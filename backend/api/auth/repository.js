@@ -1,7 +1,7 @@
 
 import { generateJWT, generateOpt } from "./helper.js";
 
-import { User, Verification, Role, Company } from "../../models/model.js";
+import { User, Verification, Role, Company } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 import config from "../../appConfig.js";
 import { sendPasswordMail, sendVerificationMail } from "../../views/index.js";

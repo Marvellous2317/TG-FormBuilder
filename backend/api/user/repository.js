@@ -2,7 +2,7 @@
 import { col, fn, literal, Op, Sequelize } from "sequelize";
 import fs from "fs";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
-import { User, Role, Company, Verification, State } from "../../models/model.js";
+import { User, Role, Company, Verification, } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";

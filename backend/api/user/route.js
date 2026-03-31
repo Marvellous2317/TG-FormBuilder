@@ -2,7 +2,7 @@ import express from 'express';
 import  {UserController} from './controller.js';
 import { isAuthenticated } from '../middlewares/authorization.js';
 import {  userDetailedMiddleware ,resesetPasswordMiddleware,forgotPasswordMiddleware, changePasswordMiddleware, checkAuth, validatePictureUpload} from './middleware.js';
-import { upload } from '../case/helper.js';
+
 
 
 
@@ -46,12 +46,6 @@ router.post(
   UserController.changePasswordApi
 );
 
-router.get(
-  '/get-leader-board',
-  checkAuth,
-  UserController.leaderBoardApi
-);
-
 
 router.post(
   '/upload-signature',
@@ -75,11 +69,6 @@ router.delete(
 
 
 
-router.post(
-  '/register-push-notification',
-  checkAuth,
-  UserController.registerPushNoticationTokenApi
-);
 
 
 

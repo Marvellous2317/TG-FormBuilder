@@ -7,7 +7,7 @@ import { sequelize } from "../config/database.js";
 export const PackagingCheckList = sequelize.define(
   "packaging_check_list",
   {
-        packagingchecklistId: {
+      packagingchecklistId: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
@@ -16,17 +16,10 @@ export const PackagingCheckList = sequelize.define(
 
     name: { type: DataTypes.STRING(100), allowNull: false },
     tittle: { type: DataTypes.STRING(100), allowNull: false },
-
-     roleId: {
-      type: DataTypes.UUID,  
-      allowNull: false, 
-    },
-
      companyId: {
       type: DataTypes.UUID,  
       allowNull: true, 
     },
-
     department: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -37,16 +30,11 @@ export const PackagingCheckList = sequelize.define(
       allowNull: false,
       defaultValue: "active",
     },
-    isVerifyEmail: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
+      createdBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
     },
-    newLogin: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
+
   },
   {
     tableName: "packaging_check_list",

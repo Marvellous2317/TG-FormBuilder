@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User, Role, Company } from "../../models/model.js";
+import { User, Role, Company } from "../../models/index.js";
 import ResponseManager from "../../utils/responseManager.js";
 import config from "../../appConfig.js";
 
@@ -220,7 +220,7 @@ export function requiresMinLevel(minLevel) {
   };
 }
 
-// Middleware to check if newLogin requires password change
+
 export function checkNewLoginRequired(req, res, next) {
   const user = req.user;
 
@@ -228,7 +228,7 @@ export function checkNewLoginRequired(req, res, next) {
     return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
   }
 
-  // Skip for password change endpoints
+
   const allowedPaths = ["/change-password", "/force-change-password"];
   if (allowedPaths.some((path) => req.path.includes(path))) {
     return next();
@@ -244,18 +244,4 @@ export function checkNewLoginRequired(req, res, next) {
   }
 
   next();
-}
-
-    const hasRequiredRole = allowedRoles.some(allowedRole => 
-      userRoles.includes(allowedRole)
-    );
-
-    if (!hasRequiredRole) {
-      return res.status(403).json({ 
-        error: `Access denied. Required role: ${allowedRoles.join(' or ')}` 
-      });
-    }
-
-    next();
-  };
 }

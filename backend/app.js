@@ -15,19 +15,7 @@ import config   from "./appConfig.js";
 import authRoute from "./api/auth/route.js"
 import adminRoute from "./api/admin/route.js"
 import userRoute from "./api/user/route.js"
-import supervisor from "./api/supervisor/route.js"
-import caseRoute from "./api/case/route.js"
-import managerRoute from "./api/manger/route.js"
-
-import { importStates,createBulkSku } from "./utils/db.js";
-
-import { sendExpoNotificationTesting, sendPushNotification } from "./utils/notification.js";
-import { globalRateLimiting ,endpointLimiters, unprotectedRoute} from "./utils/rateLimiting.js";
-import { checkAuth } from "./api/user/middleware.js";
-
-
-
-
+import checkListRoute from "./api/checklists/route.js"
 
 
 
@@ -100,16 +88,12 @@ const PORT = process.env.PORT || config.PORT || 5005;
 
 
 
-globalThis.sendPushNotification = sendPushNotification
 
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/user", userRoute);
-app.use("/api/v1/supervisor", supervisor);
 app.use("/api/v1/admin", adminRoute);
-app.use("/api/v1/case", caseRoute);
-
-app.use("/api/v1/manager", managerRoute);
+app.use("/api/v1/checklists", checkListRoute);
 
 
 
@@ -133,8 +117,6 @@ app.get("/", (req, res) => {
 app.use(errorHandler)
 
 
-
-
 app.use((req, res) => {
   return res.status(404).json({
     code: 404,
@@ -149,17 +131,14 @@ app.use((req, res) => {
 
 
 
+
+
 const startServer = async () => {
   await connectDB();
   
-  // Seed default roles
-  const { seedDefaultRoles } = await import("./models/model.js");
-  await seedDefaultRoles();
-  
-  //await importStates();
-  //await createBulkSku()
-  //await sendExpoNotificationTesting()
 
+
+  
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });

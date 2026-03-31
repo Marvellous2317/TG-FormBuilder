@@ -2,16 +2,11 @@ import { User, Role, seedDefaultRoles } from "../models/model.js";
 import { connectDB, sequelize } from "../config/database.js";
 import config from "../appConfig.js";
 
-/**
- * Seeds a default superAdmin user if one doesn't exist.
- * Run this once after setting up the database.
- */
+
 export async function seedSuperAdmin() {
   try {
-    // First ensure default roles exist
     await seedDefaultRoles();
 
-    // Check if superAdmin user already exists
     const superAdminRole = await Role.findOne({ where: { roleName: "superAdmin" } });
     if (!superAdminRole) {
       console.log("SuperAdmin role not found. Please run role seeder first.");
@@ -27,7 +22,6 @@ export async function seedSuperAdmin() {
       return;
     }
 
-    // Create default superAdmin
     const defaultPassword = config.user_default_password || "SuperAdmin123!";
     const superAdmin = User.build({
       email: "superadmin@example.com",
@@ -36,7 +30,7 @@ export async function seedSuperAdmin() {
       roleId: superAdminRole.roleId,
       status: "active",
       isVerifyEmail: true,
-      newLogin: true, // Force password change on first login
+      newLogin: true,
     });
 
     await superAdmin.setPassword(defaultPassword);

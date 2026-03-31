@@ -6,8 +6,6 @@ import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
 
-// Auth
-router.post("/signin", sigInMiddleware, AdminController.signin_api);
 
 // Role Management (superAdmin only for create/update/delete)
 router.get("/roles", isAuthenticated, adminRequired, AdminController.getAllRolesApi);
