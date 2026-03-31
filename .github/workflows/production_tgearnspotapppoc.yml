@@ -45,7 +45,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         if: github.ref == 'refs/heads/main'
         with:
-          app-name: "tgpackagingrgprd"
+          app-name: "tgpackagingappprd"
           slot-name: "Production"
           package: ./backend
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_tgpackagingrgprd }}
