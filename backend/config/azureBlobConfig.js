@@ -13,6 +13,14 @@ const containerName = isProduction
   ? config.AZURE_BLOB_CONTAINER_NAME 
   : config.AZURE_BLOB_CONTAINER_NAME_UAT;
 
-export const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+let blobServiceClient = null;
+let imageClient = null;
 
-export const imageClient = blobServiceClient.getContainerClient(containerName);
+if (connectionString) {
+  blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+  imageClient = blobServiceClient.getContainerClient(containerName);
+} else {
+  console.warn('Azure Blob connection string is not configured. Blob storage features will be unavailable.');
+}
+
+export { blobServiceClient, imageClient };
