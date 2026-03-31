@@ -1,29 +1,24 @@
 import express from 'express';
 import  {UserController} from './controller.js';
 import { isAuthenticated } from '../middlewares/authorization.js';
-import {  userDetailedMiddleware ,resesetPasswordMiddleware,forgotPasswordMiddleware, changePasswordMiddleware, checkAuth, validatePictureUpload} from './middleware.js';
-import { upload } from '../case/helper.js';
+import {  userDetailedMiddleware ,resesetPasswordMiddleware,forgotPasswordMiddleware, changePasswordMiddleware, checkAuth, validatePictureUpload, updateUserDetailsMiddleware, validateSignatureUpload} from './middleware.js';
+
 
 
 
 const router = express.Router();
 
 
-router.post(
-  '/update-user-details',
+router.put(
+  '/me',
   checkAuth,
+  updateUserDetailsMiddleware,
   UserController.updateUserDetails
-);
-router.post(
-'/create-user-details',
-userDetailedMiddleware,
-  checkAuth,
-  UserController.createUserDetails
 );
 
 
 router.get(
-  '/get-details',
+  '/me',
   checkAuth,
   UserController.getUser
 );
@@ -46,24 +41,12 @@ router.post(
   UserController.changePasswordApi
 );
 
-router.get(
-  '/get-leader-board',
-  checkAuth,
-  UserController.leaderBoardApi
-);
-
 
 router.post(
   '/upload-signature',
   checkAuth,
+  validateSignatureUpload,
   UserController.uploadSignatureApi
-);
-
-
-router.get(
-  '/get-picture',
-  checkAuth,
-  UserController.getUserPictureApi
 );
 
 
@@ -75,11 +58,6 @@ router.delete(
 
 
 
-router.post(
-  '/register-push-notification',
-  checkAuth,
-  UserController.registerPushNoticationTokenApi
-);
 
 
 

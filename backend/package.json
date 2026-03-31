@@ -1,10 +1,10 @@
 {
-	"name": "spot-earn-app",
+	"name": "packaging-check-list-app",
 	"version": "1.0.0",
 	"description": "",
 	"main": "app.js",
 	"type": "module",
-		"engines": {
+	"engines": {
 		"node": ">=22.0.0"
 	},
 	"scripts": {
@@ -14,7 +14,6 @@
 		"migrate": "npx sequelize-cli db:migrate",
 		"dev": "nodemon app"
 	},
-
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
@@ -38,6 +37,7 @@
 		"express": "^4.18.2",
 		"express-mongo-sanitize": "^2.2.0",
 		"express-rate-limit": "^7.5.0",
+		"express-validator": "^7.3.1",
 		"file-type": "^20.5.0",
 		"fs": "^0.0.1-security",
 		"helmet": "^8.1.0",

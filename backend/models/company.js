@@ -33,5 +33,5 @@ export const Company = sequelize.define(
         
         
     },
-    { tableName: "packing_check_company", freezeTableName: true, timestamps: true }
+    { tableName: "packing_check_company", freezeTableName: true, timestamps: true, paranoid: true }
 );

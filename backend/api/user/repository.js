@@ -2,12 +2,13 @@
 import { col, fn, literal, Op, Sequelize } from "sequelize";
 import fs from "fs";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
-import { User, Role, Company, Verification, State } from "../../models/model.js";
+import { User, Role, Company, Verification, } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";
 import { AzureImageDownloader, uploadFileToAzureBlob } from "../../utils/azureService.js";
 import { sequelize } from "../../config/database.js";
+import { messages } from "@trycourier/courier/api/index.js";
 
 
 export class UserRepository {
@@ -17,14 +18,35 @@ export class UserRepository {
 static async updateUser(userId, data) {
      const user = await User.findByPk(userId);
       if (!user) throw new ApplicationError("User not found");
-
     try {
-   
-
       await user.update(data);
       return user;
     } catch (error) {
      throw new ApplicationError("An error occur");
+    }
+  }
+
+  static async updateUserDetails(userId, data) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new ApplicationError("User not found", 404);
+
+    const allowedFields = ['firstName', 'lastName', "department"];
+    const filteredData = {};
+    for (const field of allowedFields) {
+      if (data[field] !== undefined) {
+        filteredData[field] = data[field];
+      }
+    }
+
+    if (Object.keys(filteredData).length === 0) {
+      throw new ApplicationError("No valid fields provided to update", 400);
+    }
+
+    try {
+      await user.update(filteredData);
+      return {messages : "User details updated successfully"  };
+    } catch (error) {
+      throw new ApplicationError("Failed to update user details");
     }
   }
 
@@ -130,7 +152,7 @@ static async updateUser(userId, data) {
 
     const {otp, expiry} = generateOpt()
     
-   await Verification.create({ email: email, otp, expiry });
+   await Verification.create({ email: email, otp, expiry, userId: user.userId });
   
     await sendVerificationMail({email:user.email ,otp, firstName:user.firstName});
 
@@ -139,6 +161,7 @@ static async updateUser(userId, data) {
     };
 
   } catch (error) {
+    console.log(error)
    
     throw new ApplicationError("An Error occur");
   }
@@ -156,16 +179,13 @@ static async updateUser(userId, data) {
     try {
       let user = await User.findOne( {
         where:{userId : userId},
-        include: [{ model: UserDetails, as: "userDetails" }],
+        include: [{ model: Role, as: "role" }],
         attributes: { exclude: ["password"] },
       });
       if (!user) throw new ValidationError("User not found");
-      if(user.role.includes("user")){
-      const nextBadgeInfo =  BadgeService.getNextBadgeInfo(user.badge, user.totalClosedCases);
-      let  progress = BadgeService.calculateProgress(user.badge, user.totalClosedCases);
-      progress = Math.round(progress)
-      return {user, nextBadgeInfo,progress};
-      }
+  
+
+      
 
   return {user};
 

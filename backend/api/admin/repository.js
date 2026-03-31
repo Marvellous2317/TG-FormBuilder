@@ -207,6 +207,7 @@ export class AdminRepository {
       return { message: "User added successfully" };
     } catch (error) {
       if (error instanceof ApplicationError || error instanceof ValidationError) throw error;
+      console.log("Error in addUser:", error);
       throw new ApplicationError("Failed to add user", 500);
     }
   }
