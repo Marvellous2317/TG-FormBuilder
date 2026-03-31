@@ -35,9 +35,10 @@ export const ChecklistDraft = sequelize.define(
     tableName: "checklist_drafts",
     freezeTableName: true,
     timestamps: true,
-    indexes: [
-      { fields: ["submissionId"], unique: true },
-      { fields: ["userId"] },
-    ],
+    paranoid: true,
+    // indexes: [
+    //   { fields: ["submissionId"], unique: true },
+    //   { fields: ["userId"] },
+    // ],
   }
 );

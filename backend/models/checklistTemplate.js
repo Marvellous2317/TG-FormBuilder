@@ -53,12 +53,12 @@ export const ChecklistTemplate = sequelize.define(
     timestamps: true,
     paranoid: true,
     deletedAt: "deletedAt",
-    indexes: [
-      { fields: ["status"] },
-      { fields: ["companyId"] },
-      { fields: ["companyId", "department"] },
-      { fields: ["createdBy"] },
-      { fields: ["companyId", "status"] },
-    ],
+    // indexes: [
+    //   { fields: ["status"] },
+    //   { fields: ["companyId"] },
+    //   { fields: ["companyId", "department"] },
+    //   { fields: ["createdBy"] },
+    //   { fields: ["companyId", "status"] },
+    // ],
   }
 );

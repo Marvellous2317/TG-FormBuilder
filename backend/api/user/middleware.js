@@ -234,3 +234,86 @@ export const validatePictureUpload = (req, res, next) => {
     return res.status(500).json({ message: "Error validating request", error });
   }
 };
+
+
+export const updateUserDetailsMiddleware = (req, res, next) => {
+  try {
+    const { firstName, lastName, department, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`${extraKeys.join(", ")} not allowed`);
+    }
+
+
+    if (!firstName && !lastName && !department) {
+      throw new ValidationError("At least one field is required to update");
+    }
+
+
+    if (firstName !== undefined) {
+      if (typeof firstName !== "string" || firstName.trim().length < 2 || firstName.trim().length > 100) {
+        throw new ValidationError("First name must be between 2 and 100 characters");
+      }
+    }
+
+
+    if (lastName !== undefined) {
+      if (typeof lastName !== "string" || lastName.trim().length < 2 || lastName.trim().length > 100) {
+        throw new ValidationError("Last name must be between 2 and 100 characters");
+      }
+    }
+
+
+    if (department !== undefined) {
+      if (typeof department !== "string" || department.length <4) {
+        throw new ValidationError("Department must be at least 4 characters");
+      }
+    }
+
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const validateSignatureUpload = (req, res, next) => {
+  try {
+    const { signature, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`${extraKeys.join(", ")} not allowed`);
+    }
+
+    if (!signature) {
+      throw new ValidationError("Signature is required");
+    }
+
+    if (typeof signature !== "string") {
+      throw new ValidationError("Signature must be a string");
+    }
+
+
+    const base64Regex = /^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/;
+    
+
+    const rawBase64Regex = /^[A-Za-z0-9+/=]+$/;
+
+    if (!base64Regex.test(signature) && !rawBase64Regex.test(signature)) {
+      throw new ValidationError("Invalid base64 image format");
+    }
+
+
+    const maxBase64Length = 7 * 1024 * 1024;
+    if (signature.length > maxBase64Length) {
+      throw new ValidationError("Signature image is too large (max 5MB)");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

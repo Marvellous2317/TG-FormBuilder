@@ -47,12 +47,12 @@ export const connectDB = async () => {
     console.log('Connected to postgres database');
 
     //  if (config.NODE_ENV === 'uat') {
-    //     logger.info('Starting database sync (alter mode)...');
+
     //     try {
     //       await sequelize.sync({ alter: true, logging: console.log });
-    //       logger.info('✓ Database sync completed successfully');
+    //       console.log('Database sync completed successfully');
     //     } catch (syncError) {
-    //       logger.error('Database sync failed:', {
+    //       console.error('Database sync failed:', {
     //         message: syncError.message,
     //         name: syncError.name,
     //         sql: syncError.sql,

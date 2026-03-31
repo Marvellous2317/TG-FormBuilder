@@ -104,9 +104,8 @@ app.use("/api/v1/checklists", checkListRoute);
 app.get("/", (req, res) => {
   return res.status(200).json({
     code: 200,
-    responseCode:"00",
     status: "success",
-    message: ' BACKEND SERVER Service up and running local',
+    message: ' BACKEND SERVER Service up and running',
   }); 
 })
 
@@ -120,7 +119,6 @@ app.use(errorHandler)
 app.use((req, res) => {
   return res.status(404).json({
     code: 404,
-    responseCode:"99",
     status: "failed",
     message: 'End-point not found',
     error: "An Error Occured",
@@ -140,7 +138,7 @@ const startServer = async () => {
 
   
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Backend server is running on port ${PORT}`);
   });
 };
 

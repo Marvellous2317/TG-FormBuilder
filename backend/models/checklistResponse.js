@@ -39,10 +39,11 @@ export const ChecklistResponse = sequelize.define(
     tableName: "checklist_responses",
     freezeTableName: true,
     timestamps: true,
-    indexes: [
-      { fields: ["submissionId"] },
-      { fields: ["fieldId"] },
-      { fields: ["submissionId", "fieldId", "sectionInstanceIndex"] },
-    ],
+    paranoid: true,
+    // indexes: [
+    //   { fields: ["submissionId"] },
+    //   { fields: ["fieldId"] },
+    //   { fields: ["submissionId", "fieldId", "sectionInstanceIndex"] },
+    // ],
   }
 );

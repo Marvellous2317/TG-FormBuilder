@@ -52,9 +52,10 @@ export const ChecklistSection = sequelize.define(
     tableName: "checklist_sections",
     freezeTableName: true,
     timestamps: true,
-    indexes: [
-      { fields: ["templateId", "templateVersion"] },
-      { fields: ["templateId", "templateVersion", "order"] },
-    ],
+    paranoid: true,
+    // indexes: [
+    //   { fields: ["templateId", "templateVersion"] },
+    //   { fields: ["templateId", "templateVersion", "order"] },
+    // ],
   }
 );

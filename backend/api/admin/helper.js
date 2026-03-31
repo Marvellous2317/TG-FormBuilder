@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export const formatDashboardResponse = (data) => {
 	return {
 		analytics: {
@@ -20,7 +22,7 @@ export const formatApprovalRequests = (users) => {
 	}));
 };
 
-// utils/formatStats.js
+
 export function formatGroupedResults(datas, groupBy) {
 	let data = datas.filter((item) => item.companyName != null);
 
@@ -69,7 +71,7 @@ export async function chunkUser(array, size) {
 
 
 export function generateRandomPassword() {
-  const length = Math.floor(Math.random() * 3) + 6; // Random length between 6-8
+  const length = Math.floor(Math.random() * 3) + 6; 
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
   let password = "";
   const randomBytes = crypto.randomBytes(length);

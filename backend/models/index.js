@@ -1,7 +1,7 @@
 import { User, } from "./user.js";
 import { Company } from "./company.js";
 import { Verification } from "./verification.js";
-import { Role, DEFAULT_ROLES } from "./role.js";
+import { Role } from "./role.js";
 import { makePassword, checkPassword } from "../api/auth/helper.js";
 
  
@@ -221,19 +221,7 @@ ChecklistDraft.belongsTo(User, {
 });
 
 
-export async function seedDefaultRoles() {
-  try {
-    for (const roleData of DEFAULT_ROLES) {
-      await Role.findOrCreate({
-        where: { roleName: roleData.roleName },
-        defaults: roleData,
-      });
-    }
-    console.log("Default roles seeded successfully");
-  } catch (error) {
-    console.error("Error seeding default roles:", error);
-  }
-}
+
 
 
 
@@ -262,7 +250,6 @@ export {
   Company, 
   Verification, 
   Role,
-  DEFAULT_ROLES,
   ChecklistTemplate,
   ChecklistSection,
   ChecklistField,

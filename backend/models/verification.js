@@ -23,5 +23,5 @@ export const Verification = sequelize.define(
         
         expiry: { type: DataTypes.DATE, allowNull: false },
     },
-    { tableName: "packing_check_verification", freezeTableName: true, timestamps: true }
+    { tableName: "packing_check_verification", freezeTableName: true, timestamps: true, paranoid: true }
 );

@@ -89,9 +89,10 @@ export const ChecklistField = sequelize.define(
     tableName: "checklist_fields",
     freezeTableName: true,
     timestamps: true,
-    indexes: [
-      { fields: ["sectionId"] },
-      { fields: ["sectionId", "order"] },
-    ],
+    paranoid: true,
+    // indexes: [
+    //   { fields: ["sectionId"] },
+    //   { fields: ["sectionId", "order"] },
+    // ],
   }
 );

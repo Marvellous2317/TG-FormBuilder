@@ -65,14 +65,15 @@ export const ChecklistSubmission = sequelize.define(
     tableName: "checklist_submissions",
     freezeTableName: true,
     timestamps: true,
-    indexes: [
-      { fields: ["assignmentId"] },
-      { fields: ["status"] },
-      { fields: ["submittedBy"] },
-      { fields: ["companyId"] },
-      { fields: ["reviewedBy", "status"] },
-      { fields: ["companyId", "status"] },
-      { fields: ["assignmentId", "submissionNumber"], unique: true },
-    ],
+    paranoid: true,
+    // indexes: [
+    //   { fields: ["assignmentId"] },
+    //   { fields: ["status"] },
+    //   { fields: ["submittedBy"] },
+    //   { fields: ["companyId"] },
+    //   { fields: ["reviewedBy", "status"] },
+    //   { fields: ["companyId", "status"] },
+    //   { fields: ["assignmentId", "submissionNumber"], unique: true },
+    // ],
   }
 );
