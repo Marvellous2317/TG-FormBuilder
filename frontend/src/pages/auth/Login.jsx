@@ -22,21 +22,38 @@ function Login() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <section className="h-full w-1/2">
+    <div className="flex h-screen w-full flex-col md:flex-row">
+      {/* Left / Top Section with Image and Text */}
+      <section className="relative h-64 w-full md:h-full md:w-1/2">
         <img
           src="/images/login-bg.png"
           alt="login image"
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
+        <div className="absolute inset-0 flex flex-col items-start justify-end p-6 pb-12 md:p-10 lg:p-20">
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            className="h-8 w-8 md:h-11 md:w-11"
+          />
+          <h1 className="mt-4 font-geist text-2xl font-semibold leading-tight text-white md:text-[32px] md:leading-12">
+            KTNL Logbook
+          </h1>
+          <p className="mt-2 text-sm font-medium text-white md:mt-1.25 md:text-base">
+            Track, manage, and secure your operational records in one
+            centralized platform. Stay compliant, stay organized, and never miss
+            a critical entry.
+          </p>
+        </div>
       </section>
 
-      <section className="flex w-1/2 flex-col items-center justify-center px-10">
-        <div className="max-w-99 w-full">
+      {/* Right / Bottom Section with Form */}
+      <section className="flex w-full flex-col items-center justify-center overflow-y-auto p-4 md:w-1/2 md:p-10 lg:p-16">
+        <div className="w-full max-w-99">
           <h1 className="font-geist text-xl font-semibold text-primary">
             Welcome to KTNL Portal
           </h1>
-          <p className="mt-1 mb-7 font-geist text-xs text-tertiary">
+          <p className="mb-6 mt-1 font-geist text-xs text-tertiary md:mb-7">
             Enter your credentials to continue
           </p>
 
@@ -67,7 +84,7 @@ function Login() {
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white transition-all duration-150 ease-in-out hover:opacity-90 active:scale-95 cursor-pointer disabled:bg-primary mt-3"
+              className="mt-3 w-full cursor-pointer rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white transition-all duration-150 ease-in-out hover:opacity-90 active:scale-95 disabled:bg-primary disabled:opacity-50"
               disabled={!formData.email || !formData.password}
             >
               Login
