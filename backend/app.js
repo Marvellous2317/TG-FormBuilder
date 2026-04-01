@@ -82,7 +82,7 @@ app.use(morgan('combined'));
 
 
 
-const PORT = process.env.PORT || config.PORT || 5005;
+const PORT = process.env.PORT || config.PORT || 6000;
 
 
 
