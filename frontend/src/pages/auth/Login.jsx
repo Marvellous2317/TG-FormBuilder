@@ -32,11 +32,11 @@ function Login() {
       </section>
 
       <section className="flex w-1/2 flex-col items-center justify-center px-10">
-        <div className="w-full max-w-md">
+        <div className="max-w-99 w-full">
           <h1 className="font-geist text-xl font-semibold text-primary">
             Welcome to KTNL Portal
           </h1>
-          <p className="mt-1 font-geist text-xs text-tertiary">
+          <p className="mt-1 mb-7 font-geist text-xs text-tertiary">
             Enter your credentials to continue
           </p>
 
@@ -44,7 +44,7 @@ function Login() {
             <InputField
               id="email"
               name="email"
-              label="Email"
+              label="Email address"
               type="email"
               placeholder="you@example.com"
               value={formData.email}
@@ -67,7 +67,7 @@ function Login() {
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white transition-all duration-150 ease-in-out hover:opacity-90 active:scale-95 cursor-pointer disabled:bg-primary"
+              className="w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white transition-all duration-150 ease-in-out hover:opacity-90 active:scale-95 cursor-pointer disabled:bg-primary mt-3"
               disabled={!formData.email || !formData.password}
             >
               Login
