@@ -88,7 +88,7 @@ function Login() {
 
             <Button
               type="submit"
-              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50"
+              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
               disabled={!formData.email || !formData.password}
             >
               Login

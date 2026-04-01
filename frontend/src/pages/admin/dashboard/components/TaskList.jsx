@@ -334,7 +334,7 @@ export default function TaskList() {
         </div>
       </section>
       <section className="items-center flex flex-row justify-center w-full">
-        // TODO: pagination
+        {/* // TODO: pagination */}
       </section>
     </div>
   );
