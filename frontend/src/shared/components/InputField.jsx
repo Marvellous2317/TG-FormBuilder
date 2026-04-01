@@ -63,7 +63,7 @@ function InputField({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 font-geist text-xs font-medium text-primary-200"
+            className="absolute right-3 top-1/2 -translate-y-1/2 font-geist text-xs font-medium text-primary-200 cursor-pointer"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? 'Hide' : 'Show'}
