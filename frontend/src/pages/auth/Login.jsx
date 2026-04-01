@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
 import { useNavigate } from 'react-router-dom';
+import Button from '../../shared/components/Button';
 
 function Login() {
   const navigate = useNavigate();
@@ -85,13 +86,13 @@ function Login() {
               autoComplete="current-password"
             />
 
-            <button
+            <Button
               type="submit"
-              className="mt-3 w-full cursor-pointer rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white transition-all duration-150 ease-in-out hover:opacity-90 active:scale-95 disabled:bg-primary disabled:opacity-50"
+              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50"
               disabled={!formData.email || !formData.password}
             >
               Login
-            </button>
+            </Button>
           </form>
         </div>
       </section>

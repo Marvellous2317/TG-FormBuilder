@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import Button from '../../shared/components/Button';
 
 const navDetails = [
   {
@@ -51,7 +52,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <button className="cursor-pointer transition-all duration-150 active:scale-95 flex gap-2 items-center mb-8 bg-secondary-600 rounded-[14px] mx-4 justify-center p-2.5">
+        <Button className="gap-2 mb-8 bg-secondary-600 rounded-[14px] mx-4 justify-center p-2.5">
           <div className="p-2 bg-primary-200 text-sm rounded-full font-geist font-semibold">
             CL
           </div>
@@ -61,7 +62,7 @@ export default function AdminLayout() {
               lennox.charles@tolaram.com
             </p>
           </div>
-        </button>
+        </Button>
       </aside>
 
       <Outlet />
