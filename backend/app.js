@@ -212,12 +212,10 @@ app.use("/api/v1/checklists", apiLimiter, checkListRoute);
 
 
 
+
 const distPathAzure = path.join(__dirname, 'dist');
-
 const distPathLocal = path.join(__dirname, '..', 'frontend', 'dist');
-
-
-const distPath = fs.existsSync(distPathAzure) ? distPathAzure : distPathLocal;
+const distPath = fs.existsSync(path.join(distPathAzure, 'index.html')) ? distPathAzure : distPathLocal;
 
 app.use(express.static(distPath));
 
@@ -225,7 +223,11 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) {
     return next();
   }
-  res.sendFile(path.join(distPath, 'index.html'));
+  const indexPath = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  next();
 });
 
 
