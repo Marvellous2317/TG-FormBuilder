@@ -4,7 +4,7 @@ import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../../pages/admin/AdminLayout';
-import AdminDashboard from '../../pages/admin/AdminDashboard';
+import AdminDashboard from '../../pages/admin/dashboard/AdminDashboard';
 import ChangePassword from '../../pages/auth/ChangePassword';
 
 export const router = createBrowserRouter([
