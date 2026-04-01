@@ -6,6 +6,13 @@ import  xss   from 'xss-clean';
 import  hpp from'hpp';
 import  compression from 'compression';
 import morgan from "morgan";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 import { errorHandler } from "./utils/errorHandler.js";
@@ -20,7 +27,9 @@ import checkListRoute from "./api/checklists/route.js"
 
 
 const app = express();
-app.use(express.json());
+
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 
 
@@ -35,42 +44,133 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.set("trust proxy", (ip) => {
-  if (!ip || !ip.match(/\d+\.\d+\.\d+\.\d+/)) return false;
-  return ip === "127.0.0.1" || ip === "::1";
+
+app.set("trust proxy", 1);
+
+
+
+
+
+
+const getClientIp = (req) => {
+
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+
+    return forwarded.split(',')[0].trim();
+  }
+
+  const realIp = req.headers['x-real-ip'];
+  if (realIp) {
+    return realIp;
+  }
+
+  return req.ip || req.connection?.remoteAddress || 'unknown';
+};
+
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  keyGenerator: (req) => getClientIp(req), // Use device IP as the key
+  message: {
+    code: 429,
+    status: 'error',
+    message: 'Too many requests from this IP, please try again later.',
+  },
+  skipSuccessfulRequests: false,
 });
 
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => getClientIp(req), 
+  message: {
+    code: 429,
+    status: 'error',
+    message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
+  },
+});
 
 
-// app.use((req, res, next) => {
-//   if (unprotectedRoute.includes(req.path)) return next();
-//   checkAuth(req, res, () => {
-//     globalRateLimiting(req, res, next);
-//   });
-// });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 200, 
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => getClientIp(req), 
+  message: {
+    code: 429,
+    status: 'error',
+    message: 'Too many API requests from this IP, please try again later.',
+  },
+});
 
 
+app.use(globalLimiter);
 
 
-// Object.entries(endpointLimiters).forEach(([path, limiter]) => {
-//   app.use(path, limiter);
-// });
-
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: { policy: "same-origin" },
+  dnsPrefetchControl: { allow: false },
+  frameguard: { action: "deny" },
+  hidePoweredBy: true,
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  ieNoOpen: true,
+  noSniff: true,
+  originAgentCluster: true,
+  permittedCrossDomainPolicies: { permittedPolicies: "none" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  xssFilter: true,
+}));
 
 
 
 app.use(xss());
 
-app.use(hpp());
+
+app.use(mongoSanitize());
+
+
+app.use(hpp({
+  whitelist: [] 
+}));
+
 
 app.use(compression());
 
 
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false, limit: '10kb' }));
+app.use(bodyParser.json({ limit: '10kb' }));
+
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
 
 
 
@@ -82,7 +182,7 @@ app.use(morgan('combined'));
 
 
 
-const PORT = process.env.PORT || config.PORT || 5005;
+const PORT = process.env.PORT || config.PORT || 5000;
 
 
 
@@ -90,24 +190,38 @@ const PORT = process.env.PORT || config.PORT || 5005;
 
 
 
-app.use("/api/v1/auth", authRoute);
-app.use("/api/v1/user", userRoute);
-app.use("/api/v1/admin", adminRoute);
-app.use("/api/v1/checklists", checkListRoute);
 
 
-
-
-
-
-
-app.get("/", (req, res) => {
+app.get("/api/v1", (req, res) => {
   return res.status(200).json({
     code: 200,
     status: "success",
-    message: ' BACKEND SERVER Service up and running',
-  }); 
-})
+    message: 'API Health Check - Service up and running',
+  });
+});
+
+
+app.use("/api/v1/auth", authLimiter, authRoute);
+
+
+app.use("/api/v1/user", apiLimiter, userRoute);
+app.use("/api/v1/admin", apiLimiter, adminRoute);
+app.use("/api/v1/checklists", apiLimiter, checkListRoute);
+
+
+
+
+
+
+
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'dist', 'index.html'));
+});
 
 
 
