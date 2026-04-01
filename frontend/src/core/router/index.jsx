@@ -3,7 +3,7 @@ import Login from '../../pages/auth/Login';
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
+    path: '/',
     element: <Login />,
   },
 ]);
