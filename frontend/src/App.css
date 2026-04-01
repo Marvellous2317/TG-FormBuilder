@@ -10,6 +10,10 @@
   /* Secondary colors */
   --color-secondary-100: #65605c;
   --color-secondary-200: #e7e7e4;
+  --color-secondary-300: #101010;
+  --color-secondary-400: #bdbdbd;
+  --color-secondary-500: #404040;
+  --color-secondary-600: #242424;
 
   --color-secondary: var(--color-secondary-100);
 
