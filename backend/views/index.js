@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const  logo ='https://www.bing.com/th/id/OIP.PeKeUukhWslnhCgrdsSyrwHaEK?w=263&h=211&c=8&rs=1&qlt=70&o=7&cb=thws4&dpr=1.3&pid=3.1&rm=3';
+const  logo ='https://iili.io/HLNnXrF.png';
 
 export const  sendApprovalEmail =async ({email,firstName})=> {
     try {
