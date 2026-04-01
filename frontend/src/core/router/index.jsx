@@ -4,6 +4,7 @@ import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../../pages/admin/AdminLayout';
+import AdminDashboard from '../../pages/admin/AdminDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -28,8 +29,12 @@ export const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           {
+            path: '',
+            element: <AdminDashboard />,
+          },
+          {
             path: 'dashboard',
-            element: <div>Admin Dashboard</div>,
+            element: <AdminDashboard />,
           },
         ],
       },
