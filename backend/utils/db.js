@@ -1,4 +1,4 @@
-import { State } from "../models/model.js";
+
 import { sequelize } from "../config/database.js";
 import fs from "fs";
 

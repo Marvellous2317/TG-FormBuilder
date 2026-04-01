@@ -28,9 +28,9 @@ export const  sendApprovalEmail =async ({email,firstName})=> {
         );
 
         const info = await EamilTransporter.sendMail({
-            from: `Spot & Earn <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_Username}>`,
             to: email,
-            subject: `Spot & Earn Account Approved`,
+            subject: `Packaging Check List Account Approved`,
             html: emailHtml,
         });
         return true;
@@ -58,9 +58,9 @@ export const  sendPasswordMail =async ({email,firstName, password})=> {
             }
         );
         const info = await EamilTransporter.sendMail({
-            from: `Spot & Earn <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_Username}>`,
             to: email,
-            subject: `Spot & Earn Account Verification`,
+            subject: `Packaging Check List Account Verification`,
             html: emailHtml,
         });
         return true;
@@ -87,9 +87,9 @@ export const  sendVerificationMail =async ({email,firstName, otp})=> {
             }
         );
         const info = await EamilTransporter.sendMail({
-            from: `Spot & Earn <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_Username}>`,
             to: email,
-            subject: `Spot & Earn Account Verification`,
+            subject: `Packaging Check List Account Verification`,
             html: emailHtml,
         });
         return true;

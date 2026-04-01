@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User, Role, Company } from "../../models/model.js";
+import { User, Role, Company } from "../../models/index.js";
 import ResponseManager from "../../utils/responseManager.js";
 import config from "../../appConfig.js";
 
@@ -53,7 +53,7 @@ export function isAuthenticated(req, res, next) {
     });
 }
 
-// Check if user has admin or superAdmin role
+
 export function adminRequired(req, res, next) {
   const user = req.user;
 
@@ -74,7 +74,7 @@ export function adminRequired(req, res, next) {
   next();
 }
 
-// Check if user has superAdmin role
+
 export function superAdminRequired(req, res, next) {
   const user = req.user;
 
@@ -94,7 +94,7 @@ export function superAdminRequired(req, res, next) {
   next();
 }
 
-// Check if user has approval role or higher
+
 export function approvalRequired(req, res, next) {
   const user = req.user;
 
@@ -115,7 +115,7 @@ export function approvalRequired(req, res, next) {
   next();
 }
 
-// Check if user has at least operator role (any authenticated user with a role)
+
 export function operatorRequired(req, res, next) {
   const user = req.user;
 
@@ -136,7 +136,7 @@ export function operatorRequired(req, res, next) {
   next();
 }
 
-// Dynamic role check - accepts role names as arguments
+
 export function requiresRole(...allowedRoles) {
   return (req, res, next) => {
     const user = req.user;
@@ -163,7 +163,7 @@ export function requiresRole(...allowedRoles) {
   };
 }
 
-// Check if user has specific permission
+
 export function requiresPermission(...requiredPermissions) {
   return (req, res, next) => {
     const user = req.user;
@@ -177,7 +177,7 @@ export function requiresPermission(...requiredPermissions) {
       return ResponseManager.error(res, "AuthorizationError", "Invalid role", 400);
     }
 
-    // SuperAdmin has all permissions
+ 
     if (userRole.permissions && userRole.permissions.includes("*")) {
       return next();
     }
@@ -198,7 +198,48 @@ export function requiresPermission(...requiredPermissions) {
   };
 }
 
-// Check minimum role level
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+
+export function validateUUID(...paramNames) {
+  return (req, res, next) => {
+    const invalidParams = [];
+
+    for (const paramName of paramNames) {
+      const value = req.params[paramName];
+      
+      if (!value) {
+        invalidParams.push(`${paramName} is required`);
+      } else if (!UUID_REGEX.test(value)) {
+        invalidParams.push(`${paramName} must be a valid UUID`);
+      }
+    }
+
+    if (invalidParams.length > 0) {
+      return ResponseManager.error(
+        res,
+        "ValidationError",
+        invalidParams.join(", "),
+        400
+      );
+    }
+
+    next();
+  };
+}
+
+
+export function validateId(paramName = "id") {
+  return validateUUID(paramName);
+}
+
+
+export function isValidUUID(value) {
+  return typeof value === "string" && UUID_REGEX.test(value);
+}
+
+
 export function requiresMinLevel(minLevel) {
   return (req, res, next) => {
     const user = req.user;
@@ -220,7 +261,7 @@ export function requiresMinLevel(minLevel) {
   };
 }
 
-// Middleware to check if newLogin requires password change
+
 export function checkNewLoginRequired(req, res, next) {
   const user = req.user;
 
@@ -228,7 +269,7 @@ export function checkNewLoginRequired(req, res, next) {
     return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
   }
 
-  // Skip for password change endpoints
+
   const allowedPaths = ["/change-password", "/force-change-password"];
   if (allowedPaths.some((path) => req.path.includes(path))) {
     return next();
@@ -244,18 +285,4 @@ export function checkNewLoginRequired(req, res, next) {
   }
 
   next();
-}
-
-    const hasRequiredRole = allowedRoles.some(allowedRole => 
-      userRoles.includes(allowedRole)
-    );
-
-    if (!hasRequiredRole) {
-      return res.status(403).json({ 
-        error: `Access denied. Required role: ${allowedRoles.join(' or ')}` 
-      });
-    }
-
-    next();
-  };
 }

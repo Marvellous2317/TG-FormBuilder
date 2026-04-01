@@ -1,0 +1,53 @@
+name: Build and Deploy Node.js app to Azure Web App - tgearnspotapppoc
+
+on:
+  push:
+    branches:
+      - main
+      - uat
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./backend
+
+      # # UAT Deployment
+      # - name: Write APP_CONFIG_JSON_TEST to appConfig.json (UAT)
+      #   if: github.ref == 'refs/heads/uat'
+      #   run: echo '${{ secrets.APP_CONFIG_JSON_TEST }}' > ./backend/appConfig.json
+
+      # - name: Deploy to Azure Web App (UAT)
+      #   uses: azure/webapps-deploy@v3
+      #   if: github.ref == 'refs/heads/uat'
+      #   with:
+      #     app-name: "tgearnspottestapp"
+      #     slot-name: "production"
+      #     package: ./backend
+      #     publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_TEST }}
+
+      # Production Deployment
+      - name: Write APP_CONFIG_JSON to appConfig.json (Production)
+        if: github.ref == 'refs/heads/main'
+        run: echo '${{ secrets.APP_CONFIG_JSON }}' > ./backend/appConfig.json
+
+      - name: Deploy to Azure Web App (Production)
+        uses: azure/webapps-deploy@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          app-name: "tgpackagingappprd"
+          slot-name: "Production"
+          package: ./backend
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_tgpackagingrgprd }}
+      
+ 

@@ -14,8 +14,13 @@ export class AdminController {
   }
 
   static async getRoleByIdApi(req, res, next) {
+
+    const roleId = req.params.roleId
+    if (!roleId) {
+      return ResponseManager.error(res, "ValidationError", "Role ID is required", 400);
+    }
     try {
-      const result = await AdminRepository.getRoleById(req.params.id);
+      const result = await AdminRepository.getRoleById(roleId);
       return ResponseManager.success(res, result, 200, "Role fetched successfully");
     } catch (e) {
       next(e);
@@ -33,7 +38,11 @@ export class AdminController {
 
   static async updateRoleApi(req, res, next) {
     try {
-      const result = await AdminRepository.updateRole(req.params.id, req.body);
+      const roleId = req.params.roleId
+      if (!roleId) {
+        return ResponseManager.error(res, "ValidationError", "Role ID is required", 400);
+      }
+      const result = await AdminRepository.updateRole(roleId, req.body);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -42,7 +51,11 @@ export class AdminController {
 
   static async deleteRoleApi(req, res, next) {
     try {
-      const result = await AdminRepository.deleteRole(req.params.id);
+      const roleId = req.params.roleId;
+      if (!roleId) {
+        return ResponseManager.error(res, "ValidationError", "Role ID is required", 400);
+      }
+      const result = await AdminRepository.deleteRole(roleId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -104,7 +117,11 @@ export class AdminController {
 
   static async deleteUserApi(req, res, next) {
     try {
-      const result = await AdminRepository.deleteUser(req.params.userId);
+      const userId = req.params.userId;
+      if (!userId) {
+        return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
+      }
+      const result = await AdminRepository.deleteUser(userId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -113,7 +130,11 @@ export class AdminController {
 
   static async resetUserPassword(req, res, next) {
     try {
-      const result = await AdminRepository.resetUserPassword(req.params.userId, req.body, req.user);
+      const userId = req.params.userId;
+      if (!userId) {
+        return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
+      }
+      const result = await AdminRepository.resetUserPassword(userId, req.body, req.user);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (error) {
       next(error);
@@ -122,7 +143,11 @@ export class AdminController {
 
   static async suspendUserApi(req, res, next) {
     try {
-      const result = await AdminRepository.suspendUser(req.params.userId);
+      const userId = req.params.userId;
+      if (!userId) {
+        return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
+      }
+      const result = await AdminRepository.suspendUser(userId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -131,7 +156,11 @@ export class AdminController {
 
   static async activateUserApi(req, res, next) {
     try {
-      const result = await AdminRepository.activateUser(req.params.userId);
+      const userId = req.params.userId;
+      if (!userId) {
+        return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
+      }
+      const result = await AdminRepository.activateUser(userId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -151,7 +180,11 @@ export class AdminController {
 
   static async getCompanyByIdApi(req, res, next) {
     try {
-      const result = await AdminRepository.getCompanyById(req.params.companyId	);
+      const companyId = req.params.companyId;
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
+      }
+      const result = await AdminRepository.getCompanyById(companyId);
       return ResponseManager.success(res, result, 200, "Company fetched successfully");
     } catch (e) {
       next(e);
@@ -187,7 +220,11 @@ export class AdminController {
 
   static async suspendCompanyApi(req, res, next) {
     try {
-      const result = await AdminRepository.suspendCompany(req.params.companyId);
+      const companyId = req.params.companyId;
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
+      }
+      const result = await AdminRepository.suspendCompany(companyId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -196,7 +233,11 @@ export class AdminController {
 
   static async activateCompanyApi(req, res, next) {
     try {
-      const result = await AdminRepository.activateCompany(req.params.companyId);
+      const companyId = req.params.companyId;
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
+      }
+      const result = await AdminRepository.activateCompany(companyId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
