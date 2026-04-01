@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import InputField from '../../components/InputField';
+import InputField from '../../shared/components/InputField';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,6 +21,7 @@ function Login() {
     event.preventDefault();
     // TODO: connect to auth API
     console.log('Login form submitted:', formData);
+    navigate('/admin/dashboard');
   };
 
   return (
@@ -39,7 +42,7 @@ function Login() {
           <h1 className="mt-4 font-geist text-2xl font-semibold leading-tight text-white md:text-[32px] md:leading-12">
             KTNL Logbook
           </h1>
-          <p className="mt-2 text-sm font-medium text-white md:mt-1.25 md:text-base">
+          <p className="mt-2 text-sm font-medium text-white md:mt-1.25 md:text-base lg:w-120 font-geist">
             Track, manage, and secure your operational records in one
             centralized platform. Stay compliant, stay organized, and never miss
             a critical entry.
