@@ -332,11 +332,9 @@ export default function TaskList() {
             </tbody>
           </table>
         </div>
-
-        {/* Optional: Show results count */}
-        <div className="px-3 md:px-4 py-2 md:py-3 border-t border-gray-200 bg-gray-50 text-xs md:text-sm text-gray-600">
-          Showing {filteredData.length} of {tableData.length} tasks
-        </div>
+      </section>
+      <section className="items-center flex flex-row justify-center w-full">
+        // TODO: pagination
       </section>
     </div>
   );
