@@ -23,6 +23,7 @@
   /* Tertiary colors */
   --color-tertiary-100: #928f8b;
   --color-tertiary-200: #efefed;
+  --color-tertiary-300: #f9f9f9;
 
   --color-tertiary: var(--color-tertiary-100);
 

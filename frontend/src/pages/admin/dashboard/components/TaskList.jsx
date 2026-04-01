@@ -232,29 +232,29 @@ export default function TaskList() {
         <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100">
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
-              <tr className="bg-[#F9F9F9]">
-                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-[#F9F9F9]">
+              <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
                   <input
                     type="checkbox"
                     className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-[#F9F9F9] whitespace-nowrap">
+                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-[#F9F9F9] whitespace-nowrap">
+                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Document Number
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-[#F9F9F9] whitespace-nowrap">
+                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Issued date
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-[#F9F9F9] whitespace-nowrap">
+                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Assigned to
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-[#F9F9F9] whitespace-nowrap">
+                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
                 </th>
-                <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-[#F9F9F9]"></th>
+                <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-tertiary-300"></th>
               </tr>
             </thead>
 
