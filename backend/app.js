@@ -10,6 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -211,16 +212,20 @@ app.use("/api/v1/checklists", apiLimiter, checkListRoute);
 
 
 
+const distPathAzure = path.join(__dirname, 'dist');
+
+const distPathLocal = path.join(__dirname, '..', 'frontend', 'dist');
 
 
+const distPath = fs.existsSync(distPathAzure) ? distPathAzure : distPathLocal;
 
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
+app.use(express.static(distPath));
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) {
     return next();
   }
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'dist', 'index.html'));
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 
@@ -246,11 +251,7 @@ app.use((req, res) => {
 
 
 const startServer = async () => {
-  await connectDB();
-  
-
-
-  
+  //await connectDB();
   app.listen(PORT, () => {
     console.log(`Backend server is running on port ${PORT}`);
   });

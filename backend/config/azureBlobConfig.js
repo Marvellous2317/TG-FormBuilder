@@ -20,7 +20,7 @@ if (connectionString) {
   blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
   imageClient = blobServiceClient.getContainerClient(containerName);
 } else {
-  console.warn('Azure Blob connection string is not configured. Blob storage features will be unavailable.');
+  // console.warn('Azure Blob connection string is not configured. Blob storage features will be unavailable.');
 }
 
 export { blobServiceClient, imageClient };
