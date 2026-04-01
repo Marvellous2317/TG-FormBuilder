@@ -25,8 +25,8 @@ export default function AdminDashboard() {
         </Button>
       </header>
 
-      <section className="">
-        <div className="flex items-center w-full gap-9 py-6 px-8">
+      <section className="py-6 px-8">
+        <div className="flex items-center w-full gap-9 ">
           <AdminCard
             icon="/icons/created-icon.png"
             title="Created logs"
@@ -45,8 +45,8 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section className="">
-        {[].length > 0 ? <TaskList /> : <EmptyTaskList />}
+      <section className="py-6 px-8">
+        {[1].length > 0 ? <TaskList /> : <EmptyTaskList />}
       </section>
     </div>
   );
