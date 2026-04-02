@@ -1,90 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 const navDetails = [
-  {
-    icon: '/icons/dashboard.png',
-    title: 'Dashboard',
-    to: '/admin/dashboard',
-  },
+  { icon: '/icons/dashboard.png', title: 'Dashboard', to: '/admin/dashboard' },
   {
     icon: '/icons/user.png',
     title: 'User management',
     to: '/admin/user-management',
   },
-  {
-    icon: '/icons/settings.png',
-    title: 'Settings',
-    to: '/admin/settings',
-  },
+  { icon: '/icons/settings.png', title: 'Settings', to: '/admin/settings' },
 ];
 
 export default function AdminLayout() {
-  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-      if (window.innerWidth >= 1024) {
-        setIsMobileMenuOpen(false);
-      }
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (desktop) setIsMobileMenuOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleSidebar = () => {
-    if (isDesktop) {
-      setIsCollapsed(!isCollapsed);
-    } else {
-      setIsMobileMenuOpen(!isMobileMenuOpen);
-    }
+    if (isDesktop) setIsCollapsed(!isCollapsed);
+    else setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <div className="flex h-screen w-full bg-white relative">
-      {/* Mobile Menu Button */}
+      {/* Mobile menu button */}
       <button
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-50 p-2 bg-primary-200 rounded-lg text-white lg:hidden shadow-lg"
-        aria-label="Toggle menu"
       >
         <FiMenu size={20} />
       </button>
 
-      {/* Desktop Collapse Button */}
-      {isDesktop && (
-        <button
-          onClick={toggleSidebar}
-          className="hidden lg:flex absolute top-1/2 -right-3 z-50 p-1.5 bg-primary-200 rounded-full text-white shadow-md hover:bg-primary-300 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          {isCollapsed ? (
-            <FiChevronRight size={14} />
-          ) : (
-            <FiChevronLeft size={14} />
-          )}
-        </button>
-      )}
-
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/70 bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={closeMobileMenu}
         />
       )}
 
-      {/* Sidebar - Sticky on desktop */}
+      {/* Sidebar */}
       <aside
         className={`
           fixed lg:sticky lg:top-0
@@ -96,20 +65,38 @@ export default function AdminLayout() {
           z-50 lg:z-auto
         `}
       >
+        {/* Collapse Toggle Button (only on desktop) */}
+        {isDesktop && (
+          <Button
+            onClick={toggleSidebar}
+            className="absolute -right-3 top-1/12 transform -translate-y-1/2
+                       bg-primary-200 hover:bg-primary-300
+                       rounded-full p-1.5 shadow-md
+                       transition-all duration-200 z-10"
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <FiChevronRight size={14} />
+            ) : (
+              <FiChevronLeft size={14} />
+            )}
+          </Button>
+        )}
+
         {/* Logo Section */}
         <div
           className={`
           p-4 border-b border-secondary-500 flex items-center
           ${isCollapsed && isDesktop ? 'lg:justify-center' : 'lg:justify-start'}
-          gap-2 shrink-0
+          gap-2 flex-shrink-0
         `}
         >
           <img
             src="/images/logo.png"
             alt="logo"
-            className="w-8 h-8 md:w-10 md:h-10 shrink-0"
+            className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
           />
-          {(!isCollapsed || !isDesktop || isMobileMenuOpen) && (
+          {(!isCollapsed || !isDesktop) && (
             <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
               <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
                 Packaging Logbook
@@ -121,26 +108,26 @@ export default function AdminLayout() {
           )}
         </div>
 
-        {/* Navigation - Takes remaining space */}
+        {/* Navigation - scrollable */}
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:space-y-3 overflow-y-auto">
-          {navDetails.map(({ icon, title, to }, index) => (
+          {navDetails.map(({ icon, title, to }) => (
             <Link
-              key={index}
+              key={to}
               to={to}
               onClick={closeMobileMenu}
               className={`
                 flex items-center gap-2 md:gap-3 py-2 px-2.5 
-                hover:bg-secondary-600 rounded-[10px] transition-colors duration-150
+                hover:bg-secondary-600 rounded-[10px] transition-colors
                 ${isCollapsed && isDesktop ? 'lg:justify-center' : ''}
               `}
               title={isCollapsed && isDesktop ? title : ''}
             >
               <img
                 src={icon}
-                alt={`${title}_icon`}
-                className="w-4 h-4 md:w-5 md:h-5 shrink-0"
+                alt={title}
+                className="w-4 h-4 md:w-5 md:h-5 object-contain flex-shrink-0"
               />
-              {(!isCollapsed || !isDesktop || isMobileMenuOpen) && (
+              {(!isCollapsed || !isDesktop) && (
                 <p className="font-geist text-xs md:text-sm text-tertiary truncate">
                   {title}
                 </p>
@@ -149,19 +136,19 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* User Profile - Fixed at bottom */}
-        <div className="shrink-0 mt-auto mx-4.5">
+        {/* User Profile - fixed at bottom */}
+        <div className="flex-shrink-0 mt-auto px-4">
           <Button
             className={`
             w-full gap-2 mb-4 md:mb-6 bg-secondary-600 rounded-[14px] mx-0 
-            justify-start p-2 md:p-2.5
+            justify-center p-2 md:p-2.5
             ${isCollapsed && isDesktop ? 'lg:px-2' : ''}
           `}
           >
-            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold shrink-0">
+            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
               CL
             </div>
-            {(!isCollapsed || !isDesktop || isMobileMenuOpen) && (
+            {(!isCollapsed || !isDesktop) && (
               <div className="gap-0.5 flex flex-col items-start overflow-hidden">
                 <h1 className="text-white font-geist text-xs md:text-sm truncate max-w-25 md:max-w-30">
                   Charles Lennox
@@ -175,14 +162,9 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main content */}
       <main className="flex-1 overflow-y-auto w-full lg:w-auto h-full">
-        <div
-          className={`
-          pt-14 lg:pt-0 h-full
-          transition-all duration-300
-        `}
-        >
+        <div className="pt-14 lg:pt-0 h-full">
           <Outlet />
         </div>
       </main>
