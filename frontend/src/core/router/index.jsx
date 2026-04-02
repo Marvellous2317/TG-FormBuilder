@@ -6,15 +6,19 @@ import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../../pages/admin/AdminLayout';
 import AdminDashboard from '../../pages/admin/dashboard/AdminDashboard';
 import ChangePassword from '../../pages/auth/ChangePassword';
+import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
+import RoleManagement from '../../pages/superadmin/RoleManagement';
+import CompanyManagement from '../../pages/superadmin/CompanyManagement';
+import UserManagement from '../../pages/superadmin/UserManagement';
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
-    element: <Login />,
-  },
-  {
     path: '/',
     element: <RoleRedirect />,
+  },
+  {
+    path: '/login',
+    element: <Login />,
   },
   {
     path: '/unauthorized',
@@ -23,6 +27,35 @@ export const router = createBrowserRouter([
   {
     path: '/change-password',
     element: <ChangePassword />,
+  },
+
+  // Super admin routes
+  {
+    element: <ProtectedRoute allowedRoles={['superadmin']} />,
+    children: [
+      {
+        path: '/superadmin',
+        element: <SuperAdminLayout />,
+        children: [
+          {
+            path: '',
+            element: <RoleManagement />,
+          },
+          {
+            path: 'roles',
+            element: <RoleManagement />,
+          },
+          {
+            path: 'users',
+            element: <UserManagement />,
+          },
+          {
+            path: 'companies',
+            element: <CompanyManagement />,
+          },
+        ],
+      },
+    ],
   },
 
   // Admin routes
