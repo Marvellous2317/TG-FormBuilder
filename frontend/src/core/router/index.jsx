@@ -10,6 +10,7 @@ import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
 import RoleManagement from '../../pages/superadmin/RoleManagement';
 import CompanyManagement from '../../pages/superadmin/CompanyManagement';
 import UserManagement from '../../pages/superadmin/UserManagement';
+import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 
 export const router = createBrowserRouter([
   {
@@ -85,7 +86,17 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/operator',
-        element: <div>Operator Workspace</div>,
+        element: <OperatorWorkspaceLayout />,
+        children: [
+          {
+            path: '',
+            element: <AdminDashboard />,
+          },
+          {
+            path: 'workspace',
+            element: <AdminDashboard />,
+          },
+        ],
       },
     ],
   },
