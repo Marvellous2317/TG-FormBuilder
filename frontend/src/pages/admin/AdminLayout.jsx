@@ -69,7 +69,7 @@ export default function AdminLayout() {
         {isDesktop && (
           <Button
             onClick={toggleSidebar}
-            className="absolute -right-3 top-1/12 transform -translate-y-1/2
+            className="absolute -right-3 top-20 transform -translate-y-1/2
                        bg-primary-200 hover:bg-primary-300
                        rounded-full p-1.5 shadow-md
                        transition-all duration-200 z-10"
