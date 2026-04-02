@@ -26,7 +26,7 @@ export default function AdminDashboard() {
       </header>
 
       <section className="py-6 px-8">
-        <div className="flex items-center w-full gap-9 ">
+        <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
           <AdminCard
             icon="/icons/created-icon.png"
             title="Created logs"

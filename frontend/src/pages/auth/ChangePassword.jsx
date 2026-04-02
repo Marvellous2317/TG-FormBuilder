@@ -72,7 +72,7 @@ function ChangePassword() {
               name="oldPassword"
               label="Old password"
               type="password"
-              placeholder="Old password"
+              // placeholder="Old password"
               value={formData.oldPassword}
               onChange={handleChange}
               required
@@ -84,7 +84,7 @@ function ChangePassword() {
               name="newPassword"
               label="New password"
               type="password"
-              placeholder="New password"
+              // placeholder="New password"
               value={formData.newPassword}
               onChange={handleChange}
               required
@@ -96,7 +96,7 @@ function ChangePassword() {
               name="confirmPassword"
               label="Confirm Password"
               type="password"
-              placeholder="Confirm password"
+              // placeholder="Confirm password"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
