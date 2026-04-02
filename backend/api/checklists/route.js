@@ -1,20 +1,13 @@
 import express from "express";
 
-import templateRoutes from "./templates/route.js";
-import assignmentRoutes from "./assignments/route.js";
-import submissionRoutes from "./submissions/route.js";
-import reviewRoutes from "./review/route.js";
+import adminRoutes from "./admin/route.js";
+import operatorRoutes from "./operator/route.js";
+import approvalRoutes from "./approval/route.js";
 
 const router = express.Router();
 
-
-router.use("/templates", templateRoutes);
-
-
-router.use("/assignments", assignmentRoutes);
-
-router.use("/my", submissionRoutes);
-
-router.use("/review", reviewRoutes);
+router.use("/admin", adminRoutes);
+router.use("/operator", operatorRoutes);
+router.use("/approval", approvalRoutes);
 
 export default router;

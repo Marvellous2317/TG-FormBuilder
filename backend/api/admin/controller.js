@@ -167,7 +167,39 @@ export class AdminController {
     }
   }
 
-  // ==================== COMPANY MANAGEMENT ====================
+  static async assignApproverApi(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const { approverId } = req.body;
+      const result = await AdminRepository.assignApprover(userId, approverId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async unassignApproverApi(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const { approverId } = req.body;
+      const result = await AdminRepository.unassignApprover(userId, approverId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async getOperatorApproversApi(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const result = await AdminRepository.getOperatorApprovers(userId);
+      return ResponseManager.success(res, result, 200, "Approvers fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  // ==================== COMPANY MANAGEMENT ======================================
 
   static async getCompaniesApi(req, res, next) {
     try {
