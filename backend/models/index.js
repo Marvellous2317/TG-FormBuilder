@@ -1,261 +1,96 @@
-import { User, } from "./user.js";
+﻿import { User } from "./user.js";
 import { Company } from "./company.js";
 import { Verification } from "./verification.js";
 import { Role } from "./role.js";
 import { makePassword, checkPassword } from "../api/auth/helper.js";
 
- 
-import { ChecklistTemplate } from "./checklistTemplate.js";
-import { ChecklistSection } from "./checklistSection.js";
-import { ChecklistField } from "./checklistField.js";
+import { Checklist } from "./checklist.js";
+import { ChecklistEntry } from "./checklistEntry.js";
 import { ChecklistAssignment } from "./checklistAssignment.js";
-import { ChecklistSubmission } from "./checklistSubmission.js";
-import { ChecklistResponse } from "./checklistResponse.js";
-import { ChecklistDraft } from "./checklistDraft.js";
+import { SubmittedChecklist } from "./submittedChecklist.js";
+import { SubmittedChecklistEntry } from "./submittedChecklistEntry.js";
+import { OperatorApprover } from "./operatorApprover.js";
 
 
+User.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+Company.hasMany(User, { foreignKey: "companyId", as: "users" });
 
+User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
+Role.hasMany(User, { foreignKey: "roleId", as: "users" });
 
- 
-// User belongs to Company
-User.belongsTo(Company, {
-  foreignKey: "companyId",
-  as: "company",
-});
+User.belongsToMany(User, { through: OperatorApprover, foreignKey: "operatorId", otherKey: "approverId", as: "approvers" });
+User.belongsToMany(User, { through: OperatorApprover, foreignKey: "approverId", otherKey: "operatorId", as: "operators" });
 
-Company.hasMany(User, {
-  foreignKey: "companyId",
-  as: "users",
-});
+OperatorApprover.belongsTo(User, { foreignKey: "operatorId", as: "operator" });
+OperatorApprover.belongsTo(User, { foreignKey: "approverId", as: "approver" });
 
-// User belongs to Role
-User.belongsTo(Role, {
-  foreignKey: "roleId",
-  as: "role",
-});
+User.hasMany(OperatorApprover, { foreignKey: "operatorId", as: "operatorApprovers" });
 
-Role.hasMany(User, {
-  foreignKey: "roleId",
-  as: "users",
-});
-
-// Verification belongs to User
-Verification.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
-});
-
-User.hasMany(Verification, {
-  foreignKey: "userId",
-  as: "verifications",
-});
-
+Verification.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(Verification, { foreignKey: "userId", as: "verifications" });
 
 User.prototype.setPassword = async function (password) {
   this.password = await makePassword(password);
 };
-
 User.prototype.checkPassword = async function (password) {
   return checkPassword(password, this.password);
 };
-
 User.prototype.toSafeJSON = function () {
   const values = this.toJSON();
   delete values.password;
   return values;
 };
 
- 
-
-// ChecklistTemplate belongs to Company (multi-tenancy)
-ChecklistTemplate.belongsTo(Company, {
-  foreignKey: "companyId",
-  as: "company",
-});
-
-Company.hasMany(ChecklistTemplate, {
-  foreignKey: "companyId",
-  as: "templates",
-});
-
-// ChecklistTemplate created by User
-ChecklistTemplate.belongsTo(User, {
-  foreignKey: "createdBy",
-  as: "creator",
-});
-
-// ChecklistTemplate has many Sections
-ChecklistTemplate.hasMany(ChecklistSection, {
-  foreignKey: "templateId",
-  as: "sections",
-});
-
-ChecklistSection.belongsTo(ChecklistTemplate, {
-  foreignKey: "templateId",
-  as: "template",
-});
-
-// ChecklistSection has many Fields
-ChecklistSection.hasMany(ChecklistField, {
-  foreignKey: "sectionId",
-  as: "fields",
-});
-
-ChecklistField.belongsTo(ChecklistSection, {
-  foreignKey: "sectionId",
-  as: "section",
-});
-
-// ChecklistAssignment belongs to Template
-ChecklistAssignment.belongsTo(ChecklistTemplate, {
-  foreignKey: "templateId",
-  as: "template",
-});
-
-ChecklistTemplate.hasMany(ChecklistAssignment, {
-  foreignKey: "templateId",
-  as: "assignments",
-});
-
-// ChecklistAssignment belongs to Company
-ChecklistAssignment.belongsTo(Company, {
-  foreignKey: "companyId",
-  as: "company",
-});
-
-// ChecklistAssignment - User relationships
-ChecklistAssignment.belongsTo(User, {
-  foreignKey: "assignedTo",
-  as: "assignee",
-});
-
-ChecklistAssignment.belongsTo(User, {
-  foreignKey: "assignedBy",
-  as: "assigner",
-});
-
-ChecklistAssignment.belongsTo(User, {
-  foreignKey: "approverId",
-  as: "approver",
-});
-
-User.hasMany(ChecklistAssignment, {
-  foreignKey: "assignedTo",
-  as: "checklistAssignments",
-});
-
-User.hasMany(ChecklistAssignment, {
-  foreignKey: "approverId",
-  as: "assignmentsToApprove",
-});
-
-// ChecklistAssignment has many Submissions
-ChecklistAssignment.hasMany(ChecklistSubmission, {
-  foreignKey: "assignmentId",
-  as: "submissions",
-});
-
-ChecklistSubmission.belongsTo(ChecklistAssignment, {
-  foreignKey: "assignmentId",
-  as: "assignment",
-});
-
-// ChecklistSubmission belongs to Company
-ChecklistSubmission.belongsTo(Company, {
-  foreignKey: "companyId",
-  as: "company",
-});
-
-// ChecklistSubmission - User relationships
-ChecklistSubmission.belongsTo(User, {
-  foreignKey: "submittedBy",
-  as: "submitter",
-});
-
-ChecklistSubmission.belongsTo(User, {
-  foreignKey: "reviewedBy",
-  as: "reviewer",
-});
-
-User.hasMany(ChecklistSubmission, {
-  foreignKey: "submittedBy",
-  as: "checklistSubmissions",
-});
-
-User.hasMany(ChecklistSubmission, {
-  foreignKey: "reviewedBy",
-  as: "reviewedSubmissions",
-});
-
-// ChecklistSubmission has many Responses
-ChecklistSubmission.hasMany(ChecklistResponse, {
-  foreignKey: "submissionId",
-  as: "responses",
-});
-
-ChecklistResponse.belongsTo(ChecklistSubmission, {
-  foreignKey: "submissionId",
-  as: "submission",
-});
 
 
-ChecklistResponse.belongsTo(ChecklistField, {
-  foreignKey: "fieldId",
-  as: "field",
-});
+// ==================== CHECKLIST (Master Data) ====================
 
-// ChecklistSubmission has one Draft
-ChecklistSubmission.hasOne(ChecklistDraft, {
-  foreignKey: "submissionId",
-  as: "draft",
-});
+Checklist.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+Company.hasMany(Checklist, { foreignKey: "companyId", as: "checklists" });
 
-ChecklistDraft.belongsTo(ChecklistSubmission, {
-  foreignKey: "submissionId",
-  as: "submission",
-});
+Checklist.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
 
-ChecklistDraft.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
-});
+// Checklist has many Entries (dynamic fields)
+Checklist.hasMany(ChecklistEntry, { foreignKey: "checklistId", as: "entries" });
+ChecklistEntry.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
 
+// ==================== ASSIGNMENT ====================
 
+ChecklistAssignment.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
+Checklist.hasMany(ChecklistAssignment, { foreignKey: "checklistId", as: "assignments" });
 
+ChecklistAssignment.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 
+ChecklistAssignment.belongsTo(User, { foreignKey: "assignedTo", as: "operator" });
+ChecklistAssignment.belongsTo(User, { foreignKey: "assignedBy", as: "assigner" });
 
+User.hasMany(ChecklistAssignment, { foreignKey: "assignedTo", as: "myAssignments" });
 
+// ==================== SUBMITTED CHECKLIST ====================
 
+ChecklistAssignment.hasMany(SubmittedChecklist, { foreignKey: "assignmentId", as: "submissions" });
+SubmittedChecklist.belongsTo(ChecklistAssignment, { foreignKey: "assignmentId", as: "assignment" });
 
+SubmittedChecklist.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+SubmittedChecklist.belongsTo(User, { foreignKey: "submittedBy", as: "submitter" });
+SubmittedChecklist.belongsTo(User, { foreignKey: "reviewedBy", as: "reviewer" });
 
+User.hasMany(SubmittedChecklist, { foreignKey: "submittedBy", as: "submittedChecklists" });
 
+// ==================== SUBMITTED CHECKLIST ENTRIES ====================
 
+SubmittedChecklist.hasMany(SubmittedChecklistEntry, { foreignKey: "submittedChecklistId", as: "entries" });
+SubmittedChecklistEntry.belongsTo(SubmittedChecklist, { foreignKey: "submittedChecklistId", as: "submittedChecklist" });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export { 
-  User, 
-  Company, 
-  Verification, 
+export {
+  User,
+  Company,
+  Verification,
   Role,
-  ChecklistTemplate,
-  ChecklistSection,
-  ChecklistField,
+  OperatorApprover,
+  Checklist,
+  ChecklistEntry,
   ChecklistAssignment,
-  ChecklistSubmission,
-  ChecklistResponse,
-  ChecklistDraft,
-
+  SubmittedChecklist,
+  SubmittedChecklistEntry,
 };
