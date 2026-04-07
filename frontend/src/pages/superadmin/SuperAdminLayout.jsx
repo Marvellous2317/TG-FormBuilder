@@ -2,22 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import Images from '../../assets/images';
+import Icons from '../../assets/icons';
 
 const navDetails = [
   {
-    icon: '/icons/dashboard.png',
-    title: 'Role management',
-    to: '/superadmin/roles',
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
+    title: 'Dashboard',
+    to: '/admin/dashboard',
   },
   {
-    icon: '/icons/dashboard.png',
+    icon: Icons.userActive,
+    icon2: Icons.userInactive,
     title: 'User management',
-    to: '/superadmin/users',
+    to: '/admin/users',
   },
   {
-    icon: '/icons/dashboard.png',
-    title: 'Company management',
-    to: '/superadmin/companies',
+    icon: Icons.settingsActive,
+    icon2: Icons.settingsInactive,
+    title: 'Settings',
+    to: '/admin/settings',
   },
 ];
 
@@ -100,7 +105,7 @@ export default function SuperAdminLayout() {
         `}
         >
           <img
-            src="/images/logo.png"
+            src={Images.logo}
             alt="logo"
             className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
           />

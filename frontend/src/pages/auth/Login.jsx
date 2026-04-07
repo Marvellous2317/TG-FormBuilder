@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
+import Images from '../../assets/images';
 
 function Login() {
   const navigate = useNavigate();
@@ -30,13 +31,13 @@ function Login() {
       {/* Left / Top Section with Image and Text */}
       <section className="relative h-64 w-full md:h-full md:w-1/2">
         <img
-          src="/images/login-bg.png"
+          src={Images.loginBg}
           alt="login image"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 flex flex-col items-start justify-end p-6 pb-12 md:p-10 lg:p-20">
           <img
-            src="/images/logo.png"
+            src={Images.logo}
             alt="logo"
             className="h-8 w-8 md:h-11 md:w-11"
           />

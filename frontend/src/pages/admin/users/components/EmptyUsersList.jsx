@@ -1,12 +1,13 @@
 import React from 'react';
 import Button from '../../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
+import Icons from '../../../../assets/icons';
 
 export default function EmptyUsersList() {
   return (
     <div className="items-center flex flex-col justify-center w-full mt-24">
       <img
-        src="/icons/invite-user.png"
+        src={Icons.inviteUserIcon}
         alt="empty document"
         className="w-10 mb-3"
       />

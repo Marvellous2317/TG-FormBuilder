@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import Icons from '../../assets/icons';
+import Images from '../../assets/images';
 
 const navDetails = [
   {
-    icon: '/icons/dashboard-active.png',
-    icon2: '/icons/dashboard-inactive.png',
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
     title: 'Dashboard',
     to: '/admin/dashboard',
   },
   {
-    icon: '/icons/user-active.png',
-    icon2: '/icons/user-inactive.png',
+    icon: Icons.userActive,
+    icon2: Icons.userInactive,
     title: 'User management',
     to: '/admin/users',
   },
   {
-    icon: '/icons/settings-active.png',
-    icon2: '/icons/settings-inactive.png',
+    icon: Icons.settingsActive,
+    icon2: Icons.settingsInactive,
     title: 'Settings',
     to: '/admin/settings',
   },
@@ -101,13 +103,13 @@ export default function AdminLayout() {
           className={`
           p-4 border-b border-secondary-500 flex items-center
           ${isCollapsed && isDesktop ? 'lg:justify-center' : 'lg:justify-start'}
-          gap-2 flex-shrink-0
+          gap-2 shrink-0
         `}
         >
           <img
-            src="/images/logo.png"
+            src={Images.logo}
             alt="logo"
-            className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
+            className="w-8 h-8 md:w-10 md:h-10 shrink-0"
           />
           {(!isCollapsed || !isDesktop) && (
             <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">

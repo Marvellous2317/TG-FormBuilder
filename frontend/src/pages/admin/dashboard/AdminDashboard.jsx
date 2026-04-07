@@ -4,6 +4,7 @@ import Button from '../../../shared/components/Button';
 import AdminCard from './components/AdminCard';
 import TaskList from './components/TaskList';
 import EmptyTaskList from './components/EmptyTaskList';
+import Icons from '../../../assets/icons';
 
 export default function AdminDashboard() {
   return (
@@ -28,17 +29,17 @@ export default function AdminDashboard() {
       <section className="py-6 px-8">
         <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
           <AdminCard
-            icon="/icons/created-icon.png"
+            icon={Icons.createdIcon}
             title="Created logs"
             count="150"
           />
           <AdminCard
-            icon="/icons/submit-icon.png"
+            icon={Icons.submitIcon}
             title="Submitted logs"
             count="150"
           />
           <AdminCard
-            icon="/icons/pending-icon.png"
+            icon={Icons.pendingIcon}
             title="Pending logs"
             count="150"
           />

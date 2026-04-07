@@ -133,7 +133,7 @@ export default function TaskList() {
     }
     if (status === 'Pending') {
       return (
-        <span className="inline-flex px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+        <span className="inline-flex px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-secondary rounded-full text-xs font-medium">
           Pending
         </span>
       );
@@ -166,7 +166,7 @@ export default function TaskList() {
               placeholder="Enter search here"
               value={search}
               onChange={handleChange}
-              className="outline-none text-gray-600 placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
+              className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
             />
           </div>
 
@@ -175,7 +175,7 @@ export default function TaskList() {
               {({ open }) => (
                 <>
                   <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0">
-                    <span className="text-gray-600 font-geist text-sm">
+                    <span className="text-secondary font-geist text-sm">
                       {currentStatus === 'all'
                         ? 'All status'
                         : statusOptions.find((s) => s.value === currentStatus)
@@ -239,19 +239,19 @@ export default function TaskList() {
                     className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Document Number
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Issued date
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Assigned to
                 </th>
-                <th className="p-3 md:p-4 text-gray-600 font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
                 </th>
                 <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-tertiary-300"></th>
@@ -284,7 +284,7 @@ export default function TaskList() {
                       {row.assignee}
                     </td>
                     <td className="p-3 md:p-4">{getStatusBadge(row.status)}</td>
-                    <td className="p-3 md:p-4 text-gray-400 hover:text-gray-600 cursor-pointer text-center relative">
+                    <td className="p-3 md:p-4 text-gray-400 hover:text-secondary cursor-pointer text-center relative">
                       <Menu>
                         {({ open }) => (
                           <>

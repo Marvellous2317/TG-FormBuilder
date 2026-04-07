@@ -4,6 +4,7 @@ import { IoAddOutline } from 'react-icons/io5';
 import AdminCard from '../dashboard/components/AdminCard';
 import UserList from './components/UserList';
 import EmptyUsersList from './components/EmptyUsersList';
+import Icons from '../../../assets/icons';
 
 export default function AdminUserManagement() {
   return (
@@ -26,17 +27,17 @@ export default function AdminUserManagement() {
       <section className="py-6 px-8">
         <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
           <AdminCard
-            icon="/icons/created-icon.png"
+            icon={Icons.createdIcon}
             title="Created logs"
             count="150"
           />
           <AdminCard
-            icon="/icons/submit-icon.png"
+            icon={Icons.submitIcon}
             title="Submitted logs"
             count="150"
           />
           <AdminCard
-            icon="/icons/pending-icon.png"
+            icon={Icons.pendingIcon}
             title="Pending logs"
             count="150"
           />
@@ -44,7 +45,7 @@ export default function AdminUserManagement() {
       </section>
 
       <section className="py-6 px-8">
-        {[].length > 0 ? <UserList /> : <EmptyUsersList />}
+        {[1].length > 0 ? <UserList /> : <EmptyUsersList />}
       </section>
     </div>
   );
