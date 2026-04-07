@@ -12,7 +12,7 @@ export async function decodeToken(token) {
 
     const user = await User.findByPk(userId, {
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });
@@ -164,41 +164,6 @@ export function requiresRole(...allowedRoles) {
 }
 
 
-export function requiresPermission(...requiredPermissions) {
-  return (req, res, next) => {
-    const user = req.user;
-
-    if (!user) {
-      return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
-    }
-
-    const userRole = user.role;
-    if (!userRole) {
-      return ResponseManager.error(res, "AuthorizationError", "Invalid role", 400);
-    }
-
- 
-    if (userRole.permissions && userRole.permissions.includes("*")) {
-      return next();
-    }
-
-    const userPermissions = userRole.permissions || [];
-    const hasPermission = requiredPermissions.some((perm) => userPermissions.includes(perm));
-
-    if (!hasPermission) {
-      return ResponseManager.error(
-        res,
-        "AuthorizationError",
-        `Permission denied. Required: ${requiredPermissions.join(" or ")}`,
-        403
-      );
-    }
-
-    next();
-  };
-}
-
-
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 
@@ -237,28 +202,6 @@ export function validateId(paramName = "id") {
 
 export function isValidUUID(value) {
   return typeof value === "string" && UUID_REGEX.test(value);
-}
-
-
-export function requiresMinLevel(minLevel) {
-  return (req, res, next) => {
-    const user = req.user;
-
-    if (!user) {
-      return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
-    }
-
-    const userRole = user.role;
-    if (!userRole || userRole.level === undefined) {
-      return ResponseManager.error(res, "AuthorizationError", "Invalid role", 400);
-    }
-
-    if (userRole.level < minLevel) {
-      return ResponseManager.error(res, "AuthorizationError", "Insufficient access level", 403);
-    }
-
-    next();
-  };
 }
 
 

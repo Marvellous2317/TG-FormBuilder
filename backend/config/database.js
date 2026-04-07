@@ -46,23 +46,23 @@ export const connectDB = async () => {
     await sequelize.authenticate();
     console.log('Connected to postgres database');
 
-    //  if (config.NODE_ENV === 'uat') {
+     if (config.NODE_ENV === 'uat') {
 
-    //     try {
-    //       await sequelize.sync({ alter: true, logging: console.log });
-    //       console.log('Database sync completed successfully');
-    //     } catch (syncError) {
-    //       console.error('Database sync failed:', {
-    //         message: syncError.message,
-    //         name: syncError.name,
-    //         sql: syncError.sql,
-    //         original: syncError.original,
-    //         parent: syncError.parent,
-    //         stack: syncError.stack
-    //       });
-    //       throw syncError;
-    //     }
-    //   }
+        try {
+          await sequelize.sync({ alter: true, logging: console.log });
+          console.log('Database sync completed successfully');
+        } catch (syncError) {
+          console.error('Database sync failed:', {
+            message: syncError.message,
+            name: syncError.name,
+            sql: syncError.sql,
+            original: syncError.original,
+            parent: syncError.parent,
+            stack: syncError.stack
+          });
+          throw syncError;
+        }
+      }
     return sequelize;
   } catch (err) {
     console.error('Error connecting to postgres database:', err);

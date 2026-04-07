@@ -1,0 +1,126 @@
+import { body, param, query } from "express-validator";
+import { validationResult } from "express-validator";
+import ResponseManager from "../../../utils/responseManager.js";
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map((err) => err.msg);
+    return ResponseManager.error(res, "ValidationError", errorMessages.join(", "), 400);
+  }
+  next();
+};
+
+// Checklist validation
+export const validateCreateChecklist = [
+  body("title").trim().notEmpty().withMessage("Checklist title is required")
+    .isLength({ max: 255 }).withMessage("Title must be less than 255 characters"),
+  body("documentNumber").trim().notEmpty().withMessage("Document number is required")
+    .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  validate,
+];
+
+export const validateUpdateChecklist = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  body("title").optional().trim().notEmpty().withMessage("Title cannot be empty")
+    .isLength({ max: 255 }).withMessage("Title must be less than 255 characters"),
+  body("documentNumber").optional().trim().notEmpty().withMessage("Document number cannot be empty")
+    .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  validate,
+];
+
+export const validateChecklistId = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  validate,
+];
+
+export const validateChecklistQuery = [
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+// Entry validation
+export const validateCreateEntries = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  body("entries").isArray({ min: 1 }).withMessage("entries must be a non-empty array"),
+  body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
+    .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula"])
+    .withMessage("Invalid field type"),
+  body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
+  body("entries.*.order").optional().isInt({ min: 0 }).withMessage("Order must be a positive integer"),
+  body("entries.*.required").optional().isBoolean().withMessage("Required must be a boolean"),
+  body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
+  body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
+  body("entries").custom((entries) => {
+    for (const [i, entry] of entries.entries()) {
+      if (entry.type === "formula" && !entry.formulaExpression) {
+        throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
+      }
+      if (["dropdown", "enum"].includes(entry.type) && (!entry.options || !Array.isArray(entry.options) || entry.options.length === 0)) {
+        throw new Error(`entries[${i}]: options is required when type is ${entry.type}`);
+      }
+    }
+    return true;
+  }),
+  validate,
+];
+
+export const validateCreateOrUpdateEntries = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  body("entries").isArray({ min: 1 }).withMessage("entries must be a non-empty array"),
+  body("entries.*.entryId").optional().isUUID().withMessage("Invalid entry ID"),
+  body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
+    .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula"])
+    .withMessage("Invalid field type"),
+  body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
+  body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
+  body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
+  body("entries").custom((entries) => {
+    for (const [i, entry] of entries.entries()) {
+      if (entry.type === "formula" && !entry.formulaExpression) {
+        throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
+      }
+      if (["dropdown", "enum"].includes(entry.type) && (!entry.options || !Array.isArray(entry.options) || entry.options.length === 0)) {
+        throw new Error(`entries[${i}]: options is required when type is ${entry.type}`);
+      }
+    }
+    return true;
+  }),
+  validate,
+];
+
+export const validateEntryId = [
+  param("entryId").isUUID().withMessage("Invalid entry ID"),
+  validate,
+];
+
+// Assignment validation
+export const validateCreateAssignment = [
+  body("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  body("assignedTo").isUUID().withMessage("Invalid operator ID"),
+  body("notes").optional().isLength({ max: 2000 }).withMessage("Notes too long"),
+  body("dueDate").optional().isISO8601().withMessage("Invalid due date format"),
+  validate,
+];
+
+export const validateUnassignment = [
+  body("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  body("assignedTo").isUUID().withMessage("Invalid operator ID"),
+  validate,
+];
+
+export const validateAssignmentId = [
+  param("assignmentId").isUUID().withMessage("Invalid assignment ID"),
+  validate,
+];
+
+export const validateAssignmentQuery = [
+  query("status").optional().isIn(["pending", "in_progress", "submitted", "approved", "rejected"])
+    .withMessage("Invalid status"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];

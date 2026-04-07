@@ -15,7 +15,7 @@ export class AuthRepository {
       const user = await User.findOne({
         where: { email: email.toLowerCase() },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
         ],
       });
@@ -105,7 +105,7 @@ export class AuthRepository {
     const user = await User.findOne({
       where: { userId },
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });

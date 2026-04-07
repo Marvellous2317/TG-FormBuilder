@@ -1,7 +1,7 @@
 import { Op, Sequelize } from "sequelize";
 import crypto from "crypto";
 
-import { User, Role, Company, } from "../../models/index.js";
+import { User, Role, Company, OperatorApprover } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 
 import { generateJWT } from "../auth/helper.js";
@@ -27,7 +27,7 @@ export class AdminRepository {
       const userRaw = await User.findOne({
         where: { email: email.toLowerCase() },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
         ],
       });
@@ -63,7 +63,7 @@ export class AdminRepository {
     try {
       const roles = await Role.findAll({
         where: { isActive: true },
-        order: [["level", "ASC"]],
+        order: [["roleName", "ASC"]],
       });
       return { roles };
     } catch (error) {
@@ -82,7 +82,7 @@ export class AdminRepository {
     }
   }
 
-  static async createRole({ roleName, description, permissions, level }) {
+  static async createRole({ roleName, description }) {
     try {
       const existing = await Role.findOne({ where: { roleName: roleName.toLowerCase() } });
       if (existing) throw new ApplicationError("Role already exists", 400);
@@ -90,8 +90,6 @@ export class AdminRepository {
       const role = await Role.create({
         roleName: roleName.toLowerCase(),
         description,
-        permissions: permissions || [],
-        level: level || 0,
       });
 
       return { message: "Role created successfully", role };
@@ -112,8 +110,6 @@ export class AdminRepository {
 
       if (data.roleName) role.roleName = data.roleName.toLowerCase();
       if (data.description !== undefined) role.description = data.description;
-      if (data.permissions !== undefined) role.permissions = data.permissions;
-      if (data.level !== undefined) role.level = data.level;
       if (data.isActive !== undefined) role.isActive = data.isActive;
 
       await role.save();
@@ -154,7 +150,7 @@ export class AdminRepository {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["password", "updatedAt"] },
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });
@@ -248,8 +244,9 @@ export class AdminRepository {
         where,
         attributes: { exclude: ["password"] },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName", "permissions", "level"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: OperatorApprover, as: "operatorApprovers",attributes: ["id"]  , include: [{ model: User, as: "approver", attributes: ["firstName", "lastName"] }] }
         ],
         limit,
         offset,
@@ -274,27 +271,18 @@ export class AdminRepository {
     try {
       const totalUsers = await User.count();
       const activeUsers = await User.count({ where: { status: "active" } });
-      const pendingUsers = await User.count({ where: { status: "pending" } });
       const suspendedUsers = await User.count({ where: { status: "suspended" } });
+      const totalRoles = await Role.count();
 
-      const usersByRole = await User.findAll({
-        attributes: [
-          "roleId",
-          [Sequelize.fn("COUNT", Sequelize.col("userId")), "count"],
-        ],
-        include: [{ model: Role, as: "role", attributes: ["roleName"] }],
-        group: ["roleId", "role.roleId"],
-        raw: true,
-      });
 
       return {
         totalUsers,
         activeUsers,
-        pendingUsers,
         suspendedUsers,
-        usersByRole,
+        totalRoles
       };
     } catch (error) {
+      console.log("Error in getUserStatistics:", error);
       throw new ApplicationError("Failed to fetch user statistics", 500);
     }
   }
@@ -409,7 +397,73 @@ export class AdminRepository {
     }
   }
 
-  // ==================== COMPANY MANAGEMENT ====================
+  static async assignApprover(operatorId, approverId) {
+    try {
+      const operator = await User.findByPk(operatorId, {
+        include: [{ model: Role, as: "role" }],
+      });
+      if (!operator) throw new ApplicationError("Operator not found", 404);
+      if (operator.role?.roleName !== "operator") {
+        throw new ApplicationError("User is not an operator", 400);
+      }
+
+      const approver = await User.findByPk(approverId, {
+        include: [{ model: Role, as: "role" }],
+      });
+      if (!approver) throw new ApplicationError("Approver not found", 404);
+      if (approver.role?.roleName !== "approval") {
+        throw new ApplicationError("Selected user does not have approval role", 400);
+      }
+
+      const existing = await OperatorApprover.findOne({
+        where: { operatorId, approverId },
+      });
+      if (existing) throw new ApplicationError("Approver is already assigned to this operator", 400);
+
+      await OperatorApprover.create({ operatorId, approverId });
+
+      return { message: "Approver assigned to operator successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to assign approver", 500);
+    }
+  }
+
+  static async unassignApprover(operatorId, approverId) {
+    try {
+      const record = await OperatorApprover.findOne({
+        where: { operatorId, approverId },
+      });
+      if (!record) throw new ApplicationError("Approver is not assigned to this operator", 404);
+
+      await record.destroy();
+
+      return { message: "Approver unassigned from operator successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to unassign approver", 500);
+    }
+  }
+
+  static async getOperatorApprovers(operatorId) {
+    try {
+      const operator = await User.findByPk(operatorId, {
+        include: [{ model: Role, as: "role" }],
+      });
+      if (!operator) throw new ApplicationError("Operator not found", 404);
+
+      const approvers = await OperatorApprover.findAll({
+        where: { operatorId },
+        include: [{ model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] }],
+      });
+
+      return { approvers: approvers.map((r) => r.approver) };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch approvers", 500);
+    }
+  }
+
 
   static async getAllCompanies({ status, search, page = 1, limit = 20 }) {
     try {
