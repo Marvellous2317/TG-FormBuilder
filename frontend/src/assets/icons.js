@@ -11,6 +11,9 @@ import settingsInactive from './icons/settings-inactive.png';
 import submitIcon from './icons/submit-icon.png';
 import userActive from './icons/user-active.png';
 import userInactive from './icons/user-inactive.png';
+import totalUsers from './icons/total-users.png';
+import activeUsers from './icons/active-users.png';
+import inactiveUsers from './icons/inactive-users.png';
 
 const Icons = {
   arrowLeftInactive,
@@ -26,6 +29,9 @@ const Icons = {
   submitIcon,
   userActive,
   userInactive,
+  totalUsers,
+  activeUsers,
+  inactiveUsers,
 };
 
 export default Icons;

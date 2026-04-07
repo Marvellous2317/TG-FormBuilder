@@ -26,19 +26,15 @@ export default function AdminUserManagement() {
 
       <section className="py-6 px-8">
         <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
+          <AdminCard icon={Icons.totalUsers} title="Total users" count="150" />
           <AdminCard
-            icon={Icons.createdIcon}
-            title="Created logs"
+            icon={Icons.activeUsers}
+            title="Active users"
             count="150"
           />
           <AdminCard
-            icon={Icons.submitIcon}
-            title="Submitted logs"
-            count="150"
-          />
-          <AdminCard
-            icon={Icons.pendingIcon}
-            title="Pending logs"
+            icon={Icons.inactiveUsers}
+            title="Inactive users"
             count="150"
           />
         </div>
