@@ -11,6 +11,8 @@ import RoleManagement from '../../pages/superadmin/RoleManagement';
 import CompanyManagement from '../../pages/superadmin/CompanyManagement';
 import UserManagement from '../../pages/superadmin/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
+import AdminSettings from '../../pages/admin/settings/AdminSettings';
+import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 
 export const router = createBrowserRouter([
   {
@@ -74,6 +76,14 @@ export const router = createBrowserRouter([
           {
             path: 'dashboard',
             element: <AdminDashboard />,
+          },
+          {
+            path: 'users',
+            element: <AdminUserManagement />,
+          },
+          {
+            path: 'settings',
+            element: <AdminSettings />,
           },
         ],
       },

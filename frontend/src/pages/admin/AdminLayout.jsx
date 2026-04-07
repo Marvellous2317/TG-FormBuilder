@@ -14,7 +14,7 @@ const navDetails = [
     icon: '/icons/user-active.png',
     icon2: '/icons/user-inactive.png',
     title: 'User management',
-    to: '/admin/user-management',
+    to: '/admin/users',
   },
   {
     icon: '/icons/settings-active.png',

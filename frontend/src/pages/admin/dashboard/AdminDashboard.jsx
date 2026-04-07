@@ -7,7 +7,7 @@ import EmptyTaskList from './components/EmptyTaskList';
 
 export default function AdminDashboard() {
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-screen max-h-screen">
       <header className="flex flex-col sm:flex-row gap-3 md:gap-0 w-full px-8 py-2.5 border-b border-secondary-200 md:items-center items-start justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-primary text-xl font-medium font-geist">
