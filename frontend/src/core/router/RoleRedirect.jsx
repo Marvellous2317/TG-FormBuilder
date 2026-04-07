@@ -6,7 +6,7 @@ export default function RoleRedirect() {
 
   const user = {
     name: 'John Doe',
-    role: 'operator',
+    role: 'admin',
   };
 
   if (!isAuthenticated || !user) {
@@ -15,9 +15,9 @@ export default function RoleRedirect() {
 
   switch (user.role) {
     case 'superadmin':
-      return <navigate to="/superadmin/roles" replace />;
+      return <Navigate to="/superadmin/roles" replace />;
     case 'admin':
-      return <navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/admin/dashboard" replace />;
     case 'operator':
       return <Navigate to="/operator/workspace" replace />;
     case 'approver':

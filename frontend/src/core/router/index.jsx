@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from '../../pages/auth/Login';
 import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
@@ -69,7 +69,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <AdminDashboard />,
+            element: <Navigate to="/admin/dashboard" replace />,
           },
           {
             path: 'dashboard',
