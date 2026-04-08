@@ -13,6 +13,7 @@ import UserManagement from '../../pages/superadmin/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
+import DepartmentManagement from '../../pages/superadmin/DepartmentManagement';
 
 export const router = createBrowserRouter([
   {
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <RoleManagement />,
+            element: <Navigate to="/superadmin/roles" replace />,
           },
           {
             path: 'roles',
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
           {
             path: 'users',
             element: <UserManagement />,
+          },
+          {
+            path: 'departments',
+            element: <DepartmentManagement />,
           },
           {
             path: 'companies',
