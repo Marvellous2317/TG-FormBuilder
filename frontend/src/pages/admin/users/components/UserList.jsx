@@ -2,6 +2,9 @@ import React, { useState, Fragment } from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaChevronDown } from 'react-icons/fa';
+import Icons from '../../../../assets/icons';
+import Button from '../../../../shared/components/Button';
+import InputField from '../../../../shared/components/InputField';
 
 const statusOptions = [
   { title: 'Completed', value: 'completed' },
@@ -396,7 +399,25 @@ export default function UserList() {
           </table>
         </div>
       </section>
-      <section className="items-center flex justify-center w-full"></section>
+      <section className="items-center flex justify-center w-full py-3.5">
+        <Button className="p-1.5">
+          <img
+            src={Icons.doubleArrowLeftInactive}
+            className="object-contain w-3 h-3"
+          />
+        </Button>
+        <Button className="p-1.5">
+          <img
+            src={Icons.arrowLeftInactive}
+            className="object-contain w-3 h-3"
+          />
+        </Button>
+
+        <div className="">
+          <p className="">Page</p>
+          <InputField className="w-12" />
+        </div>
+      </section>
     </div>
   );
 }
