@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import Images from '../../assets/images';
 import Icons from '../../assets/icons';
+import Images from '../../assets/images';
 
 const navDetails = [
   {
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
-    title: 'Dashboard',
-    to: '/admin/dashboard',
+    title: 'Role management',
+    to: '/superadmin/roles',
+  },
+  {
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
+    title: 'Department management',
+    to: '/superadmin/departments',
+  },
+  {
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
+    title: 'Company management',
+    to: '/superadmin/companies',
   },
   {
     icon: Icons.userActive,
     icon2: Icons.userInactive,
     title: 'User management',
-    to: '/admin/users',
+    to: '/superadmin/users',
   },
   {
     icon: Icons.settingsActive,
     icon2: Icons.settingsInactive,
     title: 'Settings',
-    to: '/admin/settings',
+    to: '/superadmin/settings',
   },
 ];
 
@@ -30,6 +42,8 @@ export default function SuperAdminLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -101,13 +115,13 @@ export default function SuperAdminLayout() {
           className={`
           p-4 border-b border-secondary-500 flex items-center
           ${isCollapsed && isDesktop ? 'lg:justify-center' : 'lg:justify-start'}
-          gap-2 flex-shrink-0
+          gap-2 shrink-0
         `}
         >
           <img
             src={Images.logo}
             alt="logo"
-            className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
+            className="w-8 h-8 md:w-10 md:h-10 shrink-0"
           />
           {(!isCollapsed || !isDesktop) && (
             <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
@@ -123,34 +137,43 @@ export default function SuperAdminLayout() {
 
         {/* Navigation - scrollable */}
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:space-y-3 overflow-y-auto">
-          {navDetails.map(({ icon, title, to }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={closeMobileMenu}
-              className={`
+          {navDetails.map(({ icon, title, to, icon2 }) => {
+            const isActive = location.pathname === to;
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={closeMobileMenu}
+                prefetch="intent"
+                className={({ isActive }) => `
                 flex items-center gap-2 md:gap-3 py-2 px-2.5 
-                hover:bg-secondary-600 rounded-[10px] transition-colors
+                rounded-[10px] transition-colors
+                ${
+                  isActive
+                    ? 'bg-secondary-600 text-white'
+                    : 'hover:bg-secondary-600 text-tertiary'
+                }
                 ${isCollapsed && isDesktop ? 'lg:justify-center' : ''}
               `}
-              title={isCollapsed && isDesktop ? title : ''}
-            >
-              <img
-                src={icon}
-                alt={title}
-                className="w-4 h-4 md:w-5 md:h-5 object-contain flex-shrink-0"
-              />
-              {(!isCollapsed || !isDesktop) && (
-                <p className="font-geist text-xs md:text-sm text-tertiary truncate">
-                  {title}
-                </p>
-              )}
-            </Link>
-          ))}
+                title={isCollapsed && isDesktop ? title : ''}
+              >
+                <img
+                  src={isActive ? icon : icon2}
+                  alt={title}
+                  className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
+                />
+                {(!isCollapsed || !isDesktop) && (
+                  <p className="font-geist text-xs md:text-sm text-tertiary truncate">
+                    {title}
+                  </p>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User Profile - fixed at bottom */}
-        <div className="flex-shrink-0 mt-auto px-4">
+        <div className="shrink-0 mt-auto px-4">
           <Button
             className={`
             w-full gap-2 mb-4 md:mb-6 bg-secondary-600 rounded-[14px] mx-0 

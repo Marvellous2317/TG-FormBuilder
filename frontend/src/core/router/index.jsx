@@ -7,13 +7,13 @@ import AdminLayout from '../../pages/admin/AdminLayout';
 import AdminDashboard from '../../pages/admin/dashboard/AdminDashboard';
 import ChangePassword from '../../pages/auth/ChangePassword';
 import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
-import RoleManagement from '../../pages/superadmin/RoleManagement';
-import CompanyManagement from '../../pages/superadmin/CompanyManagement';
-import UserManagement from '../../pages/superadmin/UserManagement';
+import RoleManagement from '../../pages/superadmin/roles/RoleManagement';
+import CompanyManagement from '../../pages/superadmin/company/CompanyManagement';
+import UserManagement from '../../pages/superadmin/users/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
-import DepartmentManagement from '../../pages/superadmin/DepartmentManagement';
+import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
 
 export const router = createBrowserRouter([
   {

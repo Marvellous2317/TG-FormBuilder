@@ -6,7 +6,7 @@ export default function RoleRedirect() {
 
   const user = {
     name: 'John Doe',
-    role: 'admin',
+    role: 'superadmin',
   };
 
   if (!isAuthenticated || !user) {
