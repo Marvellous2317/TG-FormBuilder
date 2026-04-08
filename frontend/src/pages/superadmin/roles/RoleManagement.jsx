@@ -3,6 +3,8 @@ import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import RoleList from './components/RoleList';
 import EmptyRoleList from './components/EmptyRoleList';
+import CreateRoleModal from './components/CreateRoleModal';
+import EditRoleModal from './components/EditRoleModal';
 
 export default function RoleManagement() {
   const [isCreateRoleModal, setIsCreateRoleModal] = useState(false);
@@ -36,6 +38,16 @@ export default function RoleManagement() {
           <EmptyRoleList setIsCreateRoleModal={setIsCreateRoleModal} />
         )}
       </section>
+
+      <CreateRoleModal
+        isCreateRoleModal={isCreateRoleModal}
+        setIsCreateRoleModal={setIsCreateRoleModal}
+      />
+
+      <EditRoleModal
+        isEditRoleModal={isEditRoleModal}
+        setIsEditRoleModal={setIsEditRoleModal}
+      />
     </div>
   );
 }

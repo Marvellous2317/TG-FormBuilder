@@ -1,10 +1,9 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaAngleDown, FaAngleUp, FaChevronDown } from 'react-icons/fa';
-import Icons from '../../../../assets/icons';
+import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
-import InputField from '../../../../shared/components/InputField';
 import Pagination from '../../../../shared/components/Pagination';
 
 const statusOptions = [
@@ -33,9 +32,9 @@ const tableData = [
 export default function RoleList({ setIsEditRoleModal }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
-  const [currentRole, setCurrentRole] = useState('all');
-
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const itemsPerPage = 10;
 
   const handleChange = (event) => {
@@ -67,18 +66,63 @@ export default function RoleList({ setIsEditRoleModal }) {
     setCurrentPage((prevPage) => prevPage + 1);
   };
 
-  const dropOtions = [
+  useEffect(() => {
+    if (activeMenuId === null) {
+      return undefined;
+    }
+
+    const closeMenu = () => setActiveMenuId(null);
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setActiveMenuId(null);
+      }
+    };
+
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('resize', closeMenu);
+      window.removeEventListener('scroll', closeMenu, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeMenuId]);
+
+  const dropOptions = [
     {
       title: 'Edit',
       value: 'edit',
-      onClick: () => setIsEditRoleModal(true),
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsEditRoleModal(true);
+      },
     },
     {
       title: 'Delete',
       value: 'delete',
-      onClick: () => {},
+      onClick: () => setActiveMenuId(null),
     },
   ];
+
+  const toggleRowMenu = (rowId, event) => {
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const menuWidth = window.innerWidth < 640 ? 192 : 160;
+    const menuHeight = dropOptions.length * 44 + 8;
+    const spaceBelow = window.innerHeight - buttonRect.bottom;
+    const shouldOpenUpward = spaceBelow < menuHeight + 12;
+
+    const left = Math.min(
+      Math.max(12, buttonRect.right - menuWidth),
+      window.innerWidth - menuWidth - 12,
+    );
+    const top = shouldOpenUpward
+      ? Math.max(12, buttonRect.top - menuHeight - 8)
+      : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
+
+    setMenuPosition({ top, left });
+    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
+  };
 
   return (
     <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full min-h-full">
@@ -210,39 +254,17 @@ export default function RoleList({ setIsEditRoleModal }) {
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.createdAt}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-400 hover:text-secondary cursor-pointer text-center relative">
-                      <Menu>
-                        {({ open }) => (
-                          <>
-                            <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0">
-                              <FiMoreVertical
-                                size={16}
-                                className="mx-auto md:w-4.5 md:h-4.5"
-                              />
-                            </MenuButton>
-                            <MenuItems className="flex flex-col z-20 absolute top-10 right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                              {dropOtions.map((status, index) => (
-                                <MenuItem key={index} as={Fragment}>
-                                  {({ active }) => (
-                                    <Button
-                                      className={`${
-                                        active ? 'bg-gray-100' : ''
-                                      } w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist ${
-                                        currentStatus === status.value
-                                          ? 'bg-primary-50 text-primary-700'
-                                          : ''
-                                      }`}
-                                      onClick={status.onClick}
-                                    >
-                                      {status.title}
-                                    </Button>
-                                  )}
-                                </MenuItem>
-                              ))}
-                            </MenuItems>
-                          </>
-                        )}
-                      </Menu>
+                    <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
+                      <Button
+                        type="button"
+                        onClick={(event) => toggleRowMenu(row.id, event)}
+                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
+                      >
+                        <FiMoreVertical
+                          size={16}
+                          className="mx-auto md:w-4.5 md:h-4.5"
+                        />
+                      </Button>
                     </td>
                   </tr>
                 ))
@@ -265,6 +287,36 @@ export default function RoleList({ setIsEditRoleModal }) {
         handlePageChange={handlePageChange}
         itemsPerPage={itemsPerPage}
       />
+      {activeMenuId !== null && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-50"
+              onClick={() => setActiveMenuId(null)}
+              role="presentation"
+            >
+              <div
+                className="absolute flex flex-col bg-white border border-gray-200 outline-none rounded-xl p-1 w-48 sm:w-40 shadow-lg shadow-gray-100"
+                style={{
+                  top: `${menuPosition.top}px`,
+                  left: `${menuPosition.left}px`,
+                }}
+                onClick={(event) => event.stopPropagation()}
+                role="menu"
+              >
+                {dropOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    className="w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist hover:bg-gray-100"
+                    onClick={option.onClick}
+                  >
+                    {option.title}
+                  </Button>
+                ))}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
