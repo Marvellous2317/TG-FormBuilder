@@ -17,7 +17,7 @@ export default function EditUsersModal({
       isOpen={isEditUserModalOpen}
       onClose={() => setIsEditUserModalOpen(false)}
       position="center"
-      width="max-w-xl"
+      width="max-w-[460px]"
       className="overflow-hidden"
     >
       <div className="flex h-full flex-col p-5">

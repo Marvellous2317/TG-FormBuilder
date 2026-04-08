@@ -25,6 +25,8 @@
   --color-tertiary-200: #efefed;
   --color-tertiary-300: #f9f9f9;
   --color-tertiary-400: #e4e3e2;
+  --color-tertiary-500: #c62828;
+  --color-tertiary-600: #f9eaea;
 
   --color-tertiary: var(--color-tertiary-100);
 

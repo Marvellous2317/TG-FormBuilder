@@ -14,7 +14,7 @@ export default function InviteUsersModal({
       isOpen={isInviteModalOpen}
       onClose={() => setIsInviteModalOpen(false)}
       position="center"
-      width="max-w-xl"
+      width="max-w-[460px]"
       className="overflow-hidden"
     >
       <div className="flex h-full flex-col p-5">

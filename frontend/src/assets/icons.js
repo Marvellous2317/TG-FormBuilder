@@ -20,6 +20,7 @@ import userInactive from './icons/user-inactive.png';
 import totalUsers from './icons/total-users.png';
 import activeUsers from './icons/active-users.png';
 import inactiveUsers from './icons/inactive-users.png';
+import deactivateUser from './icons/deactivate-user.png';
 
 const Icons = {
   arrowLeftInactive,
@@ -44,6 +45,7 @@ const Icons = {
   totalUsers,
   activeUsers,
   inactiveUsers,
+  deactivateUser,
 };
 
 export default Icons;

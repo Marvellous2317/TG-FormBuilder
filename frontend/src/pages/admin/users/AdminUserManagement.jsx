@@ -9,6 +9,7 @@ import Modal from '../../../shared/components/Modal';
 import InputField from '../../../shared/components/InputField';
 import InviteUsersModal from './components/InviteUsersModal';
 import EditUsersModal from './components/EditUsersModal';
+import DeactivateUserModal from './components/DeactivateUserModal';
 
 export default function AdminUserManagement() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -72,6 +73,11 @@ export default function AdminUserManagement() {
       <EditUsersModal
         isEditUserModalOpen={isEditUserModalOpen}
         setIsEditUserModalOpen={setIsEditUserModalOpen}
+      />
+
+      <DeactivateUserModal
+        isDeactivateUserModalOpen={isDeactivateUserModalOpen}
+        setIsDeactivateUserModalOpen={setIsDeactivateUserModalOpen}
       />
     </div>
   );
