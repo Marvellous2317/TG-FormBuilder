@@ -3,7 +3,7 @@ import Button from '../../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import Icons from '../../../../assets/icons';
 
-export default function EmptyUsersList() {
+export default function EmptyUsersList({ setIsInviteModalOpen }) {
   return (
     <div className="items-center flex flex-col justify-center w-full mt-24">
       <img
@@ -20,7 +20,10 @@ export default function EmptyUsersList() {
         Invite users within your entity to start using the platform
       </p>
 
-      <Button className="bg-primary-200 gap-1 p-2.5 rounded-[10px]">
+      <Button
+        className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+        onClick={() => setIsInviteModalOpen(true)}
+      >
         <IoAddOutline className="text-white" size={14} />
         <p className="text-white font-geist font-medium text-sm">
           Invite users

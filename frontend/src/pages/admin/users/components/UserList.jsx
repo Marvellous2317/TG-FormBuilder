@@ -18,12 +18,6 @@ const roleOptions = [
   { title: 'Approver', value: 'approver' },
 ];
 
-const dropOtions = [
-  { title: 'Unassign', value: 'unassign' },
-  { title: 'Assign', value: 'assign' },
-  { title: 'Delete log', value: 'delete' },
-];
-
 // Mock data (expanded to demonstrate the scrolling effect)
 const tableData = [
   {
@@ -124,7 +118,10 @@ const tableData = [
   },
 ];
 
-export default function UserList() {
+export default function UserList({
+  setIsEditUserModalOpen,
+  setIsDeactivateUserModalOpen,
+}) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentRole, setCurrentRole] = useState('all');
@@ -171,6 +168,22 @@ export default function UserList() {
   const handlePageChange = () => {
     setCurrentPage((prevPage) => prevPage + 1);
   };
+
+  const dropOtions = [
+    {
+      title: 'Edit',
+      value: 'edit',
+      onClick: () => setIsEditUserModalOpen(true),
+    },
+    {
+      title: 'Deactivate user',
+      value: 'deactivate',
+      onClick: () => setIsDeactivateUserModalOpen(true),
+    },
+    { title: 'Unassign', value: 'unassign', onClick: () => {} },
+    { title: 'Assign', value: 'assign', onClick: () => {} },
+    { title: 'Delete log', value: 'delete', onClick: () => {} },
+  ];
 
   return (
     <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full min-h-full">
@@ -372,17 +385,18 @@ export default function UserList() {
                               {dropOtions.map((status, index) => (
                                 <MenuItem key={index} as={Fragment}>
                                   {({ active }) => (
-                                    <button
+                                    <Button
                                       className={`${
                                         active ? 'bg-gray-100' : ''
-                                      } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                                      } w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist ${
                                         currentStatus === status.value
                                           ? 'bg-primary-50 text-primary-700'
                                           : ''
                                       }`}
+                                      onClick={status.onClick}
                                     >
                                       {status.title}
-                                    </button>
+                                    </Button>
                                   )}
                                 </MenuItem>
                               ))}
