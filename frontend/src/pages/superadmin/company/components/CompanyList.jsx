@@ -16,14 +16,18 @@ const tableData = [
   {
     id: 1,
     name: 'Ajayi Tami',
-    isActive: true,
+    address: 'an address',
+    status: true,
+    email: 'Lennox.charles@tolaram.com',
     createdAt: '2026-03-13',
     description: 'This is description',
   },
   {
     id: 2,
     name: 'Lennox',
-    isActive: true,
+    address: 'an address',
+    status: true,
+    email: 'Lennox.charles@tolaram.com',
     createdAt: '2026-03-13',
     description: 'This is description',
   },
@@ -46,7 +50,8 @@ export default function CompanyList({ setIsEditCompanyModal }) {
   const filteredData = tableData.filter((row) => {
     const matchesSearch =
       row.name.toLowerCase().includes(search.toLowerCase()) ||
-      row.description.toLowerCase().includes(search.toLowerCase());
+      row.address.toLowerCase().includes(search.toLowerCase()) ||
+      row.email.toLowerCase().includes(search.toLowerCase());
 
     let status = '';
     if (row.status) {
@@ -217,7 +222,10 @@ export default function CompanyList({ setIsEditCompanyModal }) {
                   Name
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Description
+                  Address
+                </th>
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Email
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
@@ -246,10 +254,13 @@ export default function CompanyList({ setIsEditCompanyModal }) {
                       {row.name}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
-                      {row.description}
+                      {row.address}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.isActive ? 'Active' : 'Inactive'}
+                      {row.email}
+                    </td>
+                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                      {row.status ? 'Active' : 'Inactive'}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.createdAt}
