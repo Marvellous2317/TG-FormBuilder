@@ -2,11 +2,14 @@ import React, { useState, Fragment } from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaChevronDown } from 'react-icons/fa';
+import Pagination from '../../../../shared/components/Pagination';
 
 const statusOptions = [
   { title: 'Completed', value: 'completed' },
   { title: 'Pending', value: 'pending' },
 ];
+
+const departmentOptions = [{ title: 'Packaging', value: 'packaging' }];
 
 const dropOtions = [
   { title: 'Unassign', value: 'unassign' },
@@ -23,6 +26,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: 'Ajayi Tami',
     status: 'Completed',
+    department: 'Packaging',
   },
   {
     id: 2,
@@ -31,6 +35,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: '--',
     status: 'Completed',
+    department: 'Packaging',
   },
   {
     id: 3,
@@ -39,6 +44,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: '--',
     status: 'Pending',
+    department: 'Packaging',
   },
   {
     id: 4,
@@ -47,6 +53,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: '--',
     status: 'Pending',
+    department: 'Packaging',
   },
   {
     id: 5,
@@ -55,6 +62,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: 'Ajayi Tami',
     status: 'Completed',
+    department: 'Packaging',
   },
   {
     id: 6,
@@ -63,6 +71,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: 'Ajayi Tami',
     status: 'Pending',
+    department: 'Packaging',
   },
   {
     id: 7,
@@ -71,6 +80,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: 'Ajayi Tami',
     status: 'Pending',
+    department: 'Packaging',
   },
   {
     id: 8,
@@ -79,6 +89,7 @@ const tableData = [
     date: 'March 13, 2026',
     assignee: 'Ajayi Tami',
     status: 'Completed',
+    department: 'Packaging',
   },
   {
     id: 9,
@@ -87,6 +98,7 @@ const tableData = [
     date: 'March 14, 2026',
     assignee: 'Lennox',
     status: 'Completed',
+    department: 'Labeling',
   },
   {
     id: 10,
@@ -95,6 +107,7 @@ const tableData = [
     date: 'March 14, 2026',
     assignee: 'Lennox',
     status: 'Pending',
+    department: 'Labeling',
   },
   {
     id: 11,
@@ -103,6 +116,7 @@ const tableData = [
     date: 'March 15, 2026',
     assignee: '--',
     status: 'Pending',
+    department: 'Quality Assurance',
   },
   {
     id: 12,
@@ -111,12 +125,17 @@ const tableData = [
     date: 'March 15, 2026',
     assignee: 'Ajayi Tami',
     status: 'Pending',
+    department: 'Quality Assurance',
   },
 ];
 
 export default function TaskList() {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
+  const [currentDepartment, setCurrentDepartment] = useState('all');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -155,6 +174,10 @@ export default function TaskList() {
     return matchesSearch && matchesStatus;
   });
 
+  const handlePageChange = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
   return (
     <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full">
       <section className="flex-col flex w-full">
@@ -170,11 +193,68 @@ export default function TaskList() {
             />
           </div>
 
-          <div className="relative w-full sm:w-auto">
+          <div className="relative w-full flex items-center gap-4 sm:w-auto">
+            {/* Department dropdown */}
             <Menu>
               {({ open }) => (
                 <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0">
+                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
+                    <span className="text-secondary font-geist text-sm">
+                      {currentDepartment === 'all'
+                        ? 'All departments'
+                        : departmentOptions.find(
+                            (s) => s.value === currentDepartment,
+                          )?.title || 'All departments'}
+                    </span>
+                    <FaChevronDown
+                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                      size={10}
+                    />
+                  </MenuButton>
+                  <MenuItems className="flex flex-col z-20 absolute top-full right-32 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
+                    <MenuItem as={Fragment}>
+                      {({ active }) => (
+                        <button
+                          className={`${
+                            active ? 'bg-gray-100' : ''
+                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                            currentDepartment === 'all'
+                              ? 'bg-primary-50 text-primary-700'
+                              : ''
+                          }`}
+                          onClick={() => setCurrentDepartment('all')}
+                        >
+                          All departments
+                        </button>
+                      )}
+                    </MenuItem>
+                    {departmentOptions.map((status, index) => (
+                      <MenuItem key={index} as={Fragment}>
+                        {({ active }) => (
+                          <button
+                            className={`${
+                              active ? 'bg-gray-100' : ''
+                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                              currentDepartment === status.value
+                                ? 'bg-primary-50 text-primary-700'
+                                : ''
+                            }`}
+                            onClick={() => setCurrentDepartment(status.value)}
+                          >
+                            {status.title}
+                          </button>
+                        )}
+                      </MenuItem>
+                    ))}
+                  </MenuItems>
+                </>
+              )}
+            </Menu>
+            {/* Status dropdown */}
+            <Menu>
+              {({ open }) => (
+                <>
+                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
                     <span className="text-secondary font-geist text-sm">
                       {currentStatus === 'all'
                         ? 'All status'
@@ -227,9 +307,8 @@ export default function TaskList() {
             </Menu>
           </div>
         </div>
-
         {/* Table Container - Horizontal scroll on mobile */}
-        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100">
+        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100 xl:max-h-140">
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
@@ -241,6 +320,9 @@ export default function TaskList() {
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
+                </th>
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Department
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Document Number
@@ -273,6 +355,9 @@ export default function TaskList() {
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.checklist}
+                    </td>
+                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                      {row.department}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.docNumber}
@@ -333,9 +418,11 @@ export default function TaskList() {
           </table>
         </div>
       </section>
-      <section className="items-center flex flex-row justify-center w-full">
-        {/* // TODO: pagination */}
-      </section>
+      <Pagination
+        currentPage={currentPage}
+        handlePageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+      />
     </div>
   );
 }

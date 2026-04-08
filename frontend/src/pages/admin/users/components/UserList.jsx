@@ -1,10 +1,11 @@
 import React, { useState, Fragment } from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaAngleDown, FaAngleUp, FaChevronDown } from 'react-icons/fa';
 import Icons from '../../../../assets/icons';
 import Button from '../../../../shared/components/Button';
 import InputField from '../../../../shared/components/InputField';
+import Pagination from '../../../../shared/components/Pagination';
 
 const statusOptions = [
   { title: 'Completed', value: 'completed' },
@@ -128,6 +129,9 @@ export default function UserList() {
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentRole, setCurrentRole] = useState('all');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
@@ -164,9 +168,13 @@ export default function UserList() {
     return matchesSearch && matchesStatus;
   });
 
+  const handlePageChange = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
   return (
-    <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full">
-      <section className="flex-col flex w-full">
+    <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full min-h-full">
+      <section className="flex-col flex w-full min-h-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
             <FiSearch className="text-gray-400 shrink-0" size={18} />
@@ -294,7 +302,7 @@ export default function UserList() {
         </div>
 
         {/* Table Container - Horizontal scroll on mobile */}
-        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100">
+        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100 xl:max-h-140">
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
@@ -399,25 +407,11 @@ export default function UserList() {
           </table>
         </div>
       </section>
-      <section className="items-center flex justify-center w-full py-3.5">
-        <Button className="p-1.5">
-          <img
-            src={Icons.doubleArrowLeftInactive}
-            className="object-contain w-3 h-3"
-          />
-        </Button>
-        <Button className="p-1.5">
-          <img
-            src={Icons.arrowLeftInactive}
-            className="object-contain w-3 h-3"
-          />
-        </Button>
-
-        <div className="">
-          <p className="">Page</p>
-          <InputField className="w-12" />
-        </div>
-      </section>
+      <Pagination
+        currentPage={currentPage}
+        handlePageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+      />
     </div>
   );
 }

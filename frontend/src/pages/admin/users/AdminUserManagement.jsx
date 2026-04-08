@@ -40,7 +40,7 @@ export default function AdminUserManagement() {
         </div>
       </section>
 
-      <section className="py-6 px-8">
+      <section className="py-6 px-8 min-h-full relative">
         {[1].length > 0 ? <UserList /> : <EmptyUsersList />}
       </section>
     </div>
