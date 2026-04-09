@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
-import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import useToast from '../../shared/hooks/useToast';
+import useAuth from '../../shared/hooks/useAuth';
 
 function ChangePassword() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    oldPassword: '',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
   const { showError } = useToast();
+
+  const { changePassword, isChangingPassword } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -23,7 +24,7 @@ function ChangePassword() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
       showError(
@@ -32,9 +33,7 @@ function ChangePassword() {
       );
       return;
     }
-    // TODO: connect to auth API
-    console.log('Login form submitted:', formData);
-    navigate('/admin/dashboard');
+    await changePassword(formData);
   };
 
   return (
@@ -75,12 +74,12 @@ function ChangePassword() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <InputField
-              id="oldPassword"
-              name="oldPassword"
+              id="currentPassword"
+              name="currentPassword"
               label="Old password"
               type="password"
               // placeholder="Old password"
-              value={formData.oldPassword}
+              value={formData.currentPassword}
               onChange={handleChange}
               required
               autoComplete="current-password"
@@ -114,12 +113,13 @@ function ChangePassword() {
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90 disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
               disabled={
-                !formData.oldPassword ||
+                !formData.currentPassword ||
                 !formData.newPassword ||
-                !formData.confirmPassword
+                !formData.confirmPassword ||
+                isChangingPassword
               }
             >
-              Change password
+              {isChangingPassword ? 'Changing...' : 'Change password'}
             </Button>
           </form>
         </div>

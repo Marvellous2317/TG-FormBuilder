@@ -1,19 +1,16 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function RoleRedirect() {
-  const isAuthenticated = true;
-
-  const user = {
-    name: 'John Doe',
-    role: 'superadmin',
-  };
+  const { isAuthenticated, user, clearAuth } = useAuthStore();
 
   if (!isAuthenticated || !user) {
+    clearAuth();
     return <Navigate to="/login" replace />;
   }
 
-  switch (user.role) {
+  switch (user.role.roleName.toLowerCase()) {
     case 'superadmin':
       return <Navigate to="/superadmin/roles" replace />;
     case 'admin':
@@ -23,6 +20,6 @@ export default function RoleRedirect() {
     case 'approver':
       return <Navigate to="/approver/queue" replace />;
     default:
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/unauthorized" replace />;
   }
 }

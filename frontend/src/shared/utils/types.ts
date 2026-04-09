@@ -10,7 +10,7 @@ export interface LoginResponse {
 }
 
 export interface ChangePasswordPayload {
-  oldPassword: string;
+  currentPassword: string;
   newPassword: string;
   confirmPassword: string;
 }

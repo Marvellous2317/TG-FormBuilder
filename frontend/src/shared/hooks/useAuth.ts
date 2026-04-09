@@ -93,6 +93,7 @@ export default function useAuth() {
       const successMessage =
         response?.data?.message || response?.message || 'Password changed';
       showSuccess('Change password successful', successMessage);
+      useAuthStore.getState().clearAuth();
       navigate('/login', { replace: true });
     },
     onError: (error) => {
@@ -107,5 +108,8 @@ export default function useAuth() {
     login: loginMutation.mutateAsync,
     loginMutation,
     isLoggingIn: loginMutation.isPending,
+    changePassword: changePasswordMutation.mutateAsync,
+    changePasswordMutation,
+    isChangingPassword: changePasswordMutation.isPending,
   };
 }

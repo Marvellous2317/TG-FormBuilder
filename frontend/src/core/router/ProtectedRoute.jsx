@@ -1,12 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ProtectedRoute({ allowedRoles }) {
-  const user = {
-    role: 'superadmin',
-    name: 'John Doe',
-  };
-
-  const isAuthenticated = true;
+  const { isAuthenticated, user, clearAuth } = useAuthStore();
 
   const isLoading = false;
 
@@ -15,11 +11,12 @@ export default function ProtectedRoute({ allowedRoles }) {
   }
 
   if (!isAuthenticated || !user) {
+    clearAuth();
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(user.role.roleName.toLowerCase())) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <Outlet />;
