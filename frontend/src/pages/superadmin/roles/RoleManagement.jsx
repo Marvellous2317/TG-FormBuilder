@@ -5,10 +5,17 @@ import RoleList from './components/RoleList';
 import EmptyRoleList from './components/EmptyRoleList';
 import CreateRoleModal from './components/CreateRoleModal';
 import EditRoleModal from './components/EditRoleModal';
+import { useRoles } from '../../../shared/hooks/superadmin/useRoles';
+import Loader from '../../../shared/components/Loader';
 
 export default function RoleManagement() {
   const [isCreateRoleModal, setIsCreateRoleModal] = useState(false);
   const [isEditRoleModal, setIsEditRoleModal] = useState(false);
+  const [roleToEdit, setRoleToEdit] = useState(null);
+
+  const { data, isLoading } = useRoles();
+
+  const roles = data?.data?.roles;
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -31,13 +38,22 @@ export default function RoleManagement() {
         </Button>
       </header>
 
-      <section className="py-6 px-8 min-h-full relative">
-        {[1].length > 0 ? (
-          <RoleList setIsEditRoleModal={setIsEditRoleModal} />
-        ) : (
-          <EmptyRoleList setIsCreateRoleModal={setIsCreateRoleModal} />
-        )}
-      </section>
+      {isLoading ? (
+        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
+      ) : (
+        <section className="py-6 px-8 min-h-full relative">
+          {roles?.length > 0 ? (
+            <RoleList
+              setIsEditRoleModal={setIsEditRoleModal}
+              roles={roles}
+              pagination={data.data.pagination}
+              setRoleToEdit={setRoleToEdit}
+            />
+          ) : (
+            <EmptyRoleList setIsCreateRoleModal={setIsCreateRoleModal} />
+          )}
+        </section>
+      )}
 
       <CreateRoleModal
         isCreateRoleModal={isCreateRoleModal}
@@ -45,8 +61,11 @@ export default function RoleManagement() {
       />
 
       <EditRoleModal
+        key={roleToEdit?.roleName}
         isEditRoleModal={isEditRoleModal}
         setIsEditRoleModal={setIsEditRoleModal}
+        roleToEdit={roleToEdit}
+        setRoleToEdit={setRoleToEdit}
       />
     </div>
   );

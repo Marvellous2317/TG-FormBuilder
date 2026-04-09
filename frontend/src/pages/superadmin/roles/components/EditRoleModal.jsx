@@ -2,15 +2,51 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import { useUpdateRole } from '../../../../shared/hooks/superadmin/useRoles';
+import Loader from '../../../../shared/components/Loader';
+import useToast from '../../../../shared/hooks/useToast';
 
-export default function EditRoleModal({ isEditRoleModal, setIsEditRoleModal }) {
-  const [roleName, setRoleName] = useState('');
-  const [roleDescription, setRoleDescription] = useState('');
+export default function EditRoleModal({
+  isEditRoleModal,
+  setIsEditRoleModal,
+  roleToEdit,
+  setRoleToEdit,
+}) {
+  const [roleName, setRoleName] = useState(roleToEdit?.roleName);
+  const [roleDescription, setRoleDescription] = useState(
+    roleToEdit?.description,
+  );
+
+  const { mutateAsync, isLoading } = useUpdateRole();
+
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    try {
+      await mutateAsync({
+        roleId: roleToEdit?.roleId,
+        payload: { roleName, description: roleDescription },
+      });
+
+      showSuccess('Request successful', 'Role updated successfully');
+      setIsEditRoleModal(false);
+      setRoleToEdit(null);
+    } catch (error) {
+      console.error('Error', error);
+      showError(
+        'Failed to update role',
+        'Unable to update role. Please try again.',
+      );
+    }
+  };
 
   return (
     <Modal
       isOpen={isEditRoleModal}
-      onClose={() => setIsEditRoleModal(false)}
+      onClose={() => {
+        setIsEditRoleModal(false);
+        setRoleToEdit(null);
+      }}
       position="center"
       width="max-w-[460px]"
       className="overflow-hidden"
@@ -46,7 +82,10 @@ export default function EditRoleModal({ isEditRoleModal, setIsEditRoleModal }) {
         <div className="flex items-center mt-6 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsEditRoleModal(false)}
+            onClick={() => {
+              setIsEditRoleModal(false);
+              setRoleToEdit(null);
+            }}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
@@ -54,8 +93,10 @@ export default function EditRoleModal({ isEditRoleModal, setIsEditRoleModal }) {
           <Button
             type="button"
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            disabled={isLoading}
+            onClick={handleSubmit}
           >
-            Continue
+            {isLoading ? <Loader /> : 'Update'}
           </Button>
         </div>
       </div>

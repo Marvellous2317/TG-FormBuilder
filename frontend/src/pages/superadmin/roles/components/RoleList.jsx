@@ -11,25 +11,12 @@ const statusOptions = [
   { title: 'Inactive', value: 'inactive' },
 ];
 
-// Mock data (expanded to demonstrate the scrolling effect)
-const tableData = [
-  {
-    id: 1,
-    name: 'Ajayi Tami',
-    isActive: true,
-    createdAt: '2026-03-13',
-    description: 'This is description',
-  },
-  {
-    id: 2,
-    name: 'Lennox',
-    isActive: true,
-    createdAt: '2026-03-13',
-    description: 'This is description',
-  },
-];
-
-export default function RoleList({ setIsEditRoleModal }) {
+export default function RoleList({
+  setIsEditRoleModal,
+  roles,
+  pagination,
+  setRoleToEdit,
+}) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,9 +30,9 @@ export default function RoleList({ setIsEditRoleModal }) {
   };
 
   // Filter data based on search and status
-  const filteredData = tableData.filter((row) => {
+  const filteredData = roles.filter((row) => {
     const matchesSearch =
-      row.name.toLowerCase().includes(search.toLowerCase()) ||
+      row.roleName.toLowerCase().includes(search.toLowerCase()) ||
       row.description.toLowerCase().includes(search.toLowerCase());
 
     let status = '';
@@ -105,7 +92,7 @@ export default function RoleList({ setIsEditRoleModal }) {
     },
   ];
 
-  const toggleRowMenu = (rowId, event) => {
+  const toggleRowMenu = (rowId, event, index) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
     const menuHeight = dropOptions.length * 44 + 8;
@@ -122,6 +109,8 @@ export default function RoleList({ setIsEditRoleModal }) {
 
     setMenuPosition({ top, left });
     setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
+
+    setRoleToEdit(roles[index]);
   };
 
   return (
@@ -231,9 +220,9 @@ export default function RoleList({ setIsEditRoleModal }) {
 
             <tbody>
               {filteredData.length > 0 ? (
-                filteredData.map((row) => (
+                filteredData.map((row, index) => (
                   <tr
-                    key={row.id}
+                    key={index}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
                     <td className="p-3 md:p-4 border-r border-gray-200">
@@ -243,7 +232,7 @@ export default function RoleList({ setIsEditRoleModal }) {
                       />
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
-                      {row.name}
+                      {row.roleName}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.description}
@@ -257,7 +246,7 @@ export default function RoleList({ setIsEditRoleModal }) {
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event)}
+                        onClick={(event) => toggleRowMenu(row.id, event, index)}
                         className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
@@ -282,11 +271,13 @@ export default function RoleList({ setIsEditRoleModal }) {
           </table>
         </div>
       </section>
-      <Pagination
-        currentPage={currentPage}
-        handlePageChange={handlePageChange}
-        itemsPerPage={itemsPerPage}
-      />
+      {pagination && (
+        <Pagination
+          currentPage={currentPage}
+          handlePageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(
             <div
@@ -303,9 +294,9 @@ export default function RoleList({ setIsEditRoleModal }) {
                 onClick={(event) => event.stopPropagation()}
                 role="menu"
               >
-                {dropOptions.map((option) => (
+                {dropOptions.map((option, index) => (
                   <Button
-                    key={option.value}
+                    key={index}
                     className="w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist hover:bg-gray-100"
                     onClick={option.onClick}
                   >
