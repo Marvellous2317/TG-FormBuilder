@@ -2,7 +2,12 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import useToast from './useToast';
-import { changePassword, login } from '../../core/api/auth';
+import {
+  changePassword,
+  forgotPassword,
+  login,
+  resetPassword,
+} from '../../core/api/auth';
 
 const getRoleHomePath = (user) => {
   const roleName = user?.role?.roleName?.toLowerCase();
@@ -93,6 +98,38 @@ export default function useAuth() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: resetPassword,
+    onSuccess: (response) => {
+      const successMessage =
+        response?.data?.message || response?.message || 'Password changed';
+      showSuccess('Request successful', successMessage);
+      navigate('/forgot-password', { replace: true });
+    },
+    onError: (error) => {
+      showError(
+        'Request failed',
+        getErrorMessage(error, 'Unable to reset password. Please try again.'),
+      );
+    },
+  });
+
+  const forgotPasswordMutation = useMutation({
+    mutationFn: forgotPassword,
+    onSuccess: (response) => {
+      const successMessage =
+        response?.data?.message || response?.message || 'Password changed';
+      showSuccess('Request successful', successMessage);
+      navigate('/login', { replace: true });
+    },
+    onError: (error) => {
+      showError(
+        'Request failed',
+        getErrorMessage(error, 'Unable to reset password. Please try again.'),
+      );
+    },
+  });
+
   return {
     login: loginMutation.mutateAsync,
     loginMutation,
@@ -100,5 +137,11 @@ export default function useAuth() {
     changePassword: changePasswordMutation.mutateAsync,
     changePasswordMutation,
     isChangingPassword: changePasswordMutation.isPending,
+    resetPassword: resetPasswordMutation.mutateAsync,
+    resetPasswordMutation,
+    isResetingPassword: resetPasswordMutation.isPending,
+    forgotPassword: resetPasswordMutation.mutateAsync,
+    forgotPasswordMutation,
+    isForgettingPassword: forgotPasswordMutation.isPending,
   };
 }

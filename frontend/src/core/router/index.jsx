@@ -15,6 +15,7 @@ import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
 import AuthProtect from './AuthProtect';
+import ForgotPassword from '../../pages/auth/ForgotPassword';
 
 export const router = createBrowserRouter([
   {
@@ -41,7 +42,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/forgot-password',
-            element: <ChangePassword />,
+            element: <ForgotPassword />,
           },
           {
             path: '/reset-password',

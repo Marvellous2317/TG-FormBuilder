@@ -3,6 +3,7 @@ import InputField from '../../shared/components/InputField';
 import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import useAuth from '../../shared/hooks/useAuth';
+import Loader from '../../shared/components/Loader';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -85,12 +86,19 @@ function Login() {
               autoComplete="current-password"
             />
 
+            <a
+              href="/forgot-password"
+              className="text-xs font-geist flex items-end justify-end -mt-2 text-primary hover:underline"
+            >
+              Forgot password?
+            </a>
+
             <Button
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
               disabled={!formData.email || !formData.password || isLoggingIn}
             >
-              {isLoggingIn ? 'Signing in...' : 'Login'}
+              {isLoggingIn ? <Loader /> : 'Login'}
             </Button>
           </form>
         </div>

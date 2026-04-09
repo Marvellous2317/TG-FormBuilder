@@ -4,6 +4,7 @@ import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import useToast from '../../shared/hooks/useToast';
 import useAuth from '../../shared/hooks/useAuth';
+import Loader from '../../shared/components/Loader';
 
 function ChangePassword() {
   const [formData, setFormData] = useState({
@@ -119,7 +120,7 @@ function ChangePassword() {
                 isChangingPassword
               }
             >
-              {isChangingPassword ? 'Changing...' : 'Change password'}
+              {isChangingPassword ? <Loader /> : 'Change password'}
             </Button>
           </form>
         </div>

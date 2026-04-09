@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../shared/store/authStore';
+import Loader from '../../shared/components/Loader';
 
 export default function ProtectedRoute({ allowedRoles }) {
   const { isAuthenticated, user, clearAuth } = useAuthStore();
@@ -7,7 +8,7 @@ export default function ProtectedRoute({ allowedRoles }) {
   const isLoading = false;
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loader size="h-20 w-20 !border-primary-200" />;
   }
 
   if (!isAuthenticated || !user) {
