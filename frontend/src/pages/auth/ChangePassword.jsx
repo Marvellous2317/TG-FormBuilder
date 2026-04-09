@@ -3,6 +3,7 @@ import InputField from '../../shared/components/InputField';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
+import useToast from '../../shared/hooks/useToast';
 
 function ChangePassword() {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ function ChangePassword() {
     newPassword: '',
     confirmPassword: '',
   });
+
+  const { showError } = useToast();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -23,7 +26,10 @@ function ChangePassword() {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
-      alert('New password and confirm password do not match');
+      showError(
+        'Invalid password',
+        'New password and confirm password do not match',
+      );
       return;
     }
     // TODO: connect to auth API

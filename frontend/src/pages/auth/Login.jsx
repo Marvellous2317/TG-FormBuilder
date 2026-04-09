@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
-import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
+import useAuth from '../../shared/hooks/useAuth';
 
 function Login() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const { login, isLoggingIn } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -19,11 +19,9 @@ function Login() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // TODO: connect to auth API
-    console.log('Login form submitted:', formData);
-    navigate('/admin/dashboard');
+    await login(formData);
   };
 
   return (
@@ -90,9 +88,9 @@ function Login() {
             <Button
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
-              disabled={!formData.email || !formData.password}
+              disabled={!formData.email || !formData.password || isLoggingIn}
             >
-              Login
+              {isLoggingIn ? 'Signing in...' : 'Login'}
             </Button>
           </form>
         </div>
