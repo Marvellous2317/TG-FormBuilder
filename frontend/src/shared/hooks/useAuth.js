@@ -1,17 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { changePassword, login } from '../utils/endpoints';
 import { useAuthStore } from '../store/authStore';
 import useToast from './useToast';
-import {
-  ChangePasswordPayload,
-  ChangePasswordResponse,
-  type LoginPayload,
-  type LoginResponse,
-  type User,
-} from '../utils/types';
+import { changePassword, login } from '../../core/api/auth';
 
-const getRoleHomePath = (user: User | null | undefined) => {
+const getRoleHomePath = (user) => {
   const roleName = user?.role?.roleName?.toLowerCase();
 
   switch (roleName) {
@@ -28,7 +21,7 @@ const getRoleHomePath = (user: User | null | undefined) => {
   }
 };
 
-const getErrorMessage = (error: unknown, message: string) => {
+const getErrorMessage = (error, message) => {
   if (typeof error === 'object' && error !== null) {
     const responseMessage =
       'response' in error &&
@@ -57,7 +50,7 @@ export default function useAuth() {
   const navigate = useNavigate();
   const { showError, showSuccess } = useToast();
 
-  const loginMutation = useMutation<LoginResponse, unknown, LoginPayload>({
+  const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (response) => {
       useAuthStore.getState().setAuthFromLogin(response);
@@ -83,11 +76,7 @@ export default function useAuth() {
     },
   });
 
-  const changePasswordMutation = useMutation<
-    ChangePasswordResponse,
-    unknown,
-    ChangePasswordPayload
-  >({
+  const changePasswordMutation = useMutation({
     mutationFn: changePassword,
     onSuccess: (response) => {
       const successMessage =

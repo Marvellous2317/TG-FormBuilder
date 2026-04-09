@@ -1,20 +1,5 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { LoginResponse, User } from '../utils/types';
-
-type Company = Record<string, unknown> | null;
-
-type AuthState = {
-  accessToken: string | null;
-  user: User | null;
-  requiresPasswordChange: boolean;
-  isAuthenticated: boolean;
-  setAuth: (payload: LoginResponse) => void;
-  setAuthFromLogin: (response: LoginResponse) => void;
-  setAccessToken: (token: string | null) => void;
-  setUser: (user: User | null) => void;
-  clearAuth: () => void;
-};
 
 const initialState = {
   accessToken: null,
@@ -28,26 +13,25 @@ const storage =
     ? createJSONStorage(() => localStorage)
     : undefined;
 
-export const useAuthStore = create<AuthState>()(
+export const useAuthStore = create(
   persist(
     (set) => ({
       ...initialState,
       setAuth: (payload) =>
         set(() => {
-          const accessToken = payload.data.token ?? null;
-          const user = payload.data.user ?? null;
+          const accessToken = payload?.data?.token ?? null;
+          const user = payload?.data?.user ?? null;
 
           return {
             accessToken,
             user,
             requiresPasswordChange:
-              payload.data.requiresPasswordChange ?? false,
+              payload?.data?.requiresPasswordChange ?? false,
             isAuthenticated: Boolean(accessToken && user),
           };
         }),
       setAuthFromLogin: (response) => {
-        const payload = response;
-        useAuthStore.getState().setAuth(payload);
+        useAuthStore.getState().setAuth(response);
       },
       setAccessToken: (token) =>
         set((state) => ({

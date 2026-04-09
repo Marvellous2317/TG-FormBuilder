@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const baseURL = 'https://tgpackagingappprd.azurewebsites.net/api/v1/';
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL ??
+  'https://tgpackagingappprd.azurewebsites.net/api/v1/';
 
 const redirectToLogin = () => {
   if (typeof window === 'undefined') {

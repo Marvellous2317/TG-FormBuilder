@@ -14,23 +14,42 @@ import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayou
 import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
+import AuthProtect from './AuthProtect';
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <RoleRedirect />,
-  },
-  {
-    path: '/login',
-    element: <Login />,
-  },
-  {
-    path: '/unauthorized',
-    element: <Unauthorized />,
-  },
-  {
-    path: '/change-password',
-    element: <ChangePassword />,
+    element: <AuthProtect />,
+    children: [
+      {
+        path: '',
+        children: [
+          {
+            path: '/',
+            element: <RoleRedirect />,
+          },
+          {
+            path: '/login',
+            element: <Login />,
+          },
+          {
+            path: '/unauthorized',
+            element: <Unauthorized />,
+          },
+          {
+            path: '/change-password',
+            element: <ChangePassword />,
+          },
+          {
+            path: '/forgot-password',
+            element: <ChangePassword />,
+          },
+          {
+            path: '/reset-password',
+            element: <ChangePassword />,
+          },
+        ],
+      },
+    ],
   },
 
   // Super admin routes
