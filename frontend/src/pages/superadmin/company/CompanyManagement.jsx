@@ -28,7 +28,7 @@ export default function CompanyManagement() {
         >
           <IoAddOutline className="text-white" size={14} />
           <p className="text-white font-geist font-medium text-sm">
-            Add a role
+            Add company
           </p>
         </Button>
       </header>
