@@ -10,7 +10,7 @@ const navDetails = [
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
     title: 'Dashboard',
-    to: '/superadmin/roles',
+    to: '/superadmin/',
   },
   {
     icon: Icons.dashboardActive,

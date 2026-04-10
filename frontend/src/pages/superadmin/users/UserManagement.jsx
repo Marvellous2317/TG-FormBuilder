@@ -6,11 +6,11 @@ import Icons from '../../../assets/icons';
 import InviteUsersModal from './components/InviteUsersModal';
 import EditUsersModal from './components/EditUsersModal';
 
-import AdminEmptyUsersList from './components/AdminEmptyUsersList';
-import AdminUsersList from './components/AdminUsersList';
+import AdminEmptyUsersList from '../dashboard/components/AdminEmptyUsersList';
+import AdminUsersList from '../dashboard/components/AdminDashboardList';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
-import AdminCreateUsersModal from './components/AdminCreateUsersModal';
-import AdminEditUsersModal from './components/AdminEditUsersModal';
+import AdminCreateUsersModal from '../dashboard/components/AdminCreateUsersModal';
+import AdminEditUsersModal from '../dashboard/components/AdminEditUsersModal';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
