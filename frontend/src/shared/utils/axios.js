@@ -1,19 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL ??
   'https://tgpackagingappprd.azurewebsites.net/api/v1/';
-
-const redirectToLogin = () => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  if (window.location.pathname !== '/login') {
-    window.location.replace('/login');
-  }
-};
 
 const axiosInstance = axios.create({
   baseURL,
@@ -44,9 +35,12 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    if (error.response && error.response.status === 401) {
+      console.log('Got here - 401 Unauthorized');
+
       useAuthStore.getState().clearAuth();
-      redirectToLogin();
+
+      window.location.href = '/login';
     }
 
     return Promise.reject(error);
