@@ -63,7 +63,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <Navigate to="/superadmin/roles" replace />,
+            element: <AdminDashboard />,
           },
           {
             path: 'roles',
@@ -96,10 +96,6 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <Navigate to="/admin/dashboard" replace />,
-          },
-          {
-            path: 'dashboard',
             element: <AdminDashboard />,
           },
           {

@@ -12,13 +12,13 @@ export default function RoleRedirect() {
 
   switch (user.role.roleName.toLowerCase()) {
     case 'superadmin':
-      return <Navigate to="/superadmin/roles" replace />;
+      return <Navigate to="/superadmin/" replace />;
     case 'admin':
-      return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/admin/" replace />;
     case 'operator':
-      return <Navigate to="/operator/workspace" replace />;
+      return <Navigate to="/operator/" replace />;
     case 'approver':
-      return <Navigate to="/approver/queue" replace />;
+      return <Navigate to="/approver/" replace />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }

@@ -10,7 +10,7 @@ const navDetails = [
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
     title: 'Dashboard',
-    to: '/admin/dashboard',
+    to: '/admin/',
   },
   {
     icon: Icons.userActive,
