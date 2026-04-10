@@ -1,12 +1,13 @@
 import React from 'react';
 import Button from '../../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
+import Icons from '../../../../assets/icons';
 
-export default function EmptyTaskList() {
+export default function EmptyTaskList({ setIsShowLogbookModal }) {
   return (
     <div className="items-center flex flex-col justify-center w-full mt-24">
       <img
-        src="/icons/document.png"
+        src={Icons.documentIcon}
         alt="empty document"
         className="w-10 mb-3"
       />
@@ -19,7 +20,10 @@ export default function EmptyTaskList() {
         Create your first task list and define your data structure
       </p>
 
-      <Button className="bg-primary-200 gap-1 p-2.5 rounded-[10px]">
+      <Button
+        className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+        onClick={() => setIsShowLogbookModal(true)}
+      >
         <IoAddOutline className="text-white" size={14} />
         <p className="text-white font-geist font-medium text-sm">
           Add a task list

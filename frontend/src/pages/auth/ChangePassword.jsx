@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
-import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
+import Images from '../../assets/images';
+import useToast from '../../shared/hooks/useToast';
+import useAuth from '../../shared/hooks/useAuth';
+import Loader from '../../shared/components/Loader';
 
 function ChangePassword() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    oldPassword: '',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+
+  const { showError } = useToast();
+
+  const { changePassword, isChangingPassword } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -19,15 +25,16 @@ function ChangePassword() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
-      alert('New password and confirm password do not match');
+      showError(
+        'Invalid password',
+        'New password and confirm password do not match',
+      );
       return;
     }
-    // TODO: connect to auth API
-    console.log('Login form submitted:', formData);
-    navigate('/admin/dashboard');
+    await changePassword(formData);
   };
 
   return (
@@ -35,13 +42,13 @@ function ChangePassword() {
       {/* Left / Top Section with Image and Text */}
       <section className="relative h-64 w-full md:h-full md:w-1/2">
         <img
-          src="/images/login-bg.png"
+          src={Images.loginBg}
           alt="login image"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 flex flex-col items-start justify-end p-6 pb-12 md:p-10 lg:p-20">
           <img
-            src="/images/logo.png"
+            src={Images.logo}
             alt="logo"
             className="h-8 w-8 md:h-11 md:w-11"
           />
@@ -68,12 +75,12 @@ function ChangePassword() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <InputField
-              id="oldPassword"
-              name="oldPassword"
+              id="currentPassword"
+              name="currentPassword"
               label="Old password"
               type="password"
-              placeholder="Old password"
-              value={formData.oldPassword}
+              // placeholder="Old password"
+              value={formData.currentPassword}
               onChange={handleChange}
               required
               autoComplete="current-password"
@@ -84,7 +91,7 @@ function ChangePassword() {
               name="newPassword"
               label="New password"
               type="password"
-              placeholder="New password"
+              // placeholder="New password"
               value={formData.newPassword}
               onChange={handleChange}
               required
@@ -96,7 +103,7 @@ function ChangePassword() {
               name="confirmPassword"
               label="Confirm Password"
               type="password"
-              placeholder="Confirm password"
+              // placeholder="Confirm password"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
@@ -105,14 +112,15 @@ function ChangePassword() {
 
             <Button
               type="submit"
-              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90 disabled:bg-primary disabled:opacity-50"
+              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90 disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
               disabled={
-                !formData.oldPassword ||
+                !formData.currentPassword ||
                 !formData.newPassword ||
-                !formData.confirmPassword
+                !formData.confirmPassword ||
+                isChangingPassword
               }
             >
-              Change password
+              {isChangingPassword ? <Loader /> : 'Change password'}
             </Button>
           </form>
         </div>

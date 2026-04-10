@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import InputField from '../../shared/components/InputField';
-import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
+import Images from '../../assets/images';
+import useAuth from '../../shared/hooks/useAuth';
+import Loader from '../../shared/components/Loader';
 
 function Login() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const { login, isLoggingIn } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,11 +20,9 @@ function Login() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // TODO: connect to auth API
-    console.log('Login form submitted:', formData);
-    navigate('/admin/dashboard');
+    await login(formData);
   };
 
   return (
@@ -30,13 +30,13 @@ function Login() {
       {/* Left / Top Section with Image and Text */}
       <section className="relative h-64 w-full md:h-full md:w-1/2">
         <img
-          src="/images/login-bg.png"
+          src={Images.loginBg}
           alt="login image"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 flex flex-col items-start justify-end p-6 pb-12 md:p-10 lg:p-20">
           <img
-            src="/images/logo.png"
+            src={Images.logo}
             alt="logo"
             className="h-8 w-8 md:h-11 md:w-11"
           />
@@ -86,12 +86,19 @@ function Login() {
               autoComplete="current-password"
             />
 
+            <a
+              href="/forgot-password"
+              className="text-xs font-geist flex items-end justify-end -mt-2 text-primary hover:underline"
+            >
+              Forgot password?
+            </a>
+
             <Button
               type="submit"
-              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50"
-              disabled={!formData.email || !formData.password}
+              className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
+              disabled={!formData.email || !formData.password || isLoggingIn}
             >
-              Login
+              {isLoggingIn ? <Loader /> : 'Login'}
             </Button>
           </form>
         </div>
