@@ -58,7 +58,7 @@ export default function UserManagement() {
         </div>
       </section>
 
-      <section className="py-6 px-8 min-h-full relative">
+      {/* <section className="py-6 px-8 min-h-full relative">
         {[1].length > 0 ? (
           <AdminUsersList setIsEditUserModalOpen={setIsEditUserModalOpen} />
         ) : (
@@ -66,9 +66,9 @@ export default function UserManagement() {
             setIsCreateUserModalOpen={setIsCreateUserModalOpen}
           />
         )}
-      </section>
+      </section> */}
 
-      <AdminCreateUsersModal
+      {/* <AdminCreateUsersModal
         isCreateUserModalOpen={isCreateUserModalOpen}
         setIsCreateUserModalOpen={setIsCreateUserModalOpen}
       />
@@ -76,7 +76,7 @@ export default function UserManagement() {
       <AdminEditUsersModal
         isEditUserModalOpen={isEditUserModalOpen}
         setIsEditUserModalOpen={setIsEditUserModalOpen}
-      />
+      /> */}
     </div>
   );
 }
