@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import Button from '../../../shared/components/Button';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -9,6 +9,7 @@ import AdminCard from '../../admin/dashboard/components/AdminCard';
 import Icons from '../../../assets/icons';
 import { RiEditLine } from 'react-icons/ri';
 import { GoDotFill } from 'react-icons/go';
+import SuspendEntityModal from './components/SuspendEntityModal';
 
 const EntityProfileData = [
   {
@@ -72,6 +73,8 @@ export default function Entity() {
 
   console.log(data);
 
+  const [isSuspendEntityModal, setIsSuspendEntityModal] = useState(false);
+
   const navigate = useNavigate();
 
   return (
@@ -104,7 +107,10 @@ export default function Entity() {
             <p className="text-sm text-tertiary">ENT-01</p>
           </div>
         </div>
-        <Button className="flex items-end justify-end px-3 py-2.5 bg-tertiary-500 rounded-[10px] text-white text-sm font-medium">
+        <Button
+          onClick={() => setIsSuspendEntityModal(true)}
+          className="flex items-end justify-end px-3 py-2.5 bg-tertiary-500 rounded-[10px] text-white text-sm font-medium"
+        >
           Suspend entity
         </Button>
       </div>
@@ -226,6 +232,11 @@ export default function Entity() {
           </div>
         </div>
       </div>
+
+      <SuspendEntityModal
+        isSuspendEntityModal={isSuspendEntityModal}
+        setIsSuspendEntityModal={setIsSuspendEntityModal}
+      />
     </div>
   );
 }

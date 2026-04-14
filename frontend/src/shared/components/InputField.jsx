@@ -16,10 +16,12 @@ function InputField({
   labelClassName = '',
   inputClassName = '',
   options = [],
+  rows = 4,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
   const isSelectField = type === 'select';
+  const isTextAreaField = type === 'textarea';
   const inputType = isPasswordField && showPassword ? 'text' : type;
   const inputId = id || name;
   const baseInputClassName = [
@@ -28,6 +30,7 @@ function InputField({
     disabled ? 'cursor-not-allowed bg-secondary/60' : '',
     isPasswordField ? 'pr-20' : '',
     isSelectField ? 'appearance-none pr-10' : '',
+    isTextAreaField ? 'min-h-28 resize-y' : '',
     inputClassName,
   ]
     .join(' ')
@@ -86,6 +89,20 @@ function InputField({
               className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-secondary"
             />
           </>
+        ) : isTextAreaField ? (
+          <textarea
+            id={inputId}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            disabled={disabled}
+            autoComplete={autoComplete}
+            aria-required={required}
+            rows={rows}
+            className={baseInputClassName}
+          />
         ) : (
           <input
             id={inputId}
