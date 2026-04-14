@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
-import CompanyList from './components/CompanyList';
-import CreateCompanyModal from './components/CreateCompanyModal';
-import EditCompanyModal from './components/EditCompanyModal';
-import EmptyCompanyList from './components/EmptyCompanyList';
+import EntityList from './components/EntityList';
+import CreateEntityModal from './components/CreateEntityModal';
+import EditEntityModal from './components/EditEntityModal';
+import EmptyEntityList from './components/EmptyEntityList';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 
 export default function SuperAdminDashboard() {
-  const [isCreateCompanyModal, setIsCreateCompanyModal] = useState(false);
-  const [isEditCompanyModal, setIsEditCompanyModal] = useState(false);
+  const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
+  const [isEditEntityModal, setIsEditEntityModal] = useState(false);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -25,7 +25,7 @@ export default function SuperAdminDashboard() {
         </div>
         <Button
           type="button"
-          onClick={() => setIsCreateCompanyModal(true)}
+          onClick={() => setIsCreateEntityModal(true)}
           className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
         >
           <IoAddOutline className="text-white" size={14} />
@@ -37,41 +37,45 @@ export default function SuperAdminDashboard() {
 
       <section className="py-6 px-8">
         <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
-          <AdminCard icon={Icons.totalUsers} title="Total users" count="150" />
+          <AdminCard
+            icon={Icons.activeEntitiesIcon}
+            title="Active entities"
+            count="2000"
+          />
           <AdminCard
             icon={Icons.activeUsers}
             title="Active users"
             count="150"
           />
           <AdminCard
-            icon={Icons.inactiveUsers}
-            title="Inactive users"
+            icon={Icons.logsTodayIcon}
+            title="Logs today"
             count="150"
           />
           <AdminCard
-            icon={Icons.inactiveUsers}
-            title="Total roles"
+            icon={Icons.logsWeekIcon}
+            title="This week's log"
             count="150"
           />
         </div>
       </section>
 
       <section className="py-6 px-8 min-h-full relative">
-        {[1].length > 0 ? (
-          <CompanyList setIsEditCompanyModal={setIsEditCompanyModal} />
+        {[].length > 0 ? (
+          <EntityList setIsEditEntityModal={setIsEditEntityModal} />
         ) : (
-          <EmptyCompanyList setIsCreateCompanyModal={setIsCreateCompanyModal} />
+          <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
         )}
       </section>
 
-      <CreateCompanyModal
-        isCreateCompanyModal={isCreateCompanyModal}
-        setIsCreateCompanyModal={setIsCreateCompanyModal}
+      <CreateEntityModal
+        isCreateEntityModal={isCreateEntityModal}
+        setIsCreateEntityModal={setIsCreateEntityModal}
       />
 
-      <EditCompanyModal
-        isEditCompanyModal={isEditCompanyModal}
-        setIsEditCompanyModal={setIsEditCompanyModal}
+      <EditEntityModal
+        isEditEntityModal={isEditEntityModal}
+        setIsEditEntityModal={setIsEditEntityModal}
       />
     </div>
   );

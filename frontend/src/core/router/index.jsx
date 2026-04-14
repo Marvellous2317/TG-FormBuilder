@@ -16,6 +16,7 @@ import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
 import AuthProtect from './AuthProtect';
 import ForgotPassword from '../../pages/auth/ForgotPassword';
+import SuperAdminDashboard from '../../pages/superadmin/dashboard/SuperAdminDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -63,7 +64,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <AdminDashboard />,
+            element: <SuperAdminDashboard />,
           },
           {
             path: 'roles',
