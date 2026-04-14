@@ -78,8 +78,8 @@ export default function Entity() {
   const navigate = useNavigate();
 
   return (
-    <div className="py-8 flex flex-col items-center justify-center">
-      <div className="w-[60%] flex items-start justify-start mb-10">
+    <div className="flex flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-6 flex w-full max-w-6xl items-start justify-start sm:mb-10">
         <Button
           onClick={() => navigate(-1)}
           className="flex border border-secondary-200 rounded-full gap-1.5 items-center py-1.5 px-2 text-secondary text-sm font-medium"
@@ -89,9 +89,9 @@ export default function Entity() {
         </Button>
       </div>
 
-      <div className="w-[60%] flex items-end justify-between">
+      <div className="flex w-full max-w-6xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div className="flex items-center gap-3">
-          <Button className="relative rounded-full w-15 border border-secondary-200 overflow-hidden">
+          <Button className="relative w-15 overflow-hidden rounded-full border border-secondary-200">
             <img
               src={Images.logo}
               alt="entity logo"
@@ -103,23 +103,33 @@ export default function Entity() {
             />
           </Button>
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary font-medium text-2xl">Tolaram</h2>
+            <h2 className="text-xl font-medium text-primary sm:text-2xl">
+              Tolaram
+            </h2>
             <p className="text-sm text-tertiary">ENT-01</p>
           </div>
         </div>
         <Button
           onClick={() => setIsSuspendEntityModal(true)}
-          className="flex items-end justify-end px-3 py-2.5 bg-tertiary-500 rounded-[10px] text-white text-sm font-medium"
+          className="flex w-full items-center justify-center rounded-[10px] bg-tertiary-500 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end"
         >
           Suspend entity
         </Button>
       </div>
 
-      <Divider className="w-[60%] my-6!" />
+      <Divider className="my-6! w-full max-w-6xl" />
 
-      <div className="w-[60%] flex items-center gap-4 mb-6">
-        <AdminCard icon={Icons.activeUsers} title="Active users" count="150" />
-        <AdminCard icon={Icons.logsTodayIcon} title="Logs today" count="150" />
+      <div className="mb-6 grid w-full max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <AdminCard
+          icon={Icons.activeUsers}
+          title="Active users"
+          count="150"
+        />
+        <AdminCard
+          icon={Icons.logsTodayIcon}
+          title="Logs today"
+          count="150"
+        />
         <AdminCard
           icon={Icons.logsWeekIcon}
           title="This week's log"
@@ -127,23 +137,23 @@ export default function Entity() {
         />
       </div>
 
-      <div className="flex items-center gap-4 w-[60%] mt-6 mb-5">
-        <div className="w-1/2 flex flex-col items-start px-1 pb-1 bg-secondary-700 rounded-3xl">
+      <div className="mb-5 mt-6 grid w-full max-w-6xl grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="flex w-full flex-col items-start rounded-3xl bg-secondary-700 px-1 pb-1">
           <h2 className="my-3.5 mx-5 font-medium text-primary text-sm">
             Entity profile
           </h2>
-          <div className="bg-white w-full rounded-3xl p-4 ">
+          <div className="w-full rounded-3xl bg-white p-4">
             {EntityProfileData.map((item, index, array) => {
               const isLastItem = index === array.length - 1;
               const isFirstItem = index === 0;
               return (
                 <React.Fragment key={index}>
-                  <div className="flex items-center justify-between w-full">
-                    <h2 className="text-sm w-[30%] text-tertiary">
+                  <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <h2 className="w-full text-sm text-tertiary sm:w-[30%]">
                       {item.key}
                     </h2>
-                    <div className="flex w-[70%] py-2 items-center justify-end text-end gap-3">
-                      <h2 className="text-sm font-medium text-primary">
+                    <div className="flex w-full items-center justify-between gap-3 py-2 text-left sm:w-[70%] sm:justify-end sm:text-end">
+                      <h2 className="break-words text-sm font-medium text-primary">
                         {item.value}
                       </h2>
                       {isFirstItem && (
@@ -160,22 +170,22 @@ export default function Entity() {
             })}
           </div>
         </div>
-        <div className="w-1/2 flex flex-col items-start px-1 pb-1 bg-secondary-700 rounded-3xl">
+        <div className="flex w-full flex-col items-start rounded-3xl bg-secondary-700 px-1 pb-1">
           <h2 className="my-3.5 mx-5 font-medium text-primary text-sm">
             Entity profile
           </h2>
-          <div className="bg-white w-full rounded-3xl p-4 ">
+          <div className="w-full rounded-3xl bg-white p-4">
             {AdminAccountData.map((item, index, array) => {
               const isLastItem = index === array.length - 1;
               const isFirstItem = index === 0;
               return (
                 <React.Fragment key={index}>
-                  <div className="flex items-center justify-between w-full">
-                    <h2 className="text-sm w-[30%] text-tertiary">
+                  <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <h2 className="w-full text-sm text-tertiary sm:w-[30%]">
                       {item.key}
                     </h2>
-                    <div className="flex w-[70%] py-2 items-center justify-end text-end gap-3">
-                      <h2 className="text-sm font-medium text-primary">
+                    <div className="flex w-full items-center justify-between gap-3 py-2 text-left sm:w-[70%] sm:justify-end sm:text-end">
+                      <h2 className="break-words text-sm font-medium text-primary">
                         {item.value}
                       </h2>
                       {isFirstItem && (
@@ -194,17 +204,17 @@ export default function Entity() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 w-[60%] mt-5">
-        <div className="w-full flex flex-col items-start px-1 pb-1 bg-secondary-700 rounded-3xl">
+      <div className="mt-5 flex w-full max-w-6xl items-center gap-4">
+        <div className="flex w-full flex-col items-start rounded-3xl bg-secondary-700 px-1 pb-1">
           <h2 className="my-3.5 mx-5 font-medium text-primary text-sm">
             Audit trail
           </h2>
-          <div className="bg-white w-full rounded-3xl p-4 ">
+          <div className="w-full rounded-3xl bg-white p-4">
             {AuditData.map((item, index, array) => {
               const isLastItem = index === array.length - 1;
               return (
                 <React.Fragment key={index}>
-                  <div className="flex items-start w-full gap-1.5">
+                  <div className="flex w-full items-start gap-1.5">
                     <div className="text-sm p-1.5 text-tertiary">
                       {item.logType === 'suspended' ? (
                         <GoDotFill className="text-tertiary-500 w-3 mt-1" />
@@ -216,10 +226,10 @@ export default function Entity() {
                       <h2 className="text-sm font-medium text-primary mb-2">
                         {item.title}
                       </h2>
-                      <p className=" text-tertiary text-sm">
+                      <p className="text-sm text-tertiary">
                         Reason: {item.reason}
                       </p>
-                      <p className="flex items-center text-tertiary text-sm mt-1">
+                      <p className="mt-1 flex flex-wrap items-center text-sm text-tertiary">
                         {item.date} <GoDotFill className="w-2 mx-2" />
                         {item.time}
                       </p>

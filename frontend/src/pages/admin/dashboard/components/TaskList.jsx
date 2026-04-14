@@ -3,13 +3,18 @@ import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaChevronDown } from 'react-icons/fa';
 import Pagination from '../../../../shared/components/Pagination';
+import DropdownSelect from '../../../../shared/components/DropdownSelect';
 
 const statusOptions = [
+  { title: 'All status', value: 'all' },
   { title: 'Completed', value: 'completed' },
   { title: 'Pending', value: 'pending' },
 ];
 
-const departmentOptions = [{ title: 'Packaging', value: 'packaging' }];
+const departmentOptions = [
+  { title: 'All departments', value: 'all' },
+  { title: 'Packaging', value: 'packaging' },
+];
 
 const dropOtions = [
   { title: 'Unassign', value: 'unassign' },
@@ -194,117 +199,22 @@ export default function TaskList() {
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            {/* Department dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentDepartment === 'all'
-                        ? 'All departments'
-                        : departmentOptions.find(
-                            (s) => s.value === currentDepartment,
-                          )?.title || 'All departments'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-32 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentDepartment === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentDepartment('all')}
-                        >
-                          All departments
-                        </button>
-                      )}
-                    </MenuItem>
-                    {departmentOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentDepartment === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() => setCurrentDepartment(status.value)}
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
-            {/* Status dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentStatus === 'all'
-                        ? 'All status'
-                        : statusOptions.find((s) => s.value === currentStatus)
-                            ?.title || 'All status'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentStatus === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentStatus('all')}
-                        >
-                          All status
-                        </button>
-                      )}
-                    </MenuItem>
-                    {statusOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentStatus === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() => setCurrentStatus(status.value)}
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
+            <DropdownSelect
+              value={currentDepartment}
+              options={departmentOptions}
+              onChange={(value) => setCurrentDepartment(value)}
+              placeholder="All departments"
+              buttonClassName="px-3! py-2! rounded-lg!"
+              menuClassName=""
+            />
+            <DropdownSelect
+              value={currentStatus}
+              options={statusOptions}
+              onChange={(value) => setCurrentStatus(value)}
+              placeholder="All status"
+              buttonClassName="px-3! py-2! rounded-lg!"
+              menuClassName=""
+            />
           </div>
         </div>
         {/* Table Container - Horizontal scroll on mobile */}
