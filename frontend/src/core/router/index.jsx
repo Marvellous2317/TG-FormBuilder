@@ -18,6 +18,7 @@ import AuthProtect from './AuthProtect';
 import ForgotPassword from '../../pages/auth/ForgotPassword';
 import SuperAdminDashboard from '../../pages/superadmin/dashboard/SuperAdminDashboard';
 import EntitiesManagement from '../../pages/superadmin/entities/EntitiesManagement';
+import Entity from '../../pages/superadmin/entities/Entity';
 
 export const router = createBrowserRouter([
   {
@@ -70,6 +71,11 @@ export const router = createBrowserRouter([
           {
             path: 'entities',
             element: <EntitiesManagement />,
+          },
+          {
+            path: 'entities/:id',
+            loader: ({ params }) => params,
+            element: <Entity />,
           },
           {
             path: 'roles',

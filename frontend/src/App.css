@@ -4,6 +4,7 @@
   /* Primary colors */
   --color-primary-100: #4d4845;
   --color-primary-200: #2463eb;
+  --color-primary-300: #f4f4f2;
 
   --color-primary: var(--color-primary-100);
 

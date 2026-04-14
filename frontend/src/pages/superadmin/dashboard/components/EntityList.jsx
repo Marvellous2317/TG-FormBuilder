@@ -5,7 +5,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaArrowRight, FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const statusOptions = [
   { title: 'Active', value: 'active' },
@@ -17,20 +17,42 @@ const tableData = [
   {
     id: 1,
     name: 'Ajayi Tami',
-    address: 'an address',
     status: true,
     email: 'Lennox.charles@tolaram.com',
     createdAt: '2026-03-13',
-    description: 'This is description',
+    entityName: 'Tolaram',
+    entityId: 'ENT-01',
+    count: 100,
   },
   {
     id: 2,
-    name: 'Lennox',
-    address: 'an address',
+    name: 'Ajayi Tami',
     status: true,
     email: 'Lennox.charles@tolaram.com',
     createdAt: '2026-03-13',
-    description: 'This is description',
+    entityName: 'Tolaram',
+    entityId: 'ENT-01',
+    count: 100,
+  },
+  {
+    id: 3,
+    name: 'Ajayi Tami',
+    status: true,
+    email: 'Lennox.charles@tolaram.com',
+    createdAt: '2026-03-13',
+    entityName: 'Tolaram',
+    entityId: 'ENT-01',
+    count: 100,
+  },
+  {
+    id: 4,
+    name: 'Ajayi Tami',
+    status: true,
+    email: 'Lennox.charles@tolaram.com',
+    createdAt: '2026-03-13',
+    entityName: 'Tolaram',
+    entityId: 'ENT-01',
+    count: 100,
   },
 ];
 
@@ -131,6 +153,12 @@ export default function EntityList({
 
     setMenuPosition({ top, left });
     setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
+  };
+
+  const navigate = useNavigate();
+
+  const handleRowClick = (rowId) => {
+    navigate(`/superadmin/entities/${rowId}`);
   };
 
   return (
@@ -241,23 +269,17 @@ export default function EntityList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
-                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Entity
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Name
-                </th>
-                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Address
-                </th>
-                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Email
+                  Admin
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
+                </th>
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Users
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Created at
@@ -271,25 +293,22 @@ export default function EntityList({
                 filteredData.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleRowClick(row.id)}
                   >
-                    <td className="p-3 md:p-4 border-r border-gray-200">
-                      <input
-                        type="checkbox"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
-                      {row.name}
+                      <p className="text-secondary text-sm">{row.entityName}</p>
+                      <p className="text-tertiary text-xs">{row.entityId}</p>
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
-                      {row.address}
-                    </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.email}
+                      <p className="text-secondary text-sm">{row.name}</p>
+                      <p className="text-tertiary text-xs">{row.email}</p>
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.status ? 'Active' : 'Inactive'}
+                    </td>
+                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                      {row.count}
                     </td>
                     <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.createdAt}
@@ -297,7 +316,10 @@ export default function EntityList({
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleRowMenu(row.id, event);
+                        }}
                         className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
