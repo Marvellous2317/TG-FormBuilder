@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
 import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
-import RoleList from './components/RoleList';
-import EmptyRoleList from './components/EmptyRoleList';
-import CreateRoleModal from './components/CreateRoleModal';
-import EditRoleModal from './components/EditRoleModal';
-import { useRoles } from '../../../shared/hooks/superadmin/useRoles';
-import Loader from '../../../shared/components/Loader';
+import EntityList from '../dashboard/components/EntityList';
+import CreateEntityModal from '../dashboard/components/CreateEntityModal';
+import EditEntityModal from '../dashboard/components/EditEntityModal';
+import EmptyEntityList from '../dashboard/components/EmptyEntityList';
+import Icons from '../../../assets/icons';
+import AdminCard from '../../admin/dashboard/components/AdminCard';
 
 export default function EntitiesManagement() {
-  const [isCreateRoleModal, setIsCreateRoleModal] = useState(false);
-  const [isEditRoleModal, setIsEditRoleModal] = useState(false);
-  const [roleToEdit, setRoleToEdit] = useState(null);
-
-  const { data, isLoading } = useRoles();
-
-  const roles = data?.data?.roles;
+  const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
+  const [isEditEntityModal, setIsEditEntityModal] = useState(false);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -30,7 +25,7 @@ export default function EntitiesManagement() {
         </div>
         <Button
           type="button"
-          onClick={() => setIsCreateRoleModal(true)}
+          onClick={() => setIsCreateEntityModal(true)}
           className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
         >
           <IoAddOutline className="text-white" size={14} />
@@ -40,34 +35,22 @@ export default function EntitiesManagement() {
         </Button>
       </header>
 
-      {isLoading ? (
-        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
-      ) : (
-        <section className="py-6 px-8 min-h-full relative">
-          {roles?.length > 0 ? (
-            <RoleList
-              setIsEditRoleModal={setIsEditRoleModal}
-              roles={roles}
-              pagination={data.data.pagination}
-              setRoleToEdit={setRoleToEdit}
-            />
-          ) : (
-            <EmptyRoleList setIsCreateRoleModal={setIsCreateRoleModal} />
-          )}
-        </section>
-      )}
+      <section className="py-6 px-8 min-h-full relative">
+        {[1].length > 0 ? (
+          <EntityList setIsEditEntityModal={setIsEditEntityModal} />
+        ) : (
+          <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
+        )}
+      </section>
 
-      <CreateRoleModal
-        isCreateRoleModal={isCreateRoleModal}
-        setIsCreateRoleModal={setIsCreateRoleModal}
+      <CreateEntityModal
+        isCreateEntityModal={isCreateEntityModal}
+        setIsCreateEntityModal={setIsCreateEntityModal}
       />
 
-      <EditRoleModal
-        key={roleToEdit?.roleName}
-        isEditRoleModal={isEditRoleModal}
-        setIsEditRoleModal={setIsEditRoleModal}
-        roleToEdit={roleToEdit}
-        setRoleToEdit={setRoleToEdit}
+      <EditEntityModal
+        isEditEntityModal={isEditEntityModal}
+        setIsEditEntityModal={setIsEditEntityModal}
       />
     </div>
   );

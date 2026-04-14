@@ -13,9 +13,15 @@ const navDetails = [
     to: '/superadmin/',
   },
   {
+    icon: Icons.entitiesActive,
+    icon2: Icons.entitiesInactive,
+    title: 'Entities',
+    to: '/superadmin/entities',
+  },
+  {
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
-    title: 'Entities',
+    title: 'Roles',
     to: '/superadmin/roles',
   },
   {

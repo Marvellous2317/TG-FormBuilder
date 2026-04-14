@@ -4,6 +4,8 @@ import arrowRightAactive from './icons/arrow-right-active.png';
 import createdIcon from './icons/created-icon.png';
 import dashboardActive from './icons/dashboard-active.png';
 import dashboardInactive from './icons/dashboard-inactive.png';
+import entitiesActive from './icons/entities-active.png';
+import entitiesInactive from './icons/entities-inactive.png';
 import documentIcon from './icons/document.png';
 import doubleArrowLeftInactive from './icons/double-arrow-left-inactive.png';
 import doubleArrowLeftActive from './icons/double-arrow-left-active.png';
@@ -54,6 +56,8 @@ const Icons = {
   inactiveUsers,
   activeEntitiesIcon,
   deactivateUser,
+  entitiesActive,
+  entitiesInactive,
 };
 
 export default Icons;

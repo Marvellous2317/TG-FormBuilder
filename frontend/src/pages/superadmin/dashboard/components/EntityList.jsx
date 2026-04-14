@@ -2,9 +2,10 @@ import React, { useState, Fragment, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaArrowRight, FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
+import { Link } from 'react-router-dom';
 
 const statusOptions = [
   { title: 'Active', value: 'active' },
@@ -33,7 +34,10 @@ const tableData = [
   },
 ];
 
-export default function DepartmentList({ setIsEditDepartmentModal }) {
+export default function EntityList({
+  setIsEditEntityModal,
+  isFromDashboard = false,
+}) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,7 +104,7 @@ export default function DepartmentList({ setIsEditDepartmentModal }) {
       value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
-        setIsEditDepartmentModal(true);
+        setIsEditEntityModal(true);
       },
     },
     {
@@ -133,77 +137,102 @@ export default function DepartmentList({ setIsEditDepartmentModal }) {
     <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full min-h-full">
       <section className="flex-col flex w-full min-h-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
-            <FiSearch className="text-gray-400 shrink-0" size={18} />
-            <input
-              type="text"
-              placeholder="Enter search here"
-              value={search}
-              onChange={handleChange}
-              className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
-            />
-          </div>
+          {isFromDashboard ? (
+            <h2 className="text-primary font-medium text-base">
+              Entity Tenants
+            </h2>
+          ) : (
+            <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
+              <FiSearch className="text-gray-400 shrink-0" size={18} />
+              <input
+                type="text"
+                placeholder="Enter search here"
+                value={search}
+                onChange={handleChange}
+                className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
+              />
+            </div>
+          )}
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            {/* Status dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentStatus === 'all'
-                        ? 'All status'
-                        : statusOptions.find((s) => s.value === currentStatus)
-                            ?.title || 'All status'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentStatus === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentStatus('all')}
-                        >
-                          All status
-                        </button>
-                      )}
-                    </MenuItem>
-                    {statusOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentStatus === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() =>
-                              setCurrentStatus(
-                                status.value ? 'active' : 'inactive',
-                              )
-                            }
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
+            {isFromDashboard ? (
+              <Link
+                prefetch="intent"
+                className="flex items-center gap-2 group transition-all duration-150 ease-in-out cursor-pointer"
+                href="/superadmin/entities"
+              >
+                <p className="text-primary-200 text-sm font-medium">
+                  View table
+                </p>
+                <FaArrowRight
+                  className="text-primary-200 group-hover:translate-x-0.5"
+                  size={16}
+                />
+              </Link>
+            ) : (
+              <div className="">
+                {/* Status dropdown */}
+                <Menu>
+                  {({ open }) => (
+                    <>
+                      <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
+                        <span className="text-secondary font-geist text-sm">
+                          {currentStatus === 'all'
+                            ? 'All status'
+                            : statusOptions.find(
+                                (s) => s.value === currentStatus,
+                              )?.title || 'All status'}
+                        </span>
+                        <FaChevronDown
+                          className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                          size={10}
+                        />
+                      </MenuButton>
+                      <MenuItems className="flex flex-col z-20 absolute top-full right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
+                        <MenuItem as={Fragment}>
+                          {({ active }) => (
+                            <button
+                              className={`${
+                                active ? 'bg-gray-100' : ''
+                              } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                                currentStatus === 'all'
+                                  ? 'bg-primary-50 text-primary-700'
+                                  : ''
+                              }`}
+                              onClick={() => setCurrentStatus('all')}
+                            >
+                              All status
+                            </button>
+                          )}
+                        </MenuItem>
+                        {statusOptions.map((status, index) => (
+                          <MenuItem key={index} as={Fragment}>
+                            {({ active }) => (
+                              <button
+                                className={`${
+                                  active ? 'bg-gray-100' : ''
+                                } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                                  currentStatus === status.value
+                                    ? 'bg-primary-50 text-primary-700'
+                                    : ''
+                                }`}
+                                onClick={() =>
+                                  setCurrentStatus(
+                                    status.value ? 'active' : 'inactive',
+                                  )
+                                }
+                              >
+                                {status.title}
+                              </button>
+                            )}
+                          </MenuItem>
+                        ))}
+                      </MenuItems>
+                    </>
+                  )}
+                </Menu>
+              </div>
+            )}
           </div>
         </div>
 

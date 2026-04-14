@@ -61,8 +61,11 @@ export default function SuperAdminDashboard() {
       </section>
 
       <section className="py-6 px-8 min-h-full relative">
-        {[].length > 0 ? (
-          <EntityList setIsEditEntityModal={setIsEditEntityModal} />
+        {[1].length > 0 ? (
+          <EntityList
+            setIsEditEntityModal={setIsEditEntityModal}
+            isFromDashboard={true}
+          />
         ) : (
           <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
         )}
