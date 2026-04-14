@@ -5,7 +5,9 @@ import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../../pages/admin/AdminLayout';
 import AdminDashboard from '../../pages/admin/dashboard/AdminDashboard';
+import CreateLogbook from '../../pages/admin/dashboard/CreateLogbook';
 import ChangePassword from '../../pages/auth/ChangePassword';
+import NotFound from '../../pages/auth/NotFound';
 import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
 import RoleManagement from '../../pages/superadmin/roles/RoleManagement';
 import CompanyManagement from '../../pages/superadmin/company/CompanyManagement';
@@ -38,6 +40,10 @@ export const router = createBrowserRouter([
           {
             path: '/unauthorized',
             element: <Unauthorized />,
+          },
+          {
+            path: '/notfound',
+            element: <NotFound />,
           },
           {
             path: '/change-password',
@@ -111,6 +117,10 @@ export const router = createBrowserRouter([
             element: <AdminDashboard />,
           },
           {
+            path: 'logbook',
+            element: <CreateLogbook />,
+          },
+          {
             path: 'users',
             element: <AdminUserManagement />,
           },
@@ -153,5 +163,10 @@ export const router = createBrowserRouter([
         element: <div>Approver Queue</div>,
       },
     ],
+  },
+
+  {
+    path: '*',
+    element: <Navigate to="/unauthorized" replace />,
   },
 ]);
