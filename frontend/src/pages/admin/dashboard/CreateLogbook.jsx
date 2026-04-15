@@ -10,14 +10,17 @@ import DropdownOptionsModal from './components/DropdownOptionsModal';
 import EnumOptionsModal from './components/EnumOptionsModal';
 import SectionOptionsModal from './components/SectionOptionsModal';
 import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
+import FormularModal from './components/FormularModal';
 
 export default function CreateLogbook() {
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
+  const [isFormularModal, setIsFormularModal] = useState(false);
   const [chosenSectionValue, setChosenSectionValue] = useState(null);
   const [chosenDropdownValue, setChosenDropdownValue] = useState(null);
   const [chosenEnumValue, setChosenEnumValue] = useState(null);
+  const [chosenFormularValue, setChosenFormularValue] = useState(null);
   const [fields, setFields] = useState(() =>
     Array.from({ length: 6 }, () => createField()),
   );
@@ -39,6 +42,9 @@ export default function CreateLogbook() {
       case 'section':
         setIsSectionOptionsModal(true);
         break;
+      case 'formular':
+        setIsFormularModal(true);
+        break;
       default:
         break;
     }
@@ -53,8 +59,6 @@ export default function CreateLogbook() {
       currentFields.filter((field) => field.id !== id),
     );
   };
-
-  console.log(chosenSectionValue);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-white">
@@ -214,7 +218,13 @@ export default function CreateLogbook() {
         setIsEnumOptionsModal={setIsEnumOptionsModal}
         setChosenEnumValue={setChosenEnumValue}
         chosenEnumValue={chosenEnumValue}
-        key={chosenEnumValue?.id}
+      />
+
+      <FormularModal
+        isFormularModal={isFormularModal}
+        setIsFormularModal={setIsFormularModal}
+        setChosenFormularValue={setChosenFormularValue}
+        chosenFormularValue={chosenFormularValue}
       />
     </div>
   );

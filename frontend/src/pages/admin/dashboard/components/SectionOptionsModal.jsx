@@ -12,6 +12,7 @@ import { LuGripVertical } from 'react-icons/lu';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import DropdownOptionsModal from './DropdownOptionsModal';
 import EnumOptionsModal from './EnumOptionsModal';
+import FormularModal from './FormularModal';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -24,6 +25,8 @@ export default function SectionOptionsModal({
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [chosenDropdownValue, setChosenDropdownValue] = useState(null);
   const [chosenEnumValue, setChosenEnumValue] = useState(null);
+  const [isFormularModal, setIsFormularModal] = useState(false);
+  const [chosenFormularValue, setChosenFormularValue] = useState(null);
   const [fields, setFields] = useState(
     () =>
       chosenSectionValue?.items ??
@@ -49,6 +52,9 @@ export default function SectionOptionsModal({
         break;
       case 'enum':
         setIsEnumOptionsModal(true);
+        break;
+      case 'formular':
+        setIsFormularModal(true);
         break;
       default:
         break;
@@ -218,7 +224,13 @@ export default function SectionOptionsModal({
         setIsEnumOptionsModal={setIsEnumOptionsModal}
         setChosenEnumValue={setChosenEnumValue}
         chosenEnumValue={chosenEnumValue}
-        key={chosenEnumValue?.id}
+      />
+
+      <FormularModal
+        isFormularModal={isFormularModal}
+        setIsFormularModal={setIsFormularModal}
+        setChosenFormularValue={setChosenFormularValue}
+        chosenFormularValue={chosenFormularValue}
       />
     </Modal>
   );

@@ -15,7 +15,7 @@ const fieldTypeOptions = [
   { label: 'Date', value: 'date' },
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
-  { label: 'Formula', value: 'formula' },
+  { label: 'Formular', value: 'formular' },
 ];
 
 const sectionFieldTypeOptions = [
@@ -25,7 +25,7 @@ const sectionFieldTypeOptions = [
   { label: 'Date', value: 'date' },
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
-  { label: 'Formula', value: 'formula' },
+  { label: 'Formular', value: 'formular' },
 ];
 
 export {
