@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
-import { FaPlus } from 'react-icons/fa';
-import { FiUpload } from 'react-icons/fi';
-import Divider from '../../../../shared/components/Divider';
 import { RiLinkM } from 'react-icons/ri';
 import { IoAddOutline, IoClose } from 'react-icons/io5';
 
@@ -44,13 +41,15 @@ const sourcelist = [
 export default function DropdownOptionsModal({
   isDropdownOptionsModal,
   setIsDropdownOptionsModal,
+  setChosenDropdownValue,
+  chosenDropdownValue,
 }) {
   const [sourceName, setSourceName] = useState('');
   const [item, setItem] = useState('');
   const [items, setItems] = useState([]);
   const [createList, setCreateList] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [itemToEdit, setItemToEdit] = useState(null);
+  const [selectedId, setSelectedId] = useState(chosenDropdownValue?.id ?? null);
+  // const [itemToEdit, setItemToEdit] = useState(null);
 
   const handleAddItem = () => {
     if (item.length < 3) {
@@ -77,15 +76,14 @@ export default function DropdownOptionsModal({
   };
 
   const handleEditList = (list = null) => {
-    console.log('got here');
     if (list) {
       setSourceName(list.title);
       setItems(list.items);
-      setItemToEdit(list);
+      // setItemToEdit(list);
     } else {
       setSourceName('');
       setItems([]);
-      setItemToEdit(null);
+      // setItemToEdit(null);
     }
     setCreateList(true);
     setSelectedId(list?.id || null);
@@ -93,11 +91,17 @@ export default function DropdownOptionsModal({
 
   const handleCancelEditList = () => {
     setCreateList(false);
-    setSelectedId(null);
-    setItemToEdit(null);
+    // setSelectedId(null);
+    // setItemToEdit(null);
     setSourceName('');
     setItems([]);
     setItem('');
+  };
+
+  const handleDone = () => {
+    setChosenDropdownValue(sourcelist.find(({ id }) => id === selectedId));
+    setIsDropdownOptionsModal(false);
+    // setSelectedId(null);
   };
 
   return (
@@ -279,6 +283,7 @@ export default function DropdownOptionsModal({
             <Button
               type="button"
               className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+              onClick={() => handleDone()}
             >
               Continue
             </Button>

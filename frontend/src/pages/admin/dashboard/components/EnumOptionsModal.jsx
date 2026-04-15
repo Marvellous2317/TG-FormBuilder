@@ -16,8 +16,10 @@ const enumOptions = [
 export default function EnumOptionsModal({
   isEnumOptionsModal,
   setIsEnumOptionsModal,
+  setChosenEnumValue,
+  chosenEnumValue,
 }) {
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(chosenEnumValue?.id ?? null);
 
   const handleSelectId = (id) => {
     if (selectedId === id) {
@@ -25,6 +27,12 @@ export default function EnumOptionsModal({
       return;
     }
     setSelectedId(id);
+  };
+
+  const handleDone = () => {
+    setChosenEnumValue(enumOptions.find(({ id }) => id === selectedId));
+    setIsEnumOptionsModal(false);
+    // setSelectedId(null);
   };
 
   return (
@@ -50,7 +58,7 @@ export default function EnumOptionsModal({
             const isActive = id === selectedId;
             return (
               <div
-                className={`flex w-full items-center justify-between border  rounded-[10px] py-3.5 px-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
+                className={`flex w-full items-center justify-between border  rounded-[10px] p-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
                 key={id}
                 onClick={() => handleSelectId(id)}
               >
@@ -66,7 +74,10 @@ export default function EnumOptionsModal({
         <div className="flex items-center mt-6 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsEnumOptionsModal(false)}
+            onClick={() => {
+              setSelectedId(null);
+              setIsEnumOptionsModal(false);
+            }}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
@@ -74,6 +85,7 @@ export default function EnumOptionsModal({
           <Button
             type="button"
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleDone()}
           >
             Continue
           </Button>
