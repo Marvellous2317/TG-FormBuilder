@@ -5,8 +5,13 @@ import ResponseManager from "../../utils/responseManager.js";
 export class AdminController {
 
   static async getAllRolesApi(req, res, next) {
+
+    const user = req.user;
+    if (!user) {
+      return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
+    }
     try {
-      const result = await AdminRepository.getAllRoles();
+      const result = await AdminRepository.getAllRoles(user);
       return ResponseManager.success(res, result, 200, "Roles fetched successfully");
     } catch (e) {
       next(e);
@@ -85,7 +90,7 @@ export class AdminController {
 
   static async addUserAPi(req, res, next) {
     try {
-      const result = await AdminRepository.addUser(req.body);
+      const result = await AdminRepository.addUser(req.body, req.user);
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) {
       next(e);

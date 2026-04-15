@@ -85,7 +85,9 @@ export function superAdminRequired(req, res, next) {
   const userRole = user.role;
   if (!userRole || !userRole.roleName) {
     return ResponseManager.error(res, "AuthorizationError", "Invalid role format", 400);
+
   }
+  console.log("User Role:", userRole.roleName); 
 
   if (userRole.roleName !== "superAdmin") {
     return ResponseManager.error(res, "AuthorizationError", "Super Admin access required", 403);
