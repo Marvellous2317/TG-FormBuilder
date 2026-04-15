@@ -76,23 +76,29 @@ export default function DropdownOptionsModal({
     setSelectedId(id);
   };
 
+  const handleEditList = (list = null) => {
+    console.log('got here');
+    if (list) {
+      setSourceName(list.title);
+      setItems(list.items);
+      setItemToEdit(list);
+    } else {
+      setSourceName('');
+      setItems([]);
+      setItemToEdit(null);
+    }
+    setCreateList(true);
+    setSelectedId(list?.id || null);
+  };
+
   const handleCancelEditList = () => {
     setCreateList(false);
     setSelectedId(null);
     setItemToEdit(null);
+    setSourceName('');
+    setItems([]);
+    setItem('');
   };
-
-  const handleItemToEditChange = () => {
-    if (!itemToEdit) {
-      return;
-    }
-    setSourceName(itemToEdit.title);
-    setItems(itemToEdit.items);
-  };
-
-  useEffect(() => {
-    handleItemToEditChange();
-  }, [itemToEdit]);
 
   return (
     <Modal
@@ -155,10 +161,9 @@ export default function DropdownOptionsModal({
                     <div className="flex gap-2 text-xs">
                       <Button
                         className="text-primary-200"
-                        onClick={() => {
-                          setItemToEdit({ id, title, count, items });
-                          setCreateList(true);
-                        }}
+                        onClick={() =>
+                          handleEditList({ id, title, count, items })
+                        }
                       >
                         Edit
                       </Button>
@@ -170,7 +175,7 @@ export default function DropdownOptionsModal({
 
               <Button
                 className="bg-white gap-1 p-1"
-                onClick={() => setCreateList(true)}
+                onClick={() => handleEditList()}
               >
                 <IoAddOutline className="text-primary-200" size={14} />
                 <p className="text-primary-200 font-geist font-medium text-sm">

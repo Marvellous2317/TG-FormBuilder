@@ -7,6 +7,7 @@ import { RiDeleteBinLine } from 'react-icons/ri';
 import Button from '../../../shared/components/Button';
 import DropdownSelect from '../../../shared/components/DropdownSelect';
 import DropdownOptionsModal from './components/DropdownOptionsModal';
+import EnumOptionsModal from './components/EnumOptionsModal';
 
 const fieldTypeOptions = [
   { label: 'Text', value: 'text' },
@@ -30,6 +31,7 @@ const createField = () => ({
 
 export default function CreateLogbook() {
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
+  const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [fields, setFields] = useState(() =>
     Array.from({ length: 6 }, () => createField()),
   );
@@ -44,6 +46,9 @@ export default function CreateLogbook() {
     switch (value) {
       case 'dropdown':
         setIsDropdownOptionsModal(true);
+        break;
+      case 'enum':
+        setIsEnumOptionsModal(true);
         break;
       default:
         break;
@@ -176,6 +181,11 @@ export default function CreateLogbook() {
       <DropdownOptionsModal
         isDropdownOptionsModal={isDropdownOptionsModal}
         setIsDropdownOptionsModal={setIsDropdownOptionsModal}
+      />
+
+      <EnumOptionsModal
+        isEnumOptionsModal={isEnumOptionsModal}
+        setIsEnumOptionsModal={setIsEnumOptionsModal}
       />
     </div>
   );
