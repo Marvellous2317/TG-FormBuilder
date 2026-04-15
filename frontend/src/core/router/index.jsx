@@ -13,6 +13,8 @@ import RoleManagement from '../../pages/superadmin/roles/RoleManagement';
 import CompanyManagement from '../../pages/superadmin/company/CompanyManagement';
 import UserManagement from '../../pages/superadmin/users/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
+import PendingTasks from '../../pages/operator/PendingTasks';
+import ApprovedTasks from '../../pages/operator/ApprovedTasks';
 import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
@@ -143,11 +145,11 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
-            element: <AdminDashboard />,
+            element: <PendingTasks />,
           },
           {
-            path: 'workspace',
-            element: <AdminDashboard />,
+            path: 'approved',
+            element: <ApprovedTasks />,
           },
         ],
       },
