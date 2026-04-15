@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createRole,
   fetchRole,
   fetchRoles,
   updateRole,
@@ -40,6 +41,25 @@ export function useUpdateRole(options = {}) {
           queryKey: ['superadmin', 'roles', roleId],
         });
       }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useCreateRoles(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => createRole(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'roles'],
+      });
 
       if (onSuccess) {
         await onSuccess(response, variables, context);

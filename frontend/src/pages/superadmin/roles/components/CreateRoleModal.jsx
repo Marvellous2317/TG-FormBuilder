@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import {
+  useCreateRoles,
+  useRoles,
+} from '../../../../shared/hooks/superadmin/useRoles';
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function CreateRoleModal({
   isCreateRoleModal,
@@ -9,6 +14,24 @@ export default function CreateRoleModal({
 }) {
   const [roleName, setRoleName] = useState('');
   const [roleDescription, setRoleDescription] = useState('');
+
+  const { mutateAsync, isLoading } = useCreateRoles();
+
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    try {
+      await mutateAsync({
+        payload: { roleName, description: roleDescription },
+      });
+    } catch (err) {
+      console.error('Error', err);
+      showError(
+        'Failed to create role',
+        'Unable to create role. Please try again.',
+      );
+    }
+  };
 
   return (
     <Modal
