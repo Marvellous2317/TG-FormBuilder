@@ -6,12 +6,17 @@ import { LuGripVertical } from 'react-icons/lu';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import Button from '../../../shared/components/Button';
 import DropdownSelect from '../../../shared/components/DropdownSelect';
+import DropdownOptionsModal from './components/DropdownOptionsModal';
 
 const fieldTypeOptions = [
   { label: 'Text', value: 'text' },
+  { label: 'Section', value: 'section' },
   { label: 'Number', value: 'number' },
+  { label: 'Dropdown', value: 'dropdown' },
   { label: 'Date', value: 'date' },
-  { label: 'Select', value: 'select' },
+  { label: 'Time', value: 'time' },
+  { label: 'Enum', value: 'enum' },
+  { label: 'Formula', value: 'formula' },
 ];
 
 const createFieldId = () =>
@@ -24,6 +29,7 @@ const createField = () => ({
 });
 
 export default function CreateLogbook() {
+  const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [fields, setFields] = useState(() =>
     Array.from({ length: 6 }, () => createField()),
   );
@@ -34,6 +40,14 @@ export default function CreateLogbook() {
         field.id === id ? { ...field, [key]: value } : field,
       ),
     );
+
+    switch (value) {
+      case 'dropdown':
+        setIsDropdownOptionsModal(true);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleAddField = () => {
@@ -158,6 +172,11 @@ export default function CreateLogbook() {
           Assign logbook
         </Button>
       </footer>
+
+      <DropdownOptionsModal
+        isDropdownOptionsModal={isDropdownOptionsModal}
+        setIsDropdownOptionsModal={setIsDropdownOptionsModal}
+      />
     </div>
   );
 }
