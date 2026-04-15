@@ -64,7 +64,7 @@ export default function useAuth() {
       const successMessage =
         response?.data?.message || response?.message || 'Login successful';
 
-      showSuccess('Login successful', successMessage);
+      showSuccess(successMessage);
 
       if (response?.data?.requiresPasswordChange) {
         navigate('/change-password', { replace: true });
@@ -74,10 +74,7 @@ export default function useAuth() {
       navigate(getRoleHomePath(user), { replace: true });
     },
     onError: (error) => {
-      showError(
-        'Login failed',
-        getErrorMessage(error, 'Unable to login. Please try again.'),
-      );
+      showError(getErrorMessage(error, 'Unable to login. Please try again.'));
     },
   });
 
@@ -86,13 +83,12 @@ export default function useAuth() {
     onSuccess: (response) => {
       const successMessage =
         response?.data?.message || response?.message || 'Password changed';
-      showSuccess('Change password successful', successMessage);
+      showSuccess(successMessage);
       useAuthStore.getState().clearAuth();
       navigate('/login', { replace: true });
     },
     onError: (error) => {
       showError(
-        'Change password failed',
         getErrorMessage(error, 'Unable to change password. Please try again.'),
       );
     },
@@ -103,12 +99,11 @@ export default function useAuth() {
     onSuccess: (response) => {
       const successMessage =
         response?.data?.message || response?.message || 'Password changed';
-      showSuccess('Request successful', successMessage);
+      showSuccess(successMessage);
       navigate('/forgot-password', { replace: true });
     },
     onError: (error) => {
       showError(
-        'Request failed',
         getErrorMessage(error, 'Unable to reset password. Please try again.'),
       );
     },
@@ -119,12 +114,11 @@ export default function useAuth() {
     onSuccess: (response) => {
       const successMessage =
         response?.data?.message || response?.message || 'Password changed';
-      showSuccess('Request successful', successMessage);
+      showSuccess(successMessage);
       navigate('/login', { replace: true });
     },
     onError: (error) => {
       showError(
-        'Request failed',
         getErrorMessage(error, 'Unable to reset password. Please try again.'),
       );
     },

@@ -28,10 +28,7 @@ function ChangePassword() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
-      showError(
-        'Invalid password',
-        'New password and confirm password do not match',
-      );
+      showError('New password and confirm password do not match');
       return;
     }
     await changePassword(formData);

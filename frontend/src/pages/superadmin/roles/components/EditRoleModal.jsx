@@ -17,8 +17,7 @@ export default function EditRoleModal({
     roleToEdit?.description,
   );
 
-  const { mutateAsync, isLoading } = useUpdateRole();
-
+  const { mutateAsync, isPending: isLoading } = useUpdateRole();
   const { showSuccess, showError } = useToast();
 
   const handleSubmit = async () => {
@@ -28,15 +27,12 @@ export default function EditRoleModal({
         payload: { roleName, description: roleDescription },
       });
 
-      showSuccess('Request successful', 'Role updated successfully');
+      showSuccess('Role updated successfully');
       setIsEditRoleModal(false);
       setRoleToEdit(null);
     } catch (error) {
       console.error('Error', error);
-      showError(
-        'Failed to update role',
-        'Unable to update role. Please try again.',
-      );
+      showError('Unable to update role. Please try again.');
     }
   };
 
@@ -92,11 +88,12 @@ export default function EditRoleModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] gap-2 bg-primary-200 disabled:bg-primary-200/70 px-4 py-2.5 text-sm flex items-center font-medium font-geist text-white"
             disabled={isLoading}
             onClick={handleSubmit}
           >
-            {isLoading ? <Loader /> : 'Update'}
+            Update
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

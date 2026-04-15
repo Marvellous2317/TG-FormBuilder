@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createRole,
+  deleteRole,
   fetchRole,
   fetchRoles,
   updateRole,
@@ -23,6 +24,34 @@ export function useRole(roleId, options = {}) {
   });
 }
 
+export function useDeleteRole(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ roleId }) => deleteRole(roleId),
+    onSuccess: async (response, variables, context) => {
+      const { roleId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'roles'],
+      });
+
+      // Also remove the individual role query if it exists
+      if (roleId) {
+        queryClient.removeQueries({
+          queryKey: ['superadmin', 'roles', roleId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
 export function useUpdateRole(options = {}) {
   const queryClient = useQueryClient();
   const { onSuccess, ...mutationOptions } = options;

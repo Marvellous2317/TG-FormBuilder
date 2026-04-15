@@ -6,6 +6,8 @@ import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
+import { formatDate } from '../../../../shared/utils/constants';
+import DeleteRoleModal from './DeleteRoleModal';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -18,6 +20,7 @@ export default function RoleList({
   roles,
   pagination,
   setRoleToEdit,
+  setIsDeleteRoleModalOpen,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
@@ -90,11 +93,14 @@ export default function RoleList({
     {
       title: 'Delete',
       value: 'delete',
-      onClick: () => setActiveMenuId(null),
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsDeleteRoleModalOpen(true);
+      },
     },
   ];
 
-  const toggleRowMenu = (rowId, event, index) => {
+  const toggleRowMenu = (rowId, event, index, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
     const menuHeight = dropOptions.length * 44 + 8;
@@ -110,9 +116,15 @@ export default function RoleList({
       : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
 
     setMenuPosition({ top, left });
-    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
 
-    setRoleToEdit(roles[index]);
+    if (activeMenuId === rowId) {
+      setActiveMenuId(null);
+      return;
+    }
+
+    setActiveMenuId(rowId);
+
+    setRoleToEdit(row);
   };
 
   return (
@@ -147,12 +159,6 @@ export default function RoleList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
-                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
@@ -176,12 +182,6 @@ export default function RoleList({
                     key={index}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-3 md:p-4 border-r border-gray-200">
-                      <input
-                        type="checkbox"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       {row.roleName}
                     </td>
@@ -192,12 +192,14 @@ export default function RoleList({
                       {row.isActive ? 'Active' : 'Inactive'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
-                      {row.createdAt}
+                      {formatDate(row.createdAt)}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event, index)}
+                        onClick={(event) =>
+                          toggleRowMenu(row.roleId, event, index, row)
+                        }
                         className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical

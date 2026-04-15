@@ -3,13 +3,11 @@ import { create } from 'zustand';
 const DEFAULT_DURATION = 4000;
 
 const buildToast = ({
-  title,
-  message = '',
+  message,
   type = 'info',
   duration = DEFAULT_DURATION,
 }) => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-  title,
   message,
   type,
   duration,
@@ -19,35 +17,30 @@ export const useToastStore = create((set) => ({
   toasts: [],
   showToast: (toast) =>
     set((state) => ({
-      toasts: [...state.toasts, buildToast(toast)],
-    })),
-  showSuccess: (title, message = '', duration = DEFAULT_DURATION) =>
-    set((state) => ({
       toasts: [
         ...state.toasts,
-        buildToast({ title, message, type: 'success', duration }),
+        buildToast(
+          typeof toast === 'string'
+            ? { message: toast }
+            : { ...toast, message: toast.message || '' },
+        ),
       ],
     })),
-  showError: (title, message = '', duration = DEFAULT_DURATION) =>
+  showSuccess: (message, duration = DEFAULT_DURATION) =>
     set((state) => ({
-      toasts: [
-        ...state.toasts,
-        buildToast({ title, message, type: 'error', duration }),
-      ],
+      toasts: [...state.toasts, buildToast({ message, type: 'success', duration })],
     })),
-  showInfo: (title, message = '', duration = DEFAULT_DURATION) =>
+  showError: (message, duration = DEFAULT_DURATION) =>
     set((state) => ({
-      toasts: [
-        ...state.toasts,
-        buildToast({ title, message, type: 'info', duration }),
-      ],
+      toasts: [...state.toasts, buildToast({ message, type: 'error', duration })],
     })),
-  showWarning: (title, message = '', duration = DEFAULT_DURATION) =>
+  showInfo: (message, duration = DEFAULT_DURATION) =>
     set((state) => ({
-      toasts: [
-        ...state.toasts,
-        buildToast({ title, message, type: 'warning', duration }),
-      ],
+      toasts: [...state.toasts, buildToast({ message, type: 'info', duration })],
+    })),
+  showWarning: (message, duration = DEFAULT_DURATION) =>
+    set((state) => ({
+      toasts: [...state.toasts, buildToast({ message, type: 'warning', duration })],
     })),
   removeToast: (id) =>
     set((state) => ({

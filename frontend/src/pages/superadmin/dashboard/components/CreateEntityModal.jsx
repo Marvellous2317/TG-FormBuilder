@@ -82,9 +82,9 @@ export default function CreateEntityModal({
               label="Email address"
               id="emailAddress"
               type="email"
-              className=""
               value={emailAddress}
               onChange={(e) => setEmailAddress(e.target.value)}
+              className="mt-4"
             />
           </div>
         </div>

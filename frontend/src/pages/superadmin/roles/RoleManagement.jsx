@@ -7,11 +7,13 @@ import CreateRoleModal from './components/CreateRoleModal';
 import EditRoleModal from './components/EditRoleModal';
 import { useRoles } from '../../../shared/hooks/superadmin/useRoles';
 import Loader from '../../../shared/components/Loader';
+import DeleteRoleModal from './components/DeleteRoleModal';
 
 export default function RoleManagement() {
   const [isCreateRoleModal, setIsCreateRoleModal] = useState(false);
   const [isEditRoleModal, setIsEditRoleModal] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState(null);
+  const [isDeleteRoleModalOpen, setIsDeleteRoleModalOpen] = useState(false);
 
   const { data, isLoading } = useRoles();
 
@@ -45,6 +47,7 @@ export default function RoleManagement() {
           {roles?.length > 0 ? (
             <RoleList
               setIsEditRoleModal={setIsEditRoleModal}
+              setIsDeleteRoleModalOpen={setIsDeleteRoleModalOpen}
               roles={roles}
               pagination={data.data.pagination}
               setRoleToEdit={setRoleToEdit}
@@ -66,6 +69,14 @@ export default function RoleManagement() {
         setIsEditRoleModal={setIsEditRoleModal}
         roleToEdit={roleToEdit}
         setRoleToEdit={setRoleToEdit}
+      />
+
+      <DeleteRoleModal
+        key={roleToEdit?.roleId}
+        isDeleteRoleModalOpen={isDeleteRoleModalOpen}
+        setIsDeleteRoleModalOpen={setIsDeleteRoleModalOpen}
+        roleToDelete={roleToEdit}
+        setRoleToDelete={setRoleToEdit}
       />
     </div>
   );
