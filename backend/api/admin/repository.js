@@ -59,10 +59,22 @@ export class AdminRepository {
   }
 
 
-  static async getAllRoles() {
+  static async getAllRoles(user) {
+    const role = user.roleId ? await Role.findByPk(user.roleId) : null;
+    if (role?.roleName === "superAdmin") {
+      try {
+        const roles = await Role.findAll({
+          order: [["roleName", "ASC"]],
+        });
+        return { roles };
+      } catch (error) {
+        throw new ApplicationError("Failed to fetch roles", 500);
+      }
+    }
+
     try {
       const roles = await Role.findAll({
-        where: { isActive: true },
+        where: { isActive: true, roleName: { [Op.notIn]: ["superAdmin"] } },
         order: [["roleName", "ASC"]],
       });
       return { roles };
@@ -167,7 +179,7 @@ export class AdminRepository {
     return { message: "User deleted successfully" };
   }
 
-  static async addUser({ email, firstName, lastName, roleId, companyId, department }) {
+  static async addUser( admin,{ email, firstName, lastName, roleId, companyId, department }) {
     try {
       const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
       if (existingUser) throw new ApplicationError("User with this email already exists", 400);
@@ -179,9 +191,14 @@ export class AdminRepository {
       if (companyId) {
         const company = await Company.findByPk(companyId);
         if (!company) throw new ValidationError("Invalid company ID");
+
       }
 
-  
+      const checkAdminRole = await Role.findByPk(admin.roleId);
+      if (role.roleName === "superAdmin" && checkAdminRole.roleName !== "superAdmin") {
+        throw new ApplicationError("Only SuperAdmin is Allowed to add SuperAdmin", 403);
+      }
+
       const password = generateRandomPassword();
 
       const user = User.build({
