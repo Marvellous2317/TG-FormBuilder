@@ -81,7 +81,7 @@ export default function OperatorWorkspaceLayout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto w-full lg:w-auto lg:h-auto h-full">
-        <div className="pt-14 lg:pt-0 h-full">
+        <div className="pt-14 lg:pt-0 h-full w-full">
           <Outlet />
         </div>
       </main>

@@ -201,19 +201,19 @@ export default function CompanyList({ setIsEditCompanyModal }) {
                         className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       {row.name}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.address}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.email}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.status ? 'Active' : 'Inactive'}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.createdAt}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
@@ -268,7 +268,7 @@ export default function CompanyList({ setIsEditCompanyModal }) {
                 {dropOptions.map((option) => (
                   <Button
                     key={option.value}
-                    className="w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist hover:bg-gray-100"
+                    className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
                     onClick={option.onClick}
                   >
                     {option.title}

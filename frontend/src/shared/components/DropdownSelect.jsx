@@ -89,7 +89,7 @@ function DropdownMenuPortal({
             {({ active }) => (
               <button
                 type="button"
-                className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-gray-700 ${
+                className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary ${
                   active ? 'bg-gray-100' : ''
                 } ${isSelected ? 'bg-primary-50 text-primary-700' : ''} ${itemClassName}`.trim()}
                 onClick={() => onChange(option.value)}

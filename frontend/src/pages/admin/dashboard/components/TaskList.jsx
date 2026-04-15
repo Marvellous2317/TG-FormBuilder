@@ -162,7 +162,7 @@ export default function TaskList() {
         </span>
       );
     }
-    return <span className="text-xs md:text-sm text-gray-700">{status}</span>;
+    return <span className="text-xs md:text-sm text-tertiary">{status}</span>;
   };
 
   // Filter data based on search and status
@@ -263,19 +263,19 @@ export default function TaskList() {
                         className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.checklist}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.department}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.docNumber}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.date}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.assignee}
                     </td>
                     <td className="p-3 md:p-4">{getStatusBadge(row.status)}</td>
@@ -296,7 +296,7 @@ export default function TaskList() {
                                     <button
                                       className={`${
                                         active ? 'bg-gray-100' : ''
-                                      } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
+                                      } w-full text-left cursor-pointer p-2 rounded-md text-tertiary text-sm font-geist ${
                                         currentStatus === status.value
                                           ? 'bg-primary-50 text-primary-700'
                                           : ''

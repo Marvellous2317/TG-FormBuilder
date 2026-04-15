@@ -33,7 +33,7 @@ export default function Pagination({
             min="1"
             value={currentPage}
             onChange={handlePageChange}
-            className="w-5 text-start text-gray-700 font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
+            className="w-5 text-start text-tertiary font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
           />
           <div className="flex flex-col">
             <Button
@@ -84,7 +84,7 @@ export default function Pagination({
             min="1"
             value={currentPage}
             onChange={handlePageChange}
-            className="w-5 text-start text-gray-700 font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
+            className="w-5 text-start text-tertiary font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
           />
           <div className="flex flex-col">
             <Button
