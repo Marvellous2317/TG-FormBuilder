@@ -17,6 +17,17 @@ export const validateCreateChecklist = [
     .isLength({ max: 255 }).withMessage("Title must be less than 255 characters"),
   body("documentNumber").trim().notEmpty().withMessage("Document number is required")
     .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  body("departmentId").optional({ nullable: true }).isUUID().withMessage("Department ID must be a valid UUID"),
+  body("frequency").optional({ nullable: true }).isIn(["hourly", "daily", "weekly", "monthly"])
+    .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
+  body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
+    .withMessage("Frequency interval must be between 1 and 24 hours"),
+  body().custom((body) => {
+    if (body.frequency === "hourly" && (!body.frequencyInterval || body.frequencyInterval < 1)) {
+      throw new Error("Frequency interval is required when frequency is hourly");
+    }
+    return true;
+  }),
   validate,
 ];
 
@@ -26,6 +37,17 @@ export const validateUpdateChecklist = [
     .isLength({ max: 255 }).withMessage("Title must be less than 255 characters"),
   body("documentNumber").optional().trim().notEmpty().withMessage("Document number cannot be empty")
     .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  body("departmentId").optional({ nullable: true }).isUUID().withMessage("Department ID must be a valid UUID"),
+  body("frequency").optional({ nullable: true }).isIn(["hourly", "daily", "weekly", "monthly", null])
+    .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
+  body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
+    .withMessage("Frequency interval must be between 1 and 24 hours"),
+  body().custom((body) => {
+    if (body.frequency === "hourly" && body.frequencyInterval !== undefined && body.frequencyInterval < 1) {
+      throw new Error("Frequency interval must be at least 1 when frequency is hourly");
+    }
+    return true;
+  }),
   validate,
 ];
 
@@ -37,6 +59,7 @@ export const validateChecklistId = [
 export const validateChecklistQuery = [
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  query("departmentId").optional().isUUID().withMessage("Department ID must be a valid UUID"),
   validate,
 ];
 

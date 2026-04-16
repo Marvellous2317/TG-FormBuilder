@@ -7,6 +7,7 @@ import {
   User,
   Role,
   Company,
+  Department,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -14,19 +15,50 @@ import { sequelize } from "../../../config/database.js";
 export class AdminRepository {
 
 
-  static async createChecklist({ title, documentNumber, companyId, createdBy }) {
+  static async createChecklist({ title, documentNumber, companyId, departmentId, frequency, frequencyInterval, createdBy }) {
     const transaction = await sequelize.transaction();
 
 
     try {
       const existing = await Checklist.findOne({
-        where: { documentNumber, companyId },
+        where: {
+          companyId,
+          [Op.or]: [
+            { documentNumber },
+            { title }
+          ]
+        },
         transaction,
       });
-      if (existing) throw new ApplicationError("Document number already exists", 400);
+      
+      if (existing) {
+        if (existing.documentNumber === documentNumber) {
+          throw new ApplicationError("Document number already exists", 400);
+        }
+        if (existing.title === title) {
+          throw new ApplicationError("Checklist with the same title already exists", 400);
+        }
+      }
 
+      if (departmentId) {
+        const department = await Department.findByPk(departmentId, { transaction });
+        if (!department) throw new ApplicationError("Department not found", 404);
+      }
+
+    
+      if (frequency === "hourly" && (!frequencyInterval || frequencyInterval < 1)) {
+        throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);
+      }
       const checklist = await Checklist.create(
-        { title, documentNumber, companyId, createdBy },
+        { 
+          title, 
+          documentNumber, 
+          companyId, 
+          departmentId, 
+          frequency: frequency || null,
+          frequencyInterval: frequency === "hourly" ? frequencyInterval : null,
+          createdBy 
+        },
         { transaction }
       );
 
@@ -39,10 +71,11 @@ export class AdminRepository {
     }
   }
 
-  static async getChecklists({ companyId, status, page = 1, limit = 20, search }) {
+  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search }) {
     try {
       const where = {};
       if (companyId) where.companyId = companyId;
+      if (departmentId) where.departmentId = departmentId;
       if (search) {
         where[Op.or] = [
           { title: { [Op.iLike]: `%${search}%` } },
@@ -56,6 +89,7 @@ export class AdminRepository {
         include: [
           { model: User, as: "creator", attributes: ["userId", "firstName", "lastName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
           {
             model: ChecklistAssignment, as: "assignments",
             attributes: ["assignmentId", "status", "dueDate"],
@@ -85,6 +119,7 @@ export class AdminRepository {
         include: [
           { model: User, as: "creator", attributes: ["userId", "firstName", "lastName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
           {
             model: ChecklistEntry,
             as: "entries",
@@ -102,7 +137,7 @@ export class AdminRepository {
     }
   }
 
-  static async updateChecklist(checklistId, { title, documentNumber, updatedBy }) {
+  static async updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, updatedBy }) {
     try {
       const checklist = await Checklist.findByPk(checklistId);
       if (!checklist) throw new ApplicationError("Checklist not found", 404);
@@ -112,6 +147,31 @@ export class AdminRepository {
           where: { documentNumber, companyId: checklist.companyId, checklistId: { [Op.ne]: checklistId } },
         });
         if (existing) throw new ApplicationError("Document number already exists", 400);
+      }
+
+      // Validate departmentId if provided
+      if (departmentId !== undefined) {
+        if (departmentId) {
+          const department = await Department.findByPk(departmentId);
+          if (!department) throw new ApplicationError("Department not found", 404);
+          checklist.departmentId = departmentId;
+        } else {
+          checklist.departmentId = null;
+        }
+      }
+
+      // Validate and update frequency
+      if (frequency !== undefined) {
+        if (frequency === "hourly" && (!frequencyInterval || frequencyInterval < 1)) {
+          throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);
+        }
+        checklist.frequency = frequency || null;
+        checklist.frequencyInterval = frequency === "hourly" ? frequencyInterval : null;
+      } else if (frequencyInterval !== undefined && checklist.frequency === "hourly") {
+        if (frequencyInterval < 1) {
+          throw new ApplicationError("Frequency interval must be at least 1 for hourly frequency", 400);
+        }
+        checklist.frequencyInterval = frequencyInterval;
       }
 
       if (title) checklist.title = title;
