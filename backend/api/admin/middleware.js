@@ -202,7 +202,7 @@ export function validateUserIdsMiddleware(req, res, next) {
 
 export function validateCreateCompanyMiddleware(req, res, next) {
   try {
-    const { companyName, address, contactEmail, ...extraFields } = req.body;
+    const { companyName, address, contactFullName, contactEmail, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
@@ -216,6 +216,15 @@ export function validateCreateCompanyMiddleware(req, res, next) {
     if (companyName.trim().length > 100) {
       throw new ValidationError("Company name must not exceed 100 characters");
     }
+
+      if (!contactFullName || typeof contactFullName !== "string") {
+        throw new ValidationError("Contact full name must be a string");
+      }
+      if (contactFullName.trim().length > 100) {
+      throw new ValidationError("Contact full name must not exceed 100 characters");
+    }
+
+    
 
     // Optional: address
     if (address !== undefined && address !== null) {

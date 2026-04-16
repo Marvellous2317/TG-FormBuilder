@@ -10,7 +10,7 @@ const router = express.Router();
 // Role Management (superAdmin only for create/update/delete)
 router.get("/roles", isAuthenticated, adminRequired, AdminController.getAllRolesApi);
 router.get("/roles/:roleId", validateUUID("roleId"), isAuthenticated, adminRequired, AdminController.getRoleByIdApi);
-router.post("/roles", validateRoleMiddleware, isAuthenticated, superAdminRequired, AdminController.createRoleApi);
+router.post("/roles", validateRoleMiddleware, isAuthenticated, adminRequired,  AdminController.createRoleApi);
 router.put("/roles/:roleId", validateUUID("roleId"), validateRoleMiddleware, isAuthenticated, superAdminRequired, AdminController.updateRoleApi);
 router.delete("/roles/:roleId", validateUUID("roleId"), isAuthenticated, superAdminRequired, AdminController.deleteRoleApi);
 
