@@ -47,7 +47,26 @@ export const createCompany = async (payload) => {
   return data;
 };
 
-export const updateCompany = async (payload) => {
-  const { data } = await axiosInstance.put(`/admin/companies`, payload);
+export const updateCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}`,
+    payload,
+  );
+  return data;
+};
+
+export const suspendCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}/suspend`,
+    payload,
+  );
+  return data;
+};
+
+export const activateCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}/activate`,
+    payload,
+  );
   return data;
 };

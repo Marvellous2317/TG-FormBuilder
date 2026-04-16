@@ -193,7 +193,7 @@ export default function EntityList({
                   <tr
                     key={row.companyId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleRowClick(row.id)}
+                    onClick={() => handleRowClick(row.companyId)}
                   >
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       <p className="text-secondary text-sm">

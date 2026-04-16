@@ -2,12 +2,31 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import { useSuspendCompany } from '../../../../shared/hooks/superadmin/useCompanies';
+import Loader from '../../../../shared/components/Loader';
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function SuspendEntityModal({
   isSuspendEntityModal,
   setIsSuspendEntityModal,
+  companyId,
 }) {
   const [reason, setReason] = useState('');
+
+  const { mutateAsync, isPending: isLoading } = useSuspendCompany();
+
+  const { showError, showSuccess } = useToast();
+
+  const handleSuspension = async () => {
+    try {
+      await mutateAsync({ companyId, payload: { reason } });
+      setIsSuspendEntityModal(false);
+      showSuccess('Entity suspended successfully');
+    } catch (error) {
+      console.error('Error', error);
+      showError('Unable to suspend entity. Please try again.');
+    }
+  };
 
   return (
     <Modal
@@ -20,10 +39,10 @@ export default function SuspendEntityModal({
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
           <p className="text-base font-semibold font-geist text-primary">
-            Deactivate entity
+            Suspend entity
           </p>
           <p className="text-sm font-geist text-tertiary">
-            Deactivating will permanently disable this entity. Data will be
+            Suspending will permanently disable this entity. Data will be
             retained for 90 days.
           </p>
         </div>
@@ -51,9 +70,11 @@ export default function SuspendEntityModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-tertiary-500 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex gap-2 bg-tertiary-500 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleSuspension()}
           >
-            Confirm deactivate
+            Confirm suspension
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

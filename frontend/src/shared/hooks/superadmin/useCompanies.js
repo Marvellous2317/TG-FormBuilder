@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  activateCompany,
   createCompany,
   deleteCompany,
   fetchCompanies,
   fetchCompany,
+  suspendCompany,
   updateCompany,
 } from '../../../core/api/superadmin';
 
@@ -30,7 +32,7 @@ export function useUpdateCompany(options = {}) {
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: updateCompany,
+    mutationFn: ({ companyId, payload }) => updateCompany(companyId, payload),
     onSuccess: async (response, variables, context) => {
       const companyId =
         variables?.companyId ??
@@ -95,6 +97,68 @@ export function useCreateCompanies(options = {}) {
       await queryClient.invalidateQueries({
         queryKey: ['superadmin', 'companies'],
       });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useSuspendCompany(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ companyId, payload }) => suspendCompany(companyId, payload),
+    onSuccess: async (response, variables, context) => {
+      const companyId =
+        variables?.companyId ??
+        variables?.id ??
+        response?.data?.companyId ??
+        response?.data?.data?.companyId;
+
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'companies'],
+      });
+
+      if (companyId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['superadmin', 'companies', companyId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useActivateCompany(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ companyId, payload }) => activateCompany(companyId, payload),
+    onSuccess: async (response, variables, context) => {
+      const companyId =
+        variables?.companyId ??
+        variables?.id ??
+        response?.data?.companyId ??
+        response?.data?.data?.companyId;
+
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'companies'],
+      });
+
+      if (companyId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['superadmin', 'companies', companyId],
+        });
+      }
 
       if (onSuccess) {
         await onSuccess(response, variables, context);
