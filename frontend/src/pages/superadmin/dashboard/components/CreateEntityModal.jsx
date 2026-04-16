@@ -5,14 +5,44 @@ import Button from '../../../../shared/components/Button';
 import { FaPlus } from 'react-icons/fa';
 import { FiUpload } from 'react-icons/fi';
 import Divider from '../../../../shared/components/Divider';
+import { useCreateCompanies } from '../../../../shared/hooks/superadmin/useCompanies';
+import useToast from '../../../../shared/hooks/useToast';
+import Loader from '../../../../shared/components/Loader';
 
 export default function CreateEntityModal({
   isCreateEntityModal,
   setIsCreateEntityModal,
 }) {
   const [entityName, setEntityName] = useState('');
+  const [entityAddress, setEntityAddress] = useState('');
   const [fullName, setFullName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
+
+  const { mutateAsync, isPending: isLoading } = useCreateCompanies();
+
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    if (!entityName || !entityAddress || !fullName || !emailAddress) {
+      showError('Complete all fields');
+      return;
+    }
+
+    try {
+      await mutateAsync({
+        companyName: entityName,
+        address: entityAddress,
+        contactEmail: emailAddress,
+        contactFullName: fullName,
+      });
+
+      showSuccess('Entity created successfully');
+      setIsCreateEntityModal(false);
+    } catch (err) {
+      console.error('Error', err);
+      showError('Unable to create entity. Please try again.');
+    }
+  };
 
   return (
     <Modal
@@ -37,7 +67,7 @@ export default function CreateEntityModal({
             <h2 className="text-base font-semibold font-geist text-primary">
               Entity profile
             </h2>
-            <p className="text-sm font-geist text-tertiary">
+            {/* <p className="text-sm font-geist text-tertiary">
               Add image and name of entity
             </p>
             <div className="mt-5 w-full rounded-2xl px-4 py-2 bg-tertiary-700 flex items-center justify-between">
@@ -49,7 +79,15 @@ export default function CreateEntityModal({
                 <FiUpload className="text-primary" size={12} />
                 <p className="text-secondary-100 text-sm font-medium">Upload</p>
               </Button>
-            </div>
+            </div> */}
+
+            <InputField
+              label="Address of entity"
+              id="entityAddress"
+              className="mt-4"
+              value={entityAddress}
+              onChange={(e) => setEntityAddress(e.target.value)}
+            />
 
             <InputField
               label="Name of entity"
@@ -99,9 +137,11 @@ export default function CreateEntityModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex gap-2 bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleSubmit()}
           >
             Continue
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

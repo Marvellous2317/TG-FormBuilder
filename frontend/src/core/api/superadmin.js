@@ -25,8 +25,10 @@ export const updateRole = async (payload, roleId) => {
   return data;
 };
 
-export const fetchCompanies = async () => {
-  const { data } = await axiosInstance.get('/admin/companies');
+export const fetchCompanies = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/companies', {
+    params,
+  });
   return data;
 };
 

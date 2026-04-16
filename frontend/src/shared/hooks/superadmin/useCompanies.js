@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createCompany,
+  deleteCompany,
   fetchCompanies,
   fetchCompany,
   updateCompany,
 } from '../../../core/api/superadmin';
 
-export function useCompanies(options = {}) {
+export function useCompanies(queryParams = {}, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'companies'],
-    queryFn: fetchCompanies,
+    queryKey: ['superadmin', 'companies', queryParams],
+    queryFn: () => fetchCompanies(queryParams),
+    keepPreviousData: true,
     ...options,
   });
 }
@@ -44,6 +47,54 @@ export function useUpdateCompany(options = {}) {
           queryKey: ['superadmin', 'companies', companyId],
         });
       }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useDeleteCompany(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ companyId }) => deleteCompany(companyId),
+    onSuccess: async (response, variables, context) => {
+      const { companyId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'companies'],
+      });
+
+      // Also remove the individual company query if it exists
+      if (companyId) {
+        queryClient.removeQueries({
+          queryKey: ['superadmin', 'companies', companyId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useCreateCompanies(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => createCompany(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'companies'],
+      });
 
       if (onSuccess) {
         await onSuccess(response, variables, context);

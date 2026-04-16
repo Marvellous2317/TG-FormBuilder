@@ -7,10 +7,28 @@ import EditEntityModal from './components/EditEntityModal';
 import EmptyEntityList from './components/EmptyEntityList';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
+import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
+import Loader from '../../../shared/components/Loader';
 
 export default function SuperAdminDashboard() {
   const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
   const [isEditEntityModal, setIsEditEntityModal] = useState(false);
+  const [companyPagination, setCompanyPagination] = useState({
+    page: 1,
+    limit: 20,
+  });
+
+  const { data, isPending: isLoading } = useCompanies(companyPagination);
+
+  const handlePagination = ({ page, pageSize }) => {
+    setCompanyPagination({
+      page: Number(page) || 1,
+      limit: Number(pageSize) || 20,
+    });
+  };
+
+  const companies = data?.data?.companies;
+  const pagination = data?.data?.pagination;
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -60,16 +78,23 @@ export default function SuperAdminDashboard() {
         </div>
       </section>
 
-      <section className="py-6 px-8 min-h-full relative">
-        {[1].length > 0 ? (
-          <EntityList
-            setIsEditEntityModal={setIsEditEntityModal}
-            isFromDashboard={true}
-          />
-        ) : (
-          <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
-        )}
-      </section>
+      {isLoading ? (
+        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
+      ) : (
+        <section className="py-6 px-8 min-h-full relative">
+          {companies?.length > 0 ? (
+            <EntityList
+              setIsEditEntityModal={setIsEditEntityModal}
+              isFromDashboard={true}
+              entities={companies}
+              pagination={pagination}
+              handlePageChange={handlePagination}
+            />
+          ) : (
+            <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
+          )}
+        </section>
+      )}
 
       <CreateEntityModal
         isCreateEntityModal={isCreateEntityModal}

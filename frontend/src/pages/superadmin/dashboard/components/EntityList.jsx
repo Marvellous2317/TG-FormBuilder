@@ -1,5 +1,4 @@
 import React, { useState, Fragment, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaArrowRight, FaChevronDown } from 'react-icons/fa';
@@ -7,6 +6,7 @@ import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import { Link, useNavigate } from 'react-router-dom';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
+import { formatDate } from '../../../../shared/utils/constants';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -14,78 +14,67 @@ const statusOptions = [
   { title: 'Inactive', value: 'inactive' },
 ];
 
-// Mock data (expanded to demonstrate the scrolling effect)
-const tableData = [
-  {
-    id: 1,
-    name: 'Ajayi Tami',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    entityName: 'Tolaram',
-    entityId: 'ENT-01',
-    count: 100,
-  },
-  {
-    id: 2,
-    name: 'Ajayi Tami',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    entityName: 'Tolaram',
-    entityId: 'ENT-01',
-    count: 100,
-  },
-  {
-    id: 3,
-    name: 'Ajayi Tami',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    entityName: 'Tolaram',
-    entityId: 'ENT-01',
-    count: 100,
-  },
-  {
-    id: 4,
-    name: 'Ajayi Tami',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    entityName: 'Tolaram',
-    entityId: 'ENT-01',
-    count: 100,
-  },
-];
-
 export default function EntityList({
-  setIsEditEntityModal,
   isFromDashboard = false,
+  entities,
+  pagination,
+  handlePageChange,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState(null);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const itemsPerPage = 10;
+
+  const currentPage = pagination?.page ?? 1;
+  const pageSize = pagination?.pageSize ?? 20;
 
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
   };
 
+  const handlePaginationChange = (payload) => {
+    if (typeof handlePageChange !== 'function') {
+      return;
+    }
+
+    const normalizeEvent = (input) => {
+      if (input?.target) {
+        return input.target;
+      }
+
+      if (typeof input === 'object' && input !== null) {
+        return input;
+      }
+
+      return { name: 'page', value: input };
+    };
+
+    const { name, value } = normalizeEvent(payload);
+
+    if (name === 'page') {
+      const nextPage = Math.max(1, Number(value) || 1);
+      handlePageChange({ page: nextPage, pageSize });
+      return;
+    }
+
+    if (name === 'pageSize') {
+      const nextSize = Math.max(1, Number(value) || 1);
+      handlePageChange({ page: 1, pageSize: nextSize });
+    }
+  };
+
   // Filter data based on search and status
-  const filteredData = tableData.filter((row) => {
+  const filteredData = entities.filter((row) => {
     const matchesSearch =
-      row.name.toLowerCase().includes(search.toLowerCase()) ||
+      row.companyName.toLowerCase().includes(search.toLowerCase()) ||
       row.address.toLowerCase().includes(search.toLowerCase()) ||
-      row.email.toLowerCase().includes(search.toLowerCase());
+      row.contactEmail.toLowerCase().includes(search.toLowerCase());
 
     let status = '';
     if (row.status) {
-      status = 'Active';
+      status = 'active';
     } else {
-      status = 'Inactive';
+      status = 'inactive';
     }
 
     const matchesStatus =
@@ -94,10 +83,6 @@ export default function EntityList({
 
     return matchesSearch && matchesStatus;
   });
-
-  const handlePageChange = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  };
 
   useEffect(() => {
     if (activeMenuId === null) {
@@ -121,41 +106,6 @@ export default function EntityList({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeMenuId]);
-
-  const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setIsEditEntityModal(true);
-      },
-    },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => setActiveMenuId(null),
-    },
-  ];
-
-  const toggleRowMenu = (rowId, event) => {
-    const buttonRect = event.currentTarget.getBoundingClientRect();
-    const menuWidth = window.innerWidth < 640 ? 192 : 160;
-    const menuHeight = dropOptions.length * 44 + 8;
-    const spaceBelow = window.innerHeight - buttonRect.bottom;
-    const shouldOpenUpward = spaceBelow < menuHeight + 12;
-
-    const left = Math.min(
-      Math.max(12, buttonRect.right - menuWidth),
-      window.innerWidth - menuWidth - 12,
-    );
-    const top = shouldOpenUpward
-      ? Math.max(12, buttonRect.top - menuHeight - 8)
-      : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
-
-    setMenuPosition({ top, left });
-    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
-  };
 
   const navigate = useNavigate();
 
@@ -186,8 +136,7 @@ export default function EntityList({
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
             {isFromDashboard ? (
-              <Link
-                prefetch="intent"
+              <a
                 className="flex items-center gap-2 group transition-all duration-150 ease-in-out cursor-pointer"
                 href="/superadmin/entities"
               >
@@ -198,7 +147,7 @@ export default function EntityList({
                   className="text-primary-200 group-hover:translate-x-0.5"
                   size={16}
                 />
-              </Link>
+              </a>
             ) : (
               <div className="">
                 <DropdownSelect
@@ -234,7 +183,7 @@ export default function EntityList({
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Created at
                 </th>
-                <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-tertiary-300"></th>
+                {/* <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-tertiary-300"></th> */}
               </tr>
             </thead>
 
@@ -242,28 +191,34 @@ export default function EntityList({
               {filteredData.length > 0 ? (
                 filteredData.map((row) => (
                   <tr
-                    key={row.id}
+                    key={row.companyId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => handleRowClick(row.id)}
                   >
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
-                      <p className="text-secondary text-sm">{row.entityName}</p>
-                      <p className="text-tertiary text-xs">{row.entityId}</p>
+                      <p className="text-secondary text-sm">
+                        {row.companyName}
+                      </p>
+                      <p className="text-tertiary text-xs">{row.companyId}</p>
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
-                      <p className="text-secondary text-sm">{row.name}</p>
-                      <p className="text-tertiary text-xs">{row.email}</p>
+                      <p className="text-secondary text-sm">
+                        {row.contactFullName || 'N/A'}
+                      </p>
+                      <p className="text-tertiary text-xs">
+                        {row.contactEmail}
+                      </p>
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.status ? 'Active' : 'Inactive'}
+                      {row.status}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.count}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
-                      {row.createdAt}
+                      {formatDate(row.createdAt)}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
+                    {/* <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
                         onClick={(event) => {
@@ -277,7 +232,7 @@ export default function EntityList({
                           className="mx-auto md:w-4.5 md:h-4.5"
                         />
                       </Button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               ) : (
@@ -296,39 +251,10 @@ export default function EntityList({
       </section>
       <Pagination
         currentPage={currentPage}
-        handlePageChange={handlePageChange}
-        itemsPerPage={itemsPerPage}
+        handlePageChange={handlePaginationChange}
+        itemsPerPage={pageSize}
+        totalPages={pagination?.totalPages}
       />
-      {activeMenuId !== null && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-50"
-              onClick={() => setActiveMenuId(null)}
-              role="presentation"
-            >
-              <div
-                className="absolute flex flex-col bg-white border border-gray-200 outline-none rounded-xl p-1 w-48 sm:w-40 shadow-lg shadow-gray-100"
-                style={{
-                  top: `${menuPosition.top}px`,
-                  left: `${menuPosition.left}px`,
-                }}
-                onClick={(event) => event.stopPropagation()}
-                role="menu"
-              >
-                {dropOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
-                    onClick={option.onClick}
-                  >
-                    {option.title}
-                  </Button>
-                ))}
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
     </div>
   );
 }

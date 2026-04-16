@@ -7,10 +7,16 @@ import EditEntityModal from '../dashboard/components/EditEntityModal';
 import EmptyEntityList from '../dashboard/components/EmptyEntityList';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
+import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
+import Loader from '../../../shared/components/Loader';
 
 export default function EntitiesManagement() {
   const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
   const [isEditEntityModal, setIsEditEntityModal] = useState(false);
+
+  const { data, isPending: isLoading } = useCompanies();
+
+  const companies = data?.data?.companies;
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -35,13 +41,20 @@ export default function EntitiesManagement() {
         </Button>
       </header>
 
-      <section className="py-6 px-8 min-h-full relative">
-        {[1].length > 0 ? (
-          <EntityList setIsEditEntityModal={setIsEditEntityModal} />
-        ) : (
-          <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
-        )}
-      </section>
+      {isLoading ? (
+        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
+      ) : (
+        <section className="py-6 px-8 min-h-full relative">
+          {companies?.length > 0 ? (
+            <EntityList
+              setIsEditEntityModal={setIsEditEntityModal}
+              entities={companies}
+            />
+          ) : (
+            <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
+          )}
+        </section>
+      )}
 
       <CreateEntityModal
         isCreateEntityModal={isCreateEntityModal}

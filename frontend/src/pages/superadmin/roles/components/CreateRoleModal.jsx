@@ -21,8 +21,6 @@ export default function CreateRoleModal({
   const { showSuccess, showError } = useToast();
 
   const handleSubmit = async () => {
-    console.log(isLoading);
-    console.log(roleName, roleDescription);
     if (!roleName) {
       showError('Role name is required');
       return;

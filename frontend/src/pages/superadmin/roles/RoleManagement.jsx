@@ -15,7 +15,7 @@ export default function RoleManagement() {
   const [roleToEdit, setRoleToEdit] = useState(null);
   const [isDeleteRoleModalOpen, setIsDeleteRoleModalOpen] = useState(false);
 
-  const { data, isLoading } = useRoles();
+  const { data, isPending: isLoading } = useRoles();
 
   const roles = data?.data?.roles;
 

@@ -52,6 +52,7 @@ export function useDeleteRole(options = {}) {
     ...mutationOptions,
   });
 }
+
 export function useUpdateRole(options = {}) {
   const queryClient = useQueryClient();
   const { onSuccess, ...mutationOptions } = options;
