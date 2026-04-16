@@ -17,44 +17,7 @@ import {
 import Loader from '../../../shared/components/Loader';
 import { formatDate } from '../../../shared/utils/constants';
 import useToast from '../../../shared/hooks/useToast';
-
-const EntityProfileData = [
-  {
-    key: 'Entity Name',
-    value: 'Tolaram',
-  },
-  {
-    key: 'Tenant ID',
-    value: 'ENT-01',
-  },
-  {
-    key: 'Subdomain',
-    value: 'tolaram-logistics.logbook.app',
-  },
-  {
-    key: 'Created',
-    value: 'April 9, 2026',
-  },
-];
-
-const AdminAccountData = [
-  {
-    key: 'Name',
-    value: 'Amara Chukwueze',
-  },
-  {
-    key: 'Email',
-    value: 'amara.chuwueze@tolaram.com',
-  },
-  {
-    key: 'Role',
-    value: 'Admin',
-  },
-  {
-    key: 'Last seen',
-    value: 'April 9, 2026',
-  },
-];
+import EditEntityModal from '../dashboard/components/EditEntityModal';
 
 const AuditData = [
   {
@@ -79,6 +42,7 @@ export default function Entity() {
   let { id: entityId } = useLoaderData();
 
   const [isSuspendEntityModal, setIsSuspendEntityModal] = useState(false);
+  const [isEditEntityModal, setIsEditEntityModal] = useState(false);
 
   const { data, isPending: isLoading } = useCompany(entityId);
 
@@ -88,6 +52,9 @@ export default function Entity() {
 
   const { mutateAsync, isPending: isActivatingCompanyLoading } =
     useActivateCompany();
+
+  // const { data: companyAnalytics, isPending: isCompanyAnalyticsLoading } =
+  //   useCompany(entityId);
 
   const { showError, showSuccess } = useToast();
 
@@ -195,7 +162,7 @@ export default function Entity() {
             <AdminCard
               icon={Icons.activeUsers}
               title="Active users"
-              count="150"
+              count={companyData?.usersCount ?? 0}
             />
             <AdminCard
               icon={Icons.logsTodayIcon}
@@ -225,13 +192,14 @@ export default function Entity() {
                           {item.key}
                         </h2>
                         <div className="flex w-full items-center justify-between gap-3 py-2 text-left sm:w-[70%] sm:justify-end sm:text-end">
-                          <h2 className="break-words text-sm font-medium text-primary">
+                          <h2 className="wrap-break-word text-sm font-medium text-primary">
                             {item.value}
                           </h2>
                           {isFirstItem && (
                             <RiEditLine
                               className="text-primary cursor-pointer"
                               size={12}
+                              onClick={() => setIsEditEntityModal(true)}
                             />
                           )}
                         </div>
@@ -266,6 +234,7 @@ export default function Entity() {
                             <RiEditLine
                               className="text-primary cursor-pointer"
                               size={12}
+                              onClick={() => setIsEditEntityModal(true)}
                             />
                           )}
                         </div>
@@ -280,7 +249,7 @@ export default function Entity() {
             </div>
           </div>
 
-          <div className="mt-5 flex w-full max-w-6xl items-center gap-4">
+          {/* <div className="mt-5 flex w-full max-w-6xl items-center gap-4">
             <div className="flex w-full flex-col items-start rounded-3xl bg-secondary-700 px-1 pb-1">
               <h2 className="my-3.5 mx-5 font-medium text-primary text-sm">
                 Audit trail
@@ -319,7 +288,7 @@ export default function Entity() {
                 })}
               </div>
             </div>
-          </div>
+          </div> */}
         </>
       )}
 
@@ -327,6 +296,13 @@ export default function Entity() {
         isSuspendEntityModal={isSuspendEntityModal}
         setIsSuspendEntityModal={setIsSuspendEntityModal}
         companyId={companyData?.companyId}
+      />
+
+      <EditEntityModal
+        isEditEntityModal={isEditEntityModal}
+        setIsEditEntityModal={setIsEditEntityModal}
+        company={companyData}
+        key={companyData?.companyId}
       />
     </div>
   );

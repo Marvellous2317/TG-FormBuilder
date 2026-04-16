@@ -12,7 +12,6 @@ import Loader from '../../../shared/components/Loader';
 
 export default function EntitiesManagement() {
   const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
-  const [isEditEntityModal, setIsEditEntityModal] = useState(false);
 
   const { data, isPending: isLoading } = useCompanies();
 
@@ -46,10 +45,7 @@ export default function EntitiesManagement() {
       ) : (
         <section className="py-6 px-8 min-h-full relative">
           {companies?.length > 0 ? (
-            <EntityList
-              setIsEditEntityModal={setIsEditEntityModal}
-              entities={companies}
-            />
+            <EntityList entities={companies} />
           ) : (
             <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
           )}
@@ -59,11 +55,6 @@ export default function EntitiesManagement() {
       <CreateEntityModal
         isCreateEntityModal={isCreateEntityModal}
         setIsCreateEntityModal={setIsCreateEntityModal}
-      />
-
-      <EditEntityModal
-        isEditEntityModal={isEditEntityModal}
-        setIsEditEntityModal={setIsEditEntityModal}
       />
     </div>
   );

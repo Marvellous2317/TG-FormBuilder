@@ -5,6 +5,7 @@ import {
   deleteCompany,
   fetchCompanies,
   fetchCompany,
+  fetchCompanyAnalytics,
   suspendCompany,
   updateCompany,
 } from '../../../core/api/superadmin';
@@ -22,6 +23,15 @@ export function useCompany(companyId, options = {}) {
   return useQuery({
     queryKey: ['superadmin', 'companies', companyId],
     queryFn: () => fetchCompany(companyId),
+    enabled: Boolean(companyId),
+    ...options,
+  });
+}
+
+export function useCompanyAnalytics(companyId, options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'companies', 'analytics', companyId],
+    queryFn: () => fetchCompanyAnalytics(companyId),
     enabled: Boolean(companyId),
     ...options,
   });

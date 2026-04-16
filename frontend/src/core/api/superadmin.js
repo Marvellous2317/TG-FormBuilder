@@ -70,3 +70,8 @@ export const activateCompany = async (companyId, payload) => {
   );
   return data;
 };
+
+export const fetchCompanyAnalytics = async (id) => {
+  const { data } = await axiosInstance.get(`/admin/analytics/${id}`);
+  return data;
+};

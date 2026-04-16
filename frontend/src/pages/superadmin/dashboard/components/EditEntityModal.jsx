@@ -5,14 +5,48 @@ import Button from '../../../../shared/components/Button';
 import { FaPlus } from 'react-icons/fa';
 import { FiUpload } from 'react-icons/fi';
 import Divider from '../../../../shared/components/Divider';
+import { useUpdateCompany } from '../../../../shared/hooks/superadmin/useCompanies';
+import useToast from '../../../../shared/hooks/useToast';
+import Loader from '../../../../shared/components/Loader';
 
 export default function EditEntityModal({
   isEditEntityModal,
   setIsEditEntityModal,
+  company,
 }) {
-  const [entityName, setEntityName] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
+  const [entityName, setEntityName] = useState(company?.companyName ?? '');
+  const [entityAddress, setEntityAddress] = useState(company?.address ?? '');
+  const [fullName, setFullName] = useState(company?.contactFullName ?? '');
+  const [emailAddress, setEmailAddress] = useState(company?.contactEmail ?? '');
+
+  const { mutateAsync, isPending: isLoading } = useUpdateCompany();
+
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    if (!entityName || !entityAddress || !fullName || !emailAddress) {
+      showError('Complete all fields');
+      return;
+    }
+
+    try {
+      await mutateAsync({
+        companyId: company.companyId,
+        payload: {
+          companyName: entityName,
+          address: entityAddress,
+          contactEmail: emailAddress,
+          contactFullName: fullName,
+        },
+      });
+
+      showSuccess('Entity updated successfully');
+      setIsEditEntityModal(false);
+    } catch (err) {
+      console.error('Error', err);
+      showError('Unable to update entity. Please try again.');
+    }
+  };
 
   return (
     <Modal
@@ -25,7 +59,7 @@ export default function EditEntityModal({
       <div className="flex h-full flex-col">
         <div className="space-y-0.5 p-5 border-b border-secondary-200">
           <p className="text-base font-semibold font-geist text-primary">
-            New entity
+            Edit entity
           </p>
           <p className="text-sm font-geist text-tertiary">
             Add all details to onboard an entity
@@ -37,25 +71,21 @@ export default function EditEntityModal({
             <h2 className="text-base font-semibold font-geist text-primary">
               Entity profile
             </h2>
-            <p className="text-sm font-geist text-tertiary">
-              Add image and name of entity
-            </p>
-            <div className="mt-5 w-full rounded-2xl px-4 py-2 bg-tertiary-700 flex items-center justify-between">
-              <div className="bg-white border border-secondary-200 rounded-full p-5.25 border-dashed">
-                <FaPlus className="text-primary" size={14} />
-              </div>
 
-              <Button className="bg-white border rounded-[10px] border-secondary-200 px-3 py-2 flex items-center gap-1">
-                <FiUpload className="text-primary" size={12} />
-                <p className="text-secondary-100 text-sm font-medium">Upload</p>
-              </Button>
-            </div>
+            <InputField
+              label="Address of entity"
+              id="entityAddress"
+              className="mt-4"
+              value={entityAddress}
+              onChange={(e) => setEntityAddress(e.target.value)}
+            />
 
             <InputField
               label="Name of entity"
               id="entityName"
               className="mt-4"
               value={entityName}
+              readOnly
               onChange={(e) => setEntityName(e.target.value)}
             />
           </div>
@@ -82,7 +112,7 @@ export default function EditEntityModal({
               label="Email address"
               id="emailAddress"
               type="email"
-              className=""
+              className="mt-4"
               value={emailAddress}
               onChange={(e) => setEmailAddress(e.target.value)}
             />
@@ -99,9 +129,11 @@ export default function EditEntityModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex gap-2 bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleSubmit()}
           >
-            Continue
+            Update
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>
