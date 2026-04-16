@@ -2,19 +2,49 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import { useUpdateDepartment } from '../../../../shared/hooks/superadmin/useDepartments';
+import useToast from '../../../../shared/hooks/useToast';
+import Loader from '../../../../shared/components/Loader';
 
 export default function EditDepartmentModal({
   isEditDepartmentModal,
   setIsEditDepartmentModal,
+  departmentToEdit,
+  setDepartmentToEdit,
 }) {
-  const [departmentName, setDepartmentName] = useState('');
-  const [departmentAddress, setDepartmentAddress] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const [departmentName, setDepartmentName] = useState(
+    departmentToEdit?.departmentName ?? '',
+  );
+  const [departmentDescription, setDepartmentDescription] = useState(
+    departmentToEdit?.description ?? '',
+  );
+
+  const { mutateAsync, isPending: isLoading } = useUpdateDepartment();
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    try {
+      await mutateAsync({
+        departmentId: departmentToEdit?.departmentId,
+        payload: { departmentName, description: departmentDescription },
+      });
+
+      showSuccess('Department updated successfully');
+      setIsEditDepartmentModal(false);
+      setDepartmentToEdit(null);
+    } catch (error) {
+      console.error('Error', error);
+      showError('Unable to update department. Please try again.');
+    }
+  };
 
   return (
     <Modal
       isOpen={isEditDepartmentModal}
-      onClose={() => setIsEditDepartmentModal(false)}
+      onClose={() => {
+        setIsEditDepartmentModal(false);
+        setDepartmentToEdit(null);
+      }}
       position="center"
       width="max-w-[460px]"
       className="overflow-hidden"
@@ -39,36 +69,34 @@ export default function EditDepartmentModal({
           />
 
           <InputField
-            label="Department address"
-            id="departmentAddress"
+            label="Department description"
+            id="departmentDescription"
+            type="textarea"
             className=""
-            value={departmentAddress}
-            onChange={(e) => setDepartmentAddress(e.target.value)}
-          />
-
-          <InputField
-            label="Contact email"
-            id="contactEmail"
-            type="email"
-            className=""
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            value={departmentDescription}
+            onChange={(e) => setDepartmentDescription(e.target.value)}
           />
         </div>
 
         <div className="flex items-center mt-6 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsEditDepartmentModal(false)}
+            onClick={() => {
+              setIsEditDepartmentModal(false);
+              setDepartmentToEdit(null);
+            }}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleSubmit()}
+            disabled={isLoading}
+            className="rounded-[10px] flex gap-2 bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white"
           >
             Continue
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

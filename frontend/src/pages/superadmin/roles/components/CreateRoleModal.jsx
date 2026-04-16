@@ -88,8 +88,9 @@ export default function CreateRoleModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white gap-2"
+            className="rounded-[10px] bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white gap-2"
             onClick={() => handleSubmit()}
+            disabled={isLoading}
           >
             Continue
             {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}

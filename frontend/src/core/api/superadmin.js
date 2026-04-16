@@ -76,8 +76,10 @@ export const fetchCompanyAnalytics = async (id) => {
   return data;
 };
 
-export const fetchDepartments = async () => {
-  const { data } = await axiosInstance.get('/admin/departments');
+export const fetchDepartments = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/departments', {
+    params,
+  });
   return data;
 };
 
@@ -97,6 +99,9 @@ export const createDepartment = async (payload) => {
 };
 
 export const updateDepartment = async (payload, departmentId) => {
-  const { data } = await axiosInstance.put(`/admin/departments/${departmentId}`, payload);
+  const { data } = await axiosInstance.put(
+    `/admin/departments/${departmentId}`,
+    payload,
+  );
   return data;
 };

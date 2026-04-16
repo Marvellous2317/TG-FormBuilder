@@ -64,7 +64,7 @@ export default function EntityList({
   };
 
   // Filter data based on search and status
-  const filteredData = entities.filter((row) => {
+  const filteredData = entities?.filter((row) => {
     const matchesSearch =
       row.companyName.toLowerCase().includes(search.toLowerCase()) ||
       row.address.toLowerCase().includes(search.toLowerCase()) ||

@@ -7,10 +7,11 @@ import {
   updateDepartment,
 } from '../../../core/api/superadmin';
 
-export function useDepartments(options = {}) {
+export function useDepartments(queryParams = {}, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'departments'],
-    queryFn: fetchDepartments,
+    queryKey: ['superadmin', 'departments', queryParams],
+    queryFn: () => fetchDepartments(queryParams),
+    keepPreviousData: true,
     ...options,
   });
 }
@@ -58,7 +59,8 @@ export function useUpdateDepartment(options = {}) {
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: ({ departmentId, payload }) => updateDepartment(payload, departmentId),
+    mutationFn: ({ departmentId, payload }) =>
+      updateDepartment(payload, departmentId),
     onSuccess: async (response, variables, context) => {
       const { departmentId } = variables; // clean and direct
 
