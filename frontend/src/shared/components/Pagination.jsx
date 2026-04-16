@@ -26,9 +26,9 @@ export default function Pagination({
 
   // Corrected boundary math for pagination arrows
   const canGoPrev = current > 1;
-  const canGoPrevTwice = current > 2; // Can jump back 2 if on page 3 or higher
+  const canGoPrevTwice = current > 2;
   const canGoNext = current < pageCount;
-  const canGoNextTwice = current < pageCount - 1; // Can jump forward 2 if at least 2 pages away from the end
+  const canGoNextTwice = current < pageCount - 1;
 
   useEffect(() => {
     setPageValue(current);
@@ -46,20 +46,47 @@ export default function Pagination({
     handlePageChange({ target: { name, value } });
   };
 
-  const handlePageInputChange = (event) => {
+  const handlePageTyping = (event) => {
+    setPageValue(event.target.value);
+  };
+
+  const handlePageSubmit = (event) => {
     const value = Number(event.target.value);
-    const nextPage = Math.max(1, Number.isNaN(value) ? 1 : value);
+
+    let nextPage = Math.max(1, Number.isNaN(value) || value === 0 ? 1 : value);
+
+    nextPage = Math.min(nextPage, pageCount);
+
     setPageValue(nextPage);
     emitPageChange('page', nextPage);
   };
 
-  const handlePageSizeInputChange = (event) => {
+  const handlePageKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handlePageSubmit(event);
+    }
+  };
+
+  const handlePageSizeTyping = (event) => {
+    setPageSizeValue(event.target.value);
+  };
+
+  const handlePageSizeSubmit = (event) => {
     const value = Number(event.target.value);
-    const nextSize = Math.max(1, Number.isNaN(value) ? 1 : value);
+    const nextSize = Math.max(
+      10,
+      Number.isNaN(value) || value === 0 ? 10 : value,
+    );
+
     setPageSizeValue(nextSize);
     emitPageChange('pageSize', nextSize);
   };
 
+  const handlePageSizeKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handlePageSizeSubmit(event);
+    }
+  };
   return (
     <section className="items-center flex flex-wrap border-t border-gray-200 justify-center w-full py-3.5 gap-2 sm:gap-3 md:gap-4">
       <div className="flex items-center gap-1 mr-4.75">
@@ -117,8 +144,11 @@ export default function Pagination({
             name="page"
             type="number"
             min="1"
+            max={pageSizeValue}
             value={pageValue}
-            onChange={handlePageInputChange}
+            onChange={handlePageTyping}
+            onBlur={handlePageSubmit}
+            onKeyDown={handlePageKeyDown}
             className="w-5 text-start text-tertiary font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
           />
           <div className="flex flex-col">
@@ -211,7 +241,9 @@ export default function Pagination({
             type="number"
             min="10"
             value={pageSizeValue}
-            onBlur={handlePageSizeInputChange}
+            onChange={handlePageSizeTyping}
+            onBlur={handlePageSizeSubmit}
+            onKeyDown={handlePageSizeKeyDown}
             className="w-5 text-start text-tertiary font-geist text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
           />
           <div className="flex flex-col">
