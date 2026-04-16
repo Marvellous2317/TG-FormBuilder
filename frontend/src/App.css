@@ -4,6 +4,7 @@
   /* Primary colors */
   --color-primary-100: #4d4845;
   --color-primary-200: #2463eb;
+  --color-primary-300: #f4f4f2;
 
   --color-primary: var(--color-primary-100);
 
@@ -27,6 +28,8 @@
   --color-tertiary-400: #e4e3e2;
   --color-tertiary-500: #c62828;
   --color-tertiary-600: #f9eaea;
+  --color-tertiary-700: #fafafa;
+  --color-tertiary-800: #a6a4a0;
 
   --color-tertiary: var(--color-tertiary-100);
 

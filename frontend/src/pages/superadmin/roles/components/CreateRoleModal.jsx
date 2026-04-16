@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import {
+  useCreateRoles,
+  useRoles,
+} from '../../../../shared/hooks/superadmin/useRoles';
+import useToast from '../../../../shared/hooks/useToast';
+import Loader from '../../../../shared/components/Loader';
 
 export default function CreateRoleModal({
   isCreateRoleModal,
@@ -9,6 +15,32 @@ export default function CreateRoleModal({
 }) {
   const [roleName, setRoleName] = useState('');
   const [roleDescription, setRoleDescription] = useState('');
+
+  const { mutateAsync, isPending: isLoading } = useCreateRoles();
+
+  const { showSuccess, showError } = useToast();
+
+  const handleSubmit = async () => {
+    if (!roleName) {
+      showError('Role name is required');
+      return;
+    }
+
+    if (!roleDescription) {
+      showError('Role description is required');
+      return;
+    }
+
+    try {
+      await mutateAsync({ roleName, description: roleDescription });
+
+      showSuccess('Role created successfully');
+      setIsCreateRoleModal(false);
+    } catch (err) {
+      console.error('Error', err);
+      showError('Unable to create role. Please try again.');
+    }
+  };
 
   return (
     <Modal
@@ -56,9 +88,11 @@ export default function CreateRoleModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white gap-2"
+            onClick={() => handleSubmit()}
           >
             Continue
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

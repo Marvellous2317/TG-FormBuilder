@@ -25,8 +25,10 @@ export const updateRole = async (payload, roleId) => {
   return data;
 };
 
-export const fetchCompanies = async () => {
-  const { data } = await axiosInstance.get('/admin/companies');
+export const fetchCompanies = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/companies', {
+    params,
+  });
   return data;
 };
 
@@ -45,7 +47,31 @@ export const createCompany = async (payload) => {
   return data;
 };
 
-export const updateCompany = async (payload) => {
-  const { data } = await axiosInstance.put(`/admin/companies`, payload);
+export const updateCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}`,
+    payload,
+  );
+  return data;
+};
+
+export const suspendCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}/suspend`,
+    payload,
+  );
+  return data;
+};
+
+export const activateCompany = async (companyId, payload) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}/activate`,
+    payload,
+  );
+  return data;
+};
+
+export const fetchCompanyAnalytics = async (id) => {
+  const { data } = await axiosInstance.get(`/admin/analytics/${id}`);
   return data;
 };

@@ -5,13 +5,16 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
+import DropdownSelect from '../../../../shared/components/DropdownSelect';
 
 const statusOptions = [
+  { title: 'All status', value: 'all' },
   { title: 'Completed', value: 'completed' },
   { title: 'Pending', value: 'pending' },
 ];
 
 const roleOptions = [
+  { title: 'All roles', value: 'all' },
   { title: 'Admin', value: 'admin' },
   { title: 'Operator', value: 'operator' },
   { title: 'Approver', value: 'approver' },
@@ -146,7 +149,7 @@ export default function AdminUsersList({ setIsEditUserModalOpen }) {
         </span>
       );
     }
-    return <span className="text-xs md:text-sm text-gray-700">{status}</span>;
+    return <span className="text-xs md:text-sm text-tertiary">{status}</span>;
   };
 
   // Filter data based on search and status
@@ -242,116 +245,22 @@ export default function AdminUsersList({ setIsEditUserModalOpen }) {
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            {/* Role dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentRole === 'all'
-                        ? 'All roles'
-                        : roleOptions.find((s) => s.value === currentRole)
-                            ?.title || 'All roles'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-32 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentRole === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentRole('all')}
-                        >
-                          All roles
-                        </button>
-                      )}
-                    </MenuItem>
-                    {roleOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentRole === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() => setCurrentRole(status.value)}
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
-            {/* Status dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentStatus === 'all'
-                        ? 'All status'
-                        : statusOptions.find((s) => s.value === currentStatus)
-                            ?.title || 'All status'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentStatus === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentStatus('all')}
-                        >
-                          All status
-                        </button>
-                      )}
-                    </MenuItem>
-                    {statusOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentStatus === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() => setCurrentStatus(status.value)}
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
+            <DropdownSelect
+              value={currentRole}
+              options={roleOptions}
+              onChange={(value) => setCurrentRole(value)}
+              placeholder="All roles"
+              buttonClassName="px-3! py-2! rounded-lg!"
+              menuClassName=""
+            />
+            <DropdownSelect
+              value={currentStatus}
+              options={statusOptions}
+              onChange={(value) => setCurrentStatus(value)}
+              placeholder="All status"
+              buttonClassName="px-3! py-2! rounded-lg!"
+              menuClassName=""
+            />
           </div>
         </div>
 
@@ -395,7 +304,7 @@ export default function AdminUsersList({ setIsEditUserModalOpen }) {
                         className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       <p className="text-secondary text-sm font-geist">
                         {row.name}
                       </p>
@@ -403,13 +312,13 @@ export default function AdminUsersList({ setIsEditUserModalOpen }) {
                         {row.email}
                       </p>
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.roles}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {getStatusBadge(row.status)}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row.lastSeen}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
@@ -464,7 +373,7 @@ export default function AdminUsersList({ setIsEditUserModalOpen }) {
                 {dropOptions.map((option) => (
                   <Button
                     key={option.value}
-                    className="w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist hover:bg-gray-100"
+                    className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
                     onClick={option.onClick}
                   >
                     {option.title}

@@ -13,9 +13,15 @@ const navDetails = [
     to: '/superadmin/',
   },
   {
+    icon: Icons.entitiesActive,
+    icon2: Icons.entitiesInactive,
+    title: 'Entities',
+    to: '/superadmin/entities',
+  },
+  {
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
-    title: 'Entities',
+    title: 'Roles',
     to: '/superadmin/roles',
   },
   {
@@ -103,7 +109,7 @@ export default function SuperAdminLayout() {
           <Button
             onClick={toggleSidebar}
             className="absolute -right-3 top-20 transform -translate-y-1/2
-                       bg-primary-200 hover:bg-primary-300
+                       bg-primary-200 
                        rounded-full p-1.5 shadow-md
                        transition-all duration-200 z-10"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}

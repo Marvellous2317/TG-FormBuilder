@@ -5,8 +5,12 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
+import DropdownSelect from '../../../../shared/components/DropdownSelect';
+import { formatDate } from '../../../../shared/utils/constants';
+import DeleteRoleModal from './DeleteRoleModal';
 
 const statusOptions = [
+  { title: 'All status', value: 'all' },
   { title: 'Active', value: 'active' },
   { title: 'Inactive', value: 'inactive' },
 ];
@@ -16,6 +20,7 @@ export default function RoleList({
   roles,
   pagination,
   setRoleToEdit,
+  setIsDeleteRoleModalOpen,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
@@ -88,11 +93,14 @@ export default function RoleList({
     {
       title: 'Delete',
       value: 'delete',
-      onClick: () => setActiveMenuId(null),
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsDeleteRoleModalOpen(true);
+      },
     },
   ];
 
-  const toggleRowMenu = (rowId, event, index) => {
+  const toggleRowMenu = (rowId, event, index, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
     const menuHeight = dropOptions.length * 44 + 8;
@@ -108,9 +116,15 @@ export default function RoleList({
       : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
 
     setMenuPosition({ top, left });
-    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
 
-    setRoleToEdit(roles[index]);
+    if (activeMenuId === rowId) {
+      setActiveMenuId(null);
+      return;
+    }
+
+    setActiveMenuId(rowId);
+
+    setRoleToEdit(row);
   };
 
   return (
@@ -129,65 +143,14 @@ export default function RoleList({
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            {/* Status dropdown */}
-            <Menu>
-              {({ open }) => (
-                <>
-                  <MenuButton className="cursor-pointer flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-secondary-200">
-                    <span className="text-secondary font-geist text-sm">
-                      {currentStatus === 'all'
-                        ? 'All status'
-                        : statusOptions.find((s) => s.value === currentStatus)
-                            ?.title || 'All status'}
-                    </span>
-                    <FaChevronDown
-                      className={`text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                      size={10}
-                    />
-                  </MenuButton>
-                  <MenuItems className="flex flex-col z-20 absolute top-full right-0 mt-2 bg-white border border-gray-200 outline-none rounded-xl p-1 w-full sm:w-40 shadow-lg shadow-gray-100">
-                    <MenuItem as={Fragment}>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active ? 'bg-gray-100' : ''
-                          } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                            currentStatus === 'all'
-                              ? 'bg-primary-50 text-primary-700'
-                              : ''
-                          }`}
-                          onClick={() => setCurrentStatus('all')}
-                        >
-                          All status
-                        </button>
-                      )}
-                    </MenuItem>
-                    {statusOptions.map((status, index) => (
-                      <MenuItem key={index} as={Fragment}>
-                        {({ active }) => (
-                          <button
-                            className={`${
-                              active ? 'bg-gray-100' : ''
-                            } w-full text-left cursor-pointer p-2 rounded-md text-gray-700 text-sm font-geist ${
-                              currentStatus === status.value
-                                ? 'bg-primary-50 text-primary-700'
-                                : ''
-                            }`}
-                            onClick={() =>
-                              setCurrentStatus(
-                                status.value ? 'active' : 'inactive',
-                              )
-                            }
-                          >
-                            {status.title}
-                          </button>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </>
-              )}
-            </Menu>
+            <DropdownSelect
+              value={currentStatus}
+              options={statusOptions}
+              onChange={(value) => setCurrentStatus(value)}
+              placeholder="All status"
+              buttonClassName="px-3! py-2! rounded-lg!"
+              menuClassName=""
+            />
           </div>
         </div>
 
@@ -196,12 +159,6 @@ export default function RoleList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
-                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
@@ -225,28 +182,24 @@ export default function RoleList({
                     key={index}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-3 md:p-4 border-r border-gray-200">
-                      <input
-                        type="checkbox"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       {row.roleName}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       {row.description}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.isActive ? 'Active' : 'Inactive'}
                     </td>
-                    <td className="p-3 md:p-4 text-gray-700 font-geist text-xs md:text-sm border-r border-gray-200">
-                      {row.createdAt}
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
+                      {formatDate(row.createdAt)}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event, index)}
+                        onClick={(event) =>
+                          toggleRowMenu(row.roleId, event, index, row)
+                        }
                         className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
@@ -297,7 +250,7 @@ export default function RoleList({
                 {dropOptions.map((option, index) => (
                   <Button
                     key={index}
-                    className="w-full text-left p-2 rounded-md text-gray-700 text-sm font-geist hover:bg-gray-100"
+                    className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
                     onClick={option.onClick}
                   >
                     {option.title}
