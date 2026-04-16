@@ -57,8 +57,11 @@ router.delete(
 );
 
 
-
-
+router.get(
+  '/analytics',
+  isAuthenticated,
+  UserController.getUserAnalyticsApi
+);
 
 
 

@@ -1,5 +1,6 @@
 ﻿import { User } from "./user.js";
 import { Company } from "./company.js";
+import { Department } from "./department.js";
 import { Verification } from "./verification.js";
 import { Role } from "./role.js";
 import { makePassword, checkPassword } from "../api/auth/helper.js";
@@ -48,6 +49,9 @@ User.prototype.toSafeJSON = function () {
 Checklist.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 Company.hasMany(Checklist, { foreignKey: "companyId", as: "checklists" });
 
+Checklist.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
+Department.hasMany(Checklist, { foreignKey: "departmentId", as: "checklists" });
+
 Checklist.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
 
 // Checklist has many Entries (dynamic fields)
@@ -85,6 +89,7 @@ SubmittedChecklistEntry.belongsTo(SubmittedChecklist, { foreignKey: "submittedCh
 export {
   User,
   Company,
+  Department,
   Verification,
   Role,
   OperatorApprover,

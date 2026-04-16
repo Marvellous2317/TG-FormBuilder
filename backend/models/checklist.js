@@ -21,6 +21,10 @@ export const Checklist = sequelize.define(
       type: DataTypes.UUID,
       allowNull: true,
     },
+    departmentId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
     createdBy: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -28,6 +32,16 @@ export const Checklist = sequelize.define(
     updatedBy: {
       type: DataTypes.UUID,
       allowNull: true,
+    },
+    frequency: {
+      type: DataTypes.ENUM("hourly", "daily", "weekly", "monthly"),
+      allowNull: true,
+      defaultValue: null,
+    },
+    frequencyInterval: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

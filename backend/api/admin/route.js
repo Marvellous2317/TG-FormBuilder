@@ -1,7 +1,7 @@
 import express from "express";
 import { isAuthenticated, adminRequired, superAdminRequired, validateUUID } from "../middlewares/authorization.js";
 import { AdminController } from "./controller.js";
-import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware } from "./middleware.js";
+import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware } from "./middleware.js";
 import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
@@ -10,7 +10,7 @@ const router = express.Router();
 // Role Management (superAdmin only for create/update/delete)
 router.get("/roles", isAuthenticated, adminRequired, AdminController.getAllRolesApi);
 router.get("/roles/:roleId", validateUUID("roleId"), isAuthenticated, adminRequired, AdminController.getRoleByIdApi);
-router.post("/roles", validateRoleMiddleware, isAuthenticated, superAdminRequired, AdminController.createRoleApi);
+router.post("/roles", validateRoleMiddleware, isAuthenticated, adminRequired,  AdminController.createRoleApi);
 router.put("/roles/:roleId", validateUUID("roleId"), validateRoleMiddleware, isAuthenticated, superAdminRequired, AdminController.updateRoleApi);
 router.delete("/roles/:roleId", validateUUID("roleId"), isAuthenticated, superAdminRequired, AdminController.deleteRoleApi);
 
@@ -36,5 +36,16 @@ router.put("/companies/:companyId", validateUUID("companyId"), validateUpdateCom
 router.delete("/companies/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.deleteCompanyApi);
 router.put("/companies/:companyId/suspend", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.suspendCompanyApi);
 router.put("/companies/:companyId/activate", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.activateCompanyApi);
+
+// Department Management
+router.get("/departments", isAuthenticated, adminRequired, AdminController.getDepartmentsApi);
+router.get("/departments/:departmentId", validateUUID("departmentId"), isAuthenticated, adminRequired, AdminController.getDepartmentByIdApi);
+router.post("/departments", validateCreateDepartmentMiddleware, isAuthenticated, adminRequired, AdminController.createDepartmentApi);
+router.put("/departments/:departmentId", validateUUID("departmentId"), validateUpdateDepartmentMiddleware, isAuthenticated, adminRequired, AdminController.updateDepartmentApi);
+router.delete("/departments/:departmentId", validateUUID("departmentId"), isAuthenticated, superAdminRequired, AdminController.deleteDepartmentApi);
+
+// Analytics (Super Admin only)
+router.get("/analytics", isAuthenticated, superAdminRequired, AdminController.getGlobalAnalyticsApi);
+router.get("/analytics/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.getCompanyAnalyticsApi);
 
 export default router;

@@ -202,7 +202,7 @@ export function validateUserIdsMiddleware(req, res, next) {
 
 export function validateCreateCompanyMiddleware(req, res, next) {
   try {
-    const { companyName, address, contactEmail, ...extraFields } = req.body;
+    const { companyName, address, contactFullName, contactEmail, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
@@ -216,6 +216,15 @@ export function validateCreateCompanyMiddleware(req, res, next) {
     if (companyName.trim().length > 100) {
       throw new ValidationError("Company name must not exceed 100 characters");
     }
+
+      if (!contactFullName || typeof contactFullName !== "string") {
+        throw new ValidationError("Contact full name must be a string");
+      }
+      if (contactFullName.trim().length > 100) {
+      throw new ValidationError("Contact full name must not exceed 100 characters");
+    }
+
+    
 
     // Optional: address
     if (address !== undefined && address !== null) {
@@ -281,6 +290,84 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
       if (contactEmail.length > 50) {
         throw new ValidationError("Contact email must not exceed 50 characters");
+      }
+    }
+
+    // Optional: status
+    if (status !== undefined) {
+      const validStatuses = ["active", "suspended"];
+      if (!validStatuses.includes(status)) {
+        throw new ValidationError(`Status must be one of: ${validStatuses.join(", ")}`);
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==================== DEPARTMENT VALIDATION ====================
+
+export function validateCreateDepartmentMiddleware(req, res, next) {
+  try {
+    const { departmentName, description, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    // Required field
+    if (!departmentName || typeof departmentName !== "string" || departmentName.trim().length < 2) {
+      throw new ValidationError("Department name is required and must be at least 2 characters");
+    }
+    if (departmentName.trim().length > 100) {
+      throw new ValidationError("Department name must not exceed 100 characters");
+    }
+
+    // Optional: description
+    if (description !== undefined && description !== null) {
+      if (typeof description !== "string") {
+        throw new ValidationError("Description must be a string");
+      }
+      if (description.trim().length > 255) {
+        throw new ValidationError("Description must not exceed 255 characters");
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function validateUpdateDepartmentMiddleware(req, res, next) {
+  try {
+    const { departmentName, description, status, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    // Optional: departmentName
+    if (departmentName !== undefined) {
+      if (typeof departmentName !== "string" || departmentName.trim().length < 2) {
+        throw new ValidationError("Department name must be at least 2 characters");
+      }
+      if (departmentName.trim().length > 100) {
+        throw new ValidationError("Department name must not exceed 100 characters");
+      }
+    }
+
+    // Optional: description
+    if (description !== undefined && description !== null) {
+      if (typeof description !== "string") {
+        throw new ValidationError("Description must be a string");
+      }
+      if (description.trim().length > 255) {
+        throw new ValidationError("Description must not exceed 255 characters");
       }
     }
 
