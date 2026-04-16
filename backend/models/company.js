@@ -15,6 +15,7 @@ export const Company = sequelize.define(
         companyName: {
             type: DataTypes.STRING(100),
             allowNull: false,
+            unique: true,
         },
 
         address: {
@@ -22,6 +23,10 @@ export const Company = sequelize.define(
         },
 
         contactEmail: {
+        type: DataTypes.STRING(50),
+        },
+        
+          contactFullName: {
         type: DataTypes.STRING(50),
         },
 

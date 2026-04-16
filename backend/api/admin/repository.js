@@ -96,18 +96,30 @@ export class AdminRepository {
 
   static async createRole({ roleName, description }) {
     try {
-      const existing = await Role.findOne({ where: { roleName: roleName.toLowerCase() } });
-      if (existing) throw new ApplicationError("Role already exists", 400);
+        const existing = await Role.findOne({
+            where: {
+                roleName: roleName.toLowerCase()
+            },
+            paranoid: false 
+        });
+        
+        if (existing) {
+            if (existing.deletedAt) {
+                throw new ApplicationError("Role already exists but has been deleted", 400);
+            }
+            throw new ApplicationError("Role already exists", 400);
+        }
 
-      const role = await Role.create({
-        roleName: roleName.toLowerCase(),
-        description,
-      });
+        const role = await Role.create({
+            roleName: roleName.toLowerCase(),
+            description,
+        });
 
-      return { message: "Role created successfully", role };
+        return { message: "Role created successfully", role };
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to create role", 500);
+        if (error instanceof ApplicationError) throw error;
+        console.log("Error in createRole:", error);
+        throw new ApplicationError("Failed to create role", 500);
     }
   }
 
@@ -533,17 +545,28 @@ export class AdminRepository {
     }
   }
 
-  static async createCompany({ companyName, address, contactEmail }) {
+  static async createCompany({ companyName, address, contactEmail, contactFullName }) {
     try {
       const existing = await Company.findOne({ 
-        where: { companyName: { [Op.iLike]: companyName.trim() } } 
+        where: {
+           companyName: { [Op.iLike]: companyName.trim() },
+        },
+        paranoid: false 
       });
-      if (existing) throw new ApplicationError("Company with this name already exists", 400);
+      
+      if (existing) {
+        if (existing.deletedAt) {
+          throw new ApplicationError("Company with this name already exists but has been deleted", 400);
+        }
+        throw new ApplicationError("Company with this name already exists", 400);
+      }
 
       const company = await Company.create({
         companyName: companyName.trim(),
         address: address?.trim() || null,
         contactEmail: contactEmail?.toLowerCase().trim() || null,
+        contactFullName: contactFullName?.trim() || null,
+
       });
 
       return { message: "Company created successfully", company };
