@@ -6,7 +6,7 @@ export class AdminController {
 
   static async createChecklist(req, res, next) {
     try {
-      const { title, documentNumber } = req.body;
+      const { title, documentNumber, departmentId, frequency, frequencyInterval } = req.body;
       const companyId = req.user.company?.companyId || null;
       const createdBy = req.user.userId;
 
@@ -15,7 +15,7 @@ export class AdminController {
       }
 
       const result = await AdminRepository.createChecklist({
-        title, documentNumber, companyId, createdBy,
+        title, documentNumber, companyId, departmentId, frequency, frequencyInterval, createdBy,
       });
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) { next(e); }
@@ -24,8 +24,8 @@ export class AdminController {
   static async getChecklists(req, res, next) {
     try {
       const companyId = req.user.company?.companyId || null;
-      const { page, limit, search } = req.query;
-      const result = await AdminRepository.getChecklists({ companyId, page, limit, search });
+      const { page, limit, search, departmentId } = req.query;
+      const result = await AdminRepository.getChecklists({ companyId, departmentId, page, limit, search });
       return ResponseManager.success(res, result, 200, "Checklists fetched successfully");
     } catch (e) { next(e); }
   }
@@ -41,9 +41,9 @@ export class AdminController {
   static async updateChecklist(req, res, next) {
     try {
       const { checklistId } = req.params;
-      const { title, documentNumber } = req.body;
+      const { title, documentNumber, departmentId, frequency, frequencyInterval } = req.body;
       const updatedBy = req.user.userId;
-      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, updatedBy });
+      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, updatedBy });
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) { next(e); }
   }

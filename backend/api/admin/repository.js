@@ -1,7 +1,7 @@
 import { Op, Sequelize } from "sequelize";
 import crypto from "crypto";
 
-import { User, Role, Company, OperatorApprover } from "../../models/index.js";
+import { User, Role, Company, Department, OperatorApprover, SubmittedChecklist } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 
 import { generateJWT } from "../auth/helper.js";
@@ -520,8 +520,12 @@ export class AdminRepository {
         order: [["createdAt", "DESC"]],
       });
 
+      // Get total users count across all companies
+      const totalUsersCount = await User.count();
+
       return {
         companies,
+        totalUsersCount,
         pagination: {
           total: count,
           page,
@@ -538,7 +542,11 @@ export class AdminRepository {
     try {
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
-      return { company };
+      
+      // Get users count for this specific company
+      const usersCount = await User.count({ where: { companyId } });
+      
+      return { company: { ...company.toJSON(), usersCount } };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to fetch company", 500);
@@ -660,6 +668,279 @@ export class AdminRepository {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to activate company", 500);
+    }
+  }
+
+
+  static async getAllDepartments({ status, search, page = 1, limit = 20 }) {
+    try {
+      page = Number(page) || 1;
+      limit = Number(limit) || 20;
+      const offset = (page - 1) * limit;
+      const where = {};
+
+      if (status) {
+        where.status = status;
+      }
+
+      if (search) {
+        where[Op.or] = [
+          { departmentName: { [Op.iLike]: `%${search}%` } },
+          { description: { [Op.iLike]: `%${search}%` } },
+        ];
+      }
+
+      const { rows: departments, count } = await Department.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [["createdAt", "DESC"]],
+      });
+
+      return {
+        departments,
+        pagination: {
+          total: count,
+          page,
+          pageSize: limit,
+          totalPages: Math.ceil(count / limit),
+        },
+      };
+    } catch (error) {
+      throw new ApplicationError("Failed to fetch departments", 500);
+    }
+  }
+
+  static async getDepartmentById(departmentId) {
+    try {
+      const department = await Department.findByPk(departmentId);
+      if (!department) throw new ApplicationError("Department not found", 404);
+      return { department };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch department", 500);
+    }
+  }
+
+  static async createDepartment({ departmentName, description }) {
+    try {
+      const existing = await Department.findOne({
+        where: {
+          departmentName: { [Op.iLike]: departmentName.trim() },
+        },
+        paranoid: false,
+      });
+
+      if (existing) {
+        if (existing.deletedAt) {
+          throw new ApplicationError("Department with this name already exists but has been deleted", 400);
+        }
+        throw new ApplicationError("Department with this name already exists", 400);
+      }
+
+      const department = await Department.create({
+        departmentName: departmentName.trim(),
+        description: description?.trim() || null,
+      });
+
+      return { message: "Department created successfully", department };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to create department", 500);
+    }
+  }
+
+  static async updateDepartment(departmentId, data) {
+    try {
+      const department = await Department.findByPk(departmentId);
+      if (!department) throw new ApplicationError("Department not found", 404);
+
+      if (data.departmentName !== undefined) {
+        const existing = await Department.findOne({
+          where: {
+            departmentName: { [Op.iLike]: data.departmentName.trim() },
+            departmentId: { [Op.ne]: departmentId },
+          },
+        });
+        if (existing) throw new ApplicationError("Department with this name already exists", 400);
+        department.departmentName = data.departmentName.trim();
+      }
+
+      if (data.description !== undefined) department.description = data.description?.trim() || null;
+      if (data.status !== undefined) department.status = data.status;
+
+      await department.save();
+      return { message: "Department updated successfully", department };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to update department", 500);
+    }
+  }
+
+  static async deleteDepartment(departmentId) {
+    try {
+      const department = await Department.findByPk(departmentId);
+      if (!department) throw new ApplicationError("Department not found", 404);
+
+      await department.destroy();
+      return { message: "Department deleted successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to delete department", 500);
+    }
+  }
+
+  static async suspendDepartment(departmentId) {
+    try {
+      const department = await Department.findByPk(departmentId);
+      if (!department) throw new ApplicationError("Department not found", 404);
+
+      if (department.status === "suspended") {
+        throw new ApplicationError("Department is already suspended", 400);
+      }
+
+      department.status = "suspended";
+      await department.save();
+
+      return { message: "Department suspended successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to suspend department", 500);
+    }
+  }
+
+  static async activateDepartment(departmentId) {
+    try {
+      const department = await Department.findByPk(departmentId);
+      if (!department) throw new ApplicationError("Department not found", 404);
+
+      if (department.status === "active") {
+        throw new ApplicationError("Department is already active", 400);
+      }
+
+      department.status = "active";
+      await department.save();
+
+      return { message: "Department activated successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to activate department", 500);
+    }
+  }
+
+  static async getGlobalAnalytics() {
+    try {
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+   
+      const startOfWeek = new Date(today);
+      const dayOfWeek = today.getDay();
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+      startOfWeek.setDate(today.getDate() - diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+  
+      const totalActiveCompanies = await Company.count({
+        where: { status: "active" },
+      });
+
+  
+      const totalActiveUsers = await User.count({
+        where: { status: "active" },
+      });
+
+      const totalChecklistsToday = await SubmittedChecklist.count({
+        where: {
+          createdAt: {
+            [Op.gte]: today,
+            [Op.lt]: tomorrow,
+          },
+        },
+      });
+
+
+      const totalChecklistsThisWeek = await SubmittedChecklist.count({
+        where: {
+          createdAt: {
+            [Op.gte]: startOfWeek,
+            [Op.lt]: tomorrow,
+          },
+        },
+      });
+
+      return {
+        totalActiveCompanies,
+        totalActiveUsers,
+        totalChecklistsToday,
+        totalChecklistsThisWeek,
+      };
+    } catch (error) {
+      console.log("Error in getGlobalAnalytics:", error);
+      throw new ApplicationError("Failed to fetch analytics", 500);
+    }
+  }
+
+  static async getCompanyAnalytics(companyId) {
+    try {
+
+      const company = await Company.findByPk(companyId);
+      if (!company) throw new ApplicationError("Company not found", 404);
+
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+  
+      const startOfWeek = new Date(today);
+      const dayOfWeek = today.getDay();
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+      startOfWeek.setDate(today.getDate() - diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+
+      const totalActiveUsers = await User.count({
+        where: { companyId, status: "active" },
+      });
+
+   
+      const totalChecklistsToday = await SubmittedChecklist.count({
+        where: {
+          companyId,
+          createdAt: {
+            [Op.gte]: today,
+            [Op.lt]: tomorrow,
+          },
+        },
+      });
+
+
+      const totalChecklistsThisWeek = await SubmittedChecklist.count({
+        where: {
+          companyId,
+          createdAt: {
+            [Op.gte]: startOfWeek,
+            [Op.lt]: tomorrow,
+          },
+        },
+      });
+
+      return {
+        companyId,
+        companyName: company.companyName,
+        totalActiveUsers,
+        totalChecklistsToday,
+        totalChecklistsThisWeek,
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getCompanyAnalytics:", error);
+      throw new ApplicationError("Failed to fetch company analytics", 500);
     }
   }
 }

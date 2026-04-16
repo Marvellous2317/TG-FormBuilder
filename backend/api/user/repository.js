@@ -2,7 +2,7 @@
 import { col, fn, literal, Op, Sequelize } from "sequelize";
 import fs from "fs";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
-import { User, Role, Company, Verification, } from "../../models/index.js";
+import { User, Role, Company, Verification, SubmittedChecklist } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";
@@ -235,6 +235,131 @@ static async deleteAccount(userId) {
     throw new ApplicationError(`Failed to delete account`);
   }
 }
+
+
+  static async getUserAnalytics(user) {
+    try {
+      const role = user.role?.roleName;
+      const userId = user.userId;
+      const companyId = user.companyId;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const startOfWeek = new Date(today);
+      const dayOfWeek = today.getDay();
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startOfWeek.setDate(today.getDate() - diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      if (role === "superAdmin") {
+        const totalActiveCompanies = await Company.count({ where: { status: "active" } });
+        const totalActiveUsers = await User.count({ where: { status: "active" } });
+        const totalChecklistsToday = await SubmittedChecklist.count({
+          where: { createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+        });
+        const totalChecklistsThisWeek = await SubmittedChecklist.count({
+          where: { createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+        });
+        const pendingChecklists = await SubmittedChecklist.count({ where: { status: "pending" } });
+        const approvedChecklists = await SubmittedChecklist.count({ where: { status: "approved" } });
+        const rejectedChecklists = await SubmittedChecklist.count({ where: { status: "rejected" } });
+
+        return {
+          scope: "global",
+          totalActiveCompanies,
+          totalActiveUsers,
+          totalChecklistsToday,
+          totalChecklistsThisWeek,
+          pendingChecklists,
+          approvedChecklists,
+          rejectedChecklists,
+        };
+      }
+
+      if (role === "admin") {
+        if (!companyId) throw new ApplicationError("Admin must belong to a company", 400);
+
+        const totalActiveUsers = await User.count({ where: { companyId, status: "active" } });
+        const totalChecklistsToday = await SubmittedChecklist.count({
+          where: { companyId, createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+        });
+        const totalChecklistsThisWeek = await SubmittedChecklist.count({
+          where: { companyId, createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+        });
+        const totalPending = await SubmittedChecklist.count({ where: { companyId, status: "pending" } });
+        const totalApproved = await SubmittedChecklist.count({ where: { companyId, status: "approved" } });
+        const totalRejected = await SubmittedChecklist.count({ where: { companyId, status: "rejected" } });
+
+        return {
+          scope: "company",
+          totalActiveUsers,
+          totalChecklistsToday,
+          totalChecklistsThisWeek,
+          totalPending,
+          totalApproved,
+          totalRejected,
+        };
+      }
+
+      if (role === "operator") {
+        const myChecklistsToday = await SubmittedChecklist.count({
+          where: { submittedBy: userId, createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+        });
+        const myChecklistsThisWeek = await SubmittedChecklist.count({
+          where: { submittedBy: userId, createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+        });
+        const totalPending = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "pending" } });
+        const totalApproved = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "approved" } });
+        const totalRejected = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "rejected" } });
+        const totalChecklists = await SubmittedChecklist.count({ where: { submittedBy: userId } });
+
+        return {
+          scope: "personal",
+          myChecklistsToday,
+          myChecklistsThisWeek,
+          totalPending,
+          totalApproved,
+          totalRejected,
+          totalChecklists,
+        };
+      }
+
+      if (role === "approval") {
+        const myChecklistsToday = await SubmittedChecklist.count({
+          where: { approvedBy: userId, updatedAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+        });
+        const myChecklistsThisWeek = await SubmittedChecklist.count({
+          where: { approvedBy: userId, updatedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+        });
+        const totalApproved = await SubmittedChecklist.count({ where: { approvedBy: userId, status: "approved" } });
+        const totalRejected = await SubmittedChecklist.count({ where: { approvedBy: userId, status: "rejected" } });
+        const totalReviewed = await SubmittedChecklist.count({ where: { approvedBy: userId } });
+
+        const totalPending = await SubmittedChecklist.count({ 
+          where: { companyId, status: "pending" } 
+        });
+
+        return {
+          scope: "personal",
+           myChecklistsToday,
+          myChecklistsThisWeek,
+          totalApproved,
+          totalRejected,
+          totalReviewed,
+          totalPending,
+        }
+      }
+
+      throw new ApplicationError("Invalid role for analytics", 403);
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getUserAnalytics:", error);
+      throw new ApplicationError("Failed to fetch user analytics", 500);
+    }
+  }
 
 }
 

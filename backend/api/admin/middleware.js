@@ -306,3 +306,81 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
     next(error);
   }
 }
+
+// ==================== DEPARTMENT VALIDATION ====================
+
+export function validateCreateDepartmentMiddleware(req, res, next) {
+  try {
+    const { departmentName, description, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    // Required field
+    if (!departmentName || typeof departmentName !== "string" || departmentName.trim().length < 2) {
+      throw new ValidationError("Department name is required and must be at least 2 characters");
+    }
+    if (departmentName.trim().length > 100) {
+      throw new ValidationError("Department name must not exceed 100 characters");
+    }
+
+    // Optional: description
+    if (description !== undefined && description !== null) {
+      if (typeof description !== "string") {
+        throw new ValidationError("Description must be a string");
+      }
+      if (description.trim().length > 255) {
+        throw new ValidationError("Description must not exceed 255 characters");
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export function validateUpdateDepartmentMiddleware(req, res, next) {
+  try {
+    const { departmentName, description, status, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    // Optional: departmentName
+    if (departmentName !== undefined) {
+      if (typeof departmentName !== "string" || departmentName.trim().length < 2) {
+        throw new ValidationError("Department name must be at least 2 characters");
+      }
+      if (departmentName.trim().length > 100) {
+        throw new ValidationError("Department name must not exceed 100 characters");
+      }
+    }
+
+    // Optional: description
+    if (description !== undefined && description !== null) {
+      if (typeof description !== "string") {
+        throw new ValidationError("Description must be a string");
+      }
+      if (description.trim().length > 255) {
+        throw new ValidationError("Description must not exceed 255 characters");
+      }
+    }
+
+    // Optional: status
+    if (status !== undefined) {
+      const validStatuses = ["active", "suspended"];
+      if (!validStatuses.includes(status)) {
+        throw new ValidationError(`Status must be one of: ${validStatuses.join(", ")}`);
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}

@@ -141,5 +141,18 @@ export class UserController {
           }
 
   }
+
+  static async getUserAnalyticsApi(req, res, next) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
+      }
+      const result = await UserRepository.getUserAnalytics(user);
+      return ResponseManager.success(res, result, 200, "User analytics fetched successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
   
 }

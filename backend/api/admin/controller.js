@@ -204,7 +204,6 @@ export class AdminController {
     }
   }
 
-  // ==================== COMPANY MANAGEMENT ======================================
 
   static async getCompaniesApi(req, res, next) {
     try {
@@ -276,6 +275,106 @@ export class AdminController {
       }
       const result = await AdminRepository.activateCompany(companyId);
       return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  // ==================== DEPARTMENT MANAGEMENT ======================================
+
+  static async getDepartmentsApi(req, res, next) {
+    try {
+      const result = await AdminRepository.getAllDepartments(req.query);
+      return ResponseManager.success(res, result, 200, "Departments fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async getDepartmentByIdApi(req, res, next) {
+    try {
+      const departmentId = req.params.departmentId;
+      if (!departmentId) {
+        return ResponseManager.error(res, "ValidationError", "Department ID is required", 400);
+      }
+      const result = await AdminRepository.getDepartmentById(departmentId);
+      return ResponseManager.success(res, result, 200, "Department fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async createDepartmentApi(req, res, next) {
+    try {
+      const result = await AdminRepository.createDepartment(req.body);
+      return ResponseManager.success(res, result, 201, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async updateDepartmentApi(req, res, next) {
+    try {
+      const result = await AdminRepository.updateDepartment(req.params.departmentId, req.body);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async deleteDepartmentApi(req, res, next) {
+    try {
+      const result = await AdminRepository.deleteDepartment(req.params.departmentId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async suspendDepartmentApi(req, res, next) {
+    try {
+      const departmentId = req.params.departmentId;
+      if (!departmentId) {
+        return ResponseManager.error(res, "ValidationError", "Department ID is required", 400);
+      }
+      const result = await AdminRepository.suspendDepartment(departmentId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async activateDepartmentApi(req, res, next) {
+    try {
+      const departmentId = req.params.departmentId;
+      if (!departmentId) {
+        return ResponseManager.error(res, "ValidationError", "Department ID is required", 400);
+      }
+      const result = await AdminRepository.activateDepartment(departmentId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+
+  static async getGlobalAnalyticsApi(req, res, next) {
+    try {
+      const result = await AdminRepository.getGlobalAnalytics();
+      return ResponseManager.success(res, result, 200, "Global analytics fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async getCompanyAnalyticsApi(req, res, next) {
+    try {
+      const companyId = req.params.companyId;
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
+      }
+      const result = await AdminRepository.getCompanyAnalytics(companyId);
+      return ResponseManager.success(res, result, 200, "Company analytics fetched successfully");
     } catch (e) {
       next(e);
     }
