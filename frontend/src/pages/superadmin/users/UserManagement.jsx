@@ -13,6 +13,9 @@ import AdminUserList from './components/AdminUserList';
 import CreateAdminUserModal from './components/CreateAdminUserModal';
 import EditAdminUserModal from './components/EditAdminUserModal';
 import Loader from '../../../shared/components/Loader';
+import AssignApproverModal from './components/AssignApproverModal';
+import UnassignApproverModal from './components/UnassignApproverModal';
+import DeleteUserModal from './components/DeleteUserModal';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
@@ -20,6 +23,11 @@ export default function UserManagement() {
   const [userToEdit, setUserToEdit] = useState(null);
   const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isAssignApproverModalOpen, setIsAssignApproverModalOpen] =
+    useState(false);
+
+  const [isUnassignApproverModalOpen, setIsUnassignApproverModalOpen] =
+    useState(false);
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -103,6 +111,9 @@ export default function UserManagement() {
               handlePageChange={handlePagination}
               setUserToEdit={setUserToEdit}
               setIsDeleteUserModalOpen={setIsDeleteUserModalOpen}
+              setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
+              userToEdit={userToEdit}
+              setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
             />
           ) : (
             <EmptyAdminUserList
@@ -115,6 +126,31 @@ export default function UserManagement() {
       <CreateAdminUserModal
         isCreateUserModalOpen={isCreateUserModalOpen}
         setIsCreateUserModalOpen={setIsCreateUserModalOpen}
+      />
+
+      <DeleteUserModal
+        isDeleteUserModalOpen={isDeleteUserModalOpen}
+        setIsDeleteUserModalOpen={setIsDeleteUserModalOpen}
+        userToDelete={userToDelete}
+        setUserToDelete={setUserToDelete}
+      />
+
+      <AssignApproverModal
+        isAssignApproverModalOpen={isAssignApproverModalOpen}
+        setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
+        userToEdit={userToEdit}
+        users={usersData}
+        isLoadingUsers={isLoadingUsers}
+        key={users?.userId}
+      />
+
+      <UnassignApproverModal
+        isUnassignApproverModalOpen={isUnassignApproverModalOpen}
+        setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
+        userToEdit={userToEdit}
+        users={usersData}
+        isLoadingUsers={isLoadingUsers}
+        key={users?.userId}
       />
 
       <EditAdminUserModal

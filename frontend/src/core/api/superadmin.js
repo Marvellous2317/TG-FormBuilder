@@ -143,18 +143,18 @@ export const updateUser = async (userId, payload) => {
   return data;
 };
 
-export const assignApproverToOperator = async (approverId, userId) => {
+export const assignApproverToOperator = async (userId, approverId) => {
   const { data } = await axiosInstance.put(
     `/admin/users/${userId}/assign-approver`,
-    approverId,
+    { approverId },
   );
   return data;
 };
 
-export const unassignApproverToOperator = async (approverId, userId) => {
+export const unassignApproverToOperator = async (userId, approverId) => {
   const { data } = await axiosInstance.put(
     `/admin/users/${userId}/unassign-approver`,
-    approverId,
+    { approverId },
   );
   return data;
 };

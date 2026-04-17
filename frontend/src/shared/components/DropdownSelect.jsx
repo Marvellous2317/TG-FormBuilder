@@ -11,12 +11,30 @@ function DropdownMenuPortal({
   onChange,
   menuClassName,
   itemClassName,
+  searchable,
+  searchQuery,
+  onSearchChange,
 }) {
+  const searchRef = useRef(null);
   const [menuPosition, setMenuPosition] = useState({
     top: 0,
     left: 0,
     width: 176,
   });
+
+  const filteredOptions = searchable
+    ? options.filter((o) =>
+        (o.label || o.title || '')
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
+      )
+    : options;
+
+  useEffect(() => {
+    if (open && searchable && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    }
+  }, [open, searchable]);
 
   useEffect(() => {
     if (!open || !buttonRef.current) {
@@ -30,7 +48,8 @@ function DropdownMenuPortal({
 
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const menuWidth = Math.max(buttonRect.width, 176);
-      const estimatedMenuHeight = options.length * 40 + 16;
+      const searchBarHeight = searchable ? 44 : 0;
+      const estimatedMenuHeight = filteredOptions.length * 40 + 16 + searchBarHeight;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - buttonRect.bottom;
@@ -64,7 +83,7 @@ function DropdownMenuPortal({
       window.removeEventListener('resize', updateMenuPosition);
       window.removeEventListener('scroll', updateMenuPosition, true);
     };
-  }, [open, buttonRef, options.length, value]);
+  }, [open, buttonRef, filteredOptions.length, value, searchable]);
 
   if (!open || typeof document === 'undefined') {
     return null;
@@ -80,26 +99,43 @@ function DropdownMenuPortal({
         width: `${menuPosition.width}px`,
       }}
     >
-      {options.map((option) => {
-        const optionLabel = option.label || option.title;
-        const isSelected = option.value === value;
+      {searchable && (
+        <div className="px-1 pb-1">
+          <input
+            ref={searchRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search..."
+            className="w-full rounded-lg border border-secondary-200 px-3 py-2 font-geist text-sm text-primary outline-none focus:border-primary-200/75 focus:ring-2 focus:ring-primary/10"
+            onKeyDown={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      {filteredOptions.length === 0 ? (
+        <p className="p-2 text-center font-geist text-sm text-tertiary">No results</p>
+      ) : (
+        filteredOptions.map((option) => {
+          const optionLabel = option.label || option.title;
+          const isSelected = option.value === value;
 
-        return (
-          <MenuItem key={option.value} as={Fragment}>
-            {({ active }) => (
-              <button
-                type="button"
-                className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary ${
-                  active ? 'bg-gray-100' : ''
-                } ${isSelected ? 'bg-primary-50 text-primary-700' : ''} ${itemClassName}`.trim()}
-                onClick={() => onChange(option.value)}
-              >
-                {optionLabel}
-              </button>
-            )}
-          </MenuItem>
-        );
-      })}
+          return (
+            <MenuItem key={option.value} as={Fragment}>
+              {({ active }) => (
+                <button
+                  type="button"
+                  className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary ${
+                    active ? 'bg-gray-100' : ''
+                  } ${isSelected ? 'bg-primary-50 text-primary-700' : ''} ${itemClassName}`.trim()}
+                  onClick={() => onChange(option.value)}
+                >
+                  {optionLabel}
+                </button>
+              )}
+            </MenuItem>
+          );
+        })
+      )}
     </MenuItems>,
     document.body,
   );
@@ -114,10 +150,17 @@ export default function DropdownSelect({
   buttonClassName = '',
   menuClassName = '',
   itemClassName = '',
+  searchable = false,
 }) {
   const buttonRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const selectedOption = options.find((option) => option.value === value);
   const label = selectedOption?.label || selectedOption?.title || placeholder;
+
+  const handleChange = (val) => {
+    setSearchQuery('');
+    onChange(val);
+  };
 
   return (
     <div className={className}>
@@ -147,9 +190,12 @@ export default function DropdownSelect({
               buttonRef={buttonRef}
               options={options}
               value={value}
-              onChange={onChange}
+              onChange={handleChange}
               menuClassName={menuClassName}
               itemClassName={itemClassName}
+              searchable={searchable}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
           </>
         )}

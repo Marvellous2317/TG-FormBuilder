@@ -17,6 +17,7 @@ function InputField({
   inputClassName = '',
   options = [],
   rows = 4,
+  searchable = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
@@ -65,6 +66,7 @@ function InputField({
             }
             placeholder={placeholder}
             disabled={disabled}
+            searchable={searchable}
             buttonClassName={[
               'rounded-2xl border-secondary-200 py-4',
               disabled ? 'cursor-not-allowed bg-secondary/60 opacity-60' : '',

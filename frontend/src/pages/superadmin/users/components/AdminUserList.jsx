@@ -7,6 +7,7 @@ import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { formatDate } from '../../../../shared/utils/constants';
+import useToast from '../../../../shared/hooks/useToast';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -21,12 +22,17 @@ export default function AdminUserList({
   users,
   pagination,
   handlePageChange,
+  setIsAssignApproverModalOpen,
+  setIsUnassignApproverModalOpen,
   setUserToEdit,
+  userToEdit,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  const { showError } = useToast();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -117,6 +123,34 @@ export default function AdminUserList({
       onClick: () => {
         setActiveMenuId(null);
         setIsEditUserModalOpen(true);
+      },
+    },
+    {
+      title: 'Assign approver',
+      value: 'assign',
+      onClick: () => {
+        setActiveMenuId(null);
+        if (userToEdit?.role?.roleName !== 'operator') {
+          showError('Only operators can be assigned an approver.');
+          return;
+        }
+        setIsAssignApproverModalOpen(true);
+      },
+    },
+    {
+      title: 'Unassign approver',
+      value: 'unassign',
+      onClick: () => {
+        setActiveMenuId(null);
+        if (userToEdit?.role?.roleName !== 'operator') {
+          showError('Only operators can be unassigned from an approver.');
+          return;
+        }
+        if (userToEdit?.operatorApprovers?.length < 1) {
+          showError('This operator does not have an approver.');
+          return;
+        }
+        setIsUnassignApproverModalOpen(true);
       },
     },
     {
