@@ -11,14 +11,14 @@ export default function ProtectedRoute({ allowedRoles }) {
     return <Loader size="h-20 w-20 !border-primary-200" />;
   }
 
-  // if (!isAuthenticated || !user) {
-  //   clearAuth();
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated || !user) {
+    clearAuth();
+    return <Navigate to="/login" replace />;
+  }
 
-  // if (!allowedRoles.includes(user.role.roleName.toLowerCase())) {
-  //   return <Navigate to="/unauthorized" replace />;
-  // }
+  if (!allowedRoles.includes(user.role.roleName.toLowerCase())) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   return <Outlet />;
 }

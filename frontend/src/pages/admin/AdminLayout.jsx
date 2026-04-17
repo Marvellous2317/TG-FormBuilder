@@ -4,6 +4,7 @@ import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Icons from '../../assets/icons';
 import Images from '../../assets/images';
+import { useAuthStore } from '../../shared/store/authStore';
 
 const navDetails = [
   {
@@ -30,6 +31,8 @@ export default function AdminLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  const { clearAuth } = useAuthStore();
 
   const location = useLocation();
 
@@ -168,6 +171,7 @@ export default function AdminLayout() {
             justify-center p-2 md:p-2.5
             ${isCollapsed && isDesktop ? 'lg:px-2' : ''}
           `}
+            onClick={() => clearAuth()}
           >
             <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
               CL
