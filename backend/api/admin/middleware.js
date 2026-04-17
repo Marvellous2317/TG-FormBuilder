@@ -1,7 +1,53 @@
 import { ValidationError } from "../../utils/errorHandler.js";
+import { query, validationResult } from "express-validator";
+import ResponseManager from "../../utils/responseManager.js";
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map((err) => err.msg);
+    return ResponseManager.error(res, "ValidationError", errorMessages.join(", "), 400);
+  }
+  next();
+};
+
+// ==================== QUERY VALIDATION ====================
+
+export const validateCompaniesQuery = [
+  query("status").optional().isIn(["active", "suspended"]).withMessage("Status must be active or suspended"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateUsersQuery = [
+  query("status").optional().isIn(["active", "suspended", "pending"]).withMessage("Invalid status"),
+  query("roleId").optional().isUUID().withMessage("Role ID must be a valid UUID"),
+  query("companyId").optional().isUUID().withMessage("Company ID must be a valid UUID"),
+  query("department").optional().isString().withMessage("Department must be a string"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateDepartmentsQuery = [
+  query("status").optional().isIn(["active", "suspended"]).withMessage("Status must be active or suspended"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
 
 export function validateAddUserMiddleware(req, res, next) {
   try {

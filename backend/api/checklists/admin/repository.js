@@ -71,11 +71,17 @@ export class AdminRepository {
     }
   }
 
-  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search }) {
+  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search, startDate, endDate }) {
     try {
       const where = {};
       if (companyId) where.companyId = companyId;
       if (departmentId) where.departmentId = departmentId;
+      if (status) where.status = status;
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+      }
       if (search) {
         where[Op.or] = [
           { title: { [Op.iLike]: `%${search}%` } },
@@ -360,18 +366,32 @@ export class AdminRepository {
     }
   }
 
-  static async getAssignments({ companyId, checklistId, assignedTo, page = 1, limit = 20 }) {
+  static async getAssignments({ companyId, checklistId, assignedTo, status, search, startDate, endDate, page = 1, limit = 20 }) {
     try {
       const where = {};
       if (companyId) where.companyId = companyId;
       if (checklistId) where.checklistId = checklistId;
       if (assignedTo) where.assignedTo = assignedTo;
+      if (status) where.status = status;
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+      }
+
+      const checklistWhere = {};
+      if (search) {
+        checklistWhere[Op.or] = [
+          { title: { [Op.iLike]: `%${search}%` } },
+          { documentNumber: { [Op.iLike]: `%${search}%` } },
+        ];
+      }
 
       const offset = (page - 1) * limit;
       const { rows: assignments, count: total } = await ChecklistAssignment.findAndCountAll({
         where,
         include: [
-          { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
+          { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"], where: Object.keys(checklistWhere).length ? checklistWhere : undefined },
           { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
           { model: User, as: "assigner", attributes: ["userId", "firstName", "lastName"] },
         ],

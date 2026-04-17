@@ -165,12 +165,8 @@ export class ApprovalRepository {
         if (endDate) where.updatedAt[Op.lte] = new Date(endDate);
       }
 
-      const checklistWhere = {};
       if (search) {
-        checklistWhere[Op.or] = [
-          { title: { [Op.iLike]: `%${search}%` } },
-          { documentNumber: { [Op.iLike]: `%${search}%` } },
-        ];
+        where.documentNumber = { [Op.iLike]: `%${search}%` };
       }
 
       const offset = (page - 1) * limit;

@@ -57,6 +57,11 @@ export const validateChecklistId = [
 ];
 
 export const validateChecklistQuery = [
+  query("status").optional().isIn(["active", "inactive"]).withMessage("Status must be active or inactive"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("companyId").optional().isUUID().withMessage("Company ID must be a valid UUID"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   query("departmentId").optional().isUUID().withMessage("Department ID must be a valid UUID"),
@@ -143,6 +148,12 @@ export const validateAssignmentId = [
 export const validateAssignmentQuery = [
   query("status").optional().isIn(["pending", "in_progress", "submitted", "approved", "rejected"])
     .withMessage("Invalid status"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("checklistId").optional().isUUID().withMessage("Checklist ID must be a valid UUID"),
+  query("assignedTo").optional().isUUID().withMessage("Assigned To must be a valid UUID"),
+  query("companyId").optional().isUUID().withMessage("Company ID must be a valid UUID"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   validate,
