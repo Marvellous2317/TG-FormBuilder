@@ -7,7 +7,10 @@ import EditEntityModal from './components/EditEntityModal';
 import EmptyEntityList from './components/EmptyEntityList';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
-import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
+import {
+  useCompanies,
+  useDashboardCompanyAnalytics,
+} from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 
 export default function SuperAdminDashboard() {
@@ -19,6 +22,11 @@ export default function SuperAdminDashboard() {
   });
 
   const { data, isPending: isLoading } = useCompanies(companyPagination);
+
+  const { data: dashboardAnalytics, isPending: isDashboardAnalyticsLoading } =
+    useDashboardCompanyAnalytics();
+
+  const dashboardAnalyticsData = dashboardAnalytics?.data;
 
   const handlePagination = ({ page, pageSize }) => {
     setCompanyPagination({
@@ -58,22 +66,26 @@ export default function SuperAdminDashboard() {
           <AdminCard
             icon={Icons.activeEntitiesIcon}
             title="Active entities"
-            count="2000"
+            count={dashboardAnalyticsData?.totalActiveCompanies || 0}
+            loading={isDashboardAnalyticsLoading}
           />
           <AdminCard
             icon={Icons.activeUsers}
             title="Active users"
-            count="150"
+            count={dashboardAnalyticsData?.totalActiveUsers || 0}
+            loading={isDashboardAnalyticsLoading}
           />
           <AdminCard
             icon={Icons.logsTodayIcon}
             title="Logs today"
-            count="150"
+            count={dashboardAnalyticsData?.totalChecklistsToday || 0}
+            loading={isDashboardAnalyticsLoading}
           />
           <AdminCard
             icon={Icons.logsWeekIcon}
             title="This week's log"
-            count="150"
+            count={dashboardAnalyticsData?.totalChecklistsThisWeek || 0}
+            loading={isDashboardAnalyticsLoading}
           />
         </div>
       </section>

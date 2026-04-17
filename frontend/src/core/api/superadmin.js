@@ -111,7 +111,7 @@ export const updateDepartment = async (payload, departmentId) => {
   return data;
 };
 
-export const fetchUserStatistics = async (id) => {
+export const fetchUserStatistics = async () => {
   const { data } = await axiosInstance.get(`/admin/user-statistics`);
   return data;
 };

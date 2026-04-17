@@ -3,18 +3,15 @@ import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import UserList from './components/UserList';
 import Icons from '../../../assets/icons';
-import InviteUsersModal from './components/InviteUsersModal';
-import EditUsersModal from './components/EditUsersModal';
-
-import AdminEmptyUsersList from '../dashboard/components/AdminEmptyUsersList';
-import AdminUsersList from '../dashboard/components/AdminDashboardList';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
-import AdminCreateUsersModal from '../dashboard/components/AdminCreateUsersModal';
-import AdminEditUsersModal from '../dashboard/components/AdminEditUsersModal';
 import {
   useFetchUsers,
   useUserStatistics,
 } from '../../../shared/hooks/superadmin/useSuperAdminUser';
+import EmptyAdminUserList from './components/EmptyAdminUserList';
+import AdminUserList from './components/AdminUserList';
+import CreateAdminUserModal from './components/CreateAdminUserModal';
+import EditAdminUserModal from './components/EditAdminUserModal';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
@@ -40,9 +37,7 @@ export default function UserManagement() {
           className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
         >
           <IoAddOutline className="text-white" size={14} />
-          <p className="text-white font-geist font-medium text-sm">
-            Add a user
-          </p>
+          <p className="text-white font-geist font-medium text-sm">Add user</p>
         </Button>
       </header>
 
@@ -66,34 +61,34 @@ export default function UserManagement() {
             count={userStatistics?.suspendedUsers || 0}
             loading={isLoading}
           />
-          <AdminCard
+          {/* <AdminCard
             icon={Icons.inactiveUsers}
             title="Total roles"
             count={userStatistics?.totalRoles || 0}
             loading={isLoading}
-          />
+          /> */}
         </div>
       </section>
-
-      {/* <section className="py-6 px-8 min-h-full relative">
+      {/* 
+      <section className="py-6 px-8 min-h-full relative">
         {[1].length > 0 ? (
-          <AdminUsersList setIsEditUserModalOpen={setIsEditUserModalOpen} />
+          <AdminUserList setIsEditUserModalOpen={setIsEditUserModalOpen} />
         ) : (
-          <AdminEmptyUsersList
+          <EmptyAdminUserList
             setIsCreateUserModalOpen={setIsCreateUserModalOpen}
           />
         )}
       </section> */}
 
-      {/* <AdminCreateUsersModal
+      <CreateAdminUserModal
         isCreateUserModalOpen={isCreateUserModalOpen}
         setIsCreateUserModalOpen={setIsCreateUserModalOpen}
       />
 
-      <AdminEditUsersModal
+      <EditAdminUserModal
         isEditUserModalOpen={isEditUserModalOpen}
         setIsEditUserModalOpen={setIsEditUserModalOpen}
-      /> */}
+      />
     </div>
   );
 }

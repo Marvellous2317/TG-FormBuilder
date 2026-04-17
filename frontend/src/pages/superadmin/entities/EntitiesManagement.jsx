@@ -3,10 +3,7 @@ import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import EntityList from '../dashboard/components/EntityList';
 import CreateEntityModal from '../dashboard/components/CreateEntityModal';
-import EditEntityModal from '../dashboard/components/EditEntityModal';
 import EmptyEntityList from '../dashboard/components/EmptyEntityList';
-import Icons from '../../../assets/icons';
-import AdminCard from '../../admin/dashboard/components/AdminCard';
 import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 
@@ -25,7 +22,7 @@ export default function EntitiesManagement() {
             Entities
           </h1>
           <p className="text-sm text-tertiary font-geist">
-            You have 6 onboarded entities
+            List of onboarded entities
           </p>
         </div>
         <Button
