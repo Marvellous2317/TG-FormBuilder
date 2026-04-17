@@ -8,6 +8,7 @@ import { generateJWT } from "../auth/helper.js";
 import { sendApprovalEmail, sendPasswordMail } from "../../views/index.js";
 import { sequelize } from "../../config/database.js";
 import { generateRandomPassword } from "./helper.js";
+import e from "express";
 
 
 
@@ -193,8 +194,21 @@ export class AdminRepository {
 
   static async addUser( admin,{ email, firstName, lastName, roleId, companyId, department }) {
     try {
-      const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
-      if (existingUser) throw new ApplicationError("User with this email already exists", 400);
+      const existingUser = await User.findOne({ 
+        where: { email: email.toLowerCase().trim() },
+        paranoid: false 
+      });
+
+      console.log("Existing user check:", existingUser);
+      
+      if (existingUser) {
+        if (existingUser.deletedAt) {
+          throw new ApplicationError("User with this email already exists but has been deleted", 400);
+        }
+        throw new ApplicationError("User with this email already exists", 400);
+      }
+
+      //return {existingUser};
 
       if (!roleId) throw new ValidationError("Role ID is required");
       const role = await Role.findByPk(roleId);
@@ -546,6 +560,7 @@ export class AdminRepository {
         },
       };
     } catch (error) {
+      //console.log("Error in getAllCompanies:", error);
       throw new ApplicationError("Failed to fetch companies", 500);
     }
   }
