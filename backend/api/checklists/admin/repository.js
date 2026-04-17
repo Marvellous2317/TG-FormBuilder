@@ -149,7 +149,7 @@ export class AdminRepository {
         if (existing) throw new ApplicationError("Document number already exists", 400);
       }
 
-      // Validate departmentId if provided
+
       if (departmentId !== undefined) {
         if (departmentId) {
           const department = await Department.findByPk(departmentId);
@@ -160,7 +160,6 @@ export class AdminRepository {
         }
       }
 
-      // Validate and update frequency
       if (frequency !== undefined) {
         if (frequency === "hourly" && (!frequencyInterval || frequencyInterval < 1)) {
           throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);

@@ -633,7 +633,7 @@ export class AdminRepository {
     }
   }
 
-  static async suspendCompany(companyId) {
+  static async suspendCompany(companyId, reason) {
     try {
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
@@ -643,6 +643,7 @@ export class AdminRepository {
       }
 
       company.status = "suspended";
+      company.suspendReason = reason;
       await company.save();
 
       return { message: "Company suspended successfully" };

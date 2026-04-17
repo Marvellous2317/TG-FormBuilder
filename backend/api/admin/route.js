@@ -1,7 +1,7 @@
 import express from "express";
 import { isAuthenticated, adminRequired, superAdminRequired, validateUUID } from "../middlewares/authorization.js";
 import { AdminController } from "./controller.js";
-import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware } from "./middleware.js";
+import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware } from "./middleware.js";
 import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
@@ -34,7 +34,7 @@ router.get("/companies/:companyId", validateUUID("companyId"), isAuthenticated, 
 router.post("/companies", validateCreateCompanyMiddleware, isAuthenticated, adminRequired, AdminController.createCompanyApi);
 router.put("/companies/:companyId", validateUUID("companyId"), validateUpdateCompanyMiddleware, isAuthenticated, adminRequired, AdminController.updateCompanyApi);
 router.delete("/companies/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.deleteCompanyApi);
-router.put("/companies/:companyId/suspend", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.suspendCompanyApi);
+router.put("/companies/:companyId/suspend", validateUUID("companyId"), validateSuspendCompanyMiddleware, isAuthenticated, adminRequired, AdminController.suspendCompanyApi);
 router.put("/companies/:companyId/activate", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.activateCompanyApi);
 
 // Department Management

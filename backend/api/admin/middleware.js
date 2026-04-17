@@ -255,14 +255,18 @@ export function validateCreateCompanyMiddleware(req, res, next) {
 
 export function validateUpdateCompanyMiddleware(req, res, next) {
   try {
-    const { companyName, address, contactEmail, status, ...extraFields } = req.body;
+    const { companyName, address,contactFullName, contactEmail, status, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Optional: companyName
+     if (!contactFullName || typeof contactFullName !== "string") {
+        throw new ValidationError("Contact full name must be a string");
+      }
+
+
     if (companyName !== undefined) {
       if (typeof companyName !== "string" || companyName.trim().length < 2) {
         throw new ValidationError("Company name must be at least 2 characters");
@@ -272,7 +276,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: address
+ 
     if (address !== undefined && address !== null) {
       if (typeof address !== "string") {
         throw new ValidationError("Address must be a string");
@@ -282,7 +286,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: contactEmail
+  
     if (contactEmail !== undefined && contactEmail !== null && contactEmail !== "") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(contactEmail)) {
@@ -293,7 +297,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: status
+ 
     if (status !== undefined) {
       const validStatuses = ["active", "suspended"];
       if (!validStatuses.includes(status)) {
@@ -307,7 +311,28 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
   }
 }
 
-// ==================== DEPARTMENT VALIDATION ====================
+export function validateSuspendCompanyMiddleware(req, res, next) {
+  try {
+    const { reason, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    if (!reason || typeof reason !== "string" || reason.trim().length < 5) {
+      throw new ValidationError("Reason is required and must be at least 5 characters");
+    }
+    if (reason.trim().length > 500) {
+      throw new ValidationError("Reason must not exceed 500 characters");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 
 export function validateCreateDepartmentMiddleware(req, res, next) {
   try {
@@ -318,7 +343,7 @@ export function validateCreateDepartmentMiddleware(req, res, next) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Required field
+
     if (!departmentName || typeof departmentName !== "string" || departmentName.trim().length < 2) {
       throw new ValidationError("Department name is required and must be at least 2 characters");
     }
@@ -326,7 +351,7 @@ export function validateCreateDepartmentMiddleware(req, res, next) {
       throw new ValidationError("Department name must not exceed 100 characters");
     }
 
-    // Optional: description
+  
     if (description !== undefined && description !== null) {
       if (typeof description !== "string") {
         throw new ValidationError("Description must be a string");
@@ -351,7 +376,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Optional: departmentName
+
     if (departmentName !== undefined) {
       if (typeof departmentName !== "string" || departmentName.trim().length < 2) {
         throw new ValidationError("Department name must be at least 2 characters");
@@ -361,7 +386,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       }
     }
 
-    // Optional: description
+
     if (description !== undefined && description !== null) {
       if (typeof description !== "string") {
         throw new ValidationError("Description must be a string");
@@ -371,7 +396,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       }
     }
 
-    // Optional: status
+
     if (status !== undefined) {
       const validStatuses = ["active", "suspended"];
       if (!validStatuses.includes(status)) {
