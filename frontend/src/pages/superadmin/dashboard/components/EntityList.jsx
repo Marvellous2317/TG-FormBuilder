@@ -136,9 +136,9 @@ export default function EntityList({
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
             {isFromDashboard ? (
-              <a
+              <Link
                 className="flex items-center gap-2 group transition-all duration-150 ease-in-out cursor-pointer"
-                href="/superadmin/entities"
+                to="/superadmin/entities"
               >
                 <p className="text-primary-200 text-sm font-medium">
                   View table
@@ -147,7 +147,7 @@ export default function EntityList({
                   className="text-primary-200 group-hover:translate-x-0.5"
                   size={16}
                 />
-              </a>
+              </Link>
             ) : (
               <div className="">
                 <DropdownSelect

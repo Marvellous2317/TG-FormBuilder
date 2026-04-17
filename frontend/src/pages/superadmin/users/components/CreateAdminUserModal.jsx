@@ -1,31 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
-import {
-  useCreateDepartments,
-  useDepartments,
-} from '../../../../shared/hooks/superadmin/useDepartments';
+import { useDepartments } from '../../../../shared/hooks/superadmin/useDepartments';
 import useToast from '../../../../shared/hooks/useToast';
 import Loader from '../../../../shared/components/Loader';
 import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useCompanies } from '../../../../shared/hooks/superadmin/useCompanies';
+import { useCreateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
 export default function CreateAdminUserModal({
   isCreateUserModalOpen,
   setIsCreateUserModalOpen,
 }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState({});
-  const [entity, setEntity] = useState({});
-  const [department, setDepartment] = useState('');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: {},
+    entity: {},
+    department: {},
+  });
 
   const { data: departments, isPending: isLoadingDepartments } =
     useDepartments();
   const { data: roles, isLoading: isLoadingRoles } = useRoles();
   const { data: companies, isPending: isLoadingEntities } = useCompanies();
+
+  const { mutateAsync, isPending: isLoading } = useCreateUser();
 
   const { showError, showSuccess } = useToast();
 
@@ -34,35 +36,108 @@ export default function CreateAdminUserModal({
     label: role.roleName,
     value: role.roleId,
   }));
-  const companiesData = companies?.data?.companies;
+
+  const companiesData = companies?.data?.companies.map((company) => ({
+    ...company,
+    label: company.companyName,
+    value: company.companyId,
+  }));
+
+  const departmentsData = departments?.data?.departments.map((department) => ({
+    ...department,
+    label: department.departmentName,
+    value: department.departmentId,
+  }));
+
+  const handleSetRole = (roleId) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: {
+        roleId,
+        label: rolesData.filter((r) => r.roleId === roleId)[0]?.label,
+      },
+    }));
+  };
+
+  const handleSetEntity = (companyId) => {
+    setFormData((prev) => ({
+      ...prev,
+      entity: {
+        companyId,
+        label: companiesData.filter((r) => r.companyId === companyId)[0]?.label,
+      },
+    }));
+  };
+
+  const handleSetDepartment = (departmentId) => {
+    setFormData((prev) => ({
+      ...prev,
+      department: {
+        departmentId,
+        label: departmentsData.filter((r) => r.departmentId === departmentId)[0]
+          ?.label,
+      },
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
 
   const handleSubmit = async () => {
-    if (!firstName || !lastName || !email || !role || !entity || !department) {
+    const { firstName, lastName, email, role, entity, department } = formData;
+
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !role?.roleId ||
+      !entity?.companyId ||
+      !department?.departmentId
+    ) {
       showError('Enter all fields');
       return;
     }
 
-    // try {
-    //   await mutateAsync({
-    //     firstName,
-    //     lastName,
-    //     email,
-    //     roleId: role?.roleId,
-    //     entityId: entity?.companyId,
-    //     department,
-    //   });
-    //   showSuccess('Admin User created successfully');
-    //   setIsCreateUserModalOpen(false);
-    // } catch (err) {
-    //   console.log(err);
-    //   showError('Unable to create department. Please try again.');
-    // }
+    try {
+      await mutateAsync({
+        firstName,
+        lastName,
+        email,
+        roleId: role?.roleId,
+        companyId: entity?.companyId,
+        department: department.label,
+      });
+      showSuccess('Admin User created successfully');
+      handleCloseModal();
+    } catch (err) {
+      console.log(err.response.data);
+      showError(
+        err.response.data.message ?? 'Unable to create user. Please try again.',
+      );
+    }
+  };
+
+  const handleCloseModal = () => {
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      role: {},
+      entity: {},
+      department: {},
+    });
+    setIsCreateUserModalOpen(false);
   };
 
   return (
     <Modal
       isOpen={isCreateUserModalOpen}
-      onClose={() => setIsCreateUserModalOpen(false)}
+      onClose={() => handleCloseModal()}
       position="right"
       width="max-w-[460px]"
       className="overflow-hidden"
@@ -82,67 +157,79 @@ export default function CreateAdminUserModal({
             label="First name"
             id="firstName"
             className=""
-            value={firstName}
+            value={formData.firstName}
             required
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={handleInputChange}
           />
 
           <InputField
             label="Last name"
             id="lastName"
             className=""
-            value={lastName}
+            value={formData.lastName}
             required
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={handleInputChange}
           />
 
           <InputField
             label="Email"
             id="email"
             className=""
-            value={email}
+            value={formData.email}
             required
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleInputChange}
           />
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 w-full items-center relative">
             <InputField
               label="Role"
               id="role"
               className=""
-              value={role?.roleId}
+              value={formData.role?.roleId}
               required
               readOnly={isLoadingRoles}
               options={rolesData}
               type="select"
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => handleSetRole(e.target.value)}
             />
-            {isLoadingRoles && <Loader />}
+            {isLoadingRoles && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
 
-          <InputField
-            label="Entity"
-            id="entity"
-            className=""
-            value={entity?.companyId}
-            required
-            onChange={(e) => setEntity(e.target.value)}
-          />
+          <div className="flex gap-2 w-full items-center relative">
+            <InputField
+              label="Entity"
+              id="entity"
+              className=""
+              value={formData.entity?.companyId}
+              required
+              readOnly={isLoadingEntities}
+              options={companiesData}
+              type="select"
+              onChange={(e) => handleSetEntity(e.target.value)}
+            />
+            {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
 
-          <InputField
-            label="Department"
-            id="department"
-            className=""
-            value={department}
-            required
-            onChange={(e) => setDepartment(e.target.value)}
-          />
+          <div className="flex gap-2 w-full items-center relative">
+            <InputField
+              label="Department"
+              id="department"
+              className=""
+              value={formData.department?.departmentId}
+              required
+              readOnly={isLoadingDepartments}
+              options={departmentsData}
+              type="select"
+              onChange={(e) => handleSetDepartment(e.target.value)}
+            />
+            {isLoadingDepartments && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
         </div>
 
         <div className="flex items-center mt-6 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsCreateUserModalOpen(false)}
+            onClick={() => handleCloseModal()}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
@@ -150,11 +237,11 @@ export default function CreateAdminUserModal({
           <Button
             type="button"
             onClick={() => handleSubmit()}
-            // disabled={isLoading}
+            disabled={isLoading}
             className="rounded-[10px] flex gap-2 bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white"
           >
             Continue
-            {/* {isLoading && <Loader size="border-white! h-4.5 w-4.5" />} */}
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

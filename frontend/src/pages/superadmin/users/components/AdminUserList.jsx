@@ -15,13 +15,13 @@ const statusOptions = [
 ];
 
 export default function AdminUserList({
-  setIsEditAdminUserModal,
-  setIsDeleteAdminUserModalOpen,
-  setAdminUserToDelete,
-  departments,
+  setIsEditUserModalOpen,
+  setIsDeleteUserModalOpen,
+  setUserToDelete,
+  users,
   pagination,
   handlePageChange,
-  setAdminUserToEdit,
+  setUserToEdit,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
@@ -68,10 +68,10 @@ export default function AdminUserList({
   };
 
   // Filter data based on search and status
-  const filteredData = departments?.filter((row) => {
+  const filteredData = users?.filter((row) => {
     const matchesSearch =
-      row.departmentName.toLowerCase().includes(search.toLowerCase()) ||
-      row.description.toLowerCase().includes(search.toLowerCase());
+      row.firstName.toLowerCase().includes(search.toLowerCase()) ||
+      row.lastName.toLowerCase().includes(search.toLowerCase());
 
     let status = '';
     if (row.status) {
@@ -116,7 +116,7 @@ export default function AdminUserList({
       value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
-        setIsEditAdminUserModal(true);
+        setIsEditUserModalOpen(true);
       },
     },
     {
@@ -124,7 +124,7 @@ export default function AdminUserList({
       value: 'delete',
       onClick: () => {
         setActiveMenuId(null);
-        setIsDeleteAdminUserModalOpen(true);
+        setIsDeleteUserModalOpen(true);
       },
     },
   ];
@@ -147,8 +147,8 @@ export default function AdminUserList({
     setMenuPosition({ top, left });
     setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
 
-    setAdminUserToEdit(row);
-    setAdminUserToDelete(row);
+    setUserToEdit(row);
+    setUserToDelete(row);
   };
 
   return (
@@ -186,8 +186,11 @@ export default function AdminUserList({
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
-                <th className="p-3 w-[40%] lg:w-[50%] md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Description
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Role
+                </th>
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Entity
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
@@ -200,23 +203,29 @@ export default function AdminUserList({
             </thead>
 
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((row) => (
+              {filteredData?.length > 0 ? (
+                filteredData?.map((row) => (
                   <tr
-                    key={row.departmentId}
+                    key={row?.userId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
-                      {row.departmentName}
+                    <td className="p-3 gap-1 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
+                      <p className="text-sm text-secondary">
+                        {row?.firstName} {row?.lastName}
+                      </p>
+                      <p className="text-tertiary text-xs">{row?.email}</p>
                     </td>
-                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none line-clamp-3">
-                      {row.description}
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                      {row?.role?.roleName || 'N/A'}
+                    </td>
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                      {row?.company?.companyName || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.status === 'active' ? 'Active' : 'Inactive'}
+                      {row?.status === 'active' ? 'Active' : 'Inactive'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
-                      {formatDate(row.createdAt)}
+                      {formatDate(row?.createdAt)}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button

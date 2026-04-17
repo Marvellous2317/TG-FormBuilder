@@ -97,7 +97,7 @@ export function useDeleteUser(options = {}) {
   });
 }
 
-export function useCreateCompanies(options = {}) {
+export function useCreateUser(options = {}) {
   const queryClient = useQueryClient();
   const { onSuccess, ...mutationOptions } = options;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
+import DropdownSelect from './DropdownSelect';
 
 function InputField({
   id,
@@ -29,7 +29,6 @@ function InputField({
     'placeholder:text-secondary focus:border-primary-200/75 focus:ring-2 focus:ring-primary/10',
     disabled ? 'cursor-not-allowed bg-secondary/60' : '',
     isPasswordField ? 'pr-20' : '',
-    isSelectField ? 'appearance-none pr-10' : '',
     isTextAreaField ? 'min-h-28 resize-y' : '',
     inputClassName,
   ]
@@ -54,41 +53,26 @@ function InputField({
 
       <div className="relative">
         {isSelectField ? (
-          <>
-            <select
-              id={inputId}
-              name={name}
-              value={value}
-              onChange={onChange}
-              required={required}
-              disabled={disabled}
-              autoComplete={autoComplete}
-              aria-required={required}
-              className={baseInputClassName}
-            >
-              {placeholder ? (
-                <option value="" disabled>
-                  {placeholder}
-                </option>
-              ) : null}
-              {options.map((option) => {
-                const optionValue =
-                  typeof option === 'object' ? option.value : option;
-                const optionLabel =
-                  typeof option === 'object' ? option.label : option;
-
-                return (
-                  <option key={optionValue} value={optionValue}>
-                    {optionLabel}
-                  </option>
-                );
-              })}
-            </select>
-            <FaChevronDown
-              size={12}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-secondary"
-            />
-          </>
+          <DropdownSelect
+            value={value}
+            options={options.map((option) =>
+              typeof option === 'object'
+                ? option
+                : { value: option, label: option },
+            )}
+            onChange={(val) =>
+              onChange({ target: { value: val, name } })
+            }
+            placeholder={placeholder}
+            disabled={disabled}
+            buttonClassName={[
+              'rounded-2xl border-secondary-200 py-4',
+              disabled ? 'cursor-not-allowed bg-secondary/60 opacity-60' : '',
+              inputClassName,
+            ]
+              .join(' ')
+              .trim()}
+          />
         ) : isTextAreaField ? (
           <textarea
             id={inputId}
