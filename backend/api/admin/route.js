@@ -1,7 +1,7 @@
 import express from "express";
 import { isAuthenticated, adminRequired, superAdminRequired, validateUUID } from "../middlewares/authorization.js";
 import { AdminController } from "./controller.js";
-import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware } from "./middleware.js";
+import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware, validateCompaniesQuery, validateUsersQuery, validateDepartmentsQuery } from "./middleware.js";
 import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
@@ -16,7 +16,7 @@ router.delete("/roles/:roleId", validateUUID("roleId"), isAuthenticated, superAd
 
 // User Management
 router.post("/add-user", validateAddUserMiddleware, isAuthenticated, adminRequired, AdminController.addUserAPi);
-router.get("/users", isAuthenticated, adminRequired, AdminController.getUsersApi);
+router.get("/users", validateUsersQuery, isAuthenticated, adminRequired, AdminController.getUsersApi);
 router.get("/user-statistics", isAuthenticated, adminRequired, AdminController.getUserStatisticsApi);
 router.get("/users/:userId", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.getUserApi);
 router.put("/users/:userId", validateUUID("userId"), validateUpdateUserMiddleware, isAuthenticated, adminRequired, AdminController.updateUserApi);
@@ -29,16 +29,16 @@ router.put("/users/:userId/unassign-approver", validateUUID("userId"), isAuthent
 router.get("/users/:userId/approvers", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.getOperatorApproversApi);
 
 // Company Management
-router.get("/companies", isAuthenticated, adminRequired, AdminController.getCompaniesApi);
+router.get("/companies", validateCompaniesQuery, isAuthenticated, adminRequired, AdminController.getCompaniesApi);
 router.get("/companies/:companyId", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.getCompanyByIdApi);
 router.post("/companies", validateCreateCompanyMiddleware, isAuthenticated, adminRequired, AdminController.createCompanyApi);
 router.put("/companies/:companyId", validateUUID("companyId"), validateUpdateCompanyMiddleware, isAuthenticated, adminRequired, AdminController.updateCompanyApi);
 router.delete("/companies/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.deleteCompanyApi);
-router.put("/companies/:companyId/suspend", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.suspendCompanyApi);
+router.put("/companies/:companyId/suspend", validateUUID("companyId"), validateSuspendCompanyMiddleware, isAuthenticated, adminRequired, AdminController.suspendCompanyApi);
 router.put("/companies/:companyId/activate", validateUUID("companyId"), isAuthenticated, adminRequired, AdminController.activateCompanyApi);
 
 // Department Management
-router.get("/departments", isAuthenticated, adminRequired, AdminController.getDepartmentsApi);
+router.get("/departments", validateDepartmentsQuery, isAuthenticated, adminRequired, AdminController.getDepartmentsApi);
 router.get("/departments/:departmentId", validateUUID("departmentId"), isAuthenticated, adminRequired, AdminController.getDepartmentByIdApi);
 router.post("/departments", validateCreateDepartmentMiddleware, isAuthenticated, adminRequired, AdminController.createDepartmentApi);
 router.put("/departments/:departmentId", validateUUID("departmentId"), validateUpdateDepartmentMiddleware, isAuthenticated, adminRequired, AdminController.updateDepartmentApi);

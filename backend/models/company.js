@@ -35,6 +35,11 @@ export const Company = sequelize.define(
       allowNull: false,
       defaultValue: "active",
     },
+
+    suspendReason: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
         
         
     },

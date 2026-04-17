@@ -237,7 +237,7 @@ export class AdminRepository {
     }
   }
 
-  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search }) {
+  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -258,6 +258,12 @@ export class AdminRepository {
 
       if (department) {
         where.department = { [Op.iLike]: `%${department}%` };
+      }
+
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
       }
 
       if (search) {
@@ -494,7 +500,7 @@ export class AdminRepository {
   }
 
 
-  static async getAllCompanies({ status, search, page = 1, limit = 20 }) {
+  static async getAllCompanies({ status, search, page = 1, limit = 20, startDate, endDate }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -503,6 +509,12 @@ export class AdminRepository {
 
       if (status) {
         where.status = status;
+      }
+
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
       }
 
       if (search) {
@@ -633,7 +645,7 @@ export class AdminRepository {
     }
   }
 
-  static async suspendCompany(companyId) {
+  static async suspendCompany(companyId, reason) {
     try {
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
@@ -643,6 +655,7 @@ export class AdminRepository {
       }
 
       company.status = "suspended";
+      company.suspendReason = reason;
       await company.save();
 
       return { message: "Company suspended successfully" };
@@ -672,7 +685,7 @@ export class AdminRepository {
   }
 
 
-  static async getAllDepartments({ status, search, page = 1, limit = 20 }) {
+  static async getAllDepartments({ status, search, page = 1, limit = 20, startDate, endDate }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -681,6 +694,12 @@ export class AdminRepository {
 
       if (status) {
         where.status = status;
+      }
+
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
       }
 
       if (search) {
