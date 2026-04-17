@@ -43,6 +43,9 @@ export const validateUpdateSubmission = [
 
 export const validateSubmissionQuery = [
   query("status").optional().isIn(["pending", "approved", "rejected"]).withMessage("Invalid status"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be positive"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   validate,

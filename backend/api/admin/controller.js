@@ -90,7 +90,7 @@ export class AdminController {
 
   static async addUserAPi(req, res, next) {
     try {
-      const result = await AdminRepository.addUser(req.body, req.user);
+      const result = await AdminRepository.addUser( req.user, req.body,);
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) {
       next(e);
@@ -260,7 +260,8 @@ export class AdminController {
       if (!companyId) {
         return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
       }
-      const result = await AdminRepository.suspendCompany(companyId);
+      const { reason } = req.body;
+      const result = await AdminRepository.suspendCompany(companyId, reason);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);

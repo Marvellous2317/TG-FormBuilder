@@ -285,14 +285,16 @@ export class OperatorRepository {
     }
   }
 
-  static async getMySubmissions(userId, { search, status, page = 1, limit = 20 }) {
+  static async getMySubmissions(userId, { search, status, startDate, endDate, page = 1, limit = 20 }) {
     try {
       const where = { submittedBy: userId };
       if (status) where.status = status;
-      if (search) where[Op.or] = [
-        { '$assignment.checklist.title$': { [Op.iLike]: `%${search}%` } },
-        { '$assignment.checklist.documentNumber$': { [Op.iLike]: `%${search}%` } },
-      ];
+      if (search) where.documentNumber = { [Op.iLike]: `%${search}%` };
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+      }
       const offset = (page - 1) * limit;
       const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
         where,

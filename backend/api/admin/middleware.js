@@ -1,7 +1,53 @@
 import { ValidationError } from "../../utils/errorHandler.js";
+import { query, validationResult } from "express-validator";
+import ResponseManager from "../../utils/responseManager.js";
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map((err) => err.msg);
+    return ResponseManager.error(res, "ValidationError", errorMessages.join(", "), 400);
+  }
+  next();
+};
+
+// ==================== QUERY VALIDATION ====================
+
+export const validateCompaniesQuery = [
+  query("status").optional().isIn(["active", "suspended"]).withMessage("Status must be active or suspended"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateUsersQuery = [
+  query("status").optional().isIn(["active", "suspended", "pending"]).withMessage("Invalid status"),
+  query("roleId").optional().isUUID().withMessage("Role ID must be a valid UUID"),
+  query("companyId").optional().isUUID().withMessage("Company ID must be a valid UUID"),
+  query("department").optional().isString().withMessage("Department must be a string"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateDepartmentsQuery = [
+  query("status").optional().isIn(["active", "suspended"]).withMessage("Status must be active or suspended"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("startDate").optional().isISO8601().withMessage("Start date must be a valid date"),
+  query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
 
 export function validateAddUserMiddleware(req, res, next) {
   try {
@@ -255,14 +301,18 @@ export function validateCreateCompanyMiddleware(req, res, next) {
 
 export function validateUpdateCompanyMiddleware(req, res, next) {
   try {
-    const { companyName, address, contactEmail, status, ...extraFields } = req.body;
+    const { companyName, address,contactFullName, contactEmail, status, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Optional: companyName
+     if (!contactFullName || typeof contactFullName !== "string") {
+        throw new ValidationError("Contact full name must be a string");
+      }
+
+
     if (companyName !== undefined) {
       if (typeof companyName !== "string" || companyName.trim().length < 2) {
         throw new ValidationError("Company name must be at least 2 characters");
@@ -272,7 +322,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: address
+ 
     if (address !== undefined && address !== null) {
       if (typeof address !== "string") {
         throw new ValidationError("Address must be a string");
@@ -282,7 +332,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: contactEmail
+  
     if (contactEmail !== undefined && contactEmail !== null && contactEmail !== "") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(contactEmail)) {
@@ -293,7 +343,7 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
       }
     }
 
-    // Optional: status
+ 
     if (status !== undefined) {
       const validStatuses = ["active", "suspended"];
       if (!validStatuses.includes(status)) {
@@ -307,7 +357,28 @@ export function validateUpdateCompanyMiddleware(req, res, next) {
   }
 }
 
-// ==================== DEPARTMENT VALIDATION ====================
+export function validateSuspendCompanyMiddleware(req, res, next) {
+  try {
+    const { reason, ...extraFields } = req.body;
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
+    }
+
+    if (!reason || typeof reason !== "string" || reason.trim().length < 5) {
+      throw new ValidationError("Reason is required and must be at least 5 characters");
+    }
+    if (reason.trim().length > 500) {
+      throw new ValidationError("Reason must not exceed 500 characters");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 
 export function validateCreateDepartmentMiddleware(req, res, next) {
   try {
@@ -318,7 +389,7 @@ export function validateCreateDepartmentMiddleware(req, res, next) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Required field
+
     if (!departmentName || typeof departmentName !== "string" || departmentName.trim().length < 2) {
       throw new ValidationError("Department name is required and must be at least 2 characters");
     }
@@ -326,7 +397,7 @@ export function validateCreateDepartmentMiddleware(req, res, next) {
       throw new ValidationError("Department name must not exceed 100 characters");
     }
 
-    // Optional: description
+  
     if (description !== undefined && description !== null) {
       if (typeof description !== "string") {
         throw new ValidationError("Description must be a string");
@@ -351,7 +422,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       throw new ValidationError(`Unexpected fields: ${extraKeys.join(", ")}`);
     }
 
-    // Optional: departmentName
+
     if (departmentName !== undefined) {
       if (typeof departmentName !== "string" || departmentName.trim().length < 2) {
         throw new ValidationError("Department name must be at least 2 characters");
@@ -361,7 +432,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       }
     }
 
-    // Optional: description
+
     if (description !== undefined && description !== null) {
       if (typeof description !== "string") {
         throw new ValidationError("Description must be a string");
@@ -371,7 +442,7 @@ export function validateUpdateDepartmentMiddleware(req, res, next) {
       }
     }
 
-    // Optional: status
+
     if (status !== undefined) {
       const validStatuses = ["active", "suspended"];
       if (!validStatuses.includes(status)) {
