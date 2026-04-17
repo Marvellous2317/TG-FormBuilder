@@ -31,12 +31,6 @@ const navDetails = [
     to: '/superadmin/departments',
   },
   {
-    icon: Icons.dashboardActive,
-    icon2: Icons.dashboardInactive,
-    title: 'Company management',
-    to: '/superadmin/companies',
-  },
-  {
     icon: Icons.userActive,
     icon2: Icons.userInactive,
     title: 'User management',

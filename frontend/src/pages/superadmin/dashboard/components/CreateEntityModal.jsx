@@ -13,16 +13,28 @@ export default function CreateEntityModal({
   isCreateEntityModal,
   setIsCreateEntityModal,
 }) {
-  const [entityName, setEntityName] = useState('');
-  const [entityAddress, setEntityAddress] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
+  const [formData, setFormData] = useState({
+    entityName: '',
+    entityAddress: '',
+    fullName: '',
+    emailAddress: '',
+  });
 
   const { mutateAsync, isPending: isLoading } = useCreateCompanies();
 
   const { showSuccess, showError } = useToast();
 
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
   const handleSubmit = async () => {
+    const { entityName, entityAddress, fullName, emailAddress } = formData;
+
     if (!entityName || !entityAddress || !fullName || !emailAddress) {
       showError('Complete all fields');
       return;
@@ -37,17 +49,27 @@ export default function CreateEntityModal({
       });
 
       showSuccess('Entity created successfully');
-      setIsCreateEntityModal(false);
+      handleCloseModal();
     } catch (err) {
       console.error('Error', err);
       showError('Unable to create entity. Please try again.');
     }
   };
 
+  const handleCloseModal = () => {
+    setFormData({
+      entityName: '',
+      entityAddress: '',
+      fullName: '',
+      emailAddress: '',
+    });
+    setIsCreateEntityModal(false);
+  };
+
   return (
     <Modal
       isOpen={isCreateEntityModal}
-      onClose={() => setIsCreateEntityModal(false)}
+      onClose={() => handleCloseModal()}
       position="right"
       width="max-w-[460px]"
       className="overflow-hidden"
@@ -67,7 +89,8 @@ export default function CreateEntityModal({
             <h2 className="text-base font-semibold font-geist text-primary">
               Entity profile
             </h2>
-            {/* <p className="text-sm font-geist text-tertiary">
+            {/* Commented out image upload section
+            <p className="text-sm font-geist text-tertiary">
               Add image and name of entity
             </p>
             <div className="mt-5 w-full rounded-2xl px-4 py-2 bg-tertiary-700 flex items-center justify-between">
@@ -79,22 +102,23 @@ export default function CreateEntityModal({
                 <FiUpload className="text-primary" size={12} />
                 <p className="text-secondary-100 text-sm font-medium">Upload</p>
               </Button>
-            </div> */}
+            </div>
+            */}
 
             <InputField
               label="Address of entity"
               id="entityAddress"
               className="mt-4"
-              value={entityAddress}
-              onChange={(e) => setEntityAddress(e.target.value)}
+              value={formData.entityAddress}
+              onChange={handleInputChange}
             />
 
             <InputField
               label="Name of entity"
               id="entityName"
               className="mt-4"
-              value={entityName}
-              onChange={(e) => setEntityName(e.target.value)}
+              value={formData.entityName}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -112,16 +136,16 @@ export default function CreateEntityModal({
               label="Full name"
               id="fullName"
               className="mt-5"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={formData.fullName}
+              onChange={handleInputChange}
             />
 
             <InputField
               label="Email address"
               id="emailAddress"
               type="email"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
+              value={formData.emailAddress}
+              onChange={handleInputChange}
               className="mt-4"
             />
           </div>
@@ -130,15 +154,16 @@ export default function CreateEntityModal({
         <div className="flex items-center mt-6 p-5 border-t border-secondary-200 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsCreateEntityModal(false)}
+            onClick={() => handleCloseModal()}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] flex gap-2 bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex gap-2 bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white"
             onClick={() => handleSubmit()}
+            disabled={isLoading}
           >
             Continue
             {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}

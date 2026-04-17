@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -14,16 +14,40 @@ export default function EditEntityModal({
   setIsEditEntityModal,
   company,
 }) {
-  const [entityName, setEntityName] = useState(company?.companyName ?? '');
-  const [entityAddress, setEntityAddress] = useState(company?.address ?? '');
-  const [fullName, setFullName] = useState(company?.contactFullName ?? '');
-  const [emailAddress, setEmailAddress] = useState(company?.contactEmail ?? '');
+  const [formData, setFormData] = useState({
+    entityName: company?.companyName ?? '',
+    entityAddress: company?.address ?? '',
+    fullName: company?.contactFullName ?? '',
+    emailAddress: company?.contactEmail ?? '',
+  });
 
   const { mutateAsync, isPending: isLoading } = useUpdateCompany();
 
   const { showSuccess, showError } = useToast();
 
+  // Update form data when company prop changes
+  // useEffect(() => {
+  //   if (company) {
+  //     setFormData({
+  //       entityName: company?.companyName ?? '',
+  //       entityAddress: company?.address ?? '',
+  //       fullName: company?.contactFullName ?? '',
+  //       emailAddress: company?.contactEmail ?? '',
+  //     });
+  //   }
+  // }, [company]);
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
   const handleSubmit = async () => {
+    const { entityName, entityAddress, fullName, emailAddress } = formData;
+
     if (!entityName || !entityAddress || !fullName || !emailAddress) {
       showError('Complete all fields');
       return;
@@ -41,17 +65,27 @@ export default function EditEntityModal({
       });
 
       showSuccess('Entity updated successfully');
-      setIsEditEntityModal(false);
+      handleCloseModal();
     } catch (err) {
       console.error('Error', err);
       showError('Unable to update entity. Please try again.');
     }
   };
 
+  const handleCloseModal = () => {
+    setFormData({
+      entityName: '',
+      entityAddress: '',
+      fullName: '',
+      emailAddress: '',
+    });
+    setIsEditEntityModal(false);
+  };
+
   return (
     <Modal
       isOpen={isEditEntityModal}
-      onClose={() => setIsEditEntityModal(false)}
+      onClose={() => handleCloseModal()}
       position="right"
       width="max-w-[460px]"
       className="overflow-hidden"
@@ -76,17 +110,17 @@ export default function EditEntityModal({
               label="Address of entity"
               id="entityAddress"
               className="mt-4"
-              value={entityAddress}
-              onChange={(e) => setEntityAddress(e.target.value)}
+              value={formData.entityAddress}
+              onChange={handleInputChange}
             />
 
             <InputField
               label="Name of entity"
               id="entityName"
               className="mt-4"
-              value={entityName}
+              value={formData.entityName}
               readOnly
-              onChange={(e) => setEntityName(e.target.value)}
+              onChange={handleInputChange}
             />
           </div>
 
@@ -104,8 +138,8 @@ export default function EditEntityModal({
               label="Full name"
               id="fullName"
               className="mt-5"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={formData.fullName}
+              onChange={handleInputChange}
             />
 
             <InputField
@@ -113,8 +147,8 @@ export default function EditEntityModal({
               id="emailAddress"
               type="email"
               className="mt-4"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
+              value={formData.emailAddress}
+              onChange={handleInputChange}
             />
           </div>
         </div>
@@ -122,15 +156,16 @@ export default function EditEntityModal({
         <div className="flex items-center mt-6 p-5 border-t border-secondary-200 justify-end gap-3">
           <Button
             type="button"
-            onClick={() => setIsEditEntityModal(false)}
+            onClick={() => handleCloseModal()}
             className="rounded-[10px] bg-tertiary-200 px-4 py-2.5 text-sm font-medium font-geist text-secondary"
           >
             Cancel
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] flex gap-2 bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex gap-2 bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white"
             onClick={() => handleSubmit()}
+            disabled={isLoading}
           >
             Update
             {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}

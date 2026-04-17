@@ -6,6 +6,8 @@ import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
+import { formatDate } from '../../../../shared/utils/constants';
+import useToast from '../../../../shared/hooks/useToast';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -13,53 +15,75 @@ const statusOptions = [
   { title: 'Inactive', value: 'inactive' },
 ];
 
-// Mock data (expanded to demonstrate the scrolling effect)
-const tableData = [
-  {
-    id: 1,
-    name: 'Ajayi Tami',
-    address: 'an address',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    description: 'This is description',
-  },
-  {
-    id: 2,
-    name: 'Lennox',
-    address: 'an address',
-    status: true,
-    email: 'Lennox.charles@tolaram.com',
-    createdAt: '2026-03-13',
-    description: 'This is description',
-  },
-];
-
-export default function CompanyList({ setIsEditCompanyModal }) {
+export default function AdminUserList({
+  setIsEditUserModalOpen,
+  setIsDeleteUserModalOpen,
+  setUserToDelete,
+  users,
+  pagination,
+  handlePageChange,
+  setIsAssignApproverModalOpen,
+  setIsUnassignApproverModalOpen,
+  setUserToEdit,
+  userToEdit,
+}) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const itemsPerPage = 10;
+
+  const { showError } = useToast();
+
+  const currentPage = pagination?.page ?? 1;
+  const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
 
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
   };
 
+  const handlePaginationChange = (payload) => {
+    if (typeof handlePageChange !== 'function') {
+      return;
+    }
+
+    const normalizeEvent = (input) => {
+      if (input?.target) {
+        return input.target;
+      }
+
+      if (typeof input === 'object' && input !== null) {
+        return input;
+      }
+
+      return { name: 'page', value: input };
+    };
+
+    const { name, value } = normalizeEvent(payload);
+
+    if (name === 'page') {
+      const nextPage = Math.max(1, Number(value) || 1);
+      handlePageChange({ page: nextPage, pageSize });
+      return;
+    }
+
+    if (name === 'pageSize') {
+      const nextSize = Math.max(1, Number(value) || 1);
+      handlePageChange({ page: 1, pageSize: nextSize });
+    }
+  };
+
   // Filter data based on search and status
-  const filteredData = tableData.filter((row) => {
+  const filteredData = users?.filter((row) => {
     const matchesSearch =
-      row.name.toLowerCase().includes(search.toLowerCase()) ||
-      row.address.toLowerCase().includes(search.toLowerCase()) ||
-      row.email.toLowerCase().includes(search.toLowerCase());
+      row.firstName.toLowerCase().includes(search.toLowerCase()) ||
+      row.lastName.toLowerCase().includes(search.toLowerCase());
 
     let status = '';
     if (row.status) {
-      status = 'Active';
+      status = 'active';
     } else {
-      status = 'Inactive';
+      status = 'inactive';
     }
 
     const matchesStatus =
@@ -68,10 +92,6 @@ export default function CompanyList({ setIsEditCompanyModal }) {
 
     return matchesSearch && matchesStatus;
   });
-
-  const handlePageChange = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  };
 
   useEffect(() => {
     if (activeMenuId === null) {
@@ -102,17 +122,48 @@ export default function CompanyList({ setIsEditCompanyModal }) {
       value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
-        setIsEditCompanyModal(true);
+        setIsEditUserModalOpen(true);
+      },
+    },
+    {
+      title: 'Assign approver',
+      value: 'assign',
+      onClick: () => {
+        setActiveMenuId(null);
+        if (userToEdit?.role?.roleName !== 'operator') {
+          showError('Only operators can be assigned an approver.');
+          return;
+        }
+        setIsAssignApproverModalOpen(true);
+      },
+    },
+    {
+      title: 'Unassign approver',
+      value: 'unassign',
+      onClick: () => {
+        setActiveMenuId(null);
+        if (userToEdit?.role?.roleName !== 'operator') {
+          showError('Only operators can be unassigned from an approver.');
+          return;
+        }
+        if (userToEdit?.operatorApprovers?.length < 1) {
+          showError('This operator does not have an approver.');
+          return;
+        }
+        setIsUnassignApproverModalOpen(true);
       },
     },
     {
       title: 'Delete',
       value: 'delete',
-      onClick: () => setActiveMenuId(null),
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsDeleteUserModalOpen(true);
+      },
     },
   ];
 
-  const toggleRowMenu = (rowId, event) => {
+  const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
     const menuHeight = dropOptions.length * 44 + 8;
@@ -129,6 +180,9 @@ export default function CompanyList({ setIsEditCompanyModal }) {
 
     setMenuPosition({ top, left });
     setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
+
+    setUserToEdit(row);
+    setUserToDelete(row);
   };
 
   return (
@@ -159,24 +213,18 @@ export default function CompanyList({ setIsEditCompanyModal }) {
         </div>
 
         {/* Table Container - Horizontal scroll on mobile */}
-        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100 xl:max-h-140">
+        <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-90 xl:max-h-120">
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
-                <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Address
+                  Role
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Email
+                  Entity
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
@@ -189,37 +237,34 @@ export default function CompanyList({ setIsEditCompanyModal }) {
             </thead>
 
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((row) => (
+              {filteredData?.length > 0 ? (
+                filteredData?.map((row) => (
                   <tr
-                    key={row.id}
+                    key={row?.userId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-3 md:p-4 border-r border-gray-200">
-                      <input
-                        type="checkbox"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
-                      {row.name}
+                    <td className="p-3 gap-1 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
+                      <p className="text-sm text-secondary">
+                        {row?.firstName} {row?.lastName}
+                      </p>
+                      <p className="text-tertiary text-xs">{row?.email}</p>
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
-                      {row.address}
+                      {row?.role?.roleName || 'N/A'}
+                    </td>
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
+                      {row?.company?.companyName || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.email}
-                    </td>
-                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.status ? 'Active' : 'Inactive'}
+                      {row?.status === 'active' ? 'Active' : 'Inactive'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
-                      {row.createdAt}
+                      {formatDate(row?.createdAt)}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event)}
+                        onClick={(event) => toggleRowMenu(row.id, event, row)}
                         className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
@@ -246,8 +291,9 @@ export default function CompanyList({ setIsEditCompanyModal }) {
       </section>
       <Pagination
         currentPage={currentPage}
-        handlePageChange={handlePageChange}
-        itemsPerPage={itemsPerPage}
+        handlePageChange={handlePaginationChange}
+        itemsPerPage={pageSize}
+        totalPages={pagination?.totalPages}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(

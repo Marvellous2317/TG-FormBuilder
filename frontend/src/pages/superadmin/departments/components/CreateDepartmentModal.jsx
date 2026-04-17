@@ -2,14 +2,39 @@ import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import { useCreateDepartments } from '../../../../shared/hooks/superadmin/useDepartments';
+import useToast from '../../../../shared/hooks/useToast';
+import Loader from '../../../../shared/components/Loader';
 
 export default function CreateDepartmentModal({
   isCreateDepartmentModal,
   setIsCreateDepartmentModal,
 }) {
   const [departmentName, setDepartmentName] = useState('');
-  const [departmentAddress, setDepartmentAddress] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const [departmentDescription, setDepartmentDescription] = useState('');
+
+  const { mutateAsync, isPending: isLoading } = useCreateDepartments();
+
+  const { showError, showSuccess } = useToast();
+
+  const handleSubmit = async () => {
+    if (!departmentName || !departmentDescription) {
+      showError('Enter all fields');
+      return;
+    }
+
+    try {
+      await mutateAsync({
+        departmentName,
+        description: departmentDescription,
+      });
+      showSuccess('Department created successfully');
+      setIsCreateDepartmentModal(false);
+    } catch (err) {
+      console.log(err);
+      showError('Unable to create department. Please try again.');
+    }
+  };
 
   return (
     <Modal
@@ -25,7 +50,7 @@ export default function CreateDepartmentModal({
             Create department
           </p>
           <p className="text-sm font-geist text-tertiary">
-            Create a companies for users to be assigned
+            Create a departments for logbooks to be assigned
           </p>
         </div>
 
@@ -35,24 +60,18 @@ export default function CreateDepartmentModal({
             id="departmentName"
             className=""
             value={departmentName}
+            required
             onChange={(e) => setDepartmentName(e.target.value)}
           />
 
           <InputField
-            label="Department address"
-            id="departmentAddress"
+            label="Department description"
+            id="departmentDescription"
             className=""
-            value={departmentAddress}
-            onChange={(e) => setDepartmentAddress(e.target.value)}
-          />
-
-          <InputField
-            label="Contact email"
-            id="contactEmail"
-            type="email"
-            className=""
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            type="textarea"
+            value={departmentDescription}
+            required
+            onChange={(e) => setDepartmentDescription(e.target.value)}
           />
         </div>
 
@@ -66,9 +85,12 @@ export default function CreateDepartmentModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            onClick={() => handleSubmit()}
+            disabled={isLoading}
+            className="rounded-[10px] flex gap-2 bg-primary-200 disabled:bg-primary-200/70 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium font-geist text-white"
           >
             Continue
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>

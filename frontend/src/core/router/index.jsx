@@ -97,10 +97,6 @@ export const router = createBrowserRouter([
             path: 'departments',
             element: <DepartmentManagement />,
           },
-          {
-            path: 'companies',
-            element: <CompanyManagement />,
-          },
         ],
       },
     ],

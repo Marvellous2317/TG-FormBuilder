@@ -3,7 +3,7 @@ import Icons from '../../../../assets/icons';
 import Button from '../../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 
-export default function EmptyCompanyList({ setIsCreateCompanyModal }) {
+export default function EmptyAdminUserList({ setIsCreateUserModalOpen }) {
   return (
     <div className="items-center flex flex-col justify-center w-full mt-24">
       <img
@@ -13,19 +13,19 @@ export default function EmptyCompanyList({ setIsCreateCompanyModal }) {
       />
 
       <h1 className="font-semibold font-geist text-primary text-sm">
-        Add company
+        Add a user
       </h1>
 
       <p className="text-tertiary font-geist text-xs w-52 text-center mt-1 mb-5">
-        Create your first company and define your description
+        Create your first user and define their role
       </p>
 
       <Button
         className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
-        onClick={() => setIsCreateCompanyModal(true)}
+        onClick={() => setIsCreateUserModalOpen(true)}
       >
         <IoAddOutline className="text-white" size={14} />
-        <p className="text-white font-geist font-medium text-sm">Add company</p>
+        <p className="text-white font-geist font-medium text-sm">Add user</p>
       </Button>
     </div>
   );
