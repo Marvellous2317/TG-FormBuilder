@@ -13,6 +13,7 @@ import SuspendEntityModal from './components/SuspendEntityModal';
 import {
   useActivateCompany,
   useCompany,
+  useCompanyAnalytics,
 } from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 import { formatDate } from '../../../shared/utils/constants';
@@ -53,8 +54,10 @@ export default function Entity() {
   const { mutateAsync, isPending: isActivatingCompanyLoading } =
     useActivateCompany();
 
-  // const { data: companyAnalytics, isPending: isCompanyAnalyticsLoading } =
-  //   useCompany(entityId);
+  const { data: companyAnalytics, isPending: isCompanyAnalyticsLoading } =
+    useCompanyAnalytics(entityId);
+
+  const companyAnalyticsData = companyAnalytics?.data;
 
   const { showError, showSuccess } = useToast();
 
@@ -162,17 +165,20 @@ export default function Entity() {
             <AdminCard
               icon={Icons.activeUsers}
               title="Active users"
-              count={companyData?.usersCount ?? 0}
+              count={companyAnalyticsData?.totalActiveUsers ?? 0}
+              loading={isCompanyAnalyticsLoading}
             />
             <AdminCard
               icon={Icons.logsTodayIcon}
               title="Logs today"
-              count="150"
+              count={companyAnalyticsData?.totalChecklistsToday ?? 0}
+              loading={isCompanyAnalyticsLoading}
             />
             <AdminCard
               icon={Icons.logsWeekIcon}
               title="This week's log"
-              count="150"
+              count={companyAnalyticsData?.totalChecklistsThisWeek ?? 0}
+              loading={isCompanyAnalyticsLoading}
             />
           </div>
 

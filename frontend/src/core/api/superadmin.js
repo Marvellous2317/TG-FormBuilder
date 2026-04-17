@@ -71,6 +71,11 @@ export const activateCompany = async (companyId, payload) => {
   return data;
 };
 
+export const fetchDashboardCompanyAnalytics = async () => {
+  const { data } = await axiosInstance.get(`/admin/analytics`);
+  return data;
+};
+
 export const fetchCompanyAnalytics = async (id) => {
   const { data } = await axiosInstance.get(`/admin/analytics/${id}`);
   return data;
@@ -102,6 +107,57 @@ export const updateDepartment = async (payload, departmentId) => {
   const { data } = await axiosInstance.put(
     `/admin/departments/${departmentId}`,
     payload,
+  );
+  return data;
+};
+
+export const fetchUserStatistics = async (id) => {
+  const { data } = await axiosInstance.get(`/admin/user-statistics`);
+  return data;
+};
+
+export const fetchUsers = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/users', {
+    params,
+  });
+  return data;
+};
+
+export const fetchuser = async (id) => {
+  const { data } = await axiosInstance.get(`/admin/users/${id}`);
+  return data;
+};
+
+export const deleteUser = async (id) => {
+  const { data } = await axiosInstance.delete(`/admin/users/${id}`);
+  return data;
+};
+
+export const addUser = async (payload) => {
+  const { data } = await axiosInstance.post(`/admin/add-user`, payload);
+  return data;
+};
+
+export const updateUser = async (payload, departmentId) => {
+  const { data } = await axiosInstance.put(
+    `/admin/users/${departmentId}`,
+    payload,
+  );
+  return data;
+};
+
+export const assignApproverToOperator = async (approverId, departmentId) => {
+  const { data } = await axiosInstance.put(
+    `/admin/users/${departmentId}/assign-approver`,
+    approverId,
+  );
+  return data;
+};
+
+export const unassignApproverToOperator = async (approverId, departmentId) => {
+  const { data } = await axiosInstance.put(
+    `/admin/users/${departmentId}/unassign-approver`,
+    approverId,
   );
   return data;
 };

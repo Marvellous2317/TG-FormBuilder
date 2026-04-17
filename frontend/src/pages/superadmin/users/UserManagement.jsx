@@ -11,10 +11,19 @@ import AdminUsersList from '../dashboard/components/AdminDashboardList';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 import AdminCreateUsersModal from '../dashboard/components/AdminCreateUsersModal';
 import AdminEditUsersModal from '../dashboard/components/AdminEditUsersModal';
+import {
+  useFetchUsers,
+  useUserStatistics,
+} from '../../../shared/hooks/superadmin/useSuperAdminUser';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+
+  // const { data, isPending: isLoading } = useFetchUsers();
+  const { data: statistics, isPending: isLoading } = useUserStatistics();
+
+  const userStatistics = statistics?.data;
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -39,21 +48,29 @@ export default function UserManagement() {
 
       <section className="py-6 px-8">
         <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
-          <AdminCard icon={Icons.totalUsers} title="Total users" count="150" />
+          <AdminCard
+            icon={Icons.totalUsers}
+            title="Total users"
+            count={userStatistics?.totalUsers || 0}
+            loading={isLoading}
+          />
           <AdminCard
             icon={Icons.activeUsers}
             title="Active users"
-            count="150"
+            count={userStatistics?.activeUsers || 0}
+            loading={isLoading}
           />
           <AdminCard
             icon={Icons.inactiveUsers}
             title="Inactive users"
-            count="150"
+            count={userStatistics?.suspendedUsers || 0}
+            loading={isLoading}
           />
           <AdminCard
             icon={Icons.inactiveUsers}
             title="Total roles"
-            count="150"
+            count={userStatistics?.totalRoles || 0}
+            loading={isLoading}
           />
         </div>
       </section>
