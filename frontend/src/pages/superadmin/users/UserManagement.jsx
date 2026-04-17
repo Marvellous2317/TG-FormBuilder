@@ -139,9 +139,7 @@ export default function UserManagement() {
         isAssignApproverModalOpen={isAssignApproverModalOpen}
         setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
         userToEdit={userToEdit}
-        users={usersData}
-        isLoadingUsers={isLoadingUsers}
-        key={users?.userId}
+        key={userToEdit?.userId}
       />
 
       <UnassignApproverModal

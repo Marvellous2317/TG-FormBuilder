@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
-import { useDepartments } from '../../../../shared/hooks/superadmin/useDepartments';
+import { useDepartmentsInfinite } from '../../../../shared/hooks/superadmin/useDepartments';
 import useToast from '../../../../shared/hooks/useToast';
 import Loader from '../../../../shared/components/Loader';
 import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
-import { useCompanies } from '../../../../shared/hooks/superadmin/useCompanies';
+import { useCompaniesInfinite } from '../../../../shared/hooks/superadmin/useCompanies';
 import { useCreateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
 export default function CreateAdminUserModal({
@@ -22,10 +22,44 @@ export default function CreateAdminUserModal({
     department: {},
   });
 
-  const { data: departments, isPending: isLoadingDepartments } =
-    useDepartments();
+  const [entitySearchInput, setEntitySearchInput] = useState('');
+  const [entitySearch, setEntitySearch] = useState('');
+  const [departmentSearchInput, setDepartmentSearchInput] = useState('');
+  const [departmentSearch, setDepartmentSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setEntitySearch(entitySearchInput), 300);
+    return () => clearTimeout(timer);
+  }, [entitySearchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDepartmentSearch(departmentSearchInput), 300);
+    return () => clearTimeout(timer);
+  }, [departmentSearchInput]);
+
+  const {
+    data: departmentsData,
+    isPending: isLoadingDepartments,
+    fetchNextPage: fetchNextDepartmentsPage,
+    hasNextPage: hasNextDepartmentsPage,
+    isFetchingNextPage: isFetchingNextDepartmentsPage,
+  } = useDepartmentsInfinite(
+    { search: departmentSearch },
+    { enabled: isCreateUserModalOpen },
+  );
+
   const { data: roles, isLoading: isLoadingRoles } = useRoles();
-  const { data: companies, isPending: isLoadingEntities } = useCompanies();
+
+  const {
+    data: companiesData,
+    isPending: isLoadingEntities,
+    fetchNextPage: fetchNextEntitiesPage,
+    hasNextPage: hasNextEntitiesPage,
+    isFetchingNextPage: isFetchingNextEntitiesPage,
+  } = useCompaniesInfinite(
+    { search: entitySearch },
+    { enabled: isCreateUserModalOpen },
+  );
 
   const { mutateAsync, isPending: isLoading } = useCreateUser();
 
@@ -37,13 +71,16 @@ export default function CreateAdminUserModal({
     value: role.roleId,
   }));
 
-  const companiesData = companies?.data?.companies.map((company) => ({
+  const allCompanies = companiesData?.pages.flatMap((p) => p.data.companies) ?? [];
+  const allDepartments = departmentsData?.pages.flatMap((p) => p.data.departments) ?? [];
+
+  const companiesList = allCompanies.map((company) => ({
     ...company,
     label: company.companyName,
     value: company.companyId,
   }));
 
-  const departmentsData = departments?.data?.departments.map((department) => ({
+  const departmentsList = allDepartments.map((department) => ({
     ...department,
     label: department.departmentName,
     value: department.departmentId,
@@ -64,7 +101,7 @@ export default function CreateAdminUserModal({
       ...prev,
       entity: {
         companyId,
-        label: companiesData.filter((r) => r.companyId === companyId)[0]?.label,
+        label: companiesList.find((r) => r.companyId === companyId)?.label,
       },
     }));
   };
@@ -74,8 +111,7 @@ export default function CreateAdminUserModal({
       ...prev,
       department: {
         departmentId,
-        label: departmentsData.filter((r) => r.departmentId === departmentId)[0]
-          ?.label,
+        label: departmentsList.find((r) => r.departmentId === departmentId)?.label,
       },
     }));
   };
@@ -131,6 +167,10 @@ export default function CreateAdminUserModal({
       entity: {},
       department: {},
     });
+    setEntitySearchInput('');
+    setEntitySearch('');
+    setDepartmentSearchInput('');
+    setDepartmentSearch('');
     setIsCreateUserModalOpen(false);
   };
 
@@ -202,9 +242,14 @@ export default function CreateAdminUserModal({
               className=""
               value={formData.entity?.companyId}
               required
-              readOnly={isLoadingEntities}
-              options={companiesData}
+              disabled={isLoadingEntities}
+              options={companiesList}
               type="select"
+              searchable
+              onExternalSearchChange={setEntitySearchInput}
+              onLoadMore={fetchNextEntitiesPage}
+              hasNextPage={hasNextEntitiesPage}
+              isFetchingNextPage={isFetchingNextEntitiesPage}
               onChange={(e) => handleSetEntity(e.target.value)}
             />
             {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
@@ -217,9 +262,14 @@ export default function CreateAdminUserModal({
               className=""
               value={formData.department?.departmentId}
               required
-              readOnly={isLoadingDepartments}
-              options={departmentsData}
+              disabled={isLoadingDepartments}
+              options={departmentsList}
               type="select"
+              searchable
+              onExternalSearchChange={setDepartmentSearchInput}
+              onLoadMore={fetchNextDepartmentsPage}
+              hasNextPage={hasNextDepartmentsPage}
+              isFetchingNextPage={isFetchingNextDepartmentsPage}
               onChange={(e) => handleSetDepartment(e.target.value)}
             />
             {isLoadingDepartments && <Loader size="w-4.5 h-4.5 mt-4" />}
