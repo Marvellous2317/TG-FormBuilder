@@ -41,7 +41,8 @@ export default function AdminUserManagement() {
     limit: 20,
   });
 
-  const { data: users, isPending: isLoadingUsers } = useFetchUsers();
+  const { data: users, isPending: isLoadingUsers } =
+    useFetchUsers(usersPagination);
   const { data: statistics, isPending: isLoadingUserStatistics } =
     useUserStatistics();
 

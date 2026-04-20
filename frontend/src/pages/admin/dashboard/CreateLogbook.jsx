@@ -60,6 +60,8 @@ export default function CreateLogbook() {
     );
   };
 
+  console.log(fields);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-white">
       <header className="flex flex-col items-start justify-between gap-3 border-b border-secondary-200 px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">

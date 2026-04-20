@@ -4,13 +4,23 @@ import {
   deleteChecklist,
   fetchChecklist,
   fetchChecklists,
+  fetchChecklistsAnalytics,
   updateChecklist,
 } from '../../../core/api/admin';
 
-export function useChecklists(options = {}) {
+export function useChecklists(queryParams = {}, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'checklists'],
-    queryFn: fetchChecklists,
+    queryKey: ['superadmin', 'checklists', queryParams],
+    queryFn: () => fetchChecklists(queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistsAnalytics(options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'checklists', 'analytics'],
+    queryFn: fetchChecklistsAnalytics,
     ...options,
   });
 }

@@ -1,7 +1,14 @@
 import axiosInstance from '../../shared/utils/axios';
 
-export const fetchChecklists = async () => {
-  const { data } = await axiosInstance.get('/checklists/admin');
+export const fetchChecklists = async (params = {}) => {
+  const { data } = await axiosInstance.get('/checklists/admin', {
+    params,
+  });
+  return data;
+};
+
+export const fetchChecklistsAnalytics = async () => {
+  const { data } = await axiosInstance.get('/user/analytics');
   return data;
 };
 
