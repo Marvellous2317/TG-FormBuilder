@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createDepartment,
   deleteDepartment,
@@ -12,6 +12,19 @@ export function useDepartments(queryParams = {}, options = {}) {
     queryKey: ['superadmin', 'departments', queryParams],
     queryFn: () => fetchDepartments(queryParams),
     keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useDepartmentsInfinite(queryParams = {}, options = {}) {
+  return useInfiniteQuery({
+    queryKey: ['superadmin', 'departments', 'infinite', queryParams],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchDepartments({ ...queryParams, page: pageParam, limit: 20 }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.data.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
     ...options,
   });
 }

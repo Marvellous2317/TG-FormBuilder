@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   activateCompany,
   createCompany,
@@ -16,6 +16,19 @@ export function useCompanies(queryParams = {}, options = {}) {
     queryKey: ['superadmin', 'companies', queryParams],
     queryFn: () => fetchCompanies(queryParams),
     keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useCompaniesInfinite(queryParams = {}, options = {}) {
+  return useInfiniteQuery({
+    queryKey: ['superadmin', 'companies', 'infinite', queryParams],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchCompanies({ ...queryParams, page: pageParam, limit: 20 }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.data.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
     ...options,
   });
 }

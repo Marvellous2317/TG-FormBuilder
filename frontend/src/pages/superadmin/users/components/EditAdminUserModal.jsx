@@ -9,7 +9,7 @@ import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useCompanies } from '../../../../shared/hooks/superadmin/useCompanies';
 import { useUpdateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
-export default function EditUserModal({
+export default function EditAdminUserModal({
   isEditUserModalOpen,
   setIsEditUserModalOpen,
   userToEdit,

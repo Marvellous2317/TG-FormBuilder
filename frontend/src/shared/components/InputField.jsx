@@ -18,6 +18,10 @@ function InputField({
   options = [],
   rows = 4,
   searchable = false,
+  onExternalSearchChange,
+  onLoadMore,
+  hasNextPage,
+  isFetchingNextPage,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
@@ -67,6 +71,10 @@ function InputField({
             placeholder={placeholder}
             disabled={disabled}
             searchable={searchable}
+            onExternalSearchChange={onExternalSearchChange}
+            onLoadMore={onLoadMore}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
             buttonClassName={[
               'rounded-2xl border-secondary-200 py-4',
               disabled ? 'cursor-not-allowed bg-secondary/60 opacity-60' : '',

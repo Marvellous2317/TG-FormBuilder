@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addUser,
   assignApproverToOperator,
@@ -15,6 +15,19 @@ export function useFetchUsers(queryParams = {}, options = {}) {
     queryKey: ['superadmin', 'users', queryParams],
     queryFn: () => fetchUsers(queryParams),
     keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useFetchUsersInfinite(queryParams = {}, options = {}) {
+  return useInfiniteQuery({
+    queryKey: ['superadmin', 'users', 'infinite', queryParams],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchUsers({ ...queryParams, page: pageParam, limit: 20 }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.data.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
     ...options,
   });
 }

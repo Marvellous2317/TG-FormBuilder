@@ -1,24 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
 import useToast from '../../../../shared/hooks/useToast';
 import Loader from '../../../../shared/components/Loader';
-import { useAssignApprover } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
+import {
+  useAssignApprover,
+  useFetchUsersInfinite,
+} from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import Divider from '../../../../shared/components/Divider';
 
 export default function AssignApproverModal({
   isAssignApproverModalOpen,
   setIsAssignApproverModalOpen,
   userToEdit,
-  isLoadingUsers,
-  users,
 }) {
   const [approver, setApprover] = useState(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const {
+    data,
+    isPending: isLoadingUsers,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useFetchUsersInfinite(
+    { search },
+    { enabled: isAssignApproverModalOpen },
+  );
 
   const { mutateAsync, isPending: isLoading } = useAssignApprover();
-
   const { showError, showSuccess } = useToast();
+
+  const allUsers = data?.pages.flatMap((p) => p.data.users) ?? [];
 
   const handleSubmit = async () => {
     if (!approver) {
@@ -34,7 +54,6 @@ export default function AssignApproverModal({
       showSuccess('Approver assigned successfully');
       handleCloseModal();
     } catch (err) {
-      console.log(err?.response);
       showError(
         err?.response?.data?.message ??
           'Unable to create user. Please try again.',
@@ -44,24 +63,26 @@ export default function AssignApproverModal({
 
   const handleCloseModal = () => {
     setApprover(null);
+    setSearchInput('');
+    setSearch('');
     setIsAssignApproverModalOpen(false);
   };
 
   const handleAssign = (id) => {
-    const role = users?.find((user) => user?.userId === id)?.role.roleName;
-    if (role !== 'approval') {
+    const user = allUsers.find((u) => u?.userId === id);
+    if (user?.role?.roleName !== 'approval') {
       showError('Only users with approval role can be assigned as an approver');
       return;
     }
     setApprover({
       value: id,
-      label: `${users?.find((user) => user?.userId === id)?.firstName} ${users?.find((user) => user?.userId === id)?.lastName} - ${users?.find((user) => user?.userId === id)?.email}`,
-      email: users?.find((user) => user?.userId === id)?.email,
-      role,
+      label: `${user.firstName} ${user.lastName} - ${user.email}`,
+      email: user.email,
+      role: user.role.roleName,
     });
   };
 
-  const usersData = users?.map((user) => ({
+  const usersData = allUsers.map((user) => ({
     ...user,
     label: `${user?.email} - ${user?.role?.roleName}`,
     value: user?.userId,
@@ -124,10 +145,14 @@ export default function AssignApproverModal({
                 className=""
                 value={approver?.value}
                 required
-                readOnly={isLoadingUsers}
+                disabled={isLoadingUsers}
                 options={usersData}
                 type="select"
                 searchable
+                onExternalSearchChange={setSearchInput}
+                onLoadMore={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
                 onChange={(e) => handleAssign(e.target.value)}
               />
               {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
