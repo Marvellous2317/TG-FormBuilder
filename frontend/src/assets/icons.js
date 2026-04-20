@@ -27,6 +27,7 @@ import activeEntitiesIcon from './icons/active-entities-icon.png';
 import logsTodayIcon from './icons/logs-today-icon.png';
 import logsWeekIcon from './icons/logs-week-icon.png';
 import inviteEntities from './icons/invite-entities.png';
+import userProfile from './icons/user-profile.png';
 
 const Icons = {
   arrowLeftInactive,
@@ -58,6 +59,7 @@ const Icons = {
   deactivateUser,
   entitiesActive,
   entitiesInactive,
+  userProfile,
 };
 
 export default Icons;

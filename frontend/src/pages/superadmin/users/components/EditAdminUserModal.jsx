@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
