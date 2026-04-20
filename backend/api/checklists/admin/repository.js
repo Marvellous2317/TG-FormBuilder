@@ -76,7 +76,7 @@ export class AdminRepository {
       const where = {};
       if (companyId) where.companyId = companyId;
       if (departmentId) where.departmentId = departmentId;
-      if (status) where.status = status;
+      //if (status) where.status = status;
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt[Op.gte] = new Date(startDate);
@@ -98,7 +98,7 @@ export class AdminRepository {
           { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
           {
             model: ChecklistAssignment, as: "assignments",
-            attributes: ["assignmentId", "status", "dueDate"],
+            attributes: ["assignmentId"],
             include: [
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
@@ -115,6 +115,7 @@ export class AdminRepository {
         pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
       };
     } catch (error) {
+      console.error(error);
       throw new ApplicationError("Failed to fetch checklists", 500);
     }
   }
