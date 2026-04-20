@@ -28,12 +28,15 @@ export default function CreateAdminUserModal({
   const [departmentSearch, setDepartmentSearch] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => setEntitySearch(entitySearchInput), 300);
+    const timer = setTimeout(() => setEntitySearch(entitySearchInput), 500);
     return () => clearTimeout(timer);
   }, [entitySearchInput]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDepartmentSearch(departmentSearchInput), 300);
+    const timer = setTimeout(
+      () => setDepartmentSearch(departmentSearchInput),
+      500,
+    );
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
 
@@ -71,8 +74,10 @@ export default function CreateAdminUserModal({
     value: role.roleId,
   }));
 
-  const allCompanies = companiesData?.pages.flatMap((p) => p.data.companies) ?? [];
-  const allDepartments = departmentsData?.pages.flatMap((p) => p.data.departments) ?? [];
+  const allCompanies =
+    companiesData?.pages.flatMap((p) => p.data.companies) ?? [];
+  const allDepartments =
+    departmentsData?.pages.flatMap((p) => p.data.departments) ?? [];
 
   const companiesList = allCompanies.map((company) => ({
     ...company,
@@ -111,7 +116,8 @@ export default function CreateAdminUserModal({
       ...prev,
       department: {
         departmentId,
-        label: departmentsList.find((r) => r.departmentId === departmentId)?.label,
+        label: departmentsList.find((r) => r.departmentId === departmentId)
+          ?.label,
       },
     }));
   };

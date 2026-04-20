@@ -6,9 +6,17 @@ import TaskList from './components/TaskList';
 import EmptyTaskList from './components/EmptyTaskList';
 import Icons from '../../../assets/icons';
 import CreateLogbookModal from './components/CreateLogbookModal';
+import { useChecklists } from '../../../shared/hooks/admin/useChecklist';
 
 export default function AdminDashboard() {
   const [isShowLogbookModal, setIsShowLogbookModal] = useState(false);
+
+  const { data, isPending: isLoading } = useChecklists();
+
+  const checklists = data?.data?.checklists;
+
+  console.log(checklists);
+
   return (
     <div className="w-full min-h-screen max-h-screen">
       <header className="flex flex-col sm:flex-row gap-3 md:gap-0 w-full px-8 py-2.5 border-b border-secondary-200 md:items-center items-start justify-between">
