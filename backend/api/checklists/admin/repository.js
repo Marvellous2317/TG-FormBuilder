@@ -11,6 +11,7 @@ import {
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
+import { config } from "dotenv";
 
 export class AdminRepository {
 
@@ -76,7 +77,6 @@ export class AdminRepository {
       const where = {};
       if (companyId) where.companyId = companyId;
       if (departmentId) where.departmentId = departmentId;
-      if (status) where.status = status;
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt[Op.gte] = new Date(startDate);
@@ -98,7 +98,7 @@ export class AdminRepository {
           { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
           {
             model: ChecklistAssignment, as: "assignments",
-            attributes: ["assignmentId", "status", "dueDate"],
+            attributes: ["assignmentId"],
             include: [
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
@@ -115,6 +115,7 @@ export class AdminRepository {
         pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
       };
     } catch (error) {
+      console.error(error);
       throw new ApplicationError("Failed to fetch checklists", 500);
     }
   }
@@ -247,6 +248,7 @@ export class AdminRepository {
         options: e.options || null,
         formulaExpression: e.formulaExpression || null,
         metadata: e.metadata || null,
+        config: e.config || null,
       }));
 
       const created = await ChecklistEntry.bulkCreate(entryData, { transaction });

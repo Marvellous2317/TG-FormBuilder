@@ -295,7 +295,7 @@ export class AdminRepository {
         include: [
           { model: Role, as: "role", attributes: ["roleId", "roleName"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
-          { model: OperatorApprover, as: "operatorApprovers",attributes: ["id"]  , include: [{ model: User, as: "approver", attributes: ["firstName", "lastName"] }] }
+          { model: OperatorApprover, as: "operatorApprovers",attributes: ["id"]  , include: [{ model: User, as: "approver", attributes: ["firstName", "lastName", "userId"] }] }
         ],
         limit,
         offset,
