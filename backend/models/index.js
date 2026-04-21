@@ -78,6 +78,7 @@ SubmittedChecklist.belongsTo(ChecklistAssignment, { foreignKey: "assignmentId", 
 SubmittedChecklist.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 SubmittedChecklist.belongsTo(User, { foreignKey: "submittedBy", as: "submitter" });
 SubmittedChecklist.belongsTo(User, { foreignKey: "reviewedBy", as: "reviewer" });
+SubmittedChecklist.belongsTo(User, { foreignKey: "approvedBy", as: "approver" });
 
 User.hasMany(SubmittedChecklist, { foreignKey: "submittedBy", as: "submittedChecklists" });
 
