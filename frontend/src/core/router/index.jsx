@@ -15,7 +15,6 @@ import UserManagement from '../../pages/superadmin/users/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 import PendingTasks from '../../pages/operator/PendingTasks';
 import ApprovedTasks from '../../pages/operator/ApprovedTasks';
-import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
 import AuthProtect from './AuthProtect';
@@ -25,6 +24,7 @@ import EntitiesManagement from '../../pages/superadmin/entities/EntitiesManageme
 import Entity from '../../pages/superadmin/entities/Entity';
 import OperatorDashboard from '../../pages/operator/OperatorDashboard';
 import RejectedTasks from '../../pages/operator/RejectedTasks';
+import Settings from '../../pages/auth/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -99,6 +99,10 @@ export const router = createBrowserRouter([
             path: 'departments',
             element: <DepartmentManagement />,
           },
+          {
+            path: 'settings',
+            element: <Settings />,
+          },
         ],
       },
     ],
@@ -126,7 +130,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'settings',
-            element: <AdminSettings />,
+            element: <Settings />,
           },
         ],
       },
@@ -156,6 +160,10 @@ export const router = createBrowserRouter([
           {
             path: 'rejected',
             element: <RejectedTasks />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
           },
         ],
       },

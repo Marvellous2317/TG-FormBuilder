@@ -1,94 +1,118 @@
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { FiHome, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import Images from '../../assets/images';
+import DropdownSelect from '../../shared/components/DropdownSelect';
 
 const navDetails = [
-  {
-    title: 'Dashboard',
-    to: '/operator',
-  },
-  {
-    title: 'Pending Task',
-    to: '/operator/pending',
-  },
-  {
-    title: 'Approved Task',
-    to: '/operator/approved',
-  },
-  {
-    title: 'Reject Task',
-    to: '/operator/rejected',
-  },
+  { title: 'Dashboard', to: '/operator', icon: FiHome },
+  { title: 'Pending', to: '/operator/pending', icon: FiClock },
+  { title: 'Approved', to: '/operator/approved', icon: FiCheckCircle },
+  { title: 'Rejected', to: '/operator/rejected', icon: FiXCircle },
 ];
 
 export default function OperatorWorkspaceLayout() {
+  const location = useLocation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const dropdownOptions = [
+    { title: 'Settings', to: '/operator/settings' },
+    { title: 'Logout', to: '/logout' },
+  ];
+
   return (
     <div className="flex flex-col w-full h-screen bg-white relative">
-      <aside className="w-full fixed lg:sticky lg:top-0 flex items-center transition-all duration-300 ease-in-out z-50 lg:z-auto h-20 bg-secondary-300 px-25 justify-between">
-        <div className="w-full flex items-center gap-14 justify-start">
-          <div className="p-4 border-b border-secondary-500 flex items-center lg:justify-start gap-2 shrink-0">
+      {/* HEADER */}
+      <aside className="w-full fixed lg:sticky top-0 flex items-center z-50 h-16 lg:h-20 bg-secondary-300 px-4 lg:px-10 justify-between">
+        {/* LEFT */}
+        <div className="flex items-center gap-6 w-full">
+          {/* LOGO */}
+          <div className="flex items-center gap-2 shrink-0">
             <img
               src={Images.logo}
               alt="logo"
-              className="w-8 h-8 md:w-10 md:h-10 shrink-0"
+              className="w-8 h-8 md:w-10 md:h-10"
             />
 
-            <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
-              <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
+            <div className="hidden sm:flex flex-col">
+              <h1 className="text-white text-sm font-semibold truncate">
                 Packaging Logbook
               </h1>
-              <p className="text-xs text-secondary-400 font-geist font-medium hidden sm:block truncate">
+              <p className="text-xs text-secondary-400 truncate">
                 Digitalization Portal
               </p>
             </div>
           </div>
 
-          <nav className="flex-1 p-3 md:p-4 flex items-center gap-4 overflow-y-auto">
-            {navDetails.map(({ title, to }) => {
-              const isActive = location.pathname === to;
-              return (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={() => {}}
-                  prefetch="intent"
-                  className={() => `
-                flex items-center gap-2 md:gap-3 py-2 px-2.5 
-                rounded-[10px] transition-colors
-                ${
-                  isActive
-                    ? 'bg-secondary-600 text-white'
-                    : 'hover:bg-secondary-600 text-tertiary'
-                }
-               
-              `}
-                  title={title}
-                >
-                  <p className="font-geist text-xs md:text-sm truncate">
-                    {title}
-                  </p>
-                </NavLink>
-              );
-            })}
+          {/* DESKTOP NAV */}
+          <nav className="hidden lg:flex flex-1 items-center gap-3 overflow-x-auto">
+            {navDetails.map(({ title, to, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/operator'}
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2 rounded-xl transition-all whitespace-nowrap
+                  ${
+                    isActive
+                      ? 'bg-secondary-600 text-white shadow-sm'
+                      : 'text-tertiary hover:bg-secondary-500/40'
+                  }
+                `}
+              >
+                <Icon className="text-lg" />
+                <span className="text-sm font-medium">{title}</span>
+              </NavLink>
+            ))}
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 text-white md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold shrink-0">
+        {/* RIGHT (USER INFO) */}
+        <Link to="/operator/settings" className="flex items-center gap-2 ">
+          <div className="p-2 bg-primary-200 text-white text-xs rounded-full font-semibold">
             CL
           </div>
-          <h1 className="text-tertiary font-geist text-sm md:text-sm truncate max-w-[50%] md:max-w-[90%]">
+
+          {/* Hide email on small screens */}
+          <h1 className="hidden md:block text-tertiary text-sm truncate max-w-50">
             lennox.charles@tolaram.com
           </h1>
-        </div>
+        </Link>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto w-full lg:w-auto lg:h-auto h-full">
-        <div className="pt-14 lg:pt-0 h-full w-full">
-          <Outlet />
-        </div>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 overflow-y-auto w-full pt-16 lg:pt-0 pb-20 lg:pb-0">
+        <Outlet />
       </main>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 flex justify-around items-center h-16 z-50">
+        {navDetails.map(({ title, to, icon: Icon }) => {
+          const isActive = location.pathname === to;
+
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/operator'}
+              className="flex flex-col items-center justify-center text-xs"
+            >
+              <Icon
+                className={`text-xl transition-all ${
+                  isActive ? 'text-primary-200 scale-110' : 'text-gray-400'
+                }`}
+              />
+              <span
+                className={`mt-1 ${
+                  isActive ? 'text-primary-200' : 'text-gray-400'
+                }`}
+              >
+                {title}
+              </span>
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 }

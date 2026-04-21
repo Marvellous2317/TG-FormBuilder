@@ -1,9 +1,9 @@
 import React from 'react';
-import Button from '../../../shared/components/Button';
-import InputField from '../../../shared/components/InputField';
-import Icons from '../../../assets/icons';
+import Button from '../../shared/components/Button';
+import InputField from '../../shared/components/InputField';
+import Icons from '../../assets/icons';
 
-export default function AdminSettings() {
+export default function Settings() {
   const userFirstName = 'Marvellous';
 
   const userLastName = 'Braimah';
