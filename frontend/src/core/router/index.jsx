@@ -23,6 +23,8 @@ import ForgotPassword from '../../pages/auth/ForgotPassword';
 import SuperAdminDashboard from '../../pages/superadmin/dashboard/SuperAdminDashboard';
 import EntitiesManagement from '../../pages/superadmin/entities/EntitiesManagement';
 import Entity from '../../pages/superadmin/entities/Entity';
+import OperatorDashboard from '../../pages/operator/OperatorDashboard';
+import RejectedTasks from '../../pages/operator/RejectedTasks';
 
 export const router = createBrowserRouter([
   {
@@ -141,11 +143,19 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
+            element: <OperatorDashboard />,
+          },
+          {
+            path: 'pending',
             element: <PendingTasks />,
           },
           {
             path: 'approved',
             element: <ApprovedTasks />,
+          },
+          {
+            path: 'rejected',
+            element: <RejectedTasks />,
           },
         ],
       },

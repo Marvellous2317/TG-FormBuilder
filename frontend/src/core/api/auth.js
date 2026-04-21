@@ -25,3 +25,8 @@ export const forgotPassword = async (payload) => {
   );
   return data;
 };
+
+export const getUserAnalytics = async () => {
+  const { data } = await axiosInstance.get('/user/analytics');
+  return data;
+};

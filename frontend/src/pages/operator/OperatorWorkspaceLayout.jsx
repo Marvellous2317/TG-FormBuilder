@@ -4,16 +4,20 @@ import Images from '../../assets/images';
 
 const navDetails = [
   {
-    title: 'Pending Task',
+    title: 'Dashboard',
     to: '/operator',
+  },
+  {
+    title: 'Pending Task',
+    to: '/operator/pending',
   },
   {
     title: 'Approved Task',
     to: '/operator/approved',
   },
   {
-    title: 'Settings',
-    to: '/operator/settings',
+    title: 'Reject Task',
+    to: '/operator/rejected',
   },
 ];
 
