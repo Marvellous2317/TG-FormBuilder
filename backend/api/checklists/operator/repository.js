@@ -298,6 +298,15 @@ export class OperatorRepository {
       const offset = (page - 1) * limit;
       const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
         where,
+        include: [
+          { model: User, as: "approver", attributes: ["firstName", "lastName"] },
+          {
+            model: ChecklistAssignment, as: "assignment",
+            include: [
+              { model: Checklist, as: "checklist", attributes: ["title"] },
+            ],
+          },
+        ],
         order: [["createdAt", "DESC"]],
         limit,
         offset,

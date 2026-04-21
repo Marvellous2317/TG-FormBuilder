@@ -28,7 +28,7 @@ export const  sendApprovalEmail =async ({email,firstName})=> {
         );
 
         const info = await EamilTransporter.sendMail({
-            from: `Packaging Check List <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_From}>`,
             to: email,
             subject: `Packaging Check List Account Approved`,
             html: emailHtml,
@@ -58,14 +58,14 @@ export const  sendPasswordMail =async ({email,firstName, password})=> {
             }
         );
         const info = await EamilTransporter.sendMail({
-            from: `Packaging Check List <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_From}>`,
             to: email,
             subject: `Packaging Check List Account Verification`,
             html: emailHtml,
         });
         return true;
     } catch (error) {
-        console.error('Error sending approval email:', error);
+        console.error('Error sending password email:', error);
         throw error;
     }
 }
@@ -87,7 +87,7 @@ export const  sendVerificationMail =async ({email,firstName, otp})=> {
             }
         );
         const info = await EamilTransporter.sendMail({
-            from: `Packaging Check List <${config.Email_Username}>`,
+            from: `Packaging Check List <${config.Email_From}>`,
             to: email,
             subject: `Packaging Check List Account Verification`,
             html: emailHtml,
