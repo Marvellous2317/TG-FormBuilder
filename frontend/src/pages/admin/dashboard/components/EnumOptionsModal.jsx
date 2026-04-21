@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
-import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
 
 const enumOptions = [
@@ -16,10 +15,10 @@ const enumOptions = [
 export default function EnumOptionsModal({
   isEnumOptionsModal,
   setIsEnumOptionsModal,
-  setChosenEnumValue,
-  chosenEnumValue,
+  onSave,
+  initialValue,
 }) {
-  const [selectedId, setSelectedId] = useState(chosenEnumValue?.id ?? null);
+  const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
 
   const handleSelectId = (id) => {
     if (selectedId === id) {
@@ -30,9 +29,9 @@ export default function EnumOptionsModal({
   };
 
   const handleDone = () => {
-    setChosenEnumValue(enumOptions.find(({ id }) => id === selectedId));
+    const selected = enumOptions.find(({ id }) => id === selectedId);
+    onSave({ id: selected.id, option: selected.option });
     setIsEnumOptionsModal(false);
-    // setSelectedId(null);
   };
 
   return (

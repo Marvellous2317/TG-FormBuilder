@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -41,15 +41,14 @@ const sourcelist = [
 export default function DropdownOptionsModal({
   isDropdownOptionsModal,
   setIsDropdownOptionsModal,
-  setChosenDropdownValue,
-  chosenDropdownValue,
+  onSave,
+  initialValue,
 }) {
   const [sourceName, setSourceName] = useState('');
   const [item, setItem] = useState('');
   const [items, setItems] = useState([]);
   const [createList, setCreateList] = useState(false);
-  const [selectedId, setSelectedId] = useState(chosenDropdownValue?.id ?? null);
-  // const [itemToEdit, setItemToEdit] = useState(null);
+  const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
 
   const handleAddItem = () => {
     if (item.length < 3) {
@@ -79,11 +78,9 @@ export default function DropdownOptionsModal({
     if (list) {
       setSourceName(list.title);
       setItems(list.items);
-      // setItemToEdit(list);
     } else {
       setSourceName('');
       setItems([]);
-      // setItemToEdit(null);
     }
     setCreateList(true);
     setSelectedId(list?.id || null);
@@ -91,17 +88,15 @@ export default function DropdownOptionsModal({
 
   const handleCancelEditList = () => {
     setCreateList(false);
-    // setSelectedId(null);
-    // setItemToEdit(null);
     setSourceName('');
     setItems([]);
     setItem('');
   };
 
   const handleDone = () => {
-    setChosenDropdownValue(sourcelist.find(({ id }) => id === selectedId));
+    const selected = sourcelist.find(({ id }) => id === selectedId);
+    onSave({ id: selected.id, title: selected.title });
     setIsDropdownOptionsModal(false);
-    // setSelectedId(null);
   };
 
   return (

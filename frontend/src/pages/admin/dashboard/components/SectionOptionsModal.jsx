@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -17,26 +17,30 @@ import FormularModal from './FormularModal';
 export default function SectionOptionsModal({
   isSectionOptionsModal,
   setIsSectionOptionsModal,
-  setChosenSectionValue,
-  chosenSectionValue,
+  onSave,
+  initialValue,
 }) {
-  const [sectionName, setSectionName] = useState('');
+  const [sectionName, setSectionName] = useState(initialValue?.name ?? '');
+  const [activeFieldId, setActiveFieldId] = useState(null);
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
-  const [chosenDropdownValue, setChosenDropdownValue] = useState(null);
-  const [chosenEnumValue, setChosenEnumValue] = useState(null);
   const [isFormularModal, setIsFormularModal] = useState(false);
-  const [chosenFormularValue, setChosenFormularValue] = useState(null);
   const [fields, setFields] = useState(
     () =>
-      chosenSectionValue?.items ??
-      Array.from({ length: 3 }, () => createField()),
+      initialValue?.items ?? Array.from({ length: 3 }, () => createField()),
   );
 
+  const activeField = fields.find((f) => f.id === activeFieldId);
+
+  const handleModalSave = (config) => {
+    setFields((current) =>
+      current.map((f) => (f.id === activeFieldId ? { ...f, config } : f)),
+    );
+  };
+
   const handleDone = () => {
-    setChosenSectionValue({ name: sectionName, items: fields });
+    onSave({ name: sectionName, items: fields });
     setIsSectionOptionsModal(false);
-    // setSelectedId(null);
   };
 
   const handleFieldChange = (id, key, value) => {
@@ -48,12 +52,15 @@ export default function SectionOptionsModal({
 
     switch (value) {
       case 'dropdown':
+        setActiveFieldId(id);
         setIsDropdownOptionsModal(true);
         break;
       case 'enum':
+        setActiveFieldId(id);
         setIsEnumOptionsModal(true);
         break;
       case 'formular':
+        setActiveFieldId(id);
         setIsFormularModal(true);
         break;
       default:
@@ -149,20 +156,37 @@ export default function SectionOptionsModal({
                       />
                     </div>
                     <div className="w-[20%]">
-                      {field.type === 'enum' && chosenEnumValue && (
+                      {field.type === 'enum' && field.config && (
                         <p
-                          onClick={() => setIsEnumOptionsModal(true)}
+                          onClick={() => {
+                            setActiveFieldId(field.id);
+                            setIsEnumOptionsModal(true);
+                          }}
                           className="underline text-sm text-primary-200 line-clamp-1"
                         >
-                          {chosenEnumValue?.option}
+                          {field.config.option}
                         </p>
                       )}
-                      {field.type === 'dropdown' && chosenDropdownValue && (
+                      {field.type === 'dropdown' && field.config && (
                         <p
-                          onClick={() => setIsDropdownOptionsModal(true)}
+                          onClick={() => {
+                            setActiveFieldId(field.id);
+                            setIsDropdownOptionsModal(true);
+                          }}
                           className="underline text-sm text-primary-200 line-clamp-1"
                         >
-                          {chosenDropdownValue?.title}
+                          {field.config.title}
+                        </p>
+                      )}
+                      {field.type === 'formular' && field.config && (
+                        <p
+                          onClick={() => {
+                            setActiveFieldId(field.id);
+                            setIsFormularModal(true);
+                          }}
+                          className="underline text-sm text-primary-200 line-clamp-1"
+                        >
+                          {field.config.expression || 'Formula'}
                         </p>
                       )}
                     </div>
@@ -213,24 +237,27 @@ export default function SectionOptionsModal({
       </div>
 
       <DropdownOptionsModal
+        key={`dropdown-${activeFieldId}`}
         isDropdownOptionsModal={isDropdownOptionsModal}
         setIsDropdownOptionsModal={setIsDropdownOptionsModal}
-        setChosenDropdownValue={setChosenDropdownValue}
-        chosenDropdownValue={chosenDropdownValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
 
       <EnumOptionsModal
+        key={`enum-${activeFieldId}`}
         isEnumOptionsModal={isEnumOptionsModal}
         setIsEnumOptionsModal={setIsEnumOptionsModal}
-        setChosenEnumValue={setChosenEnumValue}
-        chosenEnumValue={chosenEnumValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
 
       <FormularModal
+        key={`formular-${activeFieldId}`}
         isFormularModal={isFormularModal}
         setIsFormularModal={setIsFormularModal}
-        setChosenFormularValue={setChosenFormularValue}
-        chosenFormularValue={chosenFormularValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
     </Modal>
   );

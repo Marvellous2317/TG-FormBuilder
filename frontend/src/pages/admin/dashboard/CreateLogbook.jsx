@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { FiPlus } from 'react-icons/fi';
@@ -17,13 +17,18 @@ export default function CreateLogbook() {
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
-  const [chosenSectionValue, setChosenSectionValue] = useState(null);
-  const [chosenDropdownValue, setChosenDropdownValue] = useState(null);
-  const [chosenEnumValue, setChosenEnumValue] = useState(null);
-  const [chosenFormularValue, setChosenFormularValue] = useState(null);
+  const [activeFieldId, setActiveFieldId] = useState(null);
   const [fields, setFields] = useState(() =>
     Array.from({ length: 6 }, () => createField()),
   );
+
+  const activeField = fields.find((f) => f.id === activeFieldId);
+
+  const handleModalSave = (config) => {
+    setFields((current) =>
+      current.map((f) => (f.id === activeFieldId ? { ...f, config } : f)),
+    );
+  };
 
   const handleFieldChange = (id, key, value) => {
     setFields((currentFields) =>
@@ -34,15 +39,19 @@ export default function CreateLogbook() {
 
     switch (value) {
       case 'dropdown':
+        setActiveFieldId(id);
         setIsDropdownOptionsModal(true);
         break;
       case 'enum':
+        setActiveFieldId(id);
         setIsEnumOptionsModal(true);
         break;
       case 'section':
+        setActiveFieldId(id);
         setIsSectionOptionsModal(true);
         break;
       case 'formular':
+        setActiveFieldId(id);
         setIsFormularModal(true);
         break;
       default:
@@ -139,28 +148,48 @@ export default function CreateLogbook() {
                     />
                   </div>
                   <div className="w-[25%]">
-                    {field.type === 'enum' && chosenEnumValue && (
+                    {field.type === 'enum' && field.config && (
                       <p
-                        onClick={() => setIsEnumOptionsModal(true)}
+                        onClick={() => {
+                          setActiveFieldId(field.id);
+                          setIsEnumOptionsModal(true);
+                        }}
                         className="underline text-sm text-primary-200 line-clamp-1"
                       >
-                        {chosenEnumValue?.option}
+                        {field.config.option}
                       </p>
                     )}
-                    {field.type === 'dropdown' && chosenDropdownValue && (
+                    {field.type === 'dropdown' && field.config && (
                       <p
-                        onClick={() => setIsDropdownOptionsModal(true)}
+                        onClick={() => {
+                          setActiveFieldId(field.id);
+                          setIsDropdownOptionsModal(true);
+                        }}
                         className="underline text-sm text-primary-200 line-clamp-1"
                       >
-                        {chosenDropdownValue?.title}
+                        {field.config.title}
                       </p>
                     )}
-                    {field.type === 'section' && chosenSectionValue && (
+                    {field.type === 'section' && field.config && (
                       <p
-                        onClick={() => setIsSectionOptionsModal(true)}
+                        onClick={() => {
+                          setActiveFieldId(field.id);
+                          setIsSectionOptionsModal(true);
+                        }}
                         className="underline text-sm text-primary-200 line-clamp-1"
                       >
-                        {chosenSectionValue?.name}
+                        {field.config.name}
+                      </p>
+                    )}
+                    {field.type === 'formular' && field.config && (
+                      <p
+                        onClick={() => {
+                          setActiveFieldId(field.id);
+                          setIsFormularModal(true);
+                        }}
+                        className="underline text-sm text-primary-200 line-clamp-1"
+                      >
+                        {field.config.expression || 'Formula'}
                       </p>
                     )}
                   </div>
@@ -202,31 +231,35 @@ export default function CreateLogbook() {
       </footer>
 
       <DropdownOptionsModal
+        key={`dropdown-${activeFieldId}`}
         isDropdownOptionsModal={isDropdownOptionsModal}
         setIsDropdownOptionsModal={setIsDropdownOptionsModal}
-        setChosenDropdownValue={setChosenDropdownValue}
-        chosenDropdownValue={chosenDropdownValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
 
       <SectionOptionsModal
+        key={`section-${activeFieldId}`}
         isSectionOptionsModal={isSectionOptionsModal}
         setIsSectionOptionsModal={setIsSectionOptionsModal}
-        setChosenSectionValue={setChosenSectionValue}
-        chosenSectionValue={chosenSectionValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
 
       <EnumOptionsModal
+        key={`enum-${activeFieldId}`}
         isEnumOptionsModal={isEnumOptionsModal}
         setIsEnumOptionsModal={setIsEnumOptionsModal}
-        setChosenEnumValue={setChosenEnumValue}
-        chosenEnumValue={chosenEnumValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
 
       <FormularModal
+        key={`formular-${activeFieldId}`}
         isFormularModal={isFormularModal}
         setIsFormularModal={setIsFormularModal}
-        setChosenFormularValue={setChosenFormularValue}
-        chosenFormularValue={chosenFormularValue}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
     </div>
   );

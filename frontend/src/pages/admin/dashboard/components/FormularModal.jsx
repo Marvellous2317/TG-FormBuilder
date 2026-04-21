@@ -1,42 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
-import { RiLinkM } from 'react-icons/ri';
-import { IoAddOutline, IoClose } from 'react-icons/io5';
-
-const sourcelist = [
-  {
-    id: 1,
-    title: 'Global source',
-    count: 40,
-    items: [
-      { id: 1, value: 'dkfjslfkjdslfksj' },
-      { id: 2, value: 'dkfjslfkjdslfksj' },
-      { id: 3, value: 'dkfjslfkjdslfksj' },
-    ],
-  },
-  {
-    id: 2,
-    title: 'Local source',
-    count: 20,
-    items: [
-      { id: 1, value: 'dkfjslfkjdslfksj' },
-      { id: 2, value: 'dkfjslfkjdslfksj' },
-      { id: 3, value: 'dkfjslfkjdslfksj' },
-    ],
-  },
-  {
-    id: 3,
-    title: 'Public source',
-    count: 20,
-    items: [
-      { id: 1, value: 'dkfjslfkjdslfksj' },
-      { id: 2, value: 'dkfjslfkjdslfksj' },
-      { id: 3, value: 'dkfjslfkjdslfksj' },
-    ],
-  },
-];
 
 const mathematical = ['SUM', 'subtract', 'multiply', 'divide', 'average'];
 const aggregation = ['count', 'min', 'max'];
@@ -46,67 +11,14 @@ const fields = ['field1', 'field2', 'field3'];
 export default function FormularModal({
   isFormularModal,
   setIsFormularModal,
-  setChosenDropdownValue,
-  chosenDropdownValue,
+  onSave,
+  initialValue,
 }) {
-  const [sourceName, setSourceName] = useState('');
-  const [item, setItem] = useState('');
-  const [items, setItems] = useState([]);
-  const [createList, setCreateList] = useState(false);
-  const [selectedId, setSelectedId] = useState(chosenDropdownValue?.id ?? null);
-  // const [itemToEdit, setItemToEdit] = useState(null);
+  const [expression, setExpression] = useState(initialValue?.expression ?? '');
 
-  const handleAddItem = () => {
-    if (item.length < 3) {
-      return;
-    }
-    setItems([...items, { id: Date.now(), value: item }]);
-    setItem('');
-  };
-
-  const handleRemoveItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
-
-  const handleItemChange = (e) => {
-    setItem(e.target.value);
-  };
-
-  const handleSelectId = (id) => {
-    if (selectedId === id) {
-      setSelectedId(null);
-      return;
-    }
-    setSelectedId(id);
-  };
-
-  const handleEditList = (list = null) => {
-    if (list) {
-      setSourceName(list.title);
-      setItems(list.items);
-      // setItemToEdit(list);
-    } else {
-      setSourceName('');
-      setItems([]);
-      // setItemToEdit(null);
-    }
-    setCreateList(true);
-    setSelectedId(list?.id || null);
-  };
-
-  const handleCancelEditList = () => {
-    setCreateList(false);
-    // setSelectedId(null);
-    // setItemToEdit(null);
-    setSourceName('');
-    setItems([]);
-    setItem('');
-  };
-
-  const handleDone = () => {
-    setChosenDropdownValue(sourcelist.find(({ id }) => id === selectedId));
+  const handleSave = () => {
+    onSave({ expression });
     setIsFormularModal(false);
-    // setSelectedId(null);
   };
 
   return (
@@ -134,9 +46,16 @@ export default function FormularModal({
               placeholder="Build your formular using functions and fields"
               type="textarea"
               inputClassName="bg-tertiary-700! placeholder:text-tertiary!"
+              value={expression}
+              onChange={(e) => setExpression(e.target.value)}
             />
             <div className="flex items-start gap-3 w-full justify-start">
-              <p className="text-tertiary text-sm cursor-pointer">Clear</p>
+              <p
+                className="text-tertiary text-sm cursor-pointer"
+                onClick={() => setExpression('')}
+              >
+                Clear
+              </p>
               <p className="underline text-primary-200 text-sm cursor-pointer">
                 Test formular
               </p>
@@ -237,6 +156,7 @@ export default function FormularModal({
 
           <Button
             type="button"
+            onClick={handleSave}
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
           >
             Save formula

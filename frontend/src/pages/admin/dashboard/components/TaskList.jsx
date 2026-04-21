@@ -20,124 +20,6 @@ const departmentOptions = [
   { title: 'Packaging', value: 'packaging' },
 ];
 
-const dropOtions = [
-  { title: 'Unassign', value: 'unassign' },
-  { title: 'Assign', value: 'assign' },
-  { title: 'Delete log', value: 'delete' },
-];
-
-// Mock data (expanded to demonstrate the scrolling effect)
-const tableData = [
-  {
-    id: 1,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Completed',
-    department: 'Packaging',
-  },
-  {
-    id: 2,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: '--',
-    status: 'Completed',
-    department: 'Packaging',
-  },
-  {
-    id: 3,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: '--',
-    status: 'Pending',
-    department: 'Packaging',
-  },
-  {
-    id: 4,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: '--',
-    status: 'Pending',
-    department: 'Packaging',
-  },
-  {
-    id: 5,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Completed',
-    department: 'Packaging',
-  },
-  {
-    id: 6,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Pending',
-    department: 'Packaging',
-  },
-  {
-    id: 7,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Pending',
-    department: 'Packaging',
-  },
-  {
-    id: 8,
-    checklist: 'Packaging record',
-    docNumber: 'FM / MFG / PKG_MONO / H-1',
-    date: 'March 13, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Completed',
-    department: 'Packaging',
-  },
-  {
-    id: 9,
-    checklist: 'Labeling record',
-    docNumber: 'FM / MFG / LBL_MONO / H-2',
-    date: 'March 14, 2026',
-    assignee: 'Lennox',
-    status: 'Completed',
-    department: 'Labeling',
-  },
-  {
-    id: 10,
-    checklist: 'Labeling record',
-    docNumber: 'FM / MFG / LBL_MONO / H-2',
-    date: 'March 14, 2026',
-    assignee: 'Lennox',
-    status: 'Pending',
-    department: 'Labeling',
-  },
-  {
-    id: 11,
-    checklist: 'Quality Assurance',
-    docNumber: 'FM / QA / CHK_MONO / H-3',
-    date: 'March 15, 2026',
-    assignee: '--',
-    status: 'Pending',
-    department: 'Quality Assurance',
-  },
-  {
-    id: 12,
-    checklist: 'Quality Assurance',
-    docNumber: 'FM / QA / CHK_MONO / H-3',
-    date: 'March 15, 2026',
-    assignee: 'Ajayi Tami',
-    status: 'Pending',
-    department: 'Quality Assurance',
-  },
-];
-
 export default function TaskList({
   checklists,
   setIsEditUserModalOpen,
@@ -218,10 +100,17 @@ export default function TaskList({
     };
   }, [activeMenuId]);
 
+  const dropOptions = [
+    { title: 'Unassign log', value: 'unassign', onClick: () => {} },
+    { title: 'Assign log', value: 'assign', onClick: () => {} },
+    { title: 'Edit log', value: 'edit', onClick: () => {} },
+    { title: 'Delete log', value: 'delete', onClick: () => {} },
+  ];
+
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
-    const menuHeight = dropOtions.length * 44 + 8;
+    const menuHeight = dropOptions.length * 44 + 8;
     const spaceBelow = window.innerHeight - buttonRect.bottom;
     const shouldOpenUpward = spaceBelow < menuHeight + 12;
 
@@ -389,7 +278,7 @@ export default function TaskList({
                 onClick={(event) => event.stopPropagation()}
                 role="menu"
               >
-                {dropOtions.map((option) => (
+                {dropOptions.map((option) => (
                   <Button
                     key={option.value}
                     className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
