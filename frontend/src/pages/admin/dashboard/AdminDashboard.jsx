@@ -11,6 +11,7 @@ import {
   useChecklistsAnalytics,
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
+import EditLogbookModal from './components/EditLogbookModal';
 
 export default function AdminDashboard() {
   const [isShowLogbookModal, setIsShowLogbookModal] = useState(false);
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
         <section className="py-6 px-8 min-h-full relative">
           {checklistsData?.length > 0 ? (
             <TaskList
-              setIsEdchecklistspen={setIsEditChecklistModalOpen}
+              setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
               setChecklistToDelete={setChecklistToDelete}
               checklists={checklistsData}
               pagination={pagination}
@@ -113,6 +114,14 @@ export default function AdminDashboard() {
       <CreateLogbookModal
         isShowLogbookModal={isShowLogbookModal}
         setIsShowLogbookModal={setIsShowLogbookModal}
+      />
+
+      <EditLogbookModal
+        isEditChecklistModalOpen={isEditChecklistModalOpen}
+        setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
+        checklistToEdit={checklistToEdit}
+        setChecklistToEdit={setChecklistToEdit}
+        key={checklistToEdit?.checklistId}
       />
     </div>
   );

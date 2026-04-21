@@ -22,7 +22,7 @@ const departmentOptions = [
 
 export default function TaskList({
   checklists,
-  setIsEditUserModalOpen,
+  setIsEditChecklistModalOpen,
   setChecklistToEdit,
   setChecklistToDelete,
   pagination,
@@ -103,7 +103,14 @@ export default function TaskList({
   const dropOptions = [
     { title: 'Unassign log', value: 'unassign', onClick: () => {} },
     { title: 'Assign log', value: 'assign', onClick: () => {} },
-    { title: 'Edit log', value: 'edit', onClick: () => {} },
+    {
+      title: 'Edit log',
+      value: 'edit',
+      onClick: () => {
+        setIsEditChecklistModalOpen(true);
+        setChecklistToEdit(checklistToEdit);
+      },
+    },
     { title: 'Delete log', value: 'delete', onClick: () => {} },
   ];
 
