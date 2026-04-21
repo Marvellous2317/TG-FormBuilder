@@ -5,6 +5,7 @@ import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Icons from '../../assets/icons';
 import Images from '../../assets/images';
 import { useAuthStore } from '../../shared/store/authStore';
+import { getInitials } from '../../shared/utils/constants';
 
 const navDetails = [
   {
@@ -32,7 +33,7 @@ export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  const { clearAuth } = useAuthStore();
+  const { clearAuth, user } = useAuthStore();
 
   const location = useLocation();
 
@@ -174,15 +175,15 @@ export default function AdminLayout() {
             onClick={() => clearAuth()}
           >
             <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
-              CL
+              {getInitials(`${user.firstName} ${user.lastName}`)}
             </div>
             {(!isCollapsed || !isDesktop) && (
               <div className="gap-0.5 flex flex-col items-start overflow-hidden">
                 <h1 className="text-white font-geist text-xs md:text-sm truncate max-w-25 md:max-w-30">
-                  Charles Lennox
+                  {user.firstName} {user.lastName}
                 </h1>
                 <p className="text-tertiary font-geist text-xs truncate max-w-32 md:max-w-36">
-                  lennox.charles@tolaram.com
+                  {user.email}
                 </p>
               </div>
             )}

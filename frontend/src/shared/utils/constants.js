@@ -58,9 +58,16 @@ const formatDate = (value) => {
   return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 };
 
+const getInitials = (value) => {
+  const names = value.split(' ');
+  const initials = names.map((n) => n.charAt(0).toUpperCase());
+  return initials.join('');
+};
+
 export {
   createFieldId,
   createField,
+  getInitials,
   fieldTypeOptions,
   sectionFieldTypeOptions,
   formatDate,

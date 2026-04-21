@@ -10,7 +10,6 @@ import ChangePassword from '../../pages/auth/ChangePassword';
 import NotFound from '../../pages/auth/NotFound';
 import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
 import RoleManagement from '../../pages/superadmin/roles/RoleManagement';
-import CompanyManagement from '../../pages/superadmin/company/CompanyManagement';
 import UserManagement from '../../pages/superadmin/users/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 import PendingTasks from '../../pages/operator/PendingTasks';
@@ -25,6 +24,7 @@ import Entity from '../../pages/superadmin/entities/Entity';
 import OperatorDashboard from '../../pages/operator/OperatorDashboard';
 import RejectedTasks from '../../pages/operator/RejectedTasks';
 import Settings from '../../pages/auth/Settings';
+import Logout from '../../pages/auth/Logout';
 
 export const router = createBrowserRouter([
   {
@@ -42,11 +42,15 @@ export const router = createBrowserRouter([
             element: <Login />,
           },
           {
+            path: '/logout',
+            element: <Logout />,
+          },
+          {
             path: '/unauthorized',
             element: <Unauthorized />,
           },
           {
-            path: '/notfound',
+            path: '/not-found',
             element: <NotFound />,
           },
           {
@@ -172,17 +176,12 @@ export const router = createBrowserRouter([
 
   // Approver routes
   {
-    element: <ProtectedRoute allowedRoles={['approver']} />,
+    element: <ProtectedRoute allowedRoles={['approver', 'approval']} />,
     children: [
       {
         path: '/approver',
         element: <div>Approver Queue</div>,
       },
     ],
-  },
-
-  {
-    path: '*',
-    element: <Navigate to="/unauthorized" replace />,
   },
 ]);

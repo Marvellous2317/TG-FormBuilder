@@ -15,11 +15,11 @@ const getRoleHomePath = (user) => {
 
   switch (roleName) {
     case 'superadmin':
-      return '/superadmin/roles';
+      return '/superadmin';
     case 'admin':
-      return '/admin/dashboard';
+      return '/admin';
     case 'operator':
-      return '/operator/workspace';
+      return '/operator';
     case 'approver':
       return '/approver';
     default:
