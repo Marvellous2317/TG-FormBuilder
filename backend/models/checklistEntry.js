@@ -27,6 +27,11 @@ export const ChecklistEntry = sequelize.define(
       allowNull: true,
       
     },
+       config: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      
+    },
     order: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -38,7 +43,7 @@ export const ChecklistEntry = sequelize.define(
       defaultValue: false,
     },
     options: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       allowNull: true,
      
     },
