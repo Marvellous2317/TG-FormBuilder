@@ -284,6 +284,7 @@ export class AdminRepository {
           if (e.options !== undefined) entry.options = e.options;
           if (e.formulaExpression !== undefined) entry.formulaExpression = e.formulaExpression;
           if (e.metadata !== undefined) entry.metadata = e.metadata;
+          if (e.config !== undefined) entry.config = e.config;
 
           await entry.save({ transaction });
           results.push(entry);
@@ -298,6 +299,7 @@ export class AdminRepository {
             options: e.options || null,
             formulaExpression: e.formulaExpression || null,
             metadata: e.metadata || null,
+            config: e.config || null,
           }, { transaction });
           results.push(entry);
         }

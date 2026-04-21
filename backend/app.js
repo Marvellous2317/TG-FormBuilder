@@ -24,6 +24,7 @@ import authRoute from "./api/auth/route.js"
 import adminRoute from "./api/admin/route.js"
 import userRoute from "./api/user/route.js"
 import checkListRoute from "./api/checklists/route.js"
+import { EamilTransporter } from "./config/emailConfig.js"
 
 
 
@@ -200,6 +201,12 @@ app.get("/api/v1", (req, res) => {
     message: 'API Health Check - Service up and running',
   });
 });
+
+
+
+
+
+
 
 
 app.use("/api/v1/auth", authLimiter, authRoute);
