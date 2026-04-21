@@ -5,13 +5,14 @@ import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Icons from '../../assets/icons';
 import Images from '../../assets/images';
 import { useAuthStore } from '../../shared/store/authStore';
+import { getInitials } from '../../shared/utils/constants';
 
 const navDetails = [
   {
     icon: Icons.dashboardActive,
     icon2: Icons.dashboardInactive,
     title: 'Dashboard',
-    to: '/admin/',
+    to: '/admin',
   },
   {
     icon: Icons.userActive,
@@ -32,7 +33,7 @@ export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  const { clearAuth } = useAuthStore();
+  const { user } = useAuthStore();
 
   const location = useLocation();
 
@@ -128,15 +129,14 @@ export default function AdminLayout() {
 
         {/* Navigation - scrollable */}
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:space-y-3 overflow-y-auto">
-          {navDetails.map(({ icon, title, to, icon2 }) => {
-            const isActive = location.pathname === to;
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                onClick={closeMobileMenu}
-                prefetch="intent"
-                className={({ isActive }) => `
+          {navDetails.map(({ icon, title, to, icon2 }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/admin'}
+              onClick={closeMobileMenu}
+              prefetch="intent"
+              className={({ isActive }) => `
                 flex items-center gap-2 md:gap-3 py-2 px-2.5 
                 rounded-[10px] transition-colors
                 ${
@@ -146,21 +146,25 @@ export default function AdminLayout() {
                 }
                 ${isCollapsed && isDesktop ? 'lg:justify-center' : ''}
               `}
-                title={isCollapsed && isDesktop ? title : ''}
-              >
-                <img
-                  src={isActive ? icon : icon2}
-                  alt={title}
-                  className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
-                />
-                {(!isCollapsed || !isDesktop) && (
-                  <p className="font-geist text-xs md:text-sm text-tertiary truncate">
-                    {title}
-                  </p>
-                )}
-              </NavLink>
-            );
-          })}
+              title={isCollapsed && isDesktop ? title : ''}
+            >
+              {({ isActive }) => (
+                <>
+                  <img
+                    src={isActive ? icon : icon2}
+                    alt={title}
+                    className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
+                  />
+
+                  {(!isCollapsed || !isDesktop) && (
+                    <p className="font-geist text-xs md:text-sm text-tertiary truncate">
+                      {title}
+                    </p>
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
         {/* User Profile - fixed at bottom */}
@@ -171,18 +175,18 @@ export default function AdminLayout() {
             justify-center p-2 md:p-2.5
             ${isCollapsed && isDesktop ? 'lg:px-2' : ''}
           `}
-            onClick={() => clearAuth()}
+            // onClick={() => clearAuth()}
           >
             <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
-              CL
+              {getInitials(`${user.firstName} ${user.lastName}`)}
             </div>
             {(!isCollapsed || !isDesktop) && (
               <div className="gap-0.5 flex flex-col items-start overflow-hidden">
                 <h1 className="text-white font-geist text-xs md:text-sm truncate max-w-25 md:max-w-30">
-                  Charles Lennox
+                  {user.firstName} {user.lastName}
                 </h1>
                 <p className="text-tertiary font-geist text-xs truncate max-w-32 md:max-w-36">
-                  lennox.charles@tolaram.com
+                  {user.email}
                 </p>
               </div>
             )}

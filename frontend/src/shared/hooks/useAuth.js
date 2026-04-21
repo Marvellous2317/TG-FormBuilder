@@ -1,10 +1,11 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import useToast from './useToast';
 import {
   changePassword,
   forgotPassword,
+  getUserAnalytics,
   login,
   resetPassword,
 } from '../../core/api/auth';
@@ -14,11 +15,11 @@ const getRoleHomePath = (user) => {
 
   switch (roleName) {
     case 'superadmin':
-      return '/superadmin/roles';
+      return '/superadmin';
     case 'admin':
-      return '/admin/dashboard';
+      return '/admin';
     case 'operator':
-      return '/operator/workspace';
+      return '/operator';
     case 'approver':
       return '/approver';
     default:
@@ -138,4 +139,13 @@ export default function useAuth() {
     forgotPasswordMutation,
     isForgettingPassword: forgotPasswordMutation.isPending,
   };
+}
+
+export function useUserAnalytics(userId, options = {}) {
+  return useQuery({
+    queryKey: ['user', 'analytics', userId],
+    queryFn: () => getUserAnalytics(),
+    keepPreviousData: true,
+    ...options,
+  });
 }

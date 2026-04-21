@@ -1,9 +1,10 @@
 import React from 'react';
-import Button from '../../../shared/components/Button';
-import InputField from '../../../shared/components/InputField';
-import Icons from '../../../assets/icons';
+import Button from '../../shared/components/Button';
+import InputField from '../../shared/components/InputField';
+import Icons from '../../assets/icons';
+import { useAuthStore } from '../../shared/store/authStore';
 
-export default function AdminSettings() {
+export default function Settings() {
   const userFirstName = 'Marvellous';
 
   const userLastName = 'Braimah';
@@ -11,6 +12,8 @@ export default function AdminSettings() {
   const userEmail = 'marvellousbraimah71@gmail.com';
 
   const userRole = 'Super Admin';
+
+  const { clearAuth } = useAuthStore();
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -35,10 +38,12 @@ export default function AdminSettings() {
 
           <Button
             type="button"
-            onClick={() => {}}
+            onClick={() => {
+              clearAuth();
+            }}
             className="bg-tertiary-500 gap-1 p-2.5 px-4 rounded-[10px] lg:mr-23"
           >
-            <p className="text-white font-geist font-medium text-sm">Logout</p>
+            <p className="text-white font-medium text-sm">Logout</p>
           </Button>
         </div>
 

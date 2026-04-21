@@ -1,0 +1,27 @@
+import axiosInstance from '../../shared/utils/axios';
+
+export const getOperatorChecklists = async (params = {}) => {
+  const { data } = await axiosInstance.get('/checklists/operator', {
+    params,
+  });
+  return data;
+};
+
+export const getOperatorChecklist = async (id) => {
+  const { data } = await axiosInstance.get(`/checklists/operator/${id}`);
+  return data;
+};
+
+export const getOperatorSubmittedChecklists = async (params = {}) => {
+  const { data } = await axiosInstance.get('/checklists/operator/submissions', {
+    params,
+  });
+  return data;
+};
+
+export const getOperatorSubmittedChecklist = async (id) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/operator/submissions/${id}`,
+  );
+  return data;
+};

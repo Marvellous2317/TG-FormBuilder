@@ -10,12 +10,10 @@ import ChangePassword from '../../pages/auth/ChangePassword';
 import NotFound from '../../pages/auth/NotFound';
 import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
 import RoleManagement from '../../pages/superadmin/roles/RoleManagement';
-import CompanyManagement from '../../pages/superadmin/company/CompanyManagement';
 import UserManagement from '../../pages/superadmin/users/UserManagement';
 import OperatorWorkspaceLayout from '../../pages/operator/OperatorWorkspaceLayout';
 import PendingTasks from '../../pages/operator/PendingTasks';
 import ApprovedTasks from '../../pages/operator/ApprovedTasks';
-import AdminSettings from '../../pages/admin/settings/AdminSettings';
 import AdminUserManagement from '../../pages/admin/users/AdminUserManagement';
 import DepartmentManagement from '../../pages/superadmin/departments/DepartmentManagement';
 import AuthProtect from './AuthProtect';
@@ -23,6 +21,10 @@ import ForgotPassword from '../../pages/auth/ForgotPassword';
 import SuperAdminDashboard from '../../pages/superadmin/dashboard/SuperAdminDashboard';
 import EntitiesManagement from '../../pages/superadmin/entities/EntitiesManagement';
 import Entity from '../../pages/superadmin/entities/Entity';
+import OperatorDashboard from '../../pages/operator/OperatorDashboard';
+import RejectedTasks from '../../pages/operator/RejectedTasks';
+import Settings from '../../pages/auth/Settings';
+import Logout from '../../pages/auth/Logout';
 
 export const router = createBrowserRouter([
   {
@@ -40,11 +42,15 @@ export const router = createBrowserRouter([
             element: <Login />,
           },
           {
+            path: '/logout',
+            element: <Logout />,
+          },
+          {
             path: '/unauthorized',
             element: <Unauthorized />,
           },
           {
-            path: '/notfound',
+            path: '/not-found',
             element: <NotFound />,
           },
           {
@@ -97,6 +103,10 @@ export const router = createBrowserRouter([
             path: 'departments',
             element: <DepartmentManagement />,
           },
+          {
+            path: 'settings',
+            element: <Settings />,
+          },
         ],
       },
     ],
@@ -124,7 +134,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'settings',
-            element: <AdminSettings />,
+            element: <Settings />,
           },
         ],
       },
@@ -141,11 +151,23 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '',
+            element: <OperatorDashboard />,
+          },
+          {
+            path: 'pending',
             element: <PendingTasks />,
           },
           {
             path: 'approved',
             element: <ApprovedTasks />,
+          },
+          {
+            path: 'rejected',
+            element: <RejectedTasks />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
           },
         ],
       },
@@ -154,17 +176,12 @@ export const router = createBrowserRouter([
 
   // Approver routes
   {
-    element: <ProtectedRoute allowedRoles={['approver']} />,
+    element: <ProtectedRoute allowedRoles={['approver', 'approval']} />,
     children: [
       {
         path: '/approver',
         element: <div>Approver Queue</div>,
       },
     ],
-  },
-
-  {
-    path: '*',
-    element: <Navigate to="/unauthorized" replace />,
   },
 ]);
