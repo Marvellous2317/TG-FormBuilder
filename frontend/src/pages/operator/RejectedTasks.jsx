@@ -95,9 +95,9 @@ export default function RejectedTasks() {
                       <th className="p-3 md:p-4 w-12 text-secondary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         #
                       </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-secondary-200 whitespace-nowrap">
+                      {/* <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-secondary-200 whitespace-nowrap">
                         Checklist ID
-                      </th>
+                      </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         Checklist title
                       </th>
@@ -123,20 +123,20 @@ export default function RejectedTasks() {
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                             {index + 1}
                           </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm">
+                          {/* <td className="p-3 md:p-4 text-tertiary text-sm">
                             {row.submittedChecklistId}
+                          </td> */}
+                          <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
+                            {row.assignment?.checklist.title || 'N/A'}
                           </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.assignment.checklist.title}
-                          </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
+                          <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                             {row.documentNumber}
                           </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
+                          <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                             {row.approver &&
-                            row.approver.firstName &&
-                            row.approver.lastName
-                              ? `${row.approver.firstName} ${row.approver.lastName}`
+                            row.approver?.firstName &&
+                            row.approver?.lastName
+                              ? `${row.approver?.firstName} ${row.approver?.lastName}`
                               : 'N/A'}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm">
