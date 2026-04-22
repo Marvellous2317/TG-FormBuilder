@@ -12,6 +12,7 @@ import {
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
 import EditLogbookModal from './components/EditLogbookModal';
+import DeleteChecklistModal from './components/DeleteChecklistModal';
 
 export default function AdminDashboard() {
   const [isShowLogbookModal, setIsShowLogbookModal] = useState(false);
@@ -19,7 +20,8 @@ export default function AdminDashboard() {
   const [checklistToDelete, setChecklistToDelete] = useState(null);
   const [isEditChecklistModalOpen, setIsEditChecklistModalOpen] =
     useState(false);
-  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
+  const [isDeleteChecklistModalOpen, setIsDeleteChecklistModalOpen] =
+    useState(false);
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
               pagination={pagination}
               handlePageChange={handlePagination}
               setChecklistToEdit={setChecklistToEdit}
-              setIsDeleteChecklistModalOpen={setIsDeleteUserModalOpen}
+              setIsDeleteChecklistModalOpen={setIsDeleteChecklistModalOpen}
               // setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
               checklistToEdit={checklistToEdit}
               // setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
@@ -116,12 +118,22 @@ export default function AdminDashboard() {
         setIsShowLogbookModal={setIsShowLogbookModal}
       />
 
-      <EditLogbookModal
-        isEditChecklistModalOpen={isEditChecklistModalOpen}
-        setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
-        checklistToEdit={checklistToEdit}
-        setChecklistToEdit={setChecklistToEdit}
-        key={checklistToEdit?.checklistId}
+      {isEditChecklistModalOpen && (
+        <EditLogbookModal
+          isEditChecklistModalOpen={isEditChecklistModalOpen}
+          setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
+          checklistToEdit={checklistToEdit}
+          setChecklistToEdit={setChecklistToEdit}
+          key={checklistToEdit?.checklistId}
+        />
+      )}
+
+      <DeleteChecklistModal
+        key={checklistToDelete?.checklistId}
+        isDeleteChecklistModalOpen={isDeleteChecklistModalOpen}
+        setIsDeleteChecklistModalOpen={setIsDeleteChecklistModalOpen}
+        checklistToDelete={checklistToDelete}
+        setChecklistToDelete={setChecklistToDelete}
       />
     </div>
   );

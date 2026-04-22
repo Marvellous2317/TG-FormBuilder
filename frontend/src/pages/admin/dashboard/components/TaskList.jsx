@@ -107,11 +107,18 @@ export default function TaskList({
       title: 'Edit log',
       value: 'edit',
       onClick: () => {
+        setActiveMenuId(null);
         setIsEditChecklistModalOpen(true);
-        setChecklistToEdit(checklistToEdit);
       },
     },
-    { title: 'Delete log', value: 'delete', onClick: () => {} },
+    {
+      title: 'Delete log',
+      value: 'delete',
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsDeleteChecklistModalOpen(true);
+      },
+    },
   ];
 
   const toggleRowMenu = (rowId, event, row) => {

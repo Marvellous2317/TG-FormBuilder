@@ -100,7 +100,13 @@ export default function CreateLogbookModal({
   };
 
   const handleSubmit = async () => {
-    const { logbookTitle, documentNumber, department, frequency } = formData;
+    const {
+      logbookTitle,
+      documentNumber,
+      department,
+      frequency,
+      frequencyInterval,
+    } = formData;
 
     if (
       !logbookTitle ||
@@ -118,6 +124,7 @@ export default function CreateLogbookModal({
         documentNumber,
         departmentId: department.departmentId,
         frequency,
+        frequencyInterval,
       });
       showSuccess('Checklist created successfully');
       handleCancel();

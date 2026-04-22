@@ -29,7 +29,7 @@ export const createChecklist = async (payload) => {
 
 export const updateChecklist = async (payload, checklistId) => {
   const { data } = await axiosInstance.put(
-    `/admin/checklists/${checklistId}`,
+    `/checklists/admin/${checklistId}`,
     payload,
   );
   return data;
