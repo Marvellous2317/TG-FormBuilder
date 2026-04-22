@@ -13,6 +13,7 @@ import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import DropdownOptionsModal from './DropdownOptionsModal';
 import EnumOptionsModal from './EnumOptionsModal';
 import FormularModal from './FormularModal';
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -26,9 +27,10 @@ export default function SectionOptionsModal({
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [fields, setFields] = useState(
-    () =>
-      initialValue?.items ?? Array.from({ length: 3 }, () => createField()),
+    () => initialValue?.items ?? Array.from({ length: 3 }, () => createField()),
   );
+
+  const { showError } = useToast();
 
   const activeField = fields.find((f) => f.id === activeFieldId);
 
@@ -39,6 +41,11 @@ export default function SectionOptionsModal({
   };
 
   const handleDone = () => {
+    if (sectionName.length < 3) {
+      showError('Please enter a section name');
+      return;
+    }
+
     onSave({ name: sectionName, items: fields });
     setIsSectionOptionsModal(false);
   };
@@ -101,6 +108,7 @@ export default function SectionOptionsModal({
             type="text"
             label="Section name"
             id="sectionName"
+            required
             placeholder="Section name"
             value={sectionName}
             onChange={(e) => setSectionName(e.target.value)}

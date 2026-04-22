@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  assignChecklistOperator,
   createChecklist,
   createChecklistCatalog,
   createChecklistEntries,
@@ -11,6 +12,7 @@ import {
   fetchChecklists,
   fetchChecklistsAnalytics,
   fetchChecklistsEntries,
+  unAssignChecklistOperator,
   updateChecklist,
   updateChecklistCatalog,
   updateChecklistEntries,
@@ -249,6 +251,52 @@ export function useCreateChecklistCatalogs(options = {}) {
     onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
         queryKey: ['admin', 'checklists', 'catalogs'],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useAssignChecklistOperator(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => assignChecklistOperator(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'entries'],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists'],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useUnassignChecklistOperator(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => unAssignChecklistOperator(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'entries'],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists'],
       });
 
       if (onSuccess) {

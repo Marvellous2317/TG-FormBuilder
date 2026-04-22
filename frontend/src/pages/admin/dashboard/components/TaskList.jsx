@@ -9,6 +9,7 @@ import useToast from '../../../../shared/hooks/useToast';
 import Button from '../../../../shared/components/Button';
 import { formatDate } from '../../../../shared/utils/constants';
 import { useNavigate } from 'react-router-dom';
+import AssignLogbookModal from './AssignLogbookModal';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -34,8 +35,11 @@ export default function TaskList({
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentDepartment, setCurrentDepartment] = useState('all');
+  const [actionToPerform, setActionToPerform] = useState('assign');
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
+    useState(false);
 
   const { showError } = useToast();
   const navigate = useNavigate();
@@ -103,8 +107,24 @@ export default function TaskList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    { title: 'Unassign log', value: 'unassign', onClick: () => {} },
-    { title: 'Assign log', value: 'assign', onClick: () => {} },
+    {
+      title: 'Unassign log',
+      value: 'unassign',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActionToPerform('unassign');
+        setIsShowAssignLogbookModal(true);
+      },
+    },
+    {
+      title: 'Assign log',
+      value: 'assign',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActionToPerform('assign');
+        setIsShowAssignLogbookModal(true);
+      },
+    },
     {
       title: 'Entries',
       value: 'entries',
@@ -308,6 +328,13 @@ export default function TaskList({
             document.body,
           )
         : null}
+      <AssignLogbookModal
+        isShowAssignLogbookModal={isShowAssignLogbookModal}
+        setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
+        checklistId={checklistToEdit?.checklistId}
+        checklistAssignments={checklistToEdit?.assignments}
+        action={actionToPerform}
+      />
     </div>
   );
 }

@@ -86,9 +86,26 @@ export const createChecklistCatalog = async (payload) => {
   return data;
 };
 
-export const updateChecklistCatalog = async (payload, checklistId) => {
+export const updateChecklistCatalog = async (payload, catalogId) => {
+  console.log(payload, catalogId);
   const { data } = await axiosInstance.put(
-    `/checklists/admin/${checklistId}`,
+    `/checklists/admin/catalogs/${catalogId}`,
+    payload,
+  );
+  return data;
+};
+
+export const assignChecklistOperator = async (payload) => {
+  const { data } = await axiosInstance.post(
+    `/checklists/admin/assignments`,
+    payload,
+  );
+  return data;
+};
+
+export const unAssignChecklistOperator = async (payload) => {
+  const { data } = await axiosInstance.post(
+    `/checklists/admin/unassignments`,
     payload,
   );
   return data;

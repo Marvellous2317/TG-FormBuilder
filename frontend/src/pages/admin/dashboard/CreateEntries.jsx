@@ -12,12 +12,14 @@ import SectionOptionsModal from './components/SectionOptionsModal';
 import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
 import FormularModal from './components/FormularModal';
 import {
+  useChecklist,
   useChecklistEntries,
   useCreateChecklistEntries,
   useUpdateChecklistEntries,
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
+import AssignLogbookModal from './components/AssignLogbookModal';
 
 export default function CreateEntries() {
   let { id: checklistId } = useLoaderData();
@@ -26,6 +28,8 @@ export default function CreateEntries() {
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
+  const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
+    useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
 
   const { data, isPending: isLoadingChecklistEntries } =
@@ -222,7 +226,7 @@ export default function CreateEntries() {
                             setActiveFieldId(field.id);
                             setIsEnumOptionsModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.option}
                         </p>
@@ -233,7 +237,7 @@ export default function CreateEntries() {
                             setActiveFieldId(field.id);
                             setIsDropdownOptionsModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.title}
                         </p>
@@ -244,7 +248,7 @@ export default function CreateEntries() {
                             setActiveFieldId(field.id);
                             setIsSectionOptionsModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.name}
                         </p>
@@ -255,7 +259,7 @@ export default function CreateEntries() {
                             setActiveFieldId(field.id);
                             setIsFormularModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.expression || 'Formula'}
                         </p>
@@ -305,6 +309,7 @@ export default function CreateEntries() {
         <Button
           type="button"
           disabled={fields.length < 3}
+          onClick={() => setIsShowAssignLogbookModal(true)}
           className="justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
           Assign logbook
@@ -341,6 +346,13 @@ export default function CreateEntries() {
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+      />
+
+      <AssignLogbookModal
+        isShowAssignLogbookModal={isShowAssignLogbookModal}
+        setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
+        checklistId={checklistId}
+        action="assign"
       />
     </div>
   );
