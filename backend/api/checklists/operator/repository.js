@@ -272,7 +272,9 @@ export class OperatorRepository {
     try {
       const submission = await SubmittedChecklist.findOne({
         where: { submittedChecklistId, submittedBy: userId },
+        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
         include: [
+          { model: User, as: "approver", attributes: ["firstName", "lastName"] },
           { model: SubmittedChecklistEntry, as: "entries" },
         ],
       });

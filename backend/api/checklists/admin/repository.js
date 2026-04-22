@@ -8,6 +8,7 @@ import {
   Role,
   Company,
   Department,
+  Catalog,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -450,5 +451,111 @@ export class AdminRepository {
     }
   }
 
+
+  static async createCatalog({ name, list, companyId, createdBy }) {
+    const transaction = await sequelize.transaction();
+    try {
+      const existing = await Catalog.findOne({
+        where: { name, companyId },
+        transaction,
+      });
+      if (existing) {
+        throw new ApplicationError("Catalog with this name already exists", 400);
+      }
+
+      const catalog = await Catalog.create(
+        { name, list, companyId, createdBy },
+        { transaction }
+      );
+
+      await transaction.commit();
+      return { catalog, message: "Catalog created successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError(error.message || "Failed to create catalog", 500);
+    }
+  }
+
+  static async getCatalogs({ companyId, page = 1, limit = 20, search }) {
+    try {
+      const where = {};
+      if (companyId) where.companyId = companyId;
+      if (search) {
+        where[Op.or] = [
+          { name: { [Op.iLike]: `%${search}%` } },
+        ];
+      }
+
+      const offset = (page - 1) * limit;
+      const { rows: catalogs, count: total } = await Catalog.findAndCountAll({
+        where,
+       attributes: ["catalogId", "name", "list"],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset,
+        distinct: true,
+      });
+
+      return {
+        catalogs,
+        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
+      };
+    } catch (error) {
+      console.error(error);
+      throw new ApplicationError("Failed to fetch catalogs", 500);
+    }
+  }
+
+  static async getCatalogById(catalogId) {
+    try {
+      const catalog = await Catalog.findByPk(catalogId, {
+        attributes: ["catalogId", "name", "list"],
+      });
+
+      if (!catalog) throw new ApplicationError("Catalog not found", 404);
+      return { catalog };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch catalog", 500);
+    }
+  }
+
+  static async updateCatalog(catalogId, { name, list, updatedBy }) {
+    try {
+      const catalog = await Catalog.findByPk(catalogId);
+      if (!catalog) throw new ApplicationError("Catalog not found", 404);
+
+      if (name && name !== catalog.name) {
+        const existing = await Catalog.findOne({
+          where: { name, companyId: catalog.companyId, catalogId: { [Op.ne]: catalogId } },
+        });
+        if (existing) throw new ApplicationError("Catalog with this name already exists", 400);
+        catalog.name = name;
+      }
+
+      if (list !== undefined) catalog.list = list;
+      catalog.updatedBy = updatedBy;
+
+      await catalog.save();
+      return { catalog, message: "Catalog updated successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to update catalog", 500);
+    }
+  }
+
+  static async deleteCatalog(catalogId) {
+    try {
+      const catalog = await Catalog.findByPk(catalogId);
+      if (!catalog) throw new ApplicationError("Catalog not found", 404);
+
+      await catalog.destroy();
+      return { message: "Catalog deleted successfully" };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to delete catalog", 500);
+    }
+  }
 
 }

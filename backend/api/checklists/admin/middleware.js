@@ -158,3 +158,35 @@ export const validateAssignmentQuery = [
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   validate,
 ];
+
+// Catalog validation
+export const validateCreateCatalog = [
+  body("name").trim().notEmpty().withMessage("Catalog name is required")
+    .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+  body("list").isArray({ min: 1 }).withMessage("List must be a non-empty array"),
+  body("list.*").isString().withMessage("Each list item must be a string")
+    .trim().notEmpty().withMessage("List items cannot be empty"),
+  validate,
+];
+
+export const validateUpdateCatalog = [
+  param("catalogId").isUUID().withMessage("Invalid catalog ID"),
+  body("name").optional().trim().notEmpty().withMessage("Name cannot be empty")
+    .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+  body("list").optional().isArray().withMessage("List must be an array"),
+  body("list.*").optional().isString().withMessage("Each list item must be a string")
+    .trim().notEmpty().withMessage("List items cannot be empty"),
+  validate,
+];
+
+export const validateCatalogId = [
+  param("catalogId").isUUID().withMessage("Invalid catalog ID"),
+  validate,
+];
+
+export const validateCatalogQuery = [
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
