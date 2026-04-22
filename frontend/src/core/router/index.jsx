@@ -5,7 +5,6 @@ import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
 import AdminLayout from '../../pages/admin/AdminLayout';
 import AdminDashboard from '../../pages/admin/dashboard/AdminDashboard';
-import CreateLogbook from '../../pages/admin/dashboard/CreateLogbook';
 import ChangePassword from '../../pages/auth/ChangePassword';
 import NotFound from '../../pages/auth/NotFound';
 import SuperAdminLayout from '../../pages/superadmin/SuperAdminLayout';
@@ -25,6 +24,7 @@ import OperatorDashboard from '../../pages/operator/OperatorDashboard';
 import RejectedTasks from '../../pages/operator/RejectedTasks';
 import Settings from '../../pages/auth/Settings';
 import Logout from '../../pages/auth/Logout';
+import CreateEntries from '../../pages/admin/dashboard/CreateEntries';
 
 export const router = createBrowserRouter([
   {
@@ -125,8 +125,9 @@ export const router = createBrowserRouter([
             element: <AdminDashboard />,
           },
           {
-            path: 'logbook',
-            element: <CreateLogbook />,
+            path: 'entries/:id',
+            loader: ({ params }) => params,
+            element: <CreateEntries />,
           },
           {
             path: 'users',

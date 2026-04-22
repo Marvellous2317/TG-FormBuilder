@@ -4,6 +4,7 @@ import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
 import { RiLinkM } from 'react-icons/ri';
 import { IoAddOutline, IoClose } from 'react-icons/io5';
+import { useChecklistCatalogs } from '../../../../shared/hooks/admin/useChecklist';
 
 const sourcelist = [
   {
@@ -49,6 +50,11 @@ export default function DropdownOptionsModal({
   const [items, setItems] = useState([]);
   const [createList, setCreateList] = useState(false);
   const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
+
+  const { data, isPending: isLoadingChecklistCatalogs } =
+    useChecklistCatalogs();
+
+  console.log(data);
 
   const handleAddItem = () => {
     if (item.length < 3) {

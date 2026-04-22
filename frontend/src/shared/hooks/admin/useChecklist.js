@@ -1,16 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createChecklist,
+  createChecklistCatalog,
+  createChecklistEntries,
   deleteChecklist,
+  deleteChecklistCatalog,
   fetchChecklist,
+  fetchChecklistCatalog,
+  fetchChecklistCatalogs,
   fetchChecklists,
   fetchChecklistsAnalytics,
+  fetchChecklistsEntries,
   updateChecklist,
+  updateChecklistCatalog,
+  updateChecklistEntries,
 } from '../../../core/api/admin';
 
 export function useChecklists(queryParams = {}, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'checklists', queryParams],
+    queryKey: ['admin', 'checklists', queryParams],
     queryFn: () => fetchChecklists(queryParams),
     keepPreviousData: true,
     ...options,
@@ -19,7 +27,7 @@ export function useChecklists(queryParams = {}, options = {}) {
 
 export function useChecklistsAnalytics(options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'checklists', 'analytics'],
+    queryKey: ['admin', 'checklists', 'analytics'],
     queryFn: fetchChecklistsAnalytics,
     ...options,
   });
@@ -27,7 +35,7 @@ export function useChecklistsAnalytics(options = {}) {
 
 export function useChecklist(checklistId, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'checklists', checklistId],
+    queryKey: ['admin', 'checklists', checklistId],
     queryFn: () => fetchChecklist(checklistId),
     enabled: Boolean(checklistId),
     ...options,
@@ -45,13 +53,13 @@ export function useDeleteChecklist(options = {}) {
 
       // Invalidate the list query to refresh the UI
       await queryClient.invalidateQueries({
-        queryKey: ['superadmin', 'checklists'],
+        queryKey: ['admin', 'checklists'],
       });
 
       // Also remove the individual checklist query if it exists
       if (checklistId) {
         queryClient.removeQueries({
-          queryKey: ['superadmin', 'checklists', checklistId],
+          queryKey: ['admin', 'checklists', checklistId],
         });
       }
 
@@ -74,12 +82,12 @@ export function useUpdateChecklist(options = {}) {
       const { checklistId } = variables; // clean and direct
 
       await queryClient.invalidateQueries({
-        queryKey: ['superadmin', 'checklists'],
+        queryKey: ['admin', 'checklists'],
       });
 
       if (checklistId) {
         await queryClient.invalidateQueries({
-          queryKey: ['superadmin', 'checklists', checklistId],
+          queryKey: ['admin', 'checklists', checklistId],
         });
       }
 
@@ -99,7 +107,148 @@ export function useCreateChecklists(options = {}) {
     mutationFn: (payload) => createChecklist(payload),
     onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
-        queryKey: ['superadmin', 'checklists'],
+        queryKey: ['admin', 'checklists'],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useChecklistEntries(checklistId, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'entries', checklistId],
+    queryFn: () => fetchChecklistsEntries(checklistId),
+    enabled: Boolean(checklistId),
+    ...options,
+  });
+}
+
+export function useCreateChecklistEntries(checklistId, options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => createChecklistEntries(checklistId, payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'entries', checklistId],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useUpdateChecklistEntries(checklistId, options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => updateChecklistEntries(checklistId, payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'entries', checklistId],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useChecklistCatalogs(queryParams = {}, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'catalogs', queryParams],
+    queryFn: () => fetchChecklistCatalogs(queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistCatalog(catalogId, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'catalogs', catalogId],
+    queryFn: () => fetchChecklistCatalog(catalogId),
+    enabled: Boolean(catalogId),
+    ...options,
+  });
+}
+
+export function useDeleteChecklistCatalogs(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ catalogId }) => deleteChecklistCatalog(catalogId),
+    onSuccess: async (response, variables, context) => {
+      const { catalogId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'catalogs'],
+      });
+
+      // Also remove the individual checklist query if it exists
+      if (catalogId) {
+        queryClient.removeQueries({
+          queryKey: ['admin', 'checklists', 'catalogs', catalogId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useUpdateChecklistCatalogs(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ catalogId, payload }) =>
+      updateChecklistCatalog(payload, catalogId),
+    onSuccess: async (response, variables, context) => {
+      const { catalogId } = variables; // clean and direct
+
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'catalogs'],
+      });
+
+      if (catalogId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['admin', 'checklists', 'catalogs', catalogId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useCreateChecklistCatalogs(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => createChecklistCatalog(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'catalogs'],
       });
 
       if (onSuccess) {

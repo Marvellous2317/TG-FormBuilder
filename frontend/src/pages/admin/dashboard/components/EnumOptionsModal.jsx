@@ -57,7 +57,7 @@ export default function EnumOptionsModal({
             const isActive = id === selectedId;
             return (
               <div
-                className={`flex w-full items-center justify-between border  rounded-[10px] p-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
+                className={`flex cursor-pointer w-full items-center justify-between border  rounded-[10px] p-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
                 key={id}
                 onClick={() => handleSelectId(id)}
               >

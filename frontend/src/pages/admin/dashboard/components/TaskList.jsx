@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import useToast from '../../../../shared/hooks/useToast';
 import Button from '../../../../shared/components/Button';
 import { formatDate } from '../../../../shared/utils/constants';
+import { useNavigate } from 'react-router-dom';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -37,6 +38,7 @@ export default function TaskList({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const { showError } = useToast();
+  const navigate = useNavigate();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -104,11 +106,11 @@ export default function TaskList({
     { title: 'Unassign log', value: 'unassign', onClick: () => {} },
     { title: 'Assign log', value: 'assign', onClick: () => {} },
     {
-      title: 'Edit log',
-      value: 'edit',
+      title: 'Entries',
+      value: 'entries',
       onClick: () => {
         setActiveMenuId(null);
-        setIsEditChecklistModalOpen(true);
+        navigate(`/admin/entries/${checklistToEdit?.checklistId}`);
       },
     },
     {

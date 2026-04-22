@@ -119,13 +119,22 @@ export default function CreateLogbookModal({
     }
 
     try {
-      await mutateAsync({
-        title: logbookTitle,
-        documentNumber,
-        departmentId: department.departmentId,
-        frequency,
-        frequencyInterval,
-      });
+      if (frequency === 'hourly') {
+        await mutateAsync({
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          frequencyInterval,
+        });
+      } else {
+        await mutateAsync({
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+        });
+      }
       showSuccess('Checklist created successfully');
       handleCancel();
     } catch (err) {

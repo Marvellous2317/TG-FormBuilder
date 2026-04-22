@@ -118,18 +118,16 @@ export default function AdminDashboard() {
         setIsShowLogbookModal={setIsShowLogbookModal}
       />
 
-      {isEditChecklistModalOpen && (
-        <EditLogbookModal
-          isEditChecklistModalOpen={isEditChecklistModalOpen}
-          setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
-          checklistToEdit={checklistToEdit}
-          setChecklistToEdit={setChecklistToEdit}
-          key={checklistToEdit?.checklistId}
-        />
-      )}
+      <EditLogbookModal
+        isEditChecklistModalOpen={isEditChecklistModalOpen}
+        setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
+        checklistToEdit={checklistToEdit}
+        setChecklistToEdit={setChecklistToEdit}
+        // key={checklistToEdit?.checklistId}
+      />
 
       <DeleteChecklistModal
-        key={checklistToDelete?.checklistId}
+        // key={checklistToDelete?.checklistId}
         isDeleteChecklistModalOpen={isDeleteChecklistModalOpen}
         setIsDeleteChecklistModalOpen={setIsDeleteChecklistModalOpen}
         checklistToDelete={checklistToDelete}

@@ -141,16 +141,29 @@ export default function EditLogbookModal({
     }
 
     try {
-      await mutateAsync({
-        checklistId: checklistToEdit.checklistId,
-        payload: {
-          title: logbookTitle,
-          documentNumber,
-          departmentId: department.departmentId,
-          frequency,
-          frequencyInterval,
-        },
-      });
+      if (frequency === 'hourly') {
+        await mutateAsync({
+          checklistId: checklistToEdit.checklistId,
+          payload: {
+            title: logbookTitle,
+            documentNumber,
+            departmentId: department.departmentId,
+            frequency,
+            frequencyInterval,
+          },
+        });
+      } else {
+        await mutateAsync({
+          checklistId: checklistToEdit.checklistId,
+          payload: {
+            title: logbookTitle,
+            documentNumber,
+            departmentId: department.departmentId,
+            frequency,
+          },
+        });
+      }
+
       showSuccess('Checklist updated successfully');
       handleCancel();
     } catch (err) {
