@@ -11,6 +11,7 @@ import { ChecklistAssignment } from "./checklistAssignment.js";
 import { SubmittedChecklist } from "./submittedChecklist.js";
 import { SubmittedChecklistEntry } from "./submittedChecklistEntry.js";
 import { OperatorApprover } from "./operatorApprover.js";
+import { Catalog } from "./catalog.js";
 
 
 User.belongsTo(Company, { foreignKey: "companyId", as: "company" });
@@ -87,6 +88,14 @@ User.hasMany(SubmittedChecklist, { foreignKey: "submittedBy", as: "submittedChec
 SubmittedChecklist.hasMany(SubmittedChecklistEntry, { foreignKey: "submittedChecklistId", as: "entries" });
 SubmittedChecklistEntry.belongsTo(SubmittedChecklist, { foreignKey: "submittedChecklistId", as: "submittedChecklist" });
 
+// ==================== CATALOG ====================
+
+Catalog.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+Company.hasMany(Catalog, { foreignKey: "companyId", as: "catalogs" });
+
+Catalog.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
+Catalog.belongsTo(User, { foreignKey: "updatedBy", as: "updater" });
+
 export {
   User,
   Company,
@@ -99,4 +108,5 @@ export {
   ChecklistAssignment,
   SubmittedChecklist,
   SubmittedChecklistEntry,
+  Catalog,
 };

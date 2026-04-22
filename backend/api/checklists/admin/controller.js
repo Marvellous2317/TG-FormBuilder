@@ -133,4 +133,54 @@ export class AdminController {
   }
 
 
+  static async createCatalog(req, res, next) {
+    try {
+      const { name, list } = req.body;
+      const companyId = req.user.company?.companyId || null;
+      const createdBy = req.user.userId;
+
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "User must belong to a company to create a catalog", 400);
+      }
+
+      const result = await AdminRepository.createCatalog({ name, list, companyId, createdBy });
+      return ResponseManager.success(res, result, 201, result.message);
+    } catch (e) { next(e); }
+  }
+
+  static async getCatalogs(req, res, next) {
+    try {
+      const companyId = req.user.company?.companyId || null;
+      const { page, limit, search } = req.query;
+      const result = await AdminRepository.getCatalogs({ companyId, page, limit, search });
+      return ResponseManager.success(res, result, 200, "Catalogs fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async getCatalogById(req, res, next) {
+    try {
+      const { catalogId } = req.params;
+      const result = await AdminRepository.getCatalogById(catalogId);
+      return ResponseManager.success(res, result, 200, "Catalog fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async updateCatalog(req, res, next) {
+    try {
+      const { catalogId } = req.params;
+      const { name, list } = req.body;
+      const updatedBy = req.user.userId;
+      const result = await AdminRepository.updateCatalog(catalogId, { name, list, updatedBy });
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
+  static async deleteCatalog(req, res, next) {
+    try {
+      const { catalogId } = req.params;
+      const result = await AdminRepository.deleteCatalog(catalogId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
 }
