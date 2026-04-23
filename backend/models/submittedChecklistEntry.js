@@ -57,6 +57,11 @@ export const SubmittedChecklistEntry = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+      config: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      
+    },
   },
   {
     tableName: "submitted_checklist_entries",

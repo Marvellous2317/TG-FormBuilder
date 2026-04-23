@@ -72,7 +72,7 @@ export class AdminController {
 
   static async getUsersApi(req, res, next) {
     try {
-      const result = await AdminRepository.getAllUsers(req.query);
+      const result = await AdminRepository.getAllUsers(req.query, req.user);
       return ResponseManager.success(res, result, 200, "Users fetched successfully");
     } catch (e) {
       next(e);

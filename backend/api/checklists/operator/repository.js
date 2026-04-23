@@ -101,6 +101,7 @@ export class OperatorRepository {
           required: original?.required || false,
           options: original?.options || null,
           formulaExpression: original?.formulaExpression || null,
+          config: original?.config || null,
           value: r.value,
         };
       });
@@ -159,6 +160,7 @@ export class OperatorRepository {
             required: original?.required || false,
             options: original?.options || null,
             formulaExpression: original?.formulaExpression || null,
+            config: original?.config || null,
             value: r.value,
           };
         });
@@ -223,6 +225,7 @@ export class OperatorRepository {
           required: original?.required || false,
           options: original?.options || null,
           formulaExpression: original?.formulaExpression || null,
+          config: original?.config || null,
           value: r.value,
         };
       });
