@@ -251,12 +251,19 @@ export class AdminRepository {
     }
   }
 
-  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate }) {
+  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate }, user) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
       const offset = (page - 1) * limit;
       const where = {};
+
+      const isSuperAdmin = user?.role?.roleName === "superAdmin";
+      if (!isSuperAdmin && user?.companyId) {
+        where.companyId = user.companyId;
+      } else if (companyId) {
+        where.companyId = companyId;
+      }
 
       if (status) {
         where.status = status;
@@ -264,10 +271,6 @@ export class AdminRepository {
 
       if (roleId) {
         where.roleId = roleId;
-      }
-
-      if (companyId) {
-        where.companyId = companyId;
       }
 
       if (department) {
