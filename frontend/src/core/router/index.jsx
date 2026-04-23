@@ -25,6 +25,8 @@ import RejectedTasks from '../../pages/operator/RejectedTasks';
 import Settings from '../../pages/auth/Settings';
 import Logout from '../../pages/auth/Logout';
 import CreateEntries from '../../pages/admin/dashboard/CreateEntries';
+import ViewOperatorEntries from '../../pages/operator/ViewOperatorEntries';
+import CreateOperatorEntry from '../../pages/operator/CreateOperatorEntries';
 
 export const router = createBrowserRouter([
   {
@@ -165,6 +167,16 @@ export const router = createBrowserRouter([
           {
             path: 'rejected',
             element: <RejectedTasks />,
+          },
+          {
+            path: 'entries/:id/create',
+            loader: ({ params }) => params,
+            element: <CreateOperatorEntry />,
+          },
+          {
+            path: 'entries/:id/view',
+            loader: ({ params }) => params,
+            element: <ViewOperatorEntries />,
           },
           {
             path: 'settings',

@@ -6,9 +6,12 @@ import Pagination from '../../shared/components/Pagination';
 import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorChecklists';
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
+import { useNavigate } from 'react-router-dom';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
+
+  const navigate = useNavigate();
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -68,6 +71,10 @@ export default function OperatorDashboard() {
       const nextSize = Math.max(1, Number(value) || 1);
       handlePageChange({ page: 1, pageSize: nextSize });
     }
+  };
+
+  const handleRowClick = (rowId) => {
+    navigate(`/operator/entries/${rowId}/create`);
   };
 
   return (
@@ -144,9 +151,9 @@ export default function OperatorDashboard() {
                       <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                         #
                       </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-secondary-200 bg-tertiary-700 whitespace-nowrap">
+                      {/* <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-secondary-200 bg-tertiary-700 whitespace-nowrap">
                         Checklist ID
-                      </th>
+                      </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                         Checklist title
                       </th>
@@ -161,14 +168,15 @@ export default function OperatorDashboard() {
                       checklistsData?.map((row, index) => (
                         <tr
                           key={row.assignmentId}
-                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => handleRowClick(row?.assignmentId)}
                         >
                           <td className="p-3 md:p-4 text-tertiary font-geist text-sm md:text-sm border-r border-gray-200 space-y-1">
                             {index + 1}
                           </td>
-                          <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm border-gray-200">
+                          {/* <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm border-gray-200">
                             {row?.checklist?.checklistId}
-                          </td>
+                          </td> */}
                           <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm space-y-1 border-gray-200">
                             {row?.checklist?.title}
                           </td>

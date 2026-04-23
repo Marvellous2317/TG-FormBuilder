@@ -25,3 +25,11 @@ export const getOperatorSubmittedChecklist = async (id) => {
   );
   return data;
 };
+
+export const submitChecklistEntry = async (id, payload) => {
+  const { data } = await axiosInstance.post(
+    `/checklists/operator/${id}/submit`,
+    payload,
+  );
+  return data;
+};

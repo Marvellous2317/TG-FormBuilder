@@ -4,9 +4,12 @@ import Pagination from '../../shared/components/Pagination';
 import { useOperatorSubmittedChecklists } from '../../shared/hooks/operator/useOperatorChecklists';
 import Loader from '../../shared/components/Loader';
 import { formatDate } from '../../shared/utils/constants';
+import { useNavigate } from 'react-router-dom';
 
 export default function ApprovedTasks() {
   const [search, setSearch] = useState('');
+
+  const navigate = useNavigate();
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -57,6 +60,10 @@ export default function ApprovedTasks() {
       const nextSize = Math.max(1, Number(value) || 1);
       handlePageChange({ page: 1, pageSize: nextSize });
     }
+  };
+
+  const handleRowClick = (rowId) => {
+    navigate(`/operator/entries/${rowId}/create`);
   };
 
   return (
@@ -119,6 +126,9 @@ export default function ApprovedTasks() {
                         <tr
                           key={row.id}
                           className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                          onClick={() =>
+                            handleRowClick(row?.submittedChecklistId)
+                          }
                         >
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                             {index + 1}
