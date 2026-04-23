@@ -74,7 +74,7 @@ export const validateCreateEntries = [
   body("entries").isArray({ min: 1 }).withMessage("entries must be a non-empty array"),
   body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
     .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
-  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula"])
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula", "section"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
   body("entries.*.order").optional().isInt({ min: 0 }).withMessage("Order must be a positive integer"),
@@ -86,9 +86,7 @@ export const validateCreateEntries = [
       if (entry.type === "formula" && !entry.formulaExpression) {
         throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
       }
-      if (["dropdown", "enum"].includes(entry.type) && (!entry.options || !Array.isArray(entry.options) || entry.options.length === 0)) {
-        throw new Error(`entries[${i}]: options is required when type is ${entry.type}`);
-      }
+    
     }
     return true;
   }),
@@ -101,7 +99,7 @@ export const validateCreateOrUpdateEntries = [
   body("entries.*.entryId").optional().isUUID().withMessage("Invalid entry ID"),
   body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
     .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
-  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula"])
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula", "section"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
   body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
@@ -111,9 +109,7 @@ export const validateCreateOrUpdateEntries = [
       if (entry.type === "formula" && !entry.formulaExpression) {
         throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
       }
-      if (["dropdown", "enum"].includes(entry.type) && (!entry.options || !Array.isArray(entry.options) || entry.options.length === 0)) {
-        throw new Error(`entries[${i}]: options is required when type is ${entry.type}`);
-      }
+     
     }
     return true;
   }),
