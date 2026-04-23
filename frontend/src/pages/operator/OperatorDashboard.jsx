@@ -6,9 +6,12 @@ import Pagination from '../../shared/components/Pagination';
 import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorChecklists';
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
+import { useNavigate } from 'react-router-dom';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
+
+  const navigate = useNavigate();
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -70,17 +73,21 @@ export default function OperatorDashboard() {
     }
   };
 
+  const handleRowClick = (rowId) => {
+    navigate(`/operator/entries/${rowId}/create`);
+  };
+
   return (
-    <div className="flex w-full flex-col max-h-screen">
-      <section className="py-5 px-25 gap-1 border-b border-secondary-200">
+    <div className="flex w-full flex-col min-h-screen bg-white">
+      <section className="py-5 px-4 md:px-10 lg:px-25 gap-1 border-b border-secondary-200">
         <h2 className="font-medium text-primary text-xl">Dashboard</h2>
         <p className="text-xs text-tertiary">
           Your dashboard analytics and checklists
         </p>
       </section>
 
-      <div className="px-25">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-5">
+      <div className="px-4 md:px-10 lg:px-25 pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-5">
           <AdminCard
             icon={Icons.createdIcon}
             title="Total checklists"
@@ -122,7 +129,7 @@ export default function OperatorDashboard() {
         {isLoading ? (
           <Loader size="h-12 w-12 !border-primary-200 mt-20" />
         ) : (
-          <div className="border border-gray-200 overflow-hidden bg-white w-full min-h-full">
+          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full min-h-full shadow-sm">
             <section className="flex-col flex w-full min-h-full">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
                 <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
@@ -137,16 +144,16 @@ export default function OperatorDashboard() {
                 </div>
               </div>
 
-              <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100 xl:max-h-140">
+              <div className="w-full overflow-x-auto overflow-y-auto max-h-[60vh] md:max-h-100 xl:max-h-140">
                 <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
                   <thead className="sticky top-0 z-10 shadow-sm">
                     <tr className="bg-tertiary-300">
                       <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                         #
                       </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-secondary-200 bg-tertiary-700 whitespace-nowrap">
+                      {/* <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-secondary-200 bg-tertiary-700 whitespace-nowrap">
                         Checklist ID
-                      </th>
+                      </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                         Checklist title
                       </th>
@@ -161,14 +168,15 @@ export default function OperatorDashboard() {
                       checklistsData?.map((row, index) => (
                         <tr
                           key={row.assignmentId}
-                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => handleRowClick(row?.assignmentId)}
                         >
                           <td className="p-3 md:p-4 text-tertiary font-geist text-sm md:text-sm border-r border-gray-200 space-y-1">
                             {index + 1}
                           </td>
-                          <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm border-gray-200">
+                          {/* <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm border-gray-200">
                             {row?.checklist?.checklistId}
-                          </td>
+                          </td> */}
                           <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm space-y-1 border-gray-200">
                             {row?.checklist?.title}
                           </td>

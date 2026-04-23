@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom';
 import useToast from '../../../../shared/hooks/useToast';
 import Button from '../../../../shared/components/Button';
 import { formatDate } from '../../../../shared/utils/constants';
+import { useNavigate } from 'react-router-dom';
+import AssignLogbookModal from './AssignLogbookModal';
 
 const statusOptions = [
   { title: 'All status', value: 'all' },
@@ -33,10 +35,14 @@ export default function TaskList({
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('all');
   const [currentDepartment, setCurrentDepartment] = useState('all');
+  const [actionToPerform, setActionToPerform] = useState('assign');
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
+    useState(false);
 
   const { showError } = useToast();
+  const navigate = useNavigate();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -101,17 +107,40 @@ export default function TaskList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    { title: 'Unassign log', value: 'unassign', onClick: () => {} },
-    { title: 'Assign log', value: 'assign', onClick: () => {} },
     {
-      title: 'Edit log',
-      value: 'edit',
+      title: 'Unassign log',
+      value: 'unassign',
       onClick: () => {
-        setIsEditChecklistModalOpen(true);
-        setChecklistToEdit(checklistToEdit);
+        setActiveMenuId(null);
+        setActionToPerform('unassign');
+        setIsShowAssignLogbookModal(true);
       },
     },
-    { title: 'Delete log', value: 'delete', onClick: () => {} },
+    {
+      title: 'Assign log',
+      value: 'assign',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActionToPerform('assign');
+        setIsShowAssignLogbookModal(true);
+      },
+    },
+    {
+      title: 'Entries',
+      value: 'entries',
+      onClick: () => {
+        setActiveMenuId(null);
+        navigate(`/admin/entries/${checklistToEdit?.checklistId}`);
+      },
+    },
+    {
+      title: 'Delete log',
+      value: 'delete',
+      onClick: () => {
+        setActiveMenuId(null);
+        setIsDeleteChecklistModalOpen(true);
+      },
+    },
   ];
 
   const toggleRowMenu = (rowId, event, row) => {
@@ -299,6 +328,13 @@ export default function TaskList({
             document.body,
           )
         : null}
+      <AssignLogbookModal
+        isShowAssignLogbookModal={isShowAssignLogbookModal}
+        setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
+        checklistId={checklistToEdit?.checklistId}
+        checklistAssignments={checklistToEdit?.assignments}
+        action={actionToPerform}
+      />
     </div>
   );
 }

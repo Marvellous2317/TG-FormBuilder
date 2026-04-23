@@ -5,7 +5,10 @@ import Button from '../../../../shared/components/Button';
 import { useDepartmentsInfinite } from '../../../../shared/hooks/superadmin/useDepartments';
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
-import { useCreateChecklists } from '../../../../shared/hooks/admin/useChecklist';
+import {
+  useCreateChecklists,
+  useUpdateChecklist,
+} from '../../../../shared/hooks/admin/useChecklist';
 
 const frequencyList = [
   {
@@ -33,17 +36,34 @@ export default function EditLogbookModal({
   setChecklistToEdit,
 }) {
   const [formData, setFormData] = useState({
-    logbookTitle: '',
-    documentNumber: '',
-    department: {},
-    frequency: '',
-    frequencyInterval: '',
+    logbookTitle: checklistToEdit?.title ?? '',
+    documentNumber: checklistToEdit?.documentNumber ?? '',
+    department: checklistToEdit?.department
+      ? {
+          departmentId: checklistToEdit?.department?.departmentId,
+          departmentName: checklistToEdit?.department?.departmentName,
+        }
+      : {},
+    frequency: checklistToEdit?.frequency || '',
+    frequencyInterval: checklistToEdit?.frequencyInterval || '',
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
 
   const { showError, showSuccess } = useToast();
+
+  useEffect(() => {
+    if (isEditChecklistModalOpen && checklistToEdit) {
+      setFormData({
+        logbookTitle: checklistToEdit.title || '',
+        documentNumber: checklistToEdit.documentNumber || '',
+        department: checklistToEdit.department || {},
+        frequency: checklistToEdit.frequency || '',
+        frequencyInterval: checklistToEdit.frequencyInterval || '',
+      });
+    }
+  }, [isEditChecklistModalOpen, checklistToEdit]);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -53,7 +73,7 @@ export default function EditLogbookModal({
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
 
-  const { mutateAsync, isPending: isLoading } = useCreateChecklists();
+  const { mutateAsync, isPending: isLoading } = useUpdateChecklist();
 
   const {
     data: departmentsData,
@@ -102,7 +122,13 @@ export default function EditLogbookModal({
   };
 
   const handleSubmit = async () => {
-    const { logbookTitle, documentNumber, department, frequency } = formData;
+    const {
+      logbookTitle,
+      documentNumber,
+      department,
+      frequency,
+      frequencyInterval,
+    } = formData;
 
     if (
       !logbookTitle ||
@@ -115,35 +141,42 @@ export default function EditLogbookModal({
     }
 
     try {
-      await mutateAsync({
-        title: logbookTitle,
-        documentNumber,
-        departmentId: department.departmentId,
-        frequency,
-      });
-      showSuccess('Checklist created successfully');
+      if (frequency === 'hourly') {
+        await mutateAsync({
+          checklistId: checklistToEdit.checklistId,
+          payload: {
+            title: logbookTitle,
+            documentNumber,
+            departmentId: department.departmentId,
+            frequency,
+            frequencyInterval,
+          },
+        });
+      } else {
+        await mutateAsync({
+          checklistId: checklistToEdit.checklistId,
+          payload: {
+            title: logbookTitle,
+            documentNumber,
+            departmentId: department.departmentId,
+            frequency,
+          },
+        });
+      }
+
+      showSuccess('Checklist updated successfully');
       handleCancel();
     } catch (err) {
       console.log(err.response.data);
       showError(
         err.response.data.message ??
-          'Unable to create logbook. Please try again.',
+          'Unable to update logbook. Please try again.',
       );
     }
-
-    setFormData({
-      logbookTitle: '',
-      documentNumber: '',
-      department: {},
-      frequency: '',
-      frequencyInterval: '',
-    });
-    setDepartmentSearchInput('');
-    setDepartmentSearch('');
-    setIsEditChecklistModalOpen(false);
   };
 
   const handleCancel = () => {
+    console.log(isEditChecklistModalOpen);
     setFormData({
       logbookTitle: '',
       documentNumber: '',
@@ -151,9 +184,10 @@ export default function EditLogbookModal({
       frequency: '',
       frequencyInterval: '',
     });
+    setIsEditChecklistModalOpen(false);
+    setChecklistToEdit(null);
     setDepartmentSearchInput('');
     setDepartmentSearch('');
-    setIsEditChecklistModalOpen(false);
   };
 
   return (
@@ -167,10 +201,10 @@ export default function EditLogbookModal({
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
           <p className="text-base font-semibold font-geist text-primary">
-            Create Logbook
+            Edit Logbook
           </p>
           <p className="text-sm font-geist text-tertiary">
-            Enter logbook details
+            Update logbook details
           </p>
         </div>
 
@@ -249,7 +283,7 @@ export default function EditLogbookModal({
             onClick={() => handleSubmit()}
             disabled={isLoading}
           >
-            Continue
+            Update
             {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>

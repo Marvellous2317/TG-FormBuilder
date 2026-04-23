@@ -4,6 +4,7 @@ import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import useAuth from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
+import useToast from '../../shared/hooks/useToast';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ function Login() {
     password: '',
   });
   const { login, isLoggingIn } = useAuth();
+
+  const { showError } = useToast();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -22,6 +25,13 @@ function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(formData.email)) {
+      showError('Invalid Email');
+      return;
+    }
+
     await login(formData);
   };
 

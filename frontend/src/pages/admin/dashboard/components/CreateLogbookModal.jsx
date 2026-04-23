@@ -100,7 +100,13 @@ export default function CreateLogbookModal({
   };
 
   const handleSubmit = async () => {
-    const { logbookTitle, documentNumber, department, frequency } = formData;
+    const {
+      logbookTitle,
+      documentNumber,
+      department,
+      frequency,
+      frequencyInterval,
+    } = formData;
 
     if (
       !logbookTitle ||
@@ -113,12 +119,22 @@ export default function CreateLogbookModal({
     }
 
     try {
-      await mutateAsync({
-        title: logbookTitle,
-        documentNumber,
-        departmentId: department.departmentId,
-        frequency,
-      });
+      if (frequency === 'hourly') {
+        await mutateAsync({
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          frequencyInterval,
+        });
+      } else {
+        await mutateAsync({
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+        });
+      }
       showSuccess('Checklist created successfully');
       handleCancel();
     } catch (err) {

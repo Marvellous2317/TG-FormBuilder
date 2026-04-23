@@ -4,9 +4,12 @@ import Pagination from '../../shared/components/Pagination';
 import { useOperatorSubmittedChecklists } from '../../shared/hooks/operator/useOperatorChecklists';
 import Loader from '../../shared/components/Loader';
 import { formatDate } from '../../shared/utils/constants';
+import { useNavigate } from 'react-router-dom';
 
 export default function ApprovedTasks() {
   const [search, setSearch] = useState('');
+
+  const navigate = useNavigate();
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -59,6 +62,10 @@ export default function ApprovedTasks() {
     }
   };
 
+  const handleRowClick = (rowId) => {
+    navigate(`/operator/entries/${rowId}/create`);
+  };
+
   return (
     <div className="flex w-full flex-col max-h-screen">
       {/* HEADER */}
@@ -95,9 +102,9 @@ export default function ApprovedTasks() {
                       <th className="p-3 md:p-4 w-12 text-secondary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         #
                       </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-secondary-200 whitespace-nowrap">
+                      {/* <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-secondary-200 whitespace-nowrap">
                         Checklist ID
-                      </th>
+                      </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         Checklist title
                       </th>
@@ -119,15 +126,18 @@ export default function ApprovedTasks() {
                         <tr
                           key={row.id}
                           className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                          onClick={() =>
+                            handleRowClick(row?.submittedChecklistId)
+                          }
                         >
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                             {index + 1}
                           </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm">
+                          {/* <td className="p-3 md:p-4 text-tertiary text-sm">
                             {row.submittedChecklistId}
-                          </td>
+                          </td> */}
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.assignment.checklist.title}
+                            {row.assignment?.checklist.title || 'N/A'}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
                             {row.documentNumber}

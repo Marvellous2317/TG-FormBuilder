@@ -4,6 +4,7 @@ import {
   getOperatorChecklists,
   getOperatorSubmittedChecklist,
   getOperatorSubmittedChecklists,
+  submitChecklistEntry,
 } from '../../../core/api/operator';
 
 export function useOperatorChecklists(queryParams = {}, options = {}) {
@@ -39,5 +40,24 @@ export function useOperatorSubmittedChecklist(checklistId, options = {}) {
     queryFn: () => getOperatorSubmittedChecklist(checklistId),
     enabled: Boolean(checklistId),
     ...options,
+  });
+}
+
+export function useCreateOperatorChecklistEntries(checklistId, options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ payload }) => submitChecklistEntry(checklistId, payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['operator', 'checklists', 'entries', checklistId],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
   });
 }
