@@ -314,6 +314,7 @@ export class AdminRepository {
       return { entries: results, message: "Entries saved successfully" };
     } catch (error) {
       await transaction.rollback();
+      console.log(error);
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to save entries", 500);
     }
@@ -366,7 +367,7 @@ export class AdminRepository {
 
       return { assignment, message: "Checklist assigned successfully" };
     } catch (error) {
-        console.log(error);
+        //console.log(error);
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to create assignment", 500);
     }
