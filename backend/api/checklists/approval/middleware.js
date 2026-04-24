@@ -1,4 +1,4 @@
-import { param, query } from "express-validator";
+import { body, param, query } from "express-validator";
 import { validationResult } from "express-validator";
 import ResponseManager from "../../../utils/responseManager.js";
 
@@ -29,5 +29,12 @@ export const validateHistoryQuery = [
   query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be positive"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateApproveWithData = [
+  param("submittedChecklistId").isUUID().withMessage("Invalid submission ID"),
+  body("data").isArray({ min: 1 }).withMessage("data must be a non-empty array"),
+  body("data.*.entryId").isUUID().withMessage("Invalid entry ID"),
   validate,
 ];
