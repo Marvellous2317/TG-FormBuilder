@@ -261,7 +261,7 @@ export default function CreateEntries() {
                           }}
                           className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
-                          {field.config.expression || 'Formula'}
+                          {field.config.expression || 'Formular'}
                         </p>
                       )}
                     </div>

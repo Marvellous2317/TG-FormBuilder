@@ -10,6 +10,7 @@ function InputField({
   onChange,
   placeholder,
   required = false,
+  readOnly = false,
   disabled = false,
   autoComplete,
   className = '',
@@ -33,6 +34,7 @@ function InputField({
     'w-full rounded-2xl border border-secondary-200 bg-white px-4 py-4 font-geist text-sm text-primary outline-none transition',
     'placeholder:text-secondary focus:border-primary-200/75 focus:ring-2 focus:ring-primary/10',
     disabled ? 'cursor-not-allowed bg-secondary/60' : '',
+    readOnly ? 'bg-gray-50' : '',
     isPasswordField ? 'pr-20' : '',
     isTextAreaField ? 'min-h-28 resize-y' : '',
     inputClassName,
@@ -65,11 +67,10 @@ function InputField({
                 ? option
                 : { value: option, label: option },
             )}
-            onChange={(val) =>
-              onChange({ target: { value: val, name } })
-            }
+            onChange={(val) => onChange({ target: { value: val, name } })}
             placeholder={placeholder}
             disabled={disabled}
+            readOnly={readOnly}
             searchable={searchable}
             onExternalSearchChange={onExternalSearchChange}
             onLoadMore={onLoadMore}
@@ -91,6 +92,7 @@ function InputField({
             onChange={onChange}
             placeholder={placeholder}
             required={required}
+            readOnly={readOnly}
             disabled={disabled}
             autoComplete={autoComplete}
             aria-required={required}
@@ -105,6 +107,7 @@ function InputField({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
+            readOnly={readOnly}
             required={required}
             disabled={disabled}
             autoComplete={autoComplete}

@@ -145,14 +145,17 @@ function DropdownMenuPortal({
           />
         </div>
       )}
-      <div className="overflow-y-auto" style={{ maxHeight: `${menuPosition.listMaxHeight}px` }}>
+      <div
+        className="overflow-y-auto"
+        style={{ maxHeight: `${menuPosition.listMaxHeight}px` }}
+      >
         {filteredOptions.length === 0 && !isFetchingNextPage ? (
           <p className="p-2 text-center font-geist text-sm text-tertiary">
             No results
           </p>
         ) : (
           filteredOptions.map((option) => {
-            const optionLabel = option.label || option.title;
+            const optionLabel = option.label || option.title || option;
             const isSelected = option.value === value;
 
             return (
@@ -163,7 +166,7 @@ function DropdownMenuPortal({
                     className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary ${
                       active ? 'bg-gray-100' : ''
                     } ${isSelected ? 'bg-primary-50 text-primary-700' : ''} ${itemClassName}`.trim()}
-                    onClick={() => onChange(option.value)}
+                    onClick={() => onChange(option.value || option)}
                   >
                     {optionLabel}
                   </button>
@@ -198,6 +201,8 @@ export default function DropdownSelect({
   onLoadMore,
   hasNextPage,
   isFetchingNextPage,
+  disabled = false, // ← new prop
+  readOnly = false, // ← new prop
 }) {
   const buttonRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,9 +210,13 @@ export default function DropdownSelect({
   const label = selectedOption?.label || selectedOption?.title || placeholder;
 
   const handleChange = (val) => {
+    if (disabled || readOnly) return; // prevent changes
     setSearchQuery('');
     onChange(val);
   };
+
+  // Determine if the dropdown should be interactive
+  const isInteractive = !disabled && !readOnly;
 
   return (
     <div className={className}>
@@ -216,7 +225,10 @@ export default function DropdownSelect({
           <>
             <MenuButton
               ref={buttonRef}
-              className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-secondary-200 bg-white px-4 py-3 text-left outline-none transition-all duration-150 ease-in-out hover:bg-gray-50 ${buttonClassName}`.trim()}
+              disabled={!isInteractive}
+              className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-secondary-200 bg-white px-4 py-3 text-left outline-none transition-all duration-150 ease-in-out hover:bg-gray-50 ${
+                !isInteractive ? 'cursor-not-allowed bg-gray-50 opacity-70' : ''
+              } ${buttonClassName}`.trim()}
             >
               <span
                 className={`font-geist text-sm ${
@@ -232,22 +244,24 @@ export default function DropdownSelect({
               />
             </MenuButton>
 
-            <DropdownMenuPortal
-              open={open}
-              buttonRef={buttonRef}
-              options={options}
-              value={value}
-              onChange={handleChange}
-              menuClassName={menuClassName}
-              itemClassName={itemClassName}
-              searchable={searchable}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              onExternalSearchChange={onExternalSearchChange}
-              onLoadMore={onLoadMore}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-            />
+            {isInteractive && (
+              <DropdownMenuPortal
+                open={open}
+                buttonRef={buttonRef}
+                options={options}
+                value={value}
+                onChange={handleChange}
+                menuClassName={menuClassName}
+                itemClassName={itemClassName}
+                searchable={searchable}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onExternalSearchChange={onExternalSearchChange}
+                onLoadMore={onLoadMore}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            )}
           </>
         )}
       </Menu>

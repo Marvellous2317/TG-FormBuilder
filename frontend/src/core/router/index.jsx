@@ -174,7 +174,7 @@ export const router = createBrowserRouter([
             element: <CreateOperatorEntry />,
           },
           {
-            path: 'entries/:id/view',
+            path: 'entries/:id/view/:back',
             loader: ({ params }) => params,
             element: <ViewOperatorEntries />,
           },
