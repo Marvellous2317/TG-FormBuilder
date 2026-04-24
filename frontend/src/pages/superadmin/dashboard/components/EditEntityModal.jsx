@@ -26,16 +26,16 @@ export default function EditEntityModal({
   const { showSuccess, showError } = useToast();
 
   // Update form data when company prop changes
-  // useEffect(() => {
-  //   if (company) {
-  //     setFormData({
-  //       entityName: company?.companyName ?? '',
-  //       entityAddress: company?.address ?? '',
-  //       fullName: company?.contactFullName ?? '',
-  //       emailAddress: company?.contactEmail ?? '',
-  //     });
-  //   }
-  // }, [company]);
+  useEffect(() => {
+    if (company) {
+      setFormData({
+        entityName: company?.companyName ?? '',
+        entityAddress: company?.address ?? '',
+        fullName: company?.contactFullName ?? '',
+        emailAddress: company?.contactEmail ?? '',
+      });
+    }
+  }, [company]);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
