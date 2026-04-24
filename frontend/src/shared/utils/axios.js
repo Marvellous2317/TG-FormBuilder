@@ -43,6 +43,14 @@ axiosInstance.interceptors.response.use(
       window.location.href = '/login';
     }
 
+    if (error.response && error.response.status === 403) {
+      console.log('Got here - 403 Unauthenticated');
+
+      useAuthStore.getState().clearAuth();
+
+      window.location.href = '/login';
+    }
+
     return Promise.reject(error);
   },
 );
