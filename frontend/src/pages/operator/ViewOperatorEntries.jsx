@@ -128,7 +128,7 @@ export default function ViewOperatorEntries() {
           <h2 className="w-1/2 text-primary text-sm font-medium">Checked by</h2>
           <div className="flex w-1/2 flex-col items-start gap-1">
             <h2 className="text-primary text-sm font-medium">
-              {approver.firstName} {approver.lastName}
+              {approver?.firstName} {approver?.lastName}
             </h2>
             <p className="text-tertiary text-xs">Approver</p>
           </div>

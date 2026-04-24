@@ -30,7 +30,6 @@ import CreateOperatorEntry from '../../pages/operator/CreateOperatorEntries';
 import ApproverWorkspaceLayout from '../../pages/approver/ApproverWorkspaceLayout';
 import ApproverDashboard from '../../pages/approver/ApproverDashboard';
 import ViewApproverEntries from '../../pages/approver/ViewApproverEntries';
-import ApproverPendingTasks from '../../pages/approver/ApproverPendingTasks';
 import ApproverApprovedTasks from '../../pages/approver/ApproverApprovedTasks';
 import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
 
@@ -204,10 +203,6 @@ export const router = createBrowserRouter([
           {
             path: '',
             element: <ApproverDashboard />,
-          },
-          {
-            path: 'pending',
-            element: <ApproverPendingTasks />,
           },
           {
             path: 'approved',

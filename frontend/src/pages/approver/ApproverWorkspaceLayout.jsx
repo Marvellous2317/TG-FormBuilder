@@ -46,7 +46,7 @@ export default function ApproverWorkspaceLayout() {
               <NavLink
                 key={to}
                 to={to}
-                end={to === '/operator'}
+                end={to === '/approver'}
                 className={({ isActive }) => `
                   flex items-center gap-2 px-4 py-2 rounded-xl transition-all whitespace-nowrap
                   ${
@@ -64,7 +64,7 @@ export default function ApproverWorkspaceLayout() {
         </div>
 
         {/* RIGHT (USER INFO) */}
-        <Link to="/operator/settings" className="flex items-center gap-2 ">
+        <Link to="/approver/settings" className="flex items-center gap-2 ">
           <div className="p-2 bg-primary-200 text-white text-xs rounded-full font-semibold">
             {getInitials(`${user.firstName} ${user.lastName}`)}
           </div>
@@ -90,7 +90,7 @@ export default function ApproverWorkspaceLayout() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/operator'}
+              end={to === '/approver'}
               className="flex flex-col items-center justify-center text-xs"
             >
               <Icon

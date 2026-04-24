@@ -7,6 +7,13 @@ export const getApproverSubmittedChecklists = async (params = {}) => {
   return data;
 };
 
+export const getApproverSubmittedChecklistsHistory = async (params = {}) => {
+  const { data } = await axiosInstance.get('/checklists/approval/history', {
+    params,
+  });
+  return data;
+};
+
 export const getApproverSubmittedChecklist = async (id) => {
   const { data } = await axiosInstance.get(`/checklists/approval/${id}`);
   return data;
@@ -20,10 +27,9 @@ export const approveChecklistEntry = async (id, payload) => {
   return data;
 };
 
-export const rejectChecklistEntry = async (id, payload) => {
+export const rejectChecklistEntry = async (id) => {
   const { data } = await axiosInstance.post(
     `/checklists/approval/${id}/reject`,
-    payload,
   );
   return data;
 };

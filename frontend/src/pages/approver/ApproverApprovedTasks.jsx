@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { FiSearch } from 'react-icons/fi';
 import Pagination from '../../shared/components/Pagination';
-import { useOperatorSubmittedChecklists } from '../../shared/hooks/operator/useOperatorChecklists';
 import Loader from '../../shared/components/Loader';
 import { formatDate } from '../../shared/utils/constants';
 import { useNavigate } from 'react-router-dom';
+import { useApproverChecklistsHistory } from '../../shared/hooks/approver/useApprover';
 
 export default function ApproverApprovedTasks() {
   const [search, setSearch] = useState('');
@@ -18,7 +18,7 @@ export default function ApproverApprovedTasks() {
   });
 
   const { data: submissions, isPending: isLoadingSubmissions } =
-    useOperatorSubmittedChecklists(usersPagination);
+    useApproverChecklistsHistory(usersPagination);
 
   const submissionsData = submissions?.data?.submissions;
   const pagination = submissions?.data?.pagination;
@@ -63,7 +63,7 @@ export default function ApproverApprovedTasks() {
   };
 
   const handleRowClick = (rowId) => {
-    navigate(`/operator/entries/${rowId}/view/approved`);
+    navigate(`/approver/entries/${rowId}/view/approved`);
   };
 
   return (
@@ -106,9 +106,6 @@ export default function ApproverApprovedTasks() {
                         Checklist ID
                       </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
-                        Checklist title
-                      </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         Document number
                       </th>
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
@@ -137,16 +134,13 @@ export default function ApproverApprovedTasks() {
                             {row.submittedChecklistId}
                           </td> */}
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.assignment?.checklist.title || 'N/A'}
-                          </td>
-                          <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
                             {row.documentNumber}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.approver &&
-                            row.approver.firstName &&
-                            row.approver.lastName
-                              ? `${row.approver.firstName} ${row.approver.lastName}`
+                            {row.assignment &&
+                            row.assignment?.operator?.firstName &&
+                            row.assignment?.operator?.lastName
+                              ? `${row.assignment?.operator?.firstName} ${row.assignment?.operator?.lastName}`
                               : 'N/A'}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm">
