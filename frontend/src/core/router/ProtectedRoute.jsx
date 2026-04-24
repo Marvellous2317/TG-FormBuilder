@@ -3,7 +3,7 @@ import { useAuthStore } from '../../shared/store/authStore';
 import Loader from '../../shared/components/Loader';
 
 export default function ProtectedRoute({ allowedRoles }) {
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   const isLoading = false;
 
@@ -12,7 +12,6 @@ export default function ProtectedRoute({ allowedRoles }) {
   }
 
   if (!isAuthenticated || !user) {
-    clearAuth();
     return <Navigate to="/login" replace />;
   }
 

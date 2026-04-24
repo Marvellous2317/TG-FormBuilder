@@ -133,7 +133,7 @@ export default function CreateEntityModal({
             </p>
 
             <InputField
-              label="Full name"
+              label="Contact name"
               id="fullName"
               className="mt-5"
               value={formData.fullName}
@@ -141,7 +141,7 @@ export default function CreateEntityModal({
             />
 
             <InputField
-              label="Email address"
+              label="Contact email address"
               id="emailAddress"
               type="email"
               value={formData.emailAddress}

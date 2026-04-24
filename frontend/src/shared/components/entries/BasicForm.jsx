@@ -1,8 +1,8 @@
 import React from 'react';
 import InputField from '../InputField';
 
-export default function BasicForm({ entry, formData, setFormData }) {
-  const entryId = entry?.id || entry?.entryId;
+export default function BasicForm({ entry, formData, setFormData, readOnly }) {
+  const entryId = entry?.entryId;
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -19,10 +19,10 @@ export default function BasicForm({ entry, formData, setFormData }) {
   };
 
   // Get current value for this entry (if exists)
-  const currentValue = formData[entryId]?.value || '';
+  const currentValue = formData[entryId]?.value || entry?.value || '';
 
   return (
-    <div className="mt-5">
+    <div className="mt-5 w-full">
       <InputField
         id={entryId}
         name={entryId}
@@ -32,6 +32,7 @@ export default function BasicForm({ entry, formData, setFormData }) {
         value={currentValue}
         onChange={handleChange}
         onBlur={handleChange}
+        readOnly={readOnly}
       />
     </div>
   );

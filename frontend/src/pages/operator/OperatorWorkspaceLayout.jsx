@@ -3,6 +3,8 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { FiHome, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import Images from '../../assets/images';
 import DropdownSelect from '../../shared/components/DropdownSelect';
+import { useAuthStore } from '../../shared/store/authStore';
+import { getInitials } from '../../shared/utils/constants';
 
 const navDetails = [
   { title: 'Dashboard', to: '/operator', icon: FiHome },
@@ -13,12 +15,7 @@ const navDetails = [
 
 export default function OperatorWorkspaceLayout() {
   const location = useLocation();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const dropdownOptions = [
-    { title: 'Settings', to: '/operator/settings' },
-    { title: 'Logout', to: '/logout' },
-  ];
+  const { user } = useAuthStore();
 
   return (
     <div className="flex flex-col w-full h-screen bg-white relative">
@@ -70,12 +67,12 @@ export default function OperatorWorkspaceLayout() {
         {/* RIGHT (USER INFO) */}
         <Link to="/operator/settings" className="flex items-center gap-2 ">
           <div className="p-2 bg-primary-200 text-white text-xs rounded-full font-semibold">
-            CL
+            {getInitials(`${user.firstName} ${user.lastName}`)}
           </div>
 
           {/* Hide email on small screens */}
           <h1 className="hidden md:block text-tertiary text-sm truncate max-w-50">
-            lennox.charles@tolaram.com
+            {user.email}
           </h1>
         </Link>
       </aside>

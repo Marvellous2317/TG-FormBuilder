@@ -27,6 +27,11 @@ import Logout from '../../pages/auth/Logout';
 import CreateEntries from '../../pages/admin/dashboard/CreateEntries';
 import ViewOperatorEntries from '../../pages/operator/ViewOperatorEntries';
 import CreateOperatorEntry from '../../pages/operator/CreateOperatorEntries';
+import ApproverWorkspaceLayout from '../../pages/approver/ApproverWorkspaceLayout';
+import ApproverDashboard from '../../pages/approver/ApproverDashboard';
+import ViewApproverEntries from '../../pages/approver/ViewApproverEntries';
+import ApproverApprovedTasks from '../../pages/approver/ApproverApprovedTasks';
+import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
 
 export const router = createBrowserRouter([
   {
@@ -174,7 +179,7 @@ export const router = createBrowserRouter([
             element: <CreateOperatorEntry />,
           },
           {
-            path: 'entries/:id/view',
+            path: 'entries/:id/view/:back',
             loader: ({ params }) => params,
             element: <ViewOperatorEntries />,
           },
@@ -193,7 +198,30 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/approver',
-        element: <div>Approver Queue</div>,
+        element: <ApproverWorkspaceLayout />,
+        children: [
+          {
+            path: '',
+            element: <ApproverDashboard />,
+          },
+          {
+            path: 'approved',
+            element: <ApproverApprovedTasks />,
+          },
+          {
+            path: 'rejected',
+            element: <ApproverRejectedTasks />,
+          },
+          {
+            path: 'entries/:id/view/:back',
+            loader: ({ params }) => params,
+            element: <ViewApproverEntries />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
+          },
+        ],
       },
     ],
   },

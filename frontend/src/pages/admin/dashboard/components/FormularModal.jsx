@@ -159,7 +159,7 @@ export default function FormularModal({
             onClick={handleSave}
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
           >
-            Save formula
+            Save formular
           </Button>
         </div>
       </div>

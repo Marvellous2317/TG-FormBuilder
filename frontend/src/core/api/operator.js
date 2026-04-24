@@ -33,3 +33,11 @@ export const submitChecklistEntry = async (id, payload) => {
   );
   return data;
 };
+
+export const updateChecklistEntry = async (id, payload) => {
+  const { data } = await axiosInstance.post(
+    `/checklists/operator/submissions/${id}`,
+    payload,
+  );
+  return data;
+};
