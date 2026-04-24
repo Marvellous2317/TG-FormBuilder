@@ -30,3 +30,13 @@ export const getUserAnalytics = async () => {
   const { data } = await axiosInstance.get('/user/analytics');
   return data;
 };
+
+export const getUserProfile = async () => {
+  const { data } = await axiosInstance.get('/user/me');
+  return data;
+};
+
+export const userProfileUpdate = async (payload) => {
+  const { data } = await axiosInstance.put('/user/me', payload);
+  return data;
+};
