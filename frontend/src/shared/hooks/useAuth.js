@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import useToast from './useToast';
@@ -6,8 +6,10 @@ import {
   changePassword,
   forgotPassword,
   getUserAnalytics,
+  getUserProfile,
   login,
   resetPassword,
+  userProfileUpdate,
 } from '../../core/api/auth';
 
 const getRoleHomePath = (user) => {
@@ -147,5 +149,33 @@ export function useUserAnalytics(userId, options = {}) {
     queryFn: () => getUserAnalytics(),
     keepPreviousData: true,
     ...options,
+  });
+}
+
+export function useProfile(options = {}) {
+  return useQuery({
+    queryKey: ['user', 'profile'],
+    queryFn: () => getUserProfile(),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useProfileUpdate(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => userProfileUpdate(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'profile'],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
   });
 }
