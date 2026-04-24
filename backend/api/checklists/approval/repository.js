@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import {
-  Checklist, ChecklistAssignment,
+  Checklist, ChecklistAssignment, ChecklistEntry,
   SubmittedChecklist, SubmittedChecklistEntry, User, OperatorApprover,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
@@ -54,17 +54,20 @@ export class ApprovalRepository {
       const operatorIds = await this._getOperatorIds(approverId);
 
       const submission = await SubmittedChecklist.findByPk(submittedChecklistId, {
+        attributes: ["submittedChecklistId"],
         include: [
           {
             model: ChecklistAssignment, as: "assignment",
+            attributes: ["assignmentId" ],
             where: { assignedTo: { [Op.in]: operatorIds } },
             include: [
               { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
           },
-          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName"] },
-          { model: SubmittedChecklistEntry, as: "entries", order: [["order", "ASC"]] },
+
+  
+          { model: SubmittedChecklistEntry, as: "entries", order: [["order", "ASC"]], attributes: ["entryId","formulaExpression", "options", "required","config", "name", "value", "type"] },
         ],
       });
 
@@ -72,11 +75,12 @@ export class ApprovalRepository {
       return { submission };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
+      //console.log(error);
       throw new ApplicationError("Failed to fetch submission", 500);
     }
   }
 
-  static async approveSubmission(submittedChecklistId, approverId) {
+  static async approveSubmission(submittedChecklistId, approverId, { data }) {
     const transaction = await sequelize.transaction();
     try {
       const operatorIds = await this._getOperatorIds(approverId);
@@ -85,6 +89,7 @@ export class ApprovalRepository {
         include: [{
           model: ChecklistAssignment, as: "assignment",
           where: { assignedTo: { [Op.in]: operatorIds } },
+          include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
         }],
         transaction,
       });
@@ -94,17 +99,45 @@ export class ApprovalRepository {
         throw new ApplicationError("Only pending submissions can be approved", 400);
       }
 
+   
+      // const requiredEntries = submission.assignment.checklist.entries.filter((e) => e.required);
+      // const responseMap = new Map(data.map((r) => [r.entryId, r.value]));
+
+      // for (const entry of requiredEntries) {
+      //   const val = responseMap.get(entry.entryId);
+      //   if (val === undefined || val === null || val === "") {
+      //     throw new ApplicationError(`Field "${entry.name}" is required`, 400);
+      //   }
+      // }
+
+      const existingEntries = await SubmittedChecklistEntry.findAll({
+        where: { submittedChecklistId },
+        transaction,
+      });
+      const existingMap = new Map(existingEntries.map((e) => [e.entryId, e]));
+
+
+      for (const item of data) {
+        const existing = existingMap.get(item.entryId);
+        if (existing && existing.value !== item.value) {
+          await existing.update({ value: item.value, status: "approved" }, { transaction });
+        } else if (existing) {
+          await existing.update({ status: "approved" }, { transaction });
+        }
+      }
+
+   
+      await SubmittedChecklistEntry.update(
+        { status: "approved" },
+        { where: { submittedChecklistId, status: { [Op.ne]: "approved" } }, transaction },
+      );
+
       submission.status = "approved";
       submission.approvedBy = approverId;
       await submission.save({ transaction });
 
-      await SubmittedChecklistEntry.update(
-        { status: "approved" },
-        { where: { submittedChecklistId }, transaction },
-      );
-
       await transaction.commit();
-      return { message: "Submission approved successfully" };
+      return { submittedChecklist: submission, message: "Submission approved successfully" };
     } catch (error) {
       await transaction.rollback();
       if (error instanceof ApplicationError) throw error;

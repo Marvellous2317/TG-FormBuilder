@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-const allowedRoles = ["admin", "superAdmin"]
+const allowedRoles = ["admin", "superAdmin", "operator", "approver"];
 
 //const Roles = ["operator", "approval", "admin", "superAdmin"]
 
@@ -31,7 +31,7 @@ router.get("/assignments/:assignmentId", isAuthenticated, requiresRole("admin", 
 // Catalog Management (specific paths before parameterized)
 router.post("/catalogs", isAuthenticated, requiresRole("admin", "superAdmin"), validateCreateCatalog, AdminController.createCatalog);
 router.get("/get-all-catalogs", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogQuery, AdminController.getCatalogs);
-router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogId, AdminController.getCatalogById);
+router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin","operator", "approver"), validateCatalogId, AdminController.getCatalogById);
 router.put("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateCatalog, AdminController.updateCatalog);
 router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogId, AdminController.deleteCatalog);
 
@@ -39,10 +39,10 @@ router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "su
 router.get("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.getChecklistById);
 router.put("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateChecklist, AdminController.updateChecklist);
 router.delete("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.deleteChecklist);
+router.put("/:checklistId/entries", isAuthenticated, requiresRole("admin", "superAdmin"), validateCreateOrUpdateEntries, AdminController.createOrUpdateEntries);
 
 // Checklist entry routes (parameterized)
 router.get("/:checklistId/entries", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.getEntries);
 router.post("/:checklistId/entries", isAuthenticated, requiresRole("admin", "superAdmin"), validateCreateEntries, AdminController.createEntries);
-router.put("/:checklistId/entries", isAuthenticated, requiresRole("admin", "superAdmin"), validateCreateOrUpdateEntries, AdminController.createOrUpdateEntries);
 
 export default router;

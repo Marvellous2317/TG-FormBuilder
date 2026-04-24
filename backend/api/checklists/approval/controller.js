@@ -25,7 +25,8 @@ export class ApprovalController {
     try {
       const { submittedChecklistId } = req.params;
       const approverId = req.user.userId;
-      const result = await ApprovalRepository.approveSubmission(submittedChecklistId, approverId);
+      const { data } = req.body;
+      const result = await ApprovalRepository.approveSubmission(submittedChecklistId, approverId, { data });
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) { next(e); }
   }
