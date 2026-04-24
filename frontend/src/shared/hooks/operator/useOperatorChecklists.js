@@ -61,3 +61,22 @@ export function useCreateOperatorChecklistEntries(checklistId, options = {}) {
     ...mutationOptions,
   });
 }
+
+export function useUpdateOperatorChecklistEntries(checklistId, options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ payload }) => submitChecklistEntry(checklistId, payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['operator', 'checklists', 'entries', checklistId],
+      });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}

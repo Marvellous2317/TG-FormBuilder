@@ -9,37 +9,21 @@ export default function SectionForm({
   setFormData,
   readOnly,
 }) {
-  const entryId = entry?.entryId;
-
-  const handleChange = (value) => {
-    if (!entryId) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      [entryId]: {
-        entryId: entryId,
-        value: value,
-      },
-    }));
-  };
-
-  const currentValue = formData[entryId]?.value || entry?.value || '';
-
   const entriesData = entry?.config?.items;
 
   return (
-    <div className="mt-5 flex flex-col border border-secondary-200 p-2 rounded-xl items-center justify-between w-full gap-2">
-      <h2 className="block w-full font-geist text-sm font-regul text-secondary">
+    <div className="mt-6 flex flex-col border border-secondary-200 w-full overflow-hidden">
+      <h2 className="block w-full font-geist text-base font-medium text-secondary border-b border-secondary-200 px-4 py-4.5 bg-gray-50/50">
         {entry.name}
       </h2>
-      {entriesData?.length < 1 ? (
-        <div className="flex justify-center mt-20 px-4 md:px-10 lg:px-25">
+      {!entriesData || entriesData.length < 1 ? (
+        <div className="flex justify-center py-10 px-4">
           <p className="text-sm font-semibold text-primary font-geist">
             No entries available
           </p>
         </div>
       ) : (
-        <div className="h-full mt-5 px-4">
+        <div className="w-full flex flex-col gap-2 px-4 pb-5">
           {entriesData
             ?.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
             .map((entry) => {

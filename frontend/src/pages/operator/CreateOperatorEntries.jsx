@@ -78,7 +78,7 @@ export default function CreateOperatorEntry() {
             .map((entry) => {
               const entryKey = entry.id || entry.entryId || entry.name;
               return (
-                <div key={entryKey} className="space-y-5">
+                <div key={entryKey} className="space-y-5 space-x-2">
                   {(entry.type === 'text' ||
                     entry.type === 'date' ||
                     entry.type === 'time' ||
@@ -108,7 +108,6 @@ export default function CreateOperatorEntry() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
-                      readOnly={true}
                     />
                   )}
                 </div>
@@ -118,7 +117,7 @@ export default function CreateOperatorEntry() {
       )}
 
       {entriesData?.length > 0 && (
-        <div className="border-t border-secondary-200 pt-6 px-4 md:px-10 lg:px-25">
+        <div className="border-t border-secondary-200 mt-6 pt-6 px-4 md:px-10 lg:px-25">
           <Button
             className="bg-primary-200 py-2.5 px-5 rounded-2xl text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
             onClick={() => handleSubmit()}

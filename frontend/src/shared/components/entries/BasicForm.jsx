@@ -22,7 +22,7 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
   return (
-    <div className="mt-5">
+    <div className="mt-5 w-full">
       <InputField
         id={entryId}
         name={entryId}

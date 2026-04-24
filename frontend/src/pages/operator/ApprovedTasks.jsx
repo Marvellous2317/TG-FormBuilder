@@ -124,7 +124,7 @@ export default function ApprovedTasks() {
                     {submissionsData?.length > 0 ? (
                       submissionsData.map((row, index) => (
                         <tr
-                          key={row.id}
+                          key={row.submittedChecklistId}
                           className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                           onClick={() =>
                             handleRowClick(row?.submittedChecklistId)
