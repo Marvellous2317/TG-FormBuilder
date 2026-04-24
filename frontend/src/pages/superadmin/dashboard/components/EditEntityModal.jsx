@@ -73,12 +73,12 @@ export default function EditEntityModal({
   };
 
   const handleCloseModal = () => {
-    setFormData({
-      entityName: '',
-      entityAddress: '',
-      fullName: '',
-      emailAddress: '',
-    });
+    // setFormData({
+    //   entityName: '',
+    //   entityAddress: '',
+    //   fullName: '',
+    //   emailAddress: '',
+    // });
     setIsEditEntityModal(false);
   };
 
