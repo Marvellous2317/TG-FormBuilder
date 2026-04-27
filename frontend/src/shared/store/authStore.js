@@ -6,6 +6,7 @@ const initialState = {
   user: null,
   requiresPasswordChange: false,
   isAuthenticated: false,
+  resetEmail: null,
 };
 
 const storage =
@@ -43,6 +44,10 @@ export const useAuthStore = create(
           user,
           isAuthenticated: Boolean(state.accessToken && user),
         })),
+      setResetEmail: (email) =>
+        set(() => ({
+          resetEmail: email,
+        })),
       clearAuth: () =>
         set(() => ({
           ...initialState,
@@ -56,6 +61,7 @@ export const useAuthStore = create(
         user: state.user,
         requiresPasswordChange: state.requiresPasswordChange,
         isAuthenticated: state.isAuthenticated,
+        resetEmail: state.resetEmail,
       }),
     },
   ),

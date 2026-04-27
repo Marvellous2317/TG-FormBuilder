@@ -213,7 +213,7 @@ export default function EntityList({
                       {row.status}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row.count}
+                      {row?.totalUsers || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {formatDate(row.createdAt)}

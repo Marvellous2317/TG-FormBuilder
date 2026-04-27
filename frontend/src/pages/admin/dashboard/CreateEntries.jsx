@@ -308,7 +308,7 @@ export default function CreateEntries() {
         </Button>
         <Button
           type="button"
-          disabled={fields.length < 3}
+          disabled={fields.length < 1}
           onClick={() => setIsShowAssignLogbookModal(true)}
           className="justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-70"
         >

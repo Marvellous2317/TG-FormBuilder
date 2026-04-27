@@ -103,7 +103,7 @@ export default function useAuth() {
       const successMessage =
         response?.data?.message || response?.message || 'Password changed';
       showSuccess(successMessage);
-      navigate('/forgot-password', { replace: true });
+      navigate('/reset-password', { replace: true });
     },
     onError: (error) => {
       showError(
@@ -137,7 +137,7 @@ export default function useAuth() {
     resetPassword: resetPasswordMutation.mutateAsync,
     resetPasswordMutation,
     isResetingPassword: resetPasswordMutation.isPending,
-    forgotPassword: resetPasswordMutation.mutateAsync,
+    forgotPassword: forgotPasswordMutation.mutateAsync,
     forgotPasswordMutation,
     isForgettingPassword: forgotPasswordMutation.isPending,
   };

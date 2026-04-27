@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import useAuth from '../../shared/hooks/useAuth';
 import Images from '../../assets/images';
+import { useNavigate } from 'react-router-dom';
+import InputField from '../../shared/components/InputField';
+import Button from '../../shared/components/Button';
+import useToast from '../../shared/hooks/useToast';
+import { useAuthStore } from '../../shared/store/authStore';
+import Loader from '../../shared/components/Loader';
 
 export default function ResetPassword() {
   const [formData, setFormData] = useState({
     otp: '',
     newPassword: '',
+    confirmPassword: '',
+    email: '',
   });
   const { forgotPassword, isForgettingPassword } = useAuth();
+
+  const { showError } = useToast();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -19,6 +29,15 @@ export default function ResetPassword() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (formData.newPassword !== formData.confirmPassword) {
+      showError('New password and confirm password do not match');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      email: useAuthStore.getState().resetEmail,
+    }));
+    console.log(formData);
     await forgotPassword(formData);
   };
 
@@ -69,21 +88,37 @@ export default function ResetPassword() {
             />
 
             <InputField
-              id="email"
-              name="email"
-              label="Email address"
-              type="email"
-              value={formData.email}
+              id="newPassword"
+              name="newPassword"
+              label="New password"
+              type="password"
+              // placeholder="New password"
+              value={formData.newPassword}
               onChange={handleChange}
               required
-              autoComplete="email"
+              autoComplete="current-password"
+            />
+
+            <InputField
+              id="confirmPassword"
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              // placeholder="Confirm password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              autoComplete="current-password"
             />
 
             <Button
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90  disabled:bg-primary disabled:opacity-50 flex items-center justify-center"
               disabled={
-                !formData.email || !formData.otp || isForgettingPassword
+                !formData.newPassword ||
+                !formData.confirmPassword ||
+                !formData.otp ||
+                isForgettingPassword
               }
             >
               {isForgettingPassword ? <Loader /> : 'Reset password'}
