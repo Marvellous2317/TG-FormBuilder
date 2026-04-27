@@ -10,11 +10,13 @@ const positionStyles = {
   },
   right: {
     wrapper: 'items-stretch justify-end p-0 sm:p-4',
-    panel: 'h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] rounded-[10px]',
+    panel:
+      'h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] rounded-[10px] overflow-auto',
   },
   left: {
     wrapper: 'items-stretch justify-start p-0 sm:p-4',
-    panel: 'h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] rounded-[10px]',
+    panel:
+      'h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] rounded-[10px] overflow-auto',
   },
 };
 
@@ -67,7 +69,7 @@ export default function Modal({
       role="presentation"
     >
       <div
-        className={`relative w-full bg-white shadow-2xl ${width} ${currentPosition.panel} ${className}`}
+        className={`relative w-full bg-white overflow-auto shadow-2xl ${width} ${currentPosition.panel} ${className}`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

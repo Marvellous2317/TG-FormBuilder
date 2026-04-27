@@ -4,6 +4,8 @@ import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import useAuth from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ForgotPassword() {
   const [formData, setFormData] = useState({
@@ -21,6 +23,7 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    useAuthStore.getState().setResetEmail(formData.email);
     await resetPassword(formData);
   };
 

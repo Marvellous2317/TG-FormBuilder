@@ -32,6 +32,7 @@ import ApproverDashboard from '../../pages/approver/ApproverDashboard';
 import ViewApproverEntries from '../../pages/approver/ViewApproverEntries';
 import ApproverApprovedTasks from '../../pages/approver/ApproverApprovedTasks';
 import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
+import ResetPassword from '../../pages/auth/ResetPassword';
 
 export const router = createBrowserRouter([
   {
@@ -70,7 +71,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/reset-password',
-            element: <ChangePassword />,
+            element: <ResetPassword />,
           },
         ],
       },

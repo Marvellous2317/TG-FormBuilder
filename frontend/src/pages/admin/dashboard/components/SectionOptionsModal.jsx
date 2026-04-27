@@ -27,7 +27,7 @@ export default function SectionOptionsModal({
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [fields, setFields] = useState(
-    () => initialValue?.items ?? Array.from({ length: 3 }, () => createField()),
+    () => initialValue?.items ?? Array.from({ length: 1 }, () => createField()),
   );
 
   const { showError } = useToast();

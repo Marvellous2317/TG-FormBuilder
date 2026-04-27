@@ -16,11 +16,12 @@ export const resetPassword = async (payload) => {
 };
 
 export const forgotPassword = async (payload) => {
+  console.log('payload', ` /auth/forgot-password/${payload.email}`);
   const { data } = await axiosInstance.post(
     `/auth/forgot-password/${payload.email}`,
     {
       otp: payload.otp,
-      password: payload.password,
+      password: payload.newPassword,
     },
   );
   return data;

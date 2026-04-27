@@ -18,7 +18,7 @@ export default function EditUsersModal({
       onClose={() => setIsEditUserModalOpen(false)}
       position="center"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      // className="overflow-auto"
     >
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
@@ -72,7 +72,7 @@ export default function EditUsersModal({
           />
         </div>
 
-        <div className="flex items-center mt-6 justify-end gap-3">
+        <div className="flex items-center mt-6 justify-end pb-5 gap-3">
           <Button
             type="button"
             onClick={() => setIsEditUserModalOpen(false)}

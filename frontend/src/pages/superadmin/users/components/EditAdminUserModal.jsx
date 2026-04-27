@@ -158,7 +158,7 @@ export default function EditAdminUserModal({
       onClose={() => handleCloseModal()}
       position="right"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
@@ -244,7 +244,7 @@ export default function EditAdminUserModal({
           </div>
         </div>
 
-        <div className="flex items-center mt-6 justify-end gap-3">
+        <div className="flex items-center mt-6 pb-5 justify-end gap-3">
           <Button
             type="button"
             onClick={() => handleCloseModal()}
