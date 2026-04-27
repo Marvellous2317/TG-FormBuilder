@@ -56,6 +56,14 @@ export class AdminController {
     } catch (e) { next(e); }
   }
 
+  static async restoreChecklist(req, res, next) {
+    try {
+      const { checklistId } = req.params;
+      const result = await AdminRepository.restoreChecklist(checklistId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
   // ==================== ENTRIES ====================
 
   static async getEntries(req, res, next) {

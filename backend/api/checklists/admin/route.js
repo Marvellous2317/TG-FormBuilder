@@ -39,6 +39,7 @@ router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "su
 router.get("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.getChecklistById);
 router.put("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateChecklist, AdminController.updateChecklist);
 router.delete("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.deleteChecklist);
+router.put("/:checklistId/restore", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.restoreChecklist);
 router.put("/:checklistId/entries", isAuthenticated, requiresRole("admin", "superAdmin"), validateCreateOrUpdateEntries, AdminController.createOrUpdateEntries);
 
 // Checklist entry routes (parameterized)

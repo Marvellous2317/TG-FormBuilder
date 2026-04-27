@@ -169,6 +169,23 @@ export class AdminRepository {
     }
   }
 
+  static async restoreRole(roleId) {
+    try {
+      const role = await Role.findByPk(roleId, { paranoid: false });
+      if (!role) throw new ApplicationError("Role not found", 404);
+      
+      if (!role.deletedAt) {
+        throw new ApplicationError("Role is not deleted", 400);
+      }
+
+      await role.restore();
+      return { message: "Role restored successfully", role };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to restore role", 500);
+    }
+  }
+
 
 
   static async getUser(id) {
@@ -190,6 +207,23 @@ export class AdminRepository {
 
     await user.destroy();
     return { message: "User deleted successfully" };
+  }
+
+  static async restoreUser(userId) {
+    try {
+      const user = await User.findByPk(userId, { paranoid: false });
+      if (!user) throw new ApplicationError("User not found", 404);
+      
+      if (!user.deletedAt) {
+        throw new ApplicationError("User is not deleted", 400);
+      }
+
+      await user.restore();
+      return { message: "User restored successfully", user: user.toSafeJSON() };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to restore user", 500);
+    }
   }
 
   static async addUser( admin,{ email, firstName, lastName, roleId, companyId, department }) {
@@ -660,6 +694,23 @@ export class AdminRepository {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to delete company", 500);
+    }
+  }
+
+  static async restoreCompany(companyId) {
+    try {
+      const company = await Company.findByPk(companyId, { paranoid: false });
+      if (!company) throw new ApplicationError("Company not found", 404);
+      
+      if (!company.deletedAt) {
+        throw new ApplicationError("Company is not deleted", 400);
+      }
+
+      await company.restore();
+      return { message: "Company restored successfully", company };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to restore company", 500);
     }
   }
 

@@ -215,6 +215,27 @@ export class AdminRepository {
     }
   }
 
+  static async restoreChecklist(checklistId) {
+    try {
+      const checklist = await Checklist.findByPk(checklistId, { paranoid: false });
+      if (!checklist) throw new ApplicationError("Checklist not found", 404);
+      
+      if (!checklist.deletedAt) {
+        throw new ApplicationError("Checklist is not deleted", 400);
+      }
+
+      await checklist.restore();
+      
+      // Also restore associated entries
+      await ChecklistEntry.restore({ where: { checklistId } });
+      
+      return { message: "Checklist restored successfully", checklist };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to restore checklist", 500);
+    }
+  }
+
 
   static async getEntries(checklistId) {
     try {
