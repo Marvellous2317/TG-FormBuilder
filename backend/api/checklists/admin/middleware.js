@@ -65,6 +65,7 @@ export const validateChecklistQuery = [
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   query("departmentId").optional().isUUID().withMessage("Department ID must be a valid UUID"),
+  query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
   validate,
 ];
 

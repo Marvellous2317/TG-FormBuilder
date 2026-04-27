@@ -24,8 +24,8 @@ export class AdminController {
   static async getChecklists(req, res, next) {
     try {
       const companyId = req.user.company?.companyId || null;
-      const { page, limit, search, departmentId } = req.query;
-      const result = await AdminRepository.getChecklists({ companyId, departmentId, page, limit, search });
+      const { page, limit, search, departmentId, deleted } = req.query;
+      const result = await AdminRepository.getChecklists({ companyId, departmentId, page, limit, search, deleted });
       return ResponseManager.success(res, result, 200, "Checklists fetched successfully");
     } catch (e) { next(e); }
   }
@@ -52,6 +52,14 @@ export class AdminController {
     try {
       const { checklistId } = req.params;
       const result = await AdminRepository.deleteChecklist(checklistId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
+  static async restoreChecklist(req, res, next) {
+    try {
+      const { checklistId } = req.params;
+      const result = await AdminRepository.restoreChecklist(checklistId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) { next(e); }
   }

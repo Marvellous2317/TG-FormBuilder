@@ -73,9 +73,19 @@ export class AdminRepository {
     }
   }
 
-  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search, startDate, endDate }) {
+  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search, startDate, endDate, deleted }) {
     try {
       const where = {};
+      
+
+      let paranoid = true;
+      if (deleted === "true") {
+        paranoid = false;
+        where.deletedAt = { [Op.ne]: null };
+      } else if (deleted === "all") {
+        paranoid = false;
+      }
+      
       if (companyId) where.companyId = companyId;
       if (departmentId) where.departmentId = departmentId;
       if (startDate || endDate) {
@@ -109,6 +119,7 @@ export class AdminRepository {
         limit,
         offset,
         distinct: true,
+        paranoid,
       });
 
       return {
@@ -212,6 +223,27 @@ export class AdminRepository {
       if (error instanceof ApplicationError) throw error;
       console.error(error);
       throw new ApplicationError("Failed to delete checklist", 500);
+    }
+  }
+
+  static async restoreChecklist(checklistId) {
+    try {
+      const checklist = await Checklist.findByPk(checklistId, { paranoid: false });
+      if (!checklist) throw new ApplicationError("Checklist not found", 404);
+      
+      if (!checklist.deletedAt) {
+        throw new ApplicationError("Checklist is not deleted", 400);
+      }
+
+      await checklist.restore();
+      
+      // Also restore associated entries
+      await ChecklistEntry.restore({ where: { checklistId } });
+      
+      return { message: "Checklist restored successfully", checklist };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to restore checklist", 500);
     }
   }
 

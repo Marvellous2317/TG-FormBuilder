@@ -23,6 +23,7 @@ export const validateCompaniesQuery = [
   query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
   validate,
 ];
 
@@ -36,6 +37,7 @@ export const validateUsersQuery = [
   query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
   validate,
 ];
 
@@ -46,6 +48,12 @@ export const validateDepartmentsQuery = [
   query("endDate").optional().isISO8601().withMessage("End date must be a valid date"),
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
+  validate,
+];
+
+export const validateRolesQuery = [
+  query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
   validate,
 ];
 

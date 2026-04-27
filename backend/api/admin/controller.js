@@ -11,7 +11,8 @@ export class AdminController {
       return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
     }
     try {
-      const result = await AdminRepository.getAllRoles(user);
+      const { deleted } = req.query;
+      const result = await AdminRepository.getAllRoles(user, { deleted });
       return ResponseManager.success(res, result, 200, "Roles fetched successfully");
     } catch (e) {
       next(e);
@@ -67,6 +68,18 @@ export class AdminController {
     }
   }
 
+  static async restoreRoleApi(req, res, next) {
+    try {
+      const roleId = req.params.roleId;
+      if (!roleId) {
+        return ResponseManager.error(res, "ValidationError", "Role ID is required", 400);
+      }
+      const result = await AdminRepository.restoreRole(roleId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
 
 
 
@@ -127,6 +140,19 @@ export class AdminController {
         return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
       }
       const result = await AdminRepository.deleteUser(userId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async restoreUserApi(req, res, next) {
+    try {
+      const userId = req.params.userId;
+      if (!userId) {
+        return ResponseManager.error(res, "ValidationError", "User ID is required", 400);
+      }
+      const result = await AdminRepository.restoreUser(userId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
@@ -248,6 +274,19 @@ export class AdminController {
   static async deleteCompanyApi(req, res, next) {
     try {
       const result = await AdminRepository.deleteCompany(req.params.companyId);
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async restoreCompanyApi(req, res, next) {
+    try {
+      const companyId = req.params.companyId;
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "Company ID is required", 400);
+      }
+      const result = await AdminRepository.restoreCompany(companyId);
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) {
       next(e);
