@@ -60,12 +60,27 @@ export class AdminRepository {
   }
 
 
-  static async getAllRoles(user) {
+  static async getAllRoles(user, { deleted } = {}) {
     const role = user.roleId ? await Role.findByPk(user.roleId) : null;
+    
+    // Determine paranoid setting based on deleted filter
+    let paranoid = true;
+    let deletedAtCondition = null;
+    
+    if (deleted === "true") {
+      paranoid = false;
+      deletedAtCondition = { deletedAt: { [Op.ne]: null } };
+    } else if (deleted === "all") {
+      paranoid = false;
+    }
+    
     if (role?.roleName === "superAdmin") {
       try {
+        const where = deletedAtCondition || {};
         const roles = await Role.findAll({
+          where,
           order: [["roleName", "ASC"]],
+          paranoid,
         });
         return { roles };
       } catch (error) {
@@ -74,9 +89,14 @@ export class AdminRepository {
     }
 
     try {
+      const where = { isActive: true, roleName: { [Op.notIn]: ["superAdmin"] } };
+      if (deletedAtCondition) {
+        Object.assign(where, deletedAtCondition);
+      }
       const roles = await Role.findAll({
-        where: { isActive: true, roleName: { [Op.notIn]: ["superAdmin"] } },
+        where,
         order: [["roleName", "ASC"]],
+        paranoid,
       });
       return { roles };
     } catch (error) {
@@ -285,12 +305,20 @@ export class AdminRepository {
     }
   }
 
-  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate }, user) {
+  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate, deleted }, user) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
       const offset = (page - 1) * limit;
       const where = {};
+
+      let paranoid = true;
+      if (deleted === "true") {
+        paranoid = false;
+        where.deletedAt = { [Op.ne]: null };
+      } else if (deleted === "all") {
+        paranoid = false;
+      }
 
       const isSuperAdmin = user?.role?.roleName === "superAdmin";
       if (!isSuperAdmin && user?.companyId) {
@@ -337,6 +365,7 @@ export class AdminRepository {
         limit,
         offset,
         order: [["createdAt", "DESC"]],
+        paranoid,
       });
 
       return {
@@ -551,12 +580,21 @@ export class AdminRepository {
   }
 
 
-  static async getAllCompanies({ status, search, page = 1, limit = 20, startDate, endDate }) {
+  static async getAllCompanies({ status, search, page = 1, limit = 20, startDate, endDate, deleted }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
       const offset = (page - 1) * limit;
       const where = {};
+
+      // Determine paranoid setting based on deleted filter
+      let paranoid = true;
+      if (deleted === "true") {
+        paranoid = false;
+        where.deletedAt = { [Op.ne]: null };
+      } else if (deleted === "all") {
+        paranoid = false;
+      }
 
       if (status) {
         where.status = status;
@@ -581,6 +619,7 @@ export class AdminRepository {
         limit,
         offset,
         order: [["createdAt", "DESC"]],
+        paranoid,
       });
 
       // Get total users count across all companies

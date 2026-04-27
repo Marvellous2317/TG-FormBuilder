@@ -73,9 +73,19 @@ export class AdminRepository {
     }
   }
 
-  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search, startDate, endDate }) {
+  static async getChecklists({ companyId, departmentId, status, page = 1, limit = 20, search, startDate, endDate, deleted }) {
     try {
       const where = {};
+      
+
+      let paranoid = true;
+      if (deleted === "true") {
+        paranoid = false;
+        where.deletedAt = { [Op.ne]: null };
+      } else if (deleted === "all") {
+        paranoid = false;
+      }
+      
       if (companyId) where.companyId = companyId;
       if (departmentId) where.departmentId = departmentId;
       if (startDate || endDate) {
@@ -109,6 +119,7 @@ export class AdminRepository {
         limit,
         offset,
         distinct: true,
+        paranoid,
       });
 
       return {

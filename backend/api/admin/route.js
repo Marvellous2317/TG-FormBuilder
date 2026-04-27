@@ -1,14 +1,14 @@
 import express from "express";
 import { isAuthenticated, adminRequired, superAdminRequired, validateUUID } from "../middlewares/authorization.js";
 import { AdminController } from "./controller.js";
-import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware, validateCompaniesQuery, validateUsersQuery, validateDepartmentsQuery } from "./middleware.js";
+import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware, validateCompaniesQuery, validateUsersQuery, validateDepartmentsQuery, validateRolesQuery } from "./middleware.js";
 import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
 
 
 // Role Management (superAdmin only for create/update/delete)
-router.get("/roles", isAuthenticated, adminRequired, AdminController.getAllRolesApi);
+router.get("/roles", validateRolesQuery, isAuthenticated, adminRequired, AdminController.getAllRolesApi);
 router.get("/roles/:roleId", validateUUID("roleId"), isAuthenticated, adminRequired, AdminController.getRoleByIdApi);
 router.post("/roles", validateRoleMiddleware, isAuthenticated, adminRequired,  AdminController.createRoleApi);
 router.put("/roles/:roleId", validateUUID("roleId"), validateRoleMiddleware, isAuthenticated, superAdminRequired, AdminController.updateRoleApi);

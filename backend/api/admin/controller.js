@@ -11,7 +11,8 @@ export class AdminController {
       return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
     }
     try {
-      const result = await AdminRepository.getAllRoles(user);
+      const { deleted } = req.query;
+      const result = await AdminRepository.getAllRoles(user, { deleted });
       return ResponseManager.success(res, result, 200, "Roles fetched successfully");
     } catch (e) {
       next(e);
