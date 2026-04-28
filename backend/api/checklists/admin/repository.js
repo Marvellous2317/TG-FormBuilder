@@ -13,6 +13,7 @@ import {
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
 import { config } from "dotenv";
+import { sendAssignmentEmail } from "../../../views/index.js";
 
 export class AdminRepository {
 
@@ -396,6 +397,19 @@ export class AdminRepository {
         assignedBy,
         companyId : operator.companyId,
       });
+
+
+      try {
+        await sendAssignmentEmail({
+          email: operator.email,
+          firstName: operator.firstName,
+          checklistTitle: checklist.title,
+          documentNumber: checklist.documentNumber,
+        });
+      } catch (emailError) {
+        console.error('Failed to send assignment email:', emailError);
+
+      }
 
       return { assignment, message: "Checklist assigned successfully" };
     } catch (error) {
