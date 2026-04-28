@@ -3,18 +3,35 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginPWA } from 'rsbuild-plugin-pwa';
 
-// @ts-ignore - process is available in Node.js (rsbuild config context)
-const isProd = process.env.NODE_ENV === 'production';
-
 export default defineConfig({
   plugins: [
     pluginReact(),
-    isProd &&
-      pluginPWA({
-        injectManifest: {
-          swSrc: './src/service-worker.js',
+    pluginPWA({
+      // disabled in dev by default — set dev: true to enable in dev mode
+      dev: false,
+
+      // service worker config
+      sw: {
+        mode: 'generateSw',
+        workboxOptions: {
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/tgpackagingappprd\.azurewebsites\.net\//,
+              handler: 'NetworkFirst',
+              options: { cacheName: 'api-cache' },
+            },
+            {
+              urlPattern: /\.(?:png|jpg|svg|css|js)$/,
+              handler: 'CacheFirst',
+              options: { cacheName: 'assets-cache' },
+            },
+          ],
         },
-        manifest: {
+      },
+
+      // manifest config
+      webAppManifest: {
+        content: {
           name: 'Packaging checklist App',
           short_name: 'Packaging checklist',
           description: 'Packaging checklist form builder',
@@ -51,7 +68,8 @@ export default defineConfig({
             },
           ],
         },
-      }),
+      },
+    }),
   ],
   html: {
     template: './index.html',

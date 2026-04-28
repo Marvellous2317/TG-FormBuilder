@@ -7,7 +7,6 @@ import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorCh
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { InstallButton } from '../../shared/components/InstallButton';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
@@ -210,7 +209,6 @@ export default function OperatorDashboard() {
         )}
       </div>
 
-      <InstallButton />
     </div>
   );
 }
