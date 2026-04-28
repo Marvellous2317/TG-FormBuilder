@@ -262,8 +262,6 @@ export class AdminRepository {
         throw new ApplicationError("User with this email already exists", 400);
       }
 
-      //return {existingUser};
-
       if (!roleId) throw new ValidationError("Role ID is required");
       const role = await Role.findByPk(roleId);
       if (!role) throw new ValidationError("Invalid role ID");
@@ -705,7 +703,8 @@ export class AdminRepository {
 
       if (data.address !== undefined) company.address = data.address?.trim() || null;
       if (data.contactEmail !== undefined) company.contactEmail = data.contactEmail?.toLowerCase().trim() || null;
-      if (data.status !== undefined) company.status = data.status;
+      if (data.contactFullName !== undefined) company.contactFullName = data.contactFullName?.trim() || null;
+   
 
       await company.save();
       return { message: "Company updated successfully", company };
