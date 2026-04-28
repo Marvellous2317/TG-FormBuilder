@@ -7,18 +7,27 @@ import { InstallButton } from './shared/components/InstallButton';
 import { OfflineBanner } from './shared/components/OfflineBanner';
 import { syncPendingSubmissions } from './lib/syncQueue';
 import { useEffect } from 'react';
-import { useOnlineStatus } from './shared/hooks/useOnlineStatus';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        const status = error?.response?.status;
+        if (status >= 400 && status < 500) return false;
+        return failureCount < 2;
+      },
+    },
+  },
+});
 
 const App = () => {
-  const { isOnline } = useOnlineStatus();
-
   useEffect(() => {
-    if (isOnline) {
-      syncPendingSubmissions();
-    }
-  }, [isOnline]);
+    const handleOnline = () => syncPendingSubmissions();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

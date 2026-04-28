@@ -87,7 +87,6 @@ export const createChecklistCatalog = async (payload) => {
 };
 
 export const updateChecklistCatalog = async (payload, catalogId) => {
-  console.log(payload, catalogId);
   const { data } = await axiosInstance.put(
     `/checklists/admin/catalogs/${catalogId}`,
     payload,
