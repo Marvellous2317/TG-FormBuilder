@@ -23,8 +23,6 @@ export default function EnumForm({
     }));
   };
 
-  console.log(entry);
-
   const splitOptions = entry?.config?.option?.split(/\s*\/\s*/);
 
   // Get current value for this entry (if exists)

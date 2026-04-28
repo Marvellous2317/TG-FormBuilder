@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import useToast from '../hooks/useToast';
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL ??
@@ -34,10 +35,13 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    const { showError } = useToast();
     if (error.response && error.response.status === 401) {
       console.log('Got here - 401 Unauthorized');
 
       useAuthStore.getState().clearAuth();
+
+      showError('Unauthenticated');
 
       window.location.href = '/login';
     }
@@ -46,6 +50,8 @@ axiosInstance.interceptors.response.use(
       console.log('Got here - 403 Unauthenticated');
 
       useAuthStore.getState().clearAuth();
+
+      showError('Forbidden');
 
       window.location.href = '/login';
     }

@@ -93,7 +93,7 @@ export default function ApproverDashboard() {
           <AdminCard
             icon={Icons.createdIcon}
             title="Total checklists"
-            count={analyticsData?.totalChecklists || 0}
+            count={analyticsData?.totalReviewed || 0}
             loading={isLoadingUserAnalytics}
           />
           <AdminCard

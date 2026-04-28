@@ -9,6 +9,7 @@ import {
   useFetchUsersInfinite,
 } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import Divider from '../../../../shared/components/Divider';
+import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 
 export default function AssignApproverModal({
   isAssignApproverModalOpen,
@@ -24,6 +25,12 @@ export default function AssignApproverModal({
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  const { data: roles, isPending: isLoadingRoles } = useRoles();
+
+  const rolesData = roles?.data?.roles;
+
+  const approverRole = rolesData?.find((role) => role.roleName === 'approval');
+
   const {
     data,
     isPending: isLoadingUsers,
@@ -31,7 +38,7 @@ export default function AssignApproverModal({
     hasNextPage,
     isFetchingNextPage,
   } = useFetchUsersInfinite(
-    { search },
+    { search, roleId: approverRole?.roleId },
     { enabled: isAssignApproverModalOpen },
   );
 

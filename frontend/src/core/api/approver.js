@@ -22,7 +22,7 @@ export const getApproverSubmittedChecklist = async (id) => {
 export const approveChecklistEntry = async (id, payload) => {
   const { data } = await axiosInstance.post(
     `/checklists/approval/${id}/approve`,
-    payload,
+    { data: payload.data },
   );
   return data;
 };
