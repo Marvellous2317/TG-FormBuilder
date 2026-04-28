@@ -16,7 +16,6 @@ export const resetPassword = async (payload) => {
 };
 
 export const forgotPassword = async (payload) => {
-  console.log('payload', ` /auth/forgot-password/${payload.email}`);
   const { data } = await axiosInstance.post(
     `/auth/forgot-password/${payload.email}`,
     {

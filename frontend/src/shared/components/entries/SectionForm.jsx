@@ -9,8 +9,6 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   const sectionEntryId = entry?.entryId || entry?.id || entry?.name;
   const entriesData = entry?.config?.items;
 
-  console.log(entry);
-
   const entriesRecords = JSON.parse(entry?.value ? entry?.value : '[]');
 
   const [rows, setRows] = useState(

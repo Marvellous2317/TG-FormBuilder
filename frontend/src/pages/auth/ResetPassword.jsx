@@ -37,7 +37,6 @@ export default function ResetPassword() {
       ...prev,
       email: useAuthStore.getState().resetEmail,
     }));
-    console.log(formData);
     await forgotPassword(formData);
   };
 

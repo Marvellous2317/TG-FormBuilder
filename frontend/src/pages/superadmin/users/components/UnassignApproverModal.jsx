@@ -20,8 +20,6 @@ export default function UnassignApproverModal({
 
   const { showError, showSuccess } = useToast();
 
-  console.log(userToEdit?.operatorApprovers);
-
   const handleSubmit = async () => {
     if (!approver) {
       showError('Failed to assign approver, select an approver');

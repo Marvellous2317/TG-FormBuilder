@@ -176,7 +176,6 @@ export default function EditLogbookModal({
   };
 
   const handleCancel = () => {
-    console.log(isEditChecklistModalOpen);
     setFormData({
       logbookTitle: '',
       documentNumber: '',
