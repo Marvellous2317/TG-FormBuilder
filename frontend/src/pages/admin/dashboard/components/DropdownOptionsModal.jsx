@@ -163,7 +163,7 @@ export default function DropdownOptionsModal({
       onClose={() => setIsDropdownOptionsModal(false)}
       position="right"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col">
         <div className="space-y-0.5 p-5 border-b border-secondary-200">
