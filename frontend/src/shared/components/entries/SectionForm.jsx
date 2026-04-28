@@ -8,16 +8,30 @@ import Button from '../Button';
 export default function SectionForm({ entry, setFormData, readOnly }) {
   const sectionEntryId = entry?.entryId || entry?.id || entry?.name;
   const entriesData = entry?.config?.items;
-  const [rows, setRows] = useState([0]);
-  const [nextRowId, setNextRowId] = useState(1);
+
+  console.log(entry);
+
+  const entriesRecords = JSON.parse(entry?.value ? entry?.value : '[]');
+
+  const [rows, setRows] = useState(
+    entriesRecords && entriesRecords.length > 0
+      ? entriesRecords.map((_, i) => i)
+      : [0],
+  );
+  const [nextRowId, setNextRowId] = useState(
+    entriesRecords?.length > 0 ? entriesRecords.length : 1,
+  );
   // Local state owns the rows data so inputs update immediately without a parent round-trip
-  const [rowsData, setRowsData] = useState([{}]);
+  const [rowsData, setRowsData] = useState(entriesRecords || [{}]);
 
   // Sync local rowsData up to parent formData after every change
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      [sectionEntryId]: { entryId: sectionEntryId, value: rowsData },
+      [sectionEntryId]: {
+        entryId: sectionEntryId,
+        value: JSON.stringify(rowsData),
+      },
     }));
   }, [rowsData, sectionEntryId, setFormData]);
 
@@ -48,7 +62,9 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   // Ensure entryId is always set (section sub-fields are created with `id`, not `entryId`)
   const getRowEntry = (field, rowIndex) => {
     const fieldWithEntryId = { ...field, entryId: field.entryId || field.id };
-    return rowIndex === 0 ? fieldWithEntryId : { ...fieldWithEntryId, value: '' };
+    return rowIndex === 0
+      ? fieldWithEntryId
+      : { ...fieldWithEntryId, value: '' };
   };
 
   const sortedEntries = entriesData
@@ -58,7 +74,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   return (
     <div className="mt-6 flex flex-col border border-secondary-200 w-full overflow-hidden">
       <h2 className="block w-full font-geist text-base font-medium text-secondary border-b border-secondary-200 px-4 py-4.5 bg-gray-50/50">
-        {entry.name}
+        {entry.name} - {entry?.config?.name}
       </h2>
       {!entriesData || entriesData.length < 1 ? (
         <div className="flex justify-center py-10 px-4">
