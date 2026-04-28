@@ -49,6 +49,7 @@ export default function ResetPassword() {
           alt="login image"
           className="absolute inset-0 h-full w-full object-cover"
         />
+        <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="absolute inset-0 flex flex-col items-start justify-end p-6 pb-12 md:p-10 lg:p-20">
           <img
             src={Images.logo}
