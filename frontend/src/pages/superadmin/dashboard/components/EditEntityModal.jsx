@@ -115,11 +115,12 @@ export default function EditEntityModal({
             />
 
             <InputField
-              label="Name of entity"
+              label="Name of entityyyy"
               id="entityName"
               className="mt-4"
               value={formData.entityName}
-              readOnly
+              readOnly={true}
+              disabled={true}
               onChange={handleInputChange}
             />
           </div>

@@ -119,9 +119,10 @@ export default function Settings() {
                 label="Email address"
                 type="email"
                 value={formData.email}
-                readOnly={true}
-                inputClassName="bg-secondary-700! cursor-not-allowed"
-                className="w-full cursor-not-allowed"
+                // readOnly={true}
+                disabled
+                // inputClassName="bg-secondary-700! cursor-not-allowed"
+                // className="w-full cursor-not-allowed"
               />
 
               <InputField
@@ -130,9 +131,10 @@ export default function Settings() {
                 label="Role"
                 type="text"
                 value={formData.role}
-                readOnly={true}
-                inputClassName="bg-secondary-700! cursor-not-allowed"
-                className="w-full cursor-not-allowed"
+                // readOnly={true}
+                disabled
+                // inputClassName="bg-secondary-700! cursor-not-allowed"
+                // className="w-full cursor-not-allowed"
               />
             </div>
 

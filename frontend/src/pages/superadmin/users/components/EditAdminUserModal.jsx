@@ -14,6 +14,7 @@ export default function EditAdminUserModal({
   setIsEditUserModalOpen,
   userToEdit,
   setUserToEdit,
+  fromAdmin = false,
 }) {
   const [formData, setFormData] = useState({
     firstName: userToEdit?.firstName ?? '',
@@ -221,6 +222,7 @@ export default function EditAdminUserModal({
               value={formData.entity?.companyId}
               required
               readOnly={isLoadingEntities}
+              disabled={fromAdmin}
               options={companiesData}
               type="select"
               onChange={(e) => handleSetEntity(e.target.value)}

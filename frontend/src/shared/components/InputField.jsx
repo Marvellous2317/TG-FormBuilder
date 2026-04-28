@@ -30,33 +30,60 @@ function InputField({
   const isTextAreaField = type === 'textarea';
   const inputType = isPasswordField && showPassword ? 'text' : type;
   const inputId = id || name;
+
+  // Disabled overrides readOnly – if disabled, the field is completely inert
+  const isDisabled = disabled;
+  const isReadOnly = !disabled && readOnly; // readOnly only applies if not disabled
+
+  // Build dynamic classes for inputs / textareas
   const baseInputClassName = [
-    'w-full rounded-2xl border border-secondary-200 bg-white px-4 py-4 font-geist text-sm text-primary outline-none transition',
+    'w-full rounded-2xl border bg-white px-4 py-4 font-geist text-sm outline-none transition',
     'placeholder:text-secondary focus:border-primary-200/75 focus:ring-2 focus:ring-primary/10',
-    disabled ? 'cursor-not-allowed bg-secondary/60' : '',
-    readOnly ? 'bg-gray-50' : '',
+    // Border color based on state
+    isDisabled || isReadOnly ? 'border-secondary-200' : 'border-secondary-200',
+    // Background and text styles for different states
+    isDisabled
+      ? 'bg-secondary-50 text-secondary-400 cursor-not-allowed opacity-70'
+      : isReadOnly
+        ? 'bg-secondary-50 text-secondary-700 cursor-default' // focusable but not-editable
+        : 'bg-white text-primary',
     isPasswordField ? 'pr-20' : '',
     isTextAreaField ? 'min-h-28 resize-y' : '',
     inputClassName,
   ]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  // For DropdownSelect we need to pass readOnly/disabled correctly
+  const selectButtonClasses = [
+    'rounded-2xl border-secondary-200 py-4',
+    isDisabled
+      ? 'cursor-not-allowed bg-secondary-50 opacity-70'
+      : isReadOnly
+        ? 'cursor-default bg-secondary-50'
+        : '',
+    inputClassName,
+  ]
+    .filter(Boolean)
     .join(' ')
     .trim();
 
   return (
     <div className={`w-full ${className}`.trim()}>
-      {label ? (
+      {label && (
         <label
           htmlFor={inputId}
-          className={`mb-2 block font-geist text-sm font-regul text-secondary ${labelClassName}`.trim()}
+          className={`mb-2 block font-geist text-sm font-regular text-secondary ${labelClassName}`.trim()}
         >
           {label}
-          {required ? (
+          {required && (
             <span className="ml-1 text-red-600 text-xs" aria-hidden="true">
               *
             </span>
-          ) : null}
+          )}
         </label>
-      ) : null}
+      )}
 
       <div className="relative">
         {isSelectField ? (
@@ -67,33 +94,31 @@ function InputField({
                 ? option
                 : { value: option, label: option },
             )}
-            onChange={(val) => onChange({ target: { value: val, name } })}
+            onChange={(val) =>
+              !isDisabled &&
+              !isReadOnly &&
+              onChange({ target: { value: val, name } })
+            }
             placeholder={placeholder}
-            disabled={disabled}
-            readOnly={readOnly}
-            searchable={searchable}
+            disabled={isDisabled}
+            readOnly={isReadOnly}
+            searchable={searchable && !isDisabled && !isReadOnly}
             onExternalSearchChange={onExternalSearchChange}
             onLoadMore={onLoadMore}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
-            buttonClassName={[
-              'rounded-2xl border-secondary-200 py-4',
-              disabled ? 'cursor-not-allowed bg-secondary/60 opacity-60' : '',
-              inputClassName,
-            ]
-              .join(' ')
-              .trim()}
+            buttonClassName={selectButtonClasses}
           />
         ) : isTextAreaField ? (
           <textarea
             id={inputId}
             name={name}
             value={value}
-            onChange={onChange}
+            onChange={!isDisabled && !isReadOnly ? onChange : undefined}
             placeholder={placeholder}
             required={required}
-            readOnly={readOnly}
-            disabled={disabled}
+            readOnly={isReadOnly}
+            disabled={isDisabled}
             autoComplete={autoComplete}
             aria-required={required}
             rows={rows}
@@ -105,18 +130,18 @@ function InputField({
             name={name}
             type={inputType}
             value={value}
-            onChange={onChange}
+            onChange={!isDisabled && !isReadOnly ? onChange : undefined}
             placeholder={placeholder}
-            readOnly={readOnly}
+            readOnly={isReadOnly}
             required={required}
-            disabled={disabled}
+            disabled={isDisabled}
             autoComplete={autoComplete}
             aria-required={required}
             className={baseInputClassName}
           />
         )}
 
-        {isPasswordField ? (
+        {isPasswordField && !isDisabled && (
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
@@ -125,7 +150,7 @@ function InputField({
           >
             {showPassword ? 'Hide' : 'Show'}
           </button>
-        ) : null}
+        )}
       </div>
     </div>
   );
