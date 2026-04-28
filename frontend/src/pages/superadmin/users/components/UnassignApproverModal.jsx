@@ -31,13 +31,12 @@ export default function UnassignApproverModal({
         approverId: approver?.value,
         userId: userToEdit?.userId,
       });
-      showSuccess('Approver assigned successfully');
+      showSuccess('Approver unassigned successfully');
       handleCloseModal();
     } catch (err) {
       console.log(err?.response);
       showError(
-        err?.response?.data?.message ??
-          'Unable to create user. Please try again.',
+        err?.response?.data?.message ?? 'Unable to unassign. Please try again.',
       );
     }
   };
@@ -50,14 +49,16 @@ export default function UnassignApproverModal({
   const handleAssign = (id) => {
     setApprover({
       value: id,
-      label: `${users?.find((user) => user?.id === id)?.approver?.firstName} ${users?.find((user) => user?.id === id)?.approver?.lastName}}`,
+      label: `${userToEdit?.operatorApprovers?.find((user) => user.approver.userId === id)?.approver?.firstName} ${userToEdit?.operatorApprovers?.find((user) => user.approver.userId === id)?.approver?.lastName}`,
     });
   };
+
+  console.log(approver);
 
   const usersData = userToEdit?.operatorApprovers?.map((user) => ({
     ...user,
     label: `${user?.approver.firstName} ${user?.approver.lastName}`,
-    value: user?.id,
+    value: user?.approver.userId,
   }));
 
   return (

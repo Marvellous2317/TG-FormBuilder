@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Icons from '../../assets/icons';
@@ -53,6 +59,8 @@ export default function AdminLayout() {
   };
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const navigate = useNavigate();
 
   return (
     <div className="flex h-screen w-full bg-white relative">
@@ -175,7 +183,7 @@ export default function AdminLayout() {
             justify-center p-2 md:p-2.5
             ${isCollapsed && isDesktop ? 'lg:px-2' : ''}
           `}
-            // onClick={() => clearAuth()}
+            onClick={() => navigate('/superadmin/settings')}
           >
             <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
               {getInitials(`${user.firstName} ${user.lastName}`)}
