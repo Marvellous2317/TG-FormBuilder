@@ -39,7 +39,7 @@ export function useApproverApproveChecklistEntries(checklistId, options = {}) {
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: ({ payload }) => approveChecklistEntry(checklistId, payload),
+    mutationFn: (payload) => approveChecklistEntry(checklistId, payload),
     onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
         queryKey: ['approver', 'checklists', checklistId],

@@ -55,8 +55,10 @@ export default function ViewApproverEntries() {
   const handleApprove = async () => {
     const formDataArray = Object.values(formData);
 
+    console.log(formDataArray);
+
     try {
-      await approveEntries({ payload: { data: formDataArray } });
+      await approveEntries({ data: formDataArray });
       showSuccess('Checklist approved successfully');
       navigate('/approver/');
     } catch (err) {
@@ -99,50 +101,49 @@ export default function ViewApproverEntries() {
         </div>
       ) : (
         <div className="h-full mt-5 flex-1 px-4 md:px-10 lg:px-25">
-          {entriesData
-            ?.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-            .map((entry) => {
-              const entryKey = entry.id || entry.entryId || entry.name;
-              return (
-                <div key={entryKey} className="space-y-5">
-                  {(entry.type === 'text' ||
-                    entry.type === 'date' ||
-                    entry.type === 'time' ||
-                    entry.type === 'number') && (
-                    <BasicForm
-                      entry={entry}
-                      formData={formData}
-                      setFormData={setFormData}
-                      readOnly={true}
-                    />
-                  )}
-                  {entry.type === 'enum' && (
-                    <EnumForm
-                      entry={entry}
-                      formData={formData}
-                      setFormData={setFormData}
-                      readOnly={true}
-                    />
-                  )}
-                  {entry.type === 'dropdown' && (
-                    <DropdownForm
-                      entry={entry}
-                      formData={formData}
-                      setFormData={setFormData}
-                      readOnly={true}
-                    />
-                  )}
-                  {entry.type === 'section' && (
-                    <SectionForm
-                      entry={entry}
-                      formData={formData}
-                      setFormData={setFormData}
-                      readOnly={true}
-                    />
-                  )}
-                </div>
-              );
-            })}
+          {/* ?.sort((a, b) => (a.order ?? 999) - (b.order ?? 999)) */}
+          {entriesData.reverse().map((entry) => {
+            const entryKey = entry.id || entry.entryId || entry.name;
+            return (
+              <div key={entryKey} className="space-y-5">
+                {(entry.type === 'text' ||
+                  entry.type === 'date' ||
+                  entry.type === 'time' ||
+                  entry.type === 'number') && (
+                  <BasicForm
+                    entry={entry}
+                    formData={formData}
+                    setFormData={setFormData}
+                    readOnly={previousLocation === 'pending' ? false : true}
+                  />
+                )}
+                {entry.type === 'enum' && (
+                  <EnumForm
+                    entry={entry}
+                    formData={formData}
+                    setFormData={setFormData}
+                    readOnly={previousLocation === 'pending' ? false : true}
+                  />
+                )}
+                {entry.type === 'dropdown' && (
+                  <DropdownForm
+                    entry={entry}
+                    formData={formData}
+                    setFormData={setFormData}
+                    readOnly={previousLocation === 'pending' ? false : true}
+                  />
+                )}
+                {entry.type === 'section' && (
+                  <SectionForm
+                    entry={entry}
+                    formData={formData}
+                    setFormData={setFormData}
+                    readOnly={previousLocation === 'pending' ? false : true}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

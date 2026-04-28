@@ -44,7 +44,7 @@ export default function DropdownForm({
       <h2 className="block w-full font-geist text-sm font-regul text-secondary">
         {entry.name}
       </h2>
-      <div className="w-full flex gap-2 items-end justify-end">
+      <div className="w-full flex gap-2 items-center justify-end">
         <DropdownSelect
           value={currentValue}
           options={options}
