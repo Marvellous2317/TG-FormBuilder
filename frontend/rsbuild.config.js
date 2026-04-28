@@ -3,22 +3,22 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginPWA } from 'rsbuild-plugin-pwa';
 
-// const isProd = process.env.NODE_ENV === 'production';
-const isProd = true;
-
 export default defineConfig({
   plugins: [
     pluginReact(),
-    isProd &&
-      pluginPWA({
-        injectManifest: {
-          swSrc: './src/service-worker.js',
-        },
-        workbox: {
+    pluginPWA({
+      // disabled in dev by default — set dev: true to enable in dev mode
+      dev: false,
+
+      // service worker config
+      sw: {
+        mode: 'generateSw',
+        workboxOptions: {
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/tgpackagingappprd\.azurewebsites\.net\//,
               handler: 'NetworkFirst',
+              options: { cacheName: 'api-cache' },
             },
             {
               urlPattern: /\.(?:png|jpg|svg|css|js)$/,
@@ -27,20 +27,49 @@ export default defineConfig({
             },
           ],
         },
-        manifest: {
-          name: 'Packaging checklist',
+      },
+
+      // manifest config
+      webAppManifest: {
+        content: {
+          name: 'Packaging checklist App',
           short_name: 'Packaging checklist',
           description: 'Packaging checklist form builder',
-          theme_color: '#2463eb',
-          background_color: '#2463eb',
+          start_url: '/login',
           display: 'standalone',
-          start_url: '/',
+          background_color: '#2463eb',
+          theme_color: '#2463eb',
+          orientation: 'portrait',
+          lang: 'en',
           icons: [
-            { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+            {
+              src: '/icons/manifest-icon-192.maskable.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/icons/manifest-icon-192.maskable.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+            {
+              src: '/icons/manifest-icon-512.maskable.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/icons/manifest-icon-512.maskable.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
           ],
         },
-      }),
+      },
+    }),
   ],
   html: {
     template: './index.html',
