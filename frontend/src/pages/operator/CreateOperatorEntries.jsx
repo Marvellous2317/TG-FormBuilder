@@ -12,6 +12,7 @@ import useToast from '../../shared/hooks/useToast';
 import Loader from '../../shared/components/Loader';
 import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
+import { queueSubmission } from '../../lib/offlineQueue';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -29,6 +30,12 @@ export default function CreateOperatorEntry() {
   const handleSubmit = async () => {
     const formDataArray = Object.values(formData);
 
+    if (!navigator.onLine) {
+      await queueSubmission({ data: formDataArray });
+      showSuccess('Saved offline — will sync when reconnected');
+      return;
+    }
+
     try {
       await submitEntries({ payload: { data: formDataArray } });
       showSuccess('Entries submitted successfully');
@@ -37,6 +44,8 @@ export default function CreateOperatorEntry() {
     } catch (err) {
       console.log(err);
       showError('Something went wrong');
+      await queueSubmission({ data: formDataArray });
+      showSuccess('Saved offline — will sync when reconnected');
     }
   };
 

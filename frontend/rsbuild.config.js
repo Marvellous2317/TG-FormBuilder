@@ -14,11 +14,16 @@ export default defineConfig({
       sw: {
         mode: 'generateSw',
         workboxOptions: {
+          navigateFallback: '/index.html',
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/tgpackagingappprd\.azurewebsites\.net\//,
               handler: 'NetworkFirst',
-              options: { cacheName: 'api-cache' },
+              options: {
+                cacheName: 'api-cache',
+                networkTimeoutSeconds: 5, // fallback to cache after 5s
+                expiration: { maxAgeSeconds: 60 * 60 * 24 }, // 1 day
+              },
             },
             {
               urlPattern: /\.(?:png|jpg|svg|css|js)$/,
