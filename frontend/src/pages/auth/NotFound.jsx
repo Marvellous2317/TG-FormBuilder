@@ -28,13 +28,13 @@ export default function NotFound() {
         <div className="space-y-3">
           <Button
             onClick={() => (window.location.href = '/')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+            className="w-full flex justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
           >
             Go to Home
           </Button>
           <Button
             onClick={() => window.history.back()}
-            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+            className="w-full flex justify-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
           >
             Go Back
           </Button>

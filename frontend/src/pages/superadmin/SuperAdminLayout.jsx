@@ -93,7 +93,7 @@ export default function SuperAdminLayout() {
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-auto lg:hidden"
           onClick={closeMobileMenu}
         />
       )}
@@ -111,13 +111,13 @@ export default function SuperAdminLayout() {
         `}
       >
         {/* Collapse Toggle Button (only on desktop) */}
-        {isDesktop && (
+        {/* {isDesktop && (
           <Button
             onClick={toggleSidebar}
             className="absolute -right-3 top-20 transform -translate-y-1/2
-                       bg-primary-200 
+                       bg-primary-200
                        rounded-full p-1.5 shadow-md
-                       transition-all duration-200 z-10"
+                       transition-all duration-200 z-50"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
@@ -126,7 +126,7 @@ export default function SuperAdminLayout() {
               <FiChevronLeft size={14} />
             )}
           </Button>
-        )}
+        )} */}
 
         {/* Logo Section */}
         <div
@@ -142,17 +142,34 @@ export default function SuperAdminLayout() {
             className="w-8 h-8 md:w-10 md:h-10 shrink-0"
           />
           {(!isCollapsed || !isDesktop) && (
-            <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
-              <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
-                Packaging Logbook
-              </h1>
-              <p className="text-xs text-secondary-400 font-geist font-medium hidden sm:block truncate">
-                Digitalization Portal
-              </p>
+            <div className="flex items-end justify-between w-full">
+              <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
+                <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
+                  Packaging Logbook
+                </h1>
+                <p className="text-xs text-secondary-400 font-geist font-medium hidden sm:block truncate">
+                  Digitalization Portal
+                </p>
+              </div>
+              <Button
+                onClick={toggleSidebar}
+                className=" transform -translate-y-1/2
+                       bg-primary-200
+                       rounded-full p-1.5 shadow-md
+                       transition-all duration-200"
+                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {isCollapsed ? (
+                  <FiChevronRight size={14} />
+                ) : (
+                  <FiChevronLeft size={14} />
+                )}
+              </Button>
             </div>
           )}
         </div>
 
+        {/* Navigation - scrollable */}
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:space-y-3 overflow-y-auto">
           {navDetails.map(({ icon, title, to, icon2 }) => (
             <NavLink
@@ -162,15 +179,15 @@ export default function SuperAdminLayout() {
               onClick={closeMobileMenu}
               prefetch="intent"
               className={({ isActive }) => `
-        flex items-center gap-2 md:gap-3 py-2 px-2.5 
-        rounded-[10px] transition-colors
-        ${
-          isActive
-            ? 'bg-secondary-600 text-white'
-            : 'hover:bg-secondary-600 text-tertiary'
-        }
-        ${isCollapsed && isDesktop ? 'lg:justify-center' : ''}
-      `}
+                flex items-center gap-2 md:gap-3 py-2 px-2.5 
+                rounded-[10px] transition-colors
+                ${
+                  isActive
+                    ? 'bg-secondary-600 text-white'
+                    : 'hover:bg-secondary-600 text-tertiary'
+                }
+                ${isCollapsed && isDesktop ? 'lg:justify-center' : ''}
+              `}
               title={isCollapsed && isDesktop ? title : ''}
             >
               {({ isActive }) => (
@@ -191,6 +208,25 @@ export default function SuperAdminLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="flex items-center justify-center">
+          {isDesktop && isCollapsed && (
+            <Button
+              onClick={toggleSidebar}
+              className="transform -translate-y-1/2
+                       bg-primary-200
+                       rounded-full p-1.5 shadow-md
+                       transition-all duration-200 w-fit"
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? (
+                <FiChevronRight size={14} />
+              ) : (
+                <FiChevronLeft size={14} />
+              )}
+            </Button>
+          )}
+        </div>
 
         {/* User Profile - fixed at bottom */}
         <div className="shrink-0 mt-auto px-4">
@@ -220,8 +256,8 @@ export default function SuperAdminLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto w-full lg:w-auto h-full">
-        <div className="pt-14 lg:pt-0 h-full">
+      <main className="flex-1 overflow-y-auto w-full lg:w-auto h-full relative">
+        <div className="pt-14 lg:pt-0 h-full relative">
           <Outlet />
         </div>
       </main>

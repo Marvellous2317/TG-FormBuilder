@@ -6,6 +6,7 @@ import { useDepartmentsInfinite } from '../../../../shared/hooks/superadmin/useD
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
 import { useCreateChecklists } from '../../../../shared/hooks/admin/useChecklist';
+import { useNavigate } from 'react-router-dom';
 
 const frequencyList = [
   {
@@ -41,6 +42,8 @@ export default function CreateLogbookModal({
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
 
+  const navigate = useNavigate();
+
   const { showError, showSuccess } = useToast();
 
   useEffect(() => {
@@ -51,7 +54,16 @@ export default function CreateLogbookModal({
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
 
-  const { mutateAsync, isPending: isLoading } = useCreateChecklists();
+  const { mutateAsync, isPending: isLoading } = useCreateChecklists({
+    onSuccess: (response) => {
+      const checkListToNavigateTo = response?.data?.checklist?.checklistId;
+
+      showSuccess('Checklist created successfully');
+      handleCancel();
+
+      navigate(`/admin/entries/${checkListToNavigateTo}`);
+    },
+  });
 
   const {
     data: departmentsData,
@@ -135,8 +147,6 @@ export default function CreateLogbookModal({
           frequency,
         });
       }
-      showSuccess('Checklist created successfully');
-      handleCancel();
     } catch (err) {
       console.log(err.response.data);
       showError(
