@@ -26,6 +26,7 @@ export default function SectionOptionsModal({
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
+  const [isSectionsOptionsModal, setIsSectionsOptionsModal] = useState(false);
   const [fields, setFields] = useState(
     () => initialValue?.items ?? Array.from({ length: 1 }, () => createField()),
   );
@@ -65,6 +66,10 @@ export default function SectionOptionsModal({
       case 'enum':
         setActiveFieldId(id);
         setIsEnumOptionsModal(true);
+        break;
+      case 'section':
+        setActiveFieldId(id);
+        setIsSectionsOptionsModal(true);
         break;
       case 'formular':
         setActiveFieldId(id);
@@ -170,7 +175,7 @@ export default function SectionOptionsModal({
                             setActiveFieldId(field.id);
                             setIsEnumOptionsModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.option}
                         </p>
@@ -181,9 +186,20 @@ export default function SectionOptionsModal({
                             setActiveFieldId(field.id);
                             setIsDropdownOptionsModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.title}
+                        </p>
+                      )}
+                      {field.type === 'section' && field.config && (
+                        <p
+                          onClick={() => {
+                            setActiveFieldId(field.id);
+                            setIsSectionsOptionsModal(true);
+                          }}
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+                        >
+                          {field.config.name}
                         </p>
                       )}
                       {field.type === 'formular' && field.config && (
@@ -192,7 +208,7 @@ export default function SectionOptionsModal({
                             setActiveFieldId(field.id);
                             setIsFormularModal(true);
                           }}
-                          className="underline text-sm text-primary-200 line-clamp-1"
+                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
                         >
                           {field.config.expression || 'Formular'}
                         </p>
@@ -264,6 +280,14 @@ export default function SectionOptionsModal({
         key={`formular-${activeFieldId}`}
         isFormularModal={isFormularModal}
         setIsFormularModal={setIsFormularModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
+      />
+
+      <SectionOptionsModal
+        key={`section-${activeFieldId}`}
+        isSectionOptionsModal={isSectionsOptionsModal}
+        setIsSectionOptionsModal={setIsSectionsOptionsModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
       />

@@ -21,6 +21,7 @@ const fieldTypeOptions = [
 
 const sectionFieldTypeOptions = [
   { label: 'Text', value: 'text' },
+  { label: 'Section', value: 'section' },
   { label: 'Number', value: 'number' },
   { label: 'Dropdown', value: 'dropdown' },
   { label: 'Date', value: 'date' },
