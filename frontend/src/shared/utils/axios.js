@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import useToast from '../hooks/useToast';
+import { useToastStore } from '../store/toastStore';
 
 const baseURL =
   import.meta.env.VITE_API_BASE_URL ??
@@ -35,25 +35,47 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const { showError } = useToast();
-    if (error.response && error.response.status === 401) {
+    console.error('API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.message,
+      hasResponse: !!error.response,
+    });
+
+    if (error.response?.status === 401) {
       console.log('Got here - 401 Unauthorized');
 
-      useAuthStore.getState().clearAuth();
+      // Clear auth data from localStorage directly
+      localStorage.removeItem('auth-storage');
 
-      showError('Unauthenticated');
+      try {
+        const { showError } = useToastStore.getState();
+        showError('Unauthenticated');
+      } catch (e) {
+        console.warn('Could not show toast error', e);
+      }
 
+      // Redirect to login
       window.location.href = '/login';
+      return Promise.reject(error);
     }
 
-    if (error.response && error.response.status === 403) {
-      console.log('Got here - 403 Unauthenticated');
+    if (error.response?.status === 403) {
+      console.log('Got here - 403 Forbidden');
 
-      useAuthStore.getState().clearAuth();
+      // Clear auth data from localStorage directly
+      localStorage.removeItem('auth-storage');
 
-      showError('Forbidden');
+      try {
+        const { showError } = useToastStore.getState();
+        showError('Forbidden');
+      } catch (e) {
+        console.warn('Could not show toast error', e);
+      }
 
+      // Redirect to login
       window.location.href = '/login';
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

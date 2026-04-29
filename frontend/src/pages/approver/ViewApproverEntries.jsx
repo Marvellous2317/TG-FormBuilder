@@ -55,8 +55,6 @@ export default function ViewApproverEntries() {
   const handleApprove = async () => {
     const formDataArray = Object.values(formData);
 
-    console.log(formDataArray);
-
     try {
       await approveEntries({ data: formDataArray });
       showSuccess('Checklist approved successfully');

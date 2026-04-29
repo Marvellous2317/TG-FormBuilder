@@ -3,13 +3,17 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginPWA } from 'rsbuild-plugin-pwa';
 
-export default defineConfig({
-  plugins: [
-    pluginReact(),
-    pluginPWA({
-      // disabled in dev by default — set dev: true to enable in dev mode
-      dev: false,
+const config = {
+  plugins: [pluginReact()],
+  html: {
+    template: './index.html',
+  },
+};
 
+// Only add PWA plugin for production builds
+if (process.env.NODE_ENV === 'production') {
+  config.plugins.push(
+    pluginPWA({
       // service worker config
       sw: {
         mode: 'generateSw',
@@ -75,8 +79,7 @@ export default defineConfig({
         },
       },
     }),
-  ],
-  html: {
-    template: './index.html',
-  },
-});
+  );
+}
+
+export default defineConfig(config);

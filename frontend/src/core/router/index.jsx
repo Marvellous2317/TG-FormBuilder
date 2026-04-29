@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { ErrorElement } from '../../shared/components/ErrorBoundary';
 import Login from '../../pages/auth/Login';
 import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
@@ -37,6 +38,7 @@ import ResetPassword from '../../pages/auth/ResetPassword';
 export const router = createBrowserRouter([
   {
     element: <AuthProtect />,
+    errorElement: <ErrorElement />,
     children: [
       {
         path: '',
@@ -81,6 +83,7 @@ export const router = createBrowserRouter([
   // Super admin routes
   {
     element: <ProtectedRoute allowedRoles={['superadmin']} />,
+    errorElement: <ErrorElement />,
     children: [
       {
         path: '/superadmin',
@@ -123,6 +126,7 @@ export const router = createBrowserRouter([
   // Admin routes
   {
     element: <ProtectedRoute allowedRoles={['admin']} />,
+    errorElement: <ErrorElement />,
     children: [
       {
         path: '/admin',
@@ -153,6 +157,7 @@ export const router = createBrowserRouter([
   // Operator routes
   {
     element: <ProtectedRoute allowedRoles={['operator']} />,
+    errorElement: <ErrorElement />,
     children: [
       {
         path: '/operator',
@@ -196,6 +201,7 @@ export const router = createBrowserRouter([
   // Approver routes
   {
     element: <ProtectedRoute allowedRoles={['approver', 'approval']} />,
+    errorElement: <ErrorElement />,
     children: [
       {
         path: '/approver',

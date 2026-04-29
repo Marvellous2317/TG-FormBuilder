@@ -10,6 +10,8 @@ import {
 } from '../../../../shared/hooks/admin/useChecklist';
 import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import { IoClose } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
+import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 
 export default function AssignLogbookModal({
   isShowAssignLogbookModal,
@@ -28,10 +30,18 @@ export default function AssignLogbookModal({
 
   const { showError, showSuccess } = useToast();
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const timer = setTimeout(() => setUserSearch(userSearchInput), 500);
     return () => clearTimeout(timer);
   }, [userSearchInput]);
+
+  const { data: roles, isPending: isLoadingRoles } = useRoles();
+
+  const rolesData = roles?.data?.roles;
+
+  const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
 
   const { mutateAsync, isPending: isLoading } = useAssignChecklistOperator();
   const { mutateAsync: unassignChecklist, isPending: isUnassigning } =
@@ -44,7 +54,7 @@ export default function AssignLogbookModal({
     hasNextPage: hasNextUsersPage,
     isFetchingNextPage: isFetchingNextUsersPage,
   } = useFetchUsersInfinite(
-    { search: userSearch },
+    { search: userSearch, roleId: operatorRole?.roleId },
     { enabled: isShowAssignLogbookModal },
   );
 
@@ -83,6 +93,7 @@ export default function AssignLogbookModal({
 
       showSuccess('Logbook assigned successfully');
       handleCancel();
+      navigate('/admin');
     } catch (err) {
       console.log(err.response.data);
       showError(

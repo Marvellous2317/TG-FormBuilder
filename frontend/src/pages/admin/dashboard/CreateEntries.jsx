@@ -141,8 +141,8 @@ export default function CreateEntries() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-white">
-      <header className="flex flex-col items-start justify-between gap-3 border-b border-secondary-200 px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+    <div className="flex h-full w-full flex-col bg-white">
+      <header className="flex flex-col items-start justify-between gap-3 border-b border-secondary-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
         <Link
           prefetch="intent"
           className="flex w-full cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group sm:w-1/3"
@@ -166,7 +166,7 @@ export default function CreateEntries() {
         <div className="hidden w-1/3 sm:block" />
       </header>
 
-      <section className="flex-1 bg-secondary-200/45 p-4 sm:p-6 lg:p-8">
+      <section className="flex-1 overflow-y-auto bg-secondary-200/45 p-4 sm:p-6 lg:p-8">
         {isLoadingChecklistEntries ? (
           <Loader size="h-12 w-12 !border-primary-200 mt-20" />
         ) : (
@@ -294,7 +294,7 @@ export default function CreateEntries() {
         )}
       </section>
 
-      <footer className="flex transition-all duration-200 ease-in-out flex-col-reverse justify-end gap-3 border-t border-secondary-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+      <footer className="flex flex-col-reverse justify-end gap-3 border-t border-secondary-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
         <Button
           onClick={handleSaveEntries}
           type="button"

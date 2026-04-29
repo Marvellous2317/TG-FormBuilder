@@ -22,8 +22,8 @@ import UnassignApproverModal from '../../superadmin/users/components/UnassignApp
 import EditAdminUserModal from '../../superadmin/users/components/EditAdminUserModal';
 
 export default function AdminUserManagement() {
-  const [isDeactivateUserModalOpen, setIsDeactivateUserModalOpen] =
-    useState(false);
+  // const [isDeactivateUserModalOpen, setIsDeactivateUserModalOpen] =
+  //   useState(false);
 
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
@@ -160,7 +160,8 @@ export default function AdminUserManagement() {
         setIsEditUserModalOpen={setIsEditUserModalOpen}
         userToEdit={userToEdit}
         setUserToEdit={setUserToEdit}
-        key={userToEdit?.userId}
+        key={users?.userId}
+        fromAdmin
       />
 
       {/* <section className="py-6 px-8 min-h-full relative">
