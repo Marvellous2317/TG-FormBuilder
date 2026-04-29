@@ -10,6 +10,7 @@ import {
 } from '../../../../shared/hooks/admin/useChecklist';
 import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import { IoClose } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 
 export default function AssignLogbookModal({
   isShowAssignLogbookModal,
@@ -27,6 +28,8 @@ export default function AssignLogbookModal({
   const [assignedUsers, setAssignedUsers] = useState([]);
 
   const { showError, showSuccess } = useToast();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => setUserSearch(userSearchInput), 500);
@@ -83,6 +86,7 @@ export default function AssignLogbookModal({
 
       showSuccess('Logbook assigned successfully');
       handleCancel();
+      navigate('/admin');
     } catch (err) {
       console.log(err.response.data);
       showError(

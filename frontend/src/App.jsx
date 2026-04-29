@@ -5,6 +5,7 @@ import { router } from './core/router';
 import ToastProvider from './shared/components/ToastProvider';
 import { InstallButton } from './shared/components/InstallButton';
 import { OfflineBanner } from './shared/components/OfflineBanner';
+import ErrorBoundary from './shared/components/ErrorBoundary';
 import { syncPendingSubmissions } from './lib/syncQueue';
 import { useEffect } from 'react';
 
@@ -30,12 +31,17 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} fallbackElement={<div>Loading...</div>} />
-      <ToastProvider />
-      <InstallButton />
-      <OfflineBanner />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider
+          router={router}
+          fallbackElement={<div>Loading...</div>}
+        />
+        <ToastProvider />
+        <InstallButton />
+        <OfflineBanner />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
