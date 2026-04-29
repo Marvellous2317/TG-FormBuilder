@@ -14,6 +14,9 @@ import {
 import Button from '../../shared/components/Button';
 import ApproverConfirmationModal from './components/ApproverConfirmationModal';
 import useToast from '../../shared/hooks/useToast';
+import Icons from '../../assets/icons';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function ViewApproverEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
@@ -41,6 +44,143 @@ export default function ViewApproverEntries() {
   const { mutateAsync: rejectEntries, isPending: isRejectingEntries } =
     useApproverRejectChecklistEntries(checklistId);
 
+  const handleExportPDF = () => {
+    if (!entriesData) return;
+
+    const submission = data?.data?.submission;
+    const docNumber =
+      submission?.assignment?.checklist?.documentNumber || checklistId;
+    const docTitle = submission?.assignment?.checklist?.documentNumber || 'N/A';
+    const operatorName = operator
+      ? `${operator.firstName} ${operator.lastName}`
+      : 'N/A';
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 14;
+
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(30, 30, 30);
+    doc.text('Packaging Checklist', margin, 20);
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Document No: ${docNumber}`, margin, 28);
+    doc.text(`Title: ${docTitle}`, margin, 33);
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, 37, pageWidth - margin, 37);
+
+    let yPos = 43;
+    const sortedEntries = entriesData
+      .slice()
+      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+    let pendingRows = [];
+
+    const flushPendingRows = () => {
+      if (pendingRows.length === 0) return;
+      autoTable(doc, {
+        startY: yPos,
+        body: pendingRows,
+        margin: { left: margin, right: margin },
+        columnStyles: {
+          0: { cellWidth: 70, fontStyle: 'bold', textColor: [50, 50, 50] },
+          1: { cellWidth: 'auto', textColor: [80, 80, 80] },
+        },
+        styles: { fontSize: 9, cellPadding: 3 },
+        theme: 'grid',
+        tableLineColor: [220, 220, 220],
+        tableLineWidth: 0.1,
+      });
+      yPos = doc.lastAutoTable.finalY + 6;
+      pendingRows = [];
+    };
+
+    sortedEntries.forEach((entry) => {
+      const entryId = entry.entryId;
+      const entryValue = formData[entryId]?.value ?? entry.value ?? '';
+
+      if (entry.type === 'section') {
+        flushPendingRows();
+
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(30, 30, 30);
+        doc.text(
+          `${entry.name}${entry.config?.name ? ` - ${entry.config.name}` : ''}`,
+          margin,
+          yPos,
+        );
+        yPos += 4;
+
+        let sectionRows;
+        try {
+          sectionRows = JSON.parse(entry.value || '[]');
+        } catch {
+          sectionRows = [];
+        }
+
+        const sectionFields = (entry.config?.items || [])
+          .slice()
+          .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+        if (sectionFields.length > 0 && sectionRows.length > 0) {
+          const headers = sectionFields.map((f) => f.name);
+          const tableRows = sectionRows.map((row) =>
+            sectionFields.map((f) => {
+              const fieldId = f.entryId || f.id;
+              return row[fieldId]?.value ?? '';
+            }),
+          );
+
+          autoTable(doc, {
+            startY: yPos,
+            head: [headers],
+            body: tableRows,
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            headStyles: {
+              fillColor: [59, 130, 246],
+              textColor: 255,
+              fontStyle: 'bold',
+            },
+            theme: 'grid',
+          });
+          yPos = doc.lastAutoTable.finalY + 8;
+        } else {
+          yPos += 6;
+        }
+      } else {
+        pendingRows.push([entry.name, entryValue]);
+      }
+    });
+
+    flushPendingRows();
+
+    if (yPos > 265) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Submitted by: ${operatorName} (Operator)`, margin, yPos + 5);
+
+    doc.save(`checklist-${docNumber}.pdf`);
+  };
+
   const handleReject = async () => {
     try {
       await rejectEntries();
@@ -53,7 +193,12 @@ export default function ViewApproverEntries() {
   };
 
   const handleApprove = async () => {
-    const formDataArray = Object.values(formData);
+    const formDataArray = (entriesData ?? [])
+      .filter((entry) => entry.entryId)
+      .map((entry) => ({
+        entryId: entry.entryId,
+        value: formData[entry.entryId]?.value ?? entry.value ?? '',
+      }));
 
     try {
       await approveEntries({ data: formDataArray });
@@ -69,25 +214,44 @@ export default function ViewApproverEntries() {
     <div
       className={`flex ${entriesData?.length > 0 ? 'min-h-screen' : ''} w-full flex-col bg-white py-6`}
     >
-      <Link
-        prefetch="intent"
-        className="flex w-fit cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group px-4 md:px-10 lg:px-25"
-        to={
-          previousLocation && previousLocation !== 'pending'
-            ? `/approver/${previousLocation}`
-            : '/approver'
-        }
-      >
-        <FaArrowLeft
-          className="text-primary-200 group-hover:-translate-x-0.5"
-          size={16}
-        />
-        <p className="text-sm font-medium text-primary-200">
-          {previousLocation && previousLocation !== 'pending'
-            ? `Back to ${previousLocation}`
-            : 'Back to dashboard'}
-        </p>
-      </Link>
+      <div className="flex items-center justify-between w-full px-4 md:px-10 lg:px-25 ">
+        <Link
+          prefetch="intent"
+          className="flex w-fit cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group px-4"
+          to={
+            previousLocation && previousLocation !== 'pending'
+              ? `/approver/${previousLocation}`
+              : '/approver'
+          }
+        >
+          <FaArrowLeft
+            className="text-primary-200 group-hover:-translate-x-0.5"
+            size={16}
+          />
+          <p className="text-sm font-medium text-primary-200">
+            {previousLocation && previousLocation !== 'pending'
+              ? `Back to ${previousLocation}`
+              : 'Back to dashboard'}
+          </p>
+        </Link>
+
+        {previousLocation === 'approved' && (
+          <Button
+            onClick={handleExportPDF}
+            disabled={isLoadingChecklistEntries || !entriesData}
+            className="flex w-fit items-center gap-2 transition-all duration-150 ease-in-out group bg-primary-200 rounded-2xl py-3 px-5"
+          >
+            <img
+              src={Icons.pdfIcon}
+              alt="pdf icon"
+              className="w-5 h-5 object-contain"
+            />
+            <p className="text-white font-semibold text-sm lg:text-base">
+              Export as PDF
+            </p>
+          </Button>
+        )}
+      </div>
 
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />
@@ -99,49 +263,51 @@ export default function ViewApproverEntries() {
         </div>
       ) : (
         <div className="h-full mt-5 flex-1 px-4 md:px-10 lg:px-25">
-          {/* ?.sort((a, b) => (a.order ?? 999) - (b.order ?? 999)) */}
-          {entriesData.reverse().map((entry) => {
-            const entryKey = entry.id || entry.entryId || entry.name;
-            return (
-              <div key={entryKey} className="space-y-5">
-                {(entry.type === 'text' ||
-                  entry.type === 'date' ||
-                  entry.type === 'time' ||
-                  entry.type === 'number') && (
-                  <BasicForm
-                    entry={entry}
-                    formData={formData}
-                    setFormData={setFormData}
-                    readOnly={previousLocation === 'pending' ? false : true}
-                  />
-                )}
-                {entry.type === 'enum' && (
-                  <EnumForm
-                    entry={entry}
-                    formData={formData}
-                    setFormData={setFormData}
-                    readOnly={previousLocation === 'pending' ? false : true}
-                  />
-                )}
-                {entry.type === 'dropdown' && (
-                  <DropdownForm
-                    entry={entry}
-                    formData={formData}
-                    setFormData={setFormData}
-                    readOnly={previousLocation === 'pending' ? false : true}
-                  />
-                )}
-                {entry.type === 'section' && (
-                  <SectionForm
-                    entry={entry}
-                    formData={formData}
-                    setFormData={setFormData}
-                    readOnly={previousLocation === 'pending' ? false : true}
-                  />
-                )}
-              </div>
-            );
-          })}
+          {entriesData
+            ?.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+            .map((entry) => {
+              const entryKey = entry.id || entry.entryId || entry.name;
+
+              return (
+                <div key={entryKey} className="space-y-5">
+                  {(entry.type === 'text' ||
+                    entry.type === 'date' ||
+                    entry.type === 'time' ||
+                    entry.type === 'number') && (
+                    <BasicForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly={previousLocation === 'pending' ? false : true}
+                    />
+                  )}
+                  {entry.type === 'enum' && (
+                    <EnumForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly={previousLocation === 'pending' ? false : true}
+                    />
+                  )}
+                  {entry.type === 'dropdown' && (
+                    <DropdownForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly={previousLocation === 'pending' ? false : true}
+                    />
+                  )}
+                  {entry.type === 'section' && (
+                    <SectionForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly={previousLocation === 'pending' ? false : true}
+                    />
+                  )}
+                </div>
+              );
+            })}
         </div>
       )}
 
