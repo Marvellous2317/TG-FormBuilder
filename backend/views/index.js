@@ -98,3 +98,29 @@ export const  sendVerificationMail =async ({email,firstName, otp})=> {
         throw error;
     }
 }
+
+
+export const sendAssignmentEmail = async ({ email, firstName, checklistTitle, documentNumber }) => {
+    try {
+        const emailHtml = await ejs.renderFile(
+            path.join(__dirname, './assignment.ejs'),
+            {
+                firstName: firstName,
+                email: email,
+                logoUrl: logo,
+                checklistTitle: checklistTitle,
+                documentNumber: documentNumber,
+            }
+        );
+        const info = await EamilTransporter.sendMail({
+            from: `Packaging Check List <${config.Email_From}>`,
+            to: email,
+            subject: `New Checklist Assigned: ${checklistTitle}`,
+            html: emailHtml,
+        });
+        return true;
+    } catch (error) {
+        console.error('Error sending assignment email:', error);
+        throw error;
+    }
+}

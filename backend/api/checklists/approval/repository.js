@@ -67,7 +67,7 @@ export class ApprovalRepository {
           },
 
   
-          { model: SubmittedChecklistEntry, as: "entries", order: [["order", "ASC"]], attributes: ["entryId","formulaExpression", "options", "required","config", "name", "value", "type"] },
+          { model: SubmittedChecklistEntry, as: "entries", order: [["order", "ASC"]], attributes: ["entryId","formulaExpression", "options", "required","config", "name", "value", "type", "order"] },
         ],
       });
 
