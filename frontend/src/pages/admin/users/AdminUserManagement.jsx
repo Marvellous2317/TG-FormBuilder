@@ -160,7 +160,7 @@ export default function AdminUserManagement() {
         setIsEditUserModalOpen={setIsEditUserModalOpen}
         userToEdit={userToEdit}
         setUserToEdit={setUserToEdit}
-        key={userToEdit?.userId}
+        key={users?.userId}
         fromAdmin
       />
 

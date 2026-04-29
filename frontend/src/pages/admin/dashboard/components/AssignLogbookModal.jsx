@@ -11,6 +11,7 @@ import {
 import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import { IoClose } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 
 export default function AssignLogbookModal({
   isShowAssignLogbookModal,
@@ -36,6 +37,12 @@ export default function AssignLogbookModal({
     return () => clearTimeout(timer);
   }, [userSearchInput]);
 
+  const { data: roles, isPending: isLoadingRoles } = useRoles();
+
+  const rolesData = roles?.data?.roles;
+
+  const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
+
   const { mutateAsync, isPending: isLoading } = useAssignChecklistOperator();
   const { mutateAsync: unassignChecklist, isPending: isUnassigning } =
     useUnassignChecklistOperator();
@@ -47,7 +54,7 @@ export default function AssignLogbookModal({
     hasNextPage: hasNextUsersPage,
     isFetchingNextPage: isFetchingNextUsersPage,
   } = useFetchUsersInfinite(
-    { search: userSearch },
+    { search: userSearch, roleId: operatorRole?.roleId },
     { enabled: isShowAssignLogbookModal },
   );
 

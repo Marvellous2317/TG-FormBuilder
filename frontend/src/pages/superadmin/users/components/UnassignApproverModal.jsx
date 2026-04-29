@@ -53,8 +53,6 @@ export default function UnassignApproverModal({
     });
   };
 
-  console.log(approver);
-
   const usersData = userToEdit?.operatorApprovers?.map((user) => ({
     ...user,
     label: `${user?.approver.firstName} ${user?.approver.lastName}`,
