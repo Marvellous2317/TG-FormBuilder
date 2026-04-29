@@ -28,6 +28,7 @@ import logsTodayIcon from './icons/logs-today-icon.png';
 import logsWeekIcon from './icons/logs-week-icon.png';
 import inviteEntities from './icons/invite-entities.png';
 import userProfile from './icons/user-profile.png';
+import pdfIcon from './icons/pdf.png';
 
 const Icons = {
   arrowLeftInactive,
@@ -60,6 +61,7 @@ const Icons = {
   entitiesActive,
   entitiesInactive,
   userProfile,
+  pdfIcon,
 };
 
 export default Icons;

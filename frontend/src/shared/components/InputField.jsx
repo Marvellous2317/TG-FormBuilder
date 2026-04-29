@@ -40,13 +40,15 @@ function InputField({
     'w-full rounded-2xl border bg-white px-4 py-4 font-geist text-sm outline-none transition',
     'placeholder:text-secondary focus:border-primary-200/75 focus:ring-2 focus:ring-primary/10',
     // Border color based on state
-    isDisabled || isReadOnly ? 'border-secondary-200' : 'border-secondary-200',
+    isDisabled || isReadOnly
+      ? 'border-secondary-200 text-secondary!'
+      : 'border-secondary-200',
     // Background and text styles for different states
     isDisabled
       ? 'bg-secondary-50 text-secondary-400 cursor-not-allowed opacity-70'
       : isReadOnly
         ? 'bg-secondary-50 text-secondary-700 cursor-default' // focusable but not-editable
-        : 'bg-white text-primary',
+        : 'bg-white text-primary!',
     isPasswordField ? 'pr-20' : '',
     isTextAreaField ? 'min-h-28 resize-y' : '',
     inputClassName,
