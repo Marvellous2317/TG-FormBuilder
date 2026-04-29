@@ -311,9 +311,9 @@ export default function AdminUserList({
                 onClick={(event) => event.stopPropagation()}
                 role="menu"
               >
-                {dropOptions.map((option) => (
+                {dropOptions.map((option, index) => (
                   <Button
-                    key={option.value}
+                    key={`${option.value}::${index}`}
                     className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
                     onClick={option.onClick}
                   >

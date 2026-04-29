@@ -161,6 +161,7 @@ export default function AdminUserManagement() {
         userToEdit={userToEdit}
         setUserToEdit={setUserToEdit}
         key={userToEdit?.userId}
+        fromAdmin
       />
 
       {/* <section className="py-6 px-8 min-h-full relative">

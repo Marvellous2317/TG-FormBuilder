@@ -183,7 +183,7 @@ export default function AdminLayout() {
             justify-center p-2 md:p-2.5
             ${isCollapsed && isDesktop ? 'lg:px-2' : ''}
           `}
-            onClick={() => navigate('/superadmin/settings')}
+            onClick={() => navigate('/admin/settings')}
           >
             <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
               {getInitials(`${user.firstName} ${user.lastName}`)}

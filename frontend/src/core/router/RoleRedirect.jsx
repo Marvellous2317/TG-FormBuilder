@@ -3,10 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../shared/store/authStore';
 
 export default function RoleRedirect() {
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated || !user) {
-    clearAuth();
     return <Navigate to="/login" replace />;
   }
 
