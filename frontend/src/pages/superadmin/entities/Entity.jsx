@@ -224,7 +224,7 @@ export default function Entity() {
               </h2>
               <div className="w-full rounded-3xl bg-white p-4">
                 {AdminAccountData.map((item, index, array) => {
-                  const isLastItem = index === array.length - 1;
+                  const isLastItem = index === array?.length - 1;
                   const isFirstItem = index === 0;
                   return (
                     <React.Fragment key={index}>

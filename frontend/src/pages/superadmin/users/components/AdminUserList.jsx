@@ -166,7 +166,7 @@ export default function AdminUserList({
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
-    const menuHeight = dropOptions.length * 44 + 8;
+    const menuHeight = dropOptions?.length * 44 + 8;
     const spaceBelow = window.innerHeight - buttonRect.bottom;
     const shouldOpenUpward = spaceBelow < menuHeight + 12;
 

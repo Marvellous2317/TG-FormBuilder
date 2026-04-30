@@ -1,5 +1,12 @@
 import './App.css';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  QueryCache,
+  MutationCache,
+} from '@tanstack/react-query';
+import { useAuthStore } from './shared/store/authStore';
+import { useToastStore } from './shared/store/toastStore';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './core/router';
 import ToastProvider from './shared/components/ToastProvider';
@@ -9,7 +16,21 @@ import ErrorBoundary from './shared/components/ErrorBoundary';
 import { syncPendingSubmissions } from './lib/syncQueue';
 import { useEffect } from 'react';
 
+const handleAuthError = (error) => {
+  const status = error?.response?.status;
+  if (status === 401 || status === 403) {
+    useAuthStore.getState().clearAuth();
+    useToastStore
+      .getState()
+      .showError(
+        status === 401 ? 'Session expired. Please log in.' : 'Access denied.',
+      );
+  }
+};
+
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: handleAuthError }),
+  mutationCache: new MutationCache({ onError: handleAuthError }),
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,

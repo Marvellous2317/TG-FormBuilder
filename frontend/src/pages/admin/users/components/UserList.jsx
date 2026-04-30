@@ -309,7 +309,7 @@ export default function UserList({
             </thead>
 
             <tbody>
-              {filteredData.length > 0 ? (
+              {filteredData?.length > 0 ? (
                 filteredData.map((row) => (
                   <tr
                     key={row.id}
