@@ -130,7 +130,9 @@ export default function TaskList({
       value: 'entries',
       onClick: () => {
         setActiveMenuId(null);
-        navigate(`/admin/entries/${checklistToEdit?.checklistId}`);
+        navigate(
+          `/admin/entries/${checklistToEdit?.checklistId}/${checklistToEdit?.title}`,
+        );
       },
     },
     {

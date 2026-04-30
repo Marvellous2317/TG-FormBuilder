@@ -137,7 +137,7 @@ export const router = createBrowserRouter([
             element: <AdminDashboard />,
           },
           {
-            path: 'entries/:id',
+            path: 'entries/:id/:title',
             loader: ({ params }) => params,
             element: <CreateEntries />,
           },

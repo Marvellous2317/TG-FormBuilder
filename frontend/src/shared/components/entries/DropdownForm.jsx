@@ -40,7 +40,7 @@ export default function DropdownForm({
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
   return (
-    <div className="mt-5 flex items-center justify-between w-full gap-2">
+    <div className="mt-5 flex flex-col items-center justify-between w-full gap-2">
       <h2 className="block w-full font-geist text-sm font-regul text-secondary">
         {entry.name}
       </h2>
@@ -50,6 +50,7 @@ export default function DropdownForm({
           options={options}
           onChange={(value) => handleChange(value)}
           placeholder="Select input"
+          className="w-full"
           buttonClassName="w-full! bg-tertiary-700! p-4! text-base! text-primary! outline-none! rounded-xl! placeholder:text-tertiary!"
           menuClassName="left-0 right-auto"
           disabled={readOnly}

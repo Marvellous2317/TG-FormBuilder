@@ -85,10 +85,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
           {rows.map((rowId, rowIndex) => (
             <div
               key={rowId}
-              className={`w-full flex flex-col gap-2 px-4 pb-5 ${rowIndex > 0 ? 'border-t border-secondary-200 pt-3' : ''}`}
+              className={`w-full flex flex-col px-4 pb-5 ${rowIndex > 0 ? 'border-t border-secondary-200 pt-3' : 'pt-2'}`}
             >
               {rows.length > 1 && (
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-tertiary font-geist">
                     Row {rowIndex + 1}
                   </span>
@@ -104,13 +104,17 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   )}
                 </div>
               )}
+              <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 w-full">
               {sortedEntries?.map((field) => {
                 const rowEntry = getRowEntry(field, rowIndex);
                 const rowFormData = rowsData[rowIndex] || {};
                 const rowSetFormData = createRowSetFormData(rowIndex);
                 const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
                 return (
-                  <div key={entryKey} className="flex gap-2 w-full">
+                  <div
+                    key={entryKey}
+                    className="flex-1 min-w-40"
+                  >
                     {(field.type === 'text' ||
                       field.type === 'date' ||
                       field.type === 'time' ||
@@ -149,6 +153,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   </div>
                 );
               })}
+              </div>
             </div>
           ))}
           {!readOnly && (
