@@ -94,7 +94,9 @@ export class AdminController {
 
   static async getUserStatisticsApi(req, res, next) {
     try {
-      const result = await AdminRepository.getUserStatistics();
+
+      const user = req.user;
+      const result = await AdminRepository.getUserStatistics(user);
       return ResponseManager.success(res, result, 200, "User statistics fetched successfully");
     } catch (e) {
       next(e);
