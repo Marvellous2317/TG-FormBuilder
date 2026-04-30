@@ -27,7 +27,7 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
         id={entryId}
         name={entryId}
         label={entry.name}
-        type={entry.type === 'text' ? 'textarea' : entry.type}
+        type={entry.type}
         required={entry?.required}
         value={currentValue}
         onChange={handleChange}

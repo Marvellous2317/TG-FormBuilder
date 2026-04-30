@@ -22,7 +22,7 @@ import useToast from '../../../shared/hooks/useToast';
 import AssignLogbookModal from './components/AssignLogbookModal';
 
 export default function CreateEntries() {
-  let { id: checklistId } = useLoaderData();
+  let { id: checklistId, title: checklistTitle } = useLoaderData();
 
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
@@ -159,7 +159,7 @@ export default function CreateEntries() {
 
         <div className="flex w-full items-center justify-start sm:w-1/3 sm:justify-center">
           <h2 className="text-base font-medium text-primary">
-            Packaging record
+            {checklistTitle}
           </h2>
         </div>
 
