@@ -325,12 +325,27 @@ export class AdminRepository {
         where.companyId = companyId;
       }
 
+      if (!isSuperAdmin) {
+        where.roleId = {
+          [Op.notIn]: Sequelize.literal(`(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`)
+        };
+      }
+
       if (status) {
         where.status = status;
       }
 
       if (roleId) {
-        where.roleId = roleId;
+        if (!isSuperAdmin) {
+          where.roleId = {
+            [Op.and]: [
+              { [Op.eq]: roleId },
+              { [Op.notIn]: Sequelize.literal(`(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`) }
+            ]
+          };
+        } else {
+          where.roleId = roleId;
+        }
       }
 
       if (department) {
@@ -380,19 +395,21 @@ export class AdminRepository {
     }
   }
 
-  static async getUserStatistics() {
+  static async getUserStatistics(user) {
+    const where = {};
+
+    if (user?.role?.roleName !== "superAdmin") { 
+      where.companyId = user.companyId;
+    }
     try {
-      const totalUsers = await User.count();
-      const activeUsers = await User.count({ where: { status: "active" } });
-      const suspendedUsers = await User.count({ where: { status: "suspended" } });
-      const totalRoles = await Role.count();
-
-
+      const totalUsers = await User.count({ where });
+      const activeUsers = await User.count({ where: { ...where, status: "active" } });
+      const suspendedUsers = await User.count({ where: { ...where, status: "suspended" } });
+   
       return {
         totalUsers,
         activeUsers,
         suspendedUsers,
-        totalRoles
       };
     } catch (error) {
       console.log("Error in getUserStatistics:", error);
