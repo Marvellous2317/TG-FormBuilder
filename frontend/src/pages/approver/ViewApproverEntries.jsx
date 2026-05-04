@@ -152,7 +152,7 @@ export default function ViewApproverEntries() {
             margin: { left: margin, right: margin },
             styles: { fontSize: 8, cellPadding: 2.5 },
             headStyles: {
-              fillColor: [59, 130, 246],
+              fillColor: [0, 0, 0],
               textColor: 255,
               fontStyle: 'bold',
             },

@@ -104,55 +104,52 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   )}
                 </div>
               )}
-              <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 w-full">
-              {sortedEntries?.map((field) => {
-                const rowEntry = getRowEntry(field, rowIndex);
-                const rowFormData = rowsData[rowIndex] || {};
-                const rowSetFormData = createRowSetFormData(rowIndex);
-                const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
-                return (
-                  <div
-                    key={entryKey}
-                    className="flex-1 min-w-40"
-                  >
-                    {(field.type === 'text' ||
-                      field.type === 'date' ||
-                      field.type === 'time' ||
-                      field.type === 'number') && (
-                      <BasicForm
-                        entry={rowEntry}
-                        formData={rowFormData}
-                        setFormData={rowSetFormData}
-                        readOnly={readOnly}
-                      />
-                    )}
-                    {field.type === 'enum' && (
-                      <EnumForm
-                        entry={rowEntry}
-                        formData={rowFormData}
-                        setFormData={rowSetFormData}
-                        readOnly={readOnly}
-                      />
-                    )}
-                    {field.type === 'dropdown' && (
-                      <DropdownForm
-                        entry={rowEntry}
-                        formData={rowFormData}
-                        setFormData={rowSetFormData}
-                        readOnly={readOnly}
-                      />
-                    )}
-                    {field.type === 'section' && (
-                      <SectionForm
-                        entry={rowEntry}
-                        formData={rowFormData}
-                        setFormData={rowSetFormData}
-                        readOnly={readOnly}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] xl:grid-cols-4 gap-x-4 gap-y-1 w-full overflow-y-auto">
+                {sortedEntries?.map((field) => {
+                  const rowEntry = getRowEntry(field, rowIndex);
+                  const rowFormData = rowsData[rowIndex] || {};
+                  const rowSetFormData = createRowSetFormData(rowIndex);
+                  const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
+                  return (
+                    <div key={entryKey} className="flex-1 min-w-40">
+                      {(field.type === 'text' ||
+                        field.type === 'date' ||
+                        field.type === 'time' ||
+                        field.type === 'number') && (
+                        <BasicForm
+                          entry={rowEntry}
+                          formData={rowFormData}
+                          setFormData={rowSetFormData}
+                          readOnly={readOnly}
+                        />
+                      )}
+                      {field.type === 'enum' && (
+                        <EnumForm
+                          entry={rowEntry}
+                          formData={rowFormData}
+                          setFormData={rowSetFormData}
+                          readOnly={readOnly}
+                        />
+                      )}
+                      {field.type === 'dropdown' && (
+                        <DropdownForm
+                          entry={rowEntry}
+                          formData={rowFormData}
+                          setFormData={rowSetFormData}
+                          readOnly={readOnly}
+                        />
+                      )}
+                      {field.type === 'section' && (
+                        <SectionForm
+                          entry={rowEntry}
+                          formData={rowFormData}
+                          setFormData={rowSetFormData}
+                          readOnly={readOnly}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
