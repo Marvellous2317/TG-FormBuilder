@@ -96,7 +96,7 @@ export default function SectionOptionsModal({
       onClose={() => setIsSectionOptionsModal(false)}
       position="right"
       width="max-w-[700px]"
-      className="overflow-hidden"
+      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col overflow-auto">
         <div className="space-y-0.5 p-5 border-b border-secondary-200">

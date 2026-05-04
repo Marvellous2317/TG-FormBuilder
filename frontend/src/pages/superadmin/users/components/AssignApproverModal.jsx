@@ -101,7 +101,7 @@ export default function AssignApproverModal({
       onClose={() => handleCloseModal()}
       position="right"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col">
         <div className="space-y-0.5 p-5">
