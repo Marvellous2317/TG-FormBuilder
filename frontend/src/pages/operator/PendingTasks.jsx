@@ -62,8 +62,8 @@ export default function PendingTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/operator/entries/${rowId}/view/pending`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/operator/entries/${rowId}/view/pending?title=${rowTitle}`);
   };
 
   return (
@@ -127,7 +127,10 @@ export default function PendingTasks() {
                           key={row.submittedChecklistId}
                           className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                           onClick={() =>
-                            handleRowClick(row?.submittedChecklistId)
+                            handleRowClick(
+                              row?.submittedChecklistId,
+                              row?.assignment.checklist.title,
+                            )
                           }
                         >
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
@@ -137,13 +140,13 @@ export default function PendingTasks() {
                             {row.submittedChecklistId}
                           </td> */}
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.assignment.checklist.title}
+                            {row?.assignment.checklist.title}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.documentNumber}
+                            {row?.documentNumber}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.approver &&
+                            {row?.approver &&
                             row.approver.firstName &&
                             row.approver.lastName
                               ? `${row.approver.firstName} ${row.approver.lastName}`

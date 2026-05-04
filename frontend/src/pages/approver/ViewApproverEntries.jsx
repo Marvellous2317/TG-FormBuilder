@@ -50,7 +50,7 @@ export default function ViewApproverEntries() {
     const submission = data?.data?.submission;
     const docNumber =
       submission?.assignment?.checklist?.documentNumber || checklistId;
-    const docTitle = submission?.assignment?.checklist?.documentTitle || 'N/A';
+    const docTitle = submission?.assignment?.checklist?.title || 'N/A';
     const operatorName = operator
       ? `${operator.firstName} ${operator.lastName}`
       : 'N/A';
@@ -72,7 +72,7 @@ export default function ViewApproverEntries() {
     doc.setFont(undefined, 'normal');
     doc.setTextColor(100, 100, 100);
     doc.text(`Document No: ${docNumber}`, margin, 28);
-    doc.text(`Entity name: ${docTitle}`, margin, 33);
+    // doc.text(`Entity name: ${docTitle}`, margin, 33);
 
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, 37, pageWidth - margin, 37);

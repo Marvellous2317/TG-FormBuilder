@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   useOperatorSubmittedChecklist,
   useUpdateOperatorChecklistEntries,
@@ -15,6 +20,9 @@ import Button from '../../shared/components/Button';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
+
+  const [searchParams] = useSearchParams();
+  const title = searchParams.get('title');
 
   const { data, isPending: isLoadingChecklistEntries } =
     useOperatorSubmittedChecklist(checklistId);
@@ -51,7 +59,7 @@ export default function ViewOperatorEntries() {
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
       {/* Sticky header */}
-      <div className="shrink-0 bg-white py-4 px-4 md:px-10 lg:px-25 border-b border-secondary-200">
+      <div className="shrink-0 bg-white py-4 px-4 md:px-10 lg:px-25 border-b border-secondary-200 grid md:grid-cols-3 items-center">
         <Link
           prefetch="intent"
           className="flex w-fit cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group"
@@ -67,6 +75,10 @@ export default function ViewOperatorEntries() {
               : 'Back to dashboard'}
           </p>
         </Link>
+
+        <h1 className="flex items-center justify-start md:justify-center w-full text-base mt-4 md:mt-0 lg:text-lg font-semibold text-primary font-geist">
+          {title}
+        </h1>
       </div>
 
       {/* Scrollable body */}
@@ -145,7 +157,7 @@ export default function ViewOperatorEntries() {
       {!isLoadingChecklistEntries && previousLocation === 'pending' && (
         <div className="shrink-0 border-t border-secondary-200 bg-white py-4 px-4 md:px-10 lg:px-25">
           <Button
-            className="bg-primary-200 py-2.5 px-5 rounded-2xl text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
+            className="bg-primary-200 py-2.5 px-5 rounded-2xl text-sm lg:text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
             onClick={() => handleUpdate()}
             disabled={isLoadingChecklistEntries || isUpdatingEntries}
           >
