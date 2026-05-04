@@ -29,6 +29,8 @@ import logsWeekIcon from './icons/logs-week-icon.png';
 import inviteEntities from './icons/invite-entities.png';
 import userProfile from './icons/user-profile.png';
 import pdfIcon from './icons/pdf.png';
+import eraserIcon from './icons/eraser.png';
+import penIcon from './icons/pen.png';
 
 const Icons = {
   arrowLeftInactive,
@@ -62,6 +64,8 @@ const Icons = {
   entitiesInactive,
   userProfile,
   pdfIcon,
+  eraserIcon,
+  penIcon,
 };
 
 export default Icons;

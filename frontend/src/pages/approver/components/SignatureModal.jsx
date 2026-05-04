@@ -1,0 +1,260 @@
+import { useRef, useState, useEffect } from 'react';
+import Modal from '../../../shared/components/Modal';
+import Button from '../../../shared/components/Button';
+import Icons from '../../../assets/icons';
+import { useApproverSignature } from '../../../shared/hooks/approver/useApprover';
+import Loader from '../../../shared/components/Loader';
+import useToast from '../../../shared/hooks/useToast';
+
+export default function SignatureModal({
+  isSignatureModalOpen,
+  setIsSignatureModalOpen,
+}) {
+  const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [uploadedImageDataUrl, setUploadedImageDataUrl] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false);
+
+  const { mutateAsync: saveSignature, isPending: isSavingSignature } =
+    useApproverSignature();
+
+  const { showError, showSuccess } = useToast();
+
+  // Initialize canvas context and set up drawing
+  useEffect(() => {
+    if (!isSignatureModalOpen) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size (physical pixels) to match display size
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    // Set drawing style
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000';
+
+    // Start with a blank canvas (white background)
+    ctx.fillStyle = '#f6f6f4';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [isSignatureModalOpen]);
+
+  // Drawing logic
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const pos = getCanvasCoordinates(e, canvas);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const pos = getCanvasCoordinates(e, canvas);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    setHasSignature(true);
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const getCanvasCoordinates = (e, canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width; // canvas physical width divided by CSS width
+    const scaleY = canvas.height / rect.height;
+
+    let clientX, clientY;
+
+    if (e.touches) {
+      // Touch event
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    return { x, y };
+  };
+
+  const handleSignatureUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadedImageDataUrl(reader.result);
+      setHasSignature(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openFilePicker = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const clearCanvas = () => {
+    setUploadedImageDataUrl(null);
+    setHasSignature(false);
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f6f6f4';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const confirmSignature = async () => {
+    const signatureDataURL = uploadedImageDataUrl
+      ? uploadedImageDataUrl
+      : canvasRef.current?.toDataURL('image/png');
+
+    if (!signatureDataURL) {
+      showError('Please add a signature before saving.');
+      return;
+    }
+
+    try {
+      await saveSignature({ signature: signatureDataURL });
+      showSuccess('Signature saved successfully');
+    } catch (error) {
+      console.error('Error saving signature', error);
+      showError('Unable to save signature. Please try again.');
+      return;
+    }
+
+    setIsSignatureModalOpen(false);
+  };
+
+  if (!isSignatureModalOpen) return null;
+
+  return (
+    <Modal
+      isOpen={isSignatureModalOpen}
+      onClose={() => {
+        clearCanvas();
+        setIsSignatureModalOpen(false);
+      }}
+      position="center"
+      width="max-w-[612px]"
+      className="overflow-hidden"
+    >
+      <div className="flex h-full flex-col p-5">
+        <h2 className="text-base font-semibold font-geist text-primary">
+          Sign document
+        </h2>
+        <p className="text-sm mt-1 font-geist text-tertiary">
+          Your signature will be added to approved logs
+        </p>
+
+        {/* Canvas drawing area */}
+        <div className="mt-4 rounded-md bg-secondary-700 px-4 py-3.5">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleSignatureUpload}
+          />
+
+          {uploadedImageDataUrl ? (
+            <div className="w-full h-50 overflow-hidden rounded-md bg-primary">
+              <img
+                src={uploadedImageDataUrl}
+                alt="Uploaded signature preview"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          ) : (
+            <canvas
+              ref={canvasRef}
+              className="w-full h-50 touch-none cursor-crosshair bg-primary"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Button
+              type="button"
+              onClick={clearCanvas}
+              className="text-sm font-medium flex items-center gap-2 transition text-secondary"
+            >
+              <img
+                src={Icons.eraserIcon}
+                alt="clear canvas"
+                className="w-4 object-contain"
+              />
+              Clear
+            </Button>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex justify-between items-center mt-4 gap-3">
+          <Button
+            className="flex items-center gap-2 px-4 py-2.5"
+            onClick={openFilePicker}
+            type="button"
+          >
+            <img
+              src={Icons.penIcon}
+              alt="upload signature"
+              className="w-3 object-contain"
+            />
+            <p className="text-sm font-medium text-primary-200">
+              Upload a signature
+            </p>
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              onClick={() => {
+                clearCanvas();
+                setIsSignatureModalOpen(false);
+              }}
+              className="px-4 py-2 text-sm font-medium text-secondary bg-tertiary-200 rounded-[10px] transition"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmSignature}
+              disabled={!hasSignature}
+              className="px-3 py-2 text-sm font-medium text-white bg-primary-200 rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed transition flex gap-2"
+            >
+              Save Signature
+              {isSavingSignature && <Loader size="border-white! h-4.5 w-4.5" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}

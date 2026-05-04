@@ -5,6 +5,7 @@ import {
   getApproverSubmittedChecklists,
   getApproverSubmittedChecklistsHistory,
   rejectChecklistEntry,
+  uploadSignature,
 } from '../../../core/api/approver';
 
 export function useApproverChecklists(queryParams = {}, options = {}) {
@@ -82,7 +83,7 @@ export function useApproverSignature(options = {}) {
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: ({ payload }) => approveChecklistEntry(payload),
+    mutationFn: (payload) => uploadSignature(payload),
     onSuccess: async (response, variables, context) => {
       if (onSuccess) {
         await onSuccess(response, variables, context);

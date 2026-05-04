@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminCard from '../admin/dashboard/components/AdminCard';
 import Icons from '../../assets/icons';
 import { FiSearch } from 'react-icons/fi';
@@ -8,15 +8,31 @@ import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
 import { useApproverChecklists } from '../../shared/hooks/approver/useApprover';
 import { formatDate } from '../../shared/utils/constants';
+import SignatureModal from './components/SignatureModal';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ApproverDashboard() {
   const [search, setSearch] = useState('');
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const { user } = useAuthStore();
 
   const navigate = useNavigate();
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
     limit: 20,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const handleSignatureUpload = () => {
+      setIsSignatureModalOpen(false);
+    };
+
+    if (!user.signature) {
+      handleSignatureUpload(true);
+    }
   });
 
   const { data, isPending: isLoadingPendingEntries } =
@@ -224,6 +240,10 @@ export default function ApproverDashboard() {
           </div>
         )}
       </div>
+      <SignatureModal
+        isSignatureModalOpen={isSignatureModalOpen}
+        setIsSignatureModalOpen={setIsSignatureModalOpen}
+      />
     </div>
   );
 }

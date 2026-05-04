@@ -6,9 +6,10 @@ import { useAuthStore } from '../../shared/store/authStore';
 import useToast from '../../shared/hooks/useToast';
 import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
+import SignatureModal from '../approver/components/SignatureModal';
 
 export default function Settings() {
-  const { clearAuth, user } = useAuthStore();
+  const { clearAuth, user, setUser } = useAuthStore();
   const { showSuccess, showError } = useToast();
 
   const [formData, setFormData] = useState({
@@ -32,6 +33,7 @@ export default function Settings() {
       email: user?.email || '',
       role: user?.role?.roleName || '',
     });
+    setUser(profileData);
   }, [user, profile]);
 
   const handleInputChange = (e) => {
@@ -138,6 +140,19 @@ export default function Settings() {
               />
             </div>
 
+            {profileData?.signature && (
+              <div className="flex flex-col items-center">
+                <h2 className="mt-4 mb-2 block font-geist text-sm font-regular text-secondary">
+                  Approver signature
+                </h2>
+                <img
+                  src={profileData?.signature}
+                  alt="User Profile"
+                  className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
+                />
+              </div>
+            )}
+
             <div className="flex justify-end mt-10">
               <Button
                 type="button"
@@ -155,6 +170,10 @@ export default function Settings() {
           </div>
         </section>
       )}
+      {/* <SignatureModal
+        isSignatureModalOpen={isSignatureModalOpen}
+        setIsSignatureModalOpen={setIsSignatureModalOpen}
+      /> */}
     </div>
   );
 }
