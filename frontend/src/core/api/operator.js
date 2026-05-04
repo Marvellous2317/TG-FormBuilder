@@ -35,7 +35,7 @@ export const submitChecklistEntry = async (id, payload) => {
 };
 
 export const updateChecklistEntry = async (id, payload) => {
-  const { data } = await axiosInstance.post(
+  const { data } = await axiosInstance.put(
     `/checklists/operator/submissions/${id}`,
     payload,
   );

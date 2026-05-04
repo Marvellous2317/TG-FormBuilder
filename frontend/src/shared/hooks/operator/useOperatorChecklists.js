@@ -5,6 +5,7 @@ import {
   getOperatorSubmittedChecklist,
   getOperatorSubmittedChecklists,
   submitChecklistEntry,
+  updateChecklistEntry,
 } from '../../../core/api/operator';
 
 export function useOperatorChecklists(queryParams = {}, options = {}) {
@@ -67,10 +68,14 @@ export function useUpdateOperatorChecklistEntries(checklistId, options = {}) {
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: ({ payload }) => submitChecklistEntry(checklistId, payload),
+    mutationFn: ({ payload }) => updateChecklistEntry(checklistId, payload),
     onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
         queryKey: ['operator', 'checklists', 'entries', checklistId],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['operator', 'checklists', 'submissions', checklistId],
       });
 
       if (onSuccess) {

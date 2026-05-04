@@ -147,7 +147,7 @@ export default function AssignLogbookModal({
       onClose={() => setIsShowAssignLogbookModal(false)}
       position={toPerformAssign ? 'center' : 'right'}
       width="max-w-[460px]"
-      className="overflow-hidden"
+      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">

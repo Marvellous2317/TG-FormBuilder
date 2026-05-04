@@ -137,10 +137,10 @@ export default function ApproverApprovedTasks() {
                             {row.documentNumber}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
-                            {row.assignment &&
-                            row.assignment?.operator?.firstName &&
-                            row.assignment?.operator?.lastName
-                              ? `${row.assignment?.operator?.firstName} ${row.assignment?.operator?.lastName}`
+                            {row.submitter &&
+                            row.submitter?.firstName &&
+                            row.submitter?.lastName
+                              ? `${row.submitter?.firstName} ${row.submitter?.lastName}`
                               : 'N/A'}
                           </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm">

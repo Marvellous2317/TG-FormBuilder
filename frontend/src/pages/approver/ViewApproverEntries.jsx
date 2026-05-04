@@ -17,11 +17,17 @@ import useToast from '../../shared/hooks/useToast';
 import Icons from '../../assets/icons';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import SignatureModal from './components/SignatureModal';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ViewApproverEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
 
+  const { user } = useAuthStore();
+
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   const [action, setAction] = useState('');
 
@@ -50,7 +56,7 @@ export default function ViewApproverEntries() {
     const submission = data?.data?.submission;
     const docNumber =
       submission?.assignment?.checklist?.documentNumber || checklistId;
-    const docTitle = submission?.assignment?.checklist?.documentTitle || 'N/A';
+    const docTitle = submission?.assignment?.checklist?.title || 'N/A';
     const operatorName = operator
       ? `${operator.firstName} ${operator.lastName}`
       : 'N/A';
@@ -72,7 +78,7 @@ export default function ViewApproverEntries() {
     doc.setFont(undefined, 'normal');
     doc.setTextColor(100, 100, 100);
     doc.text(`Document No: ${docNumber}`, margin, 28);
-    doc.text(`Entity name: ${docTitle}`, margin, 33);
+    // doc.text(`Entity name: ${docTitle}`, margin, 33);
 
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, 37, pageWidth - margin, 37);
@@ -152,7 +158,7 @@ export default function ViewApproverEntries() {
             margin: { left: margin, right: margin },
             styles: { fontSize: 8, cellPadding: 2.5 },
             headStyles: {
-              fillColor: [59, 130, 246],
+              fillColor: [0, 0, 0],
               textColor: 255,
               fontStyle: 'bold',
             },
@@ -178,6 +184,35 @@ export default function ViewApproverEntries() {
     doc.setTextColor(100, 100, 100);
     doc.text(`Submitted by: ${operatorName} (Operator)`, margin, yPos + 5);
 
+    const signatureDataUrl = user?.signature;
+    if (signatureDataUrl) {
+      const signatureY = yPos + 12;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const signatureHeight = 30;
+      const signatureWidth = 60;
+      const formatMatch = signatureDataUrl.match(
+        /^data:image\/(png|jpeg|jpg);base64,/i,
+      );
+      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
+
+      if (signatureY + signatureHeight + margin > pageHeight) {
+        doc.addPage();
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+      }
+
+      doc.text('Approver signature:', margin, signatureY);
+      doc.addImage(
+        signatureDataUrl,
+        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
+        margin,
+        signatureY + 3,
+        signatureWidth,
+        signatureHeight,
+      );
+    }
+
     doc.save(`checklist-${docNumber}.pdf`);
   };
 
@@ -199,6 +234,12 @@ export default function ViewApproverEntries() {
         entryId: entry.entryId,
         value: formData[entry.entryId]?.value ?? entry.value ?? '',
       }));
+
+    if (!user.signature) {
+      showError('Signature is required. Please add a signature.');
+      setIsSignatureModalOpen(true);
+      return;
+    }
 
     try {
       await approveEntries({ data: formDataArray });
@@ -361,6 +402,11 @@ export default function ViewApproverEntries() {
         handleReject={handleReject}
         isRejecting={isRejectingEntries}
         action={action}
+      />
+
+      <SignatureModal
+        isSignatureModalOpen={isSignatureModalOpen}
+        setIsSignatureModalOpen={setIsSignatureModalOpen}
       />
     </div>
   );
