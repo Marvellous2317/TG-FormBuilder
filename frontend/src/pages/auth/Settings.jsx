@@ -33,7 +33,7 @@ export default function Settings() {
       email: user?.email || '',
       role: user?.role?.roleName || '',
     });
-    setUser(profileData);
+    if (profileData) setUser(profileData);
   }, [user, profile]);
 
   const handleInputChange = (e) => {
@@ -58,16 +58,12 @@ export default function Settings() {
 
   return (
     <div className="w-full min-h-screen bg-secondary-200/20">
-      <header className="flex flex-col md:flex-row gap-3 md:gap-0 w-full px-8 py-2.5 border-b border-secondary-200 md:items-center items-start justify-between">
-        <div className="flex flex-col gap-1 md:gap-2">
-          <h1 className="text-primary text-xl font-medium font-geist">
-            Settings
-          </h1>
-          <p className="text-sm text-tertiary font-geist">
-            Edit your profile and log out of your account
-          </p>
-        </div>
-      </header>
+      <section className="py-5 px-4 sm:px-6 lg:px-25 gap-1 border-b border-secondary-200">
+        <h2 className="font-medium text-primary text-xl">Settings</h2>
+        <p className="text-xs text-tertiary">
+          Edit your profile and log out of your account
+        </p>
+      </section>
 
       {isLoadingProfile ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />

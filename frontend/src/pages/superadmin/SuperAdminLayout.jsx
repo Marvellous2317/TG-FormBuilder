@@ -57,9 +57,7 @@ export default function SuperAdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  const { clearAuth, user } = useAuthStore();
-
-  const location = useLocation();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const handleResize = () => {
