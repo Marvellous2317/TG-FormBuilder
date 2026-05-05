@@ -79,7 +79,27 @@ export default function UnassignApproverModal({
 
         <Divider />
 
-        <div className="flex-1 flex flex-col gap-4 px-5 pt-2">
+        <div className="flex gap-2 flex-col pt-2">
+          <p className="text-base font-semibold font-geist text-primary">
+            Select approver
+          </p>
+
+          <div className="flex gap-2 w-full items-center relative">
+            <InputField
+              label="Approver"
+              id="approver"
+              value={approver?.value}
+              required
+              readOnly={isLoadingUsers}
+              options={usersData}
+              type="select"
+              onChange={(e) => handleAssign(e.target.value)}
+            />
+            {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col gap-4 mt-5 px-5 ">
           <div className="flex gap-2 flex-col">
             <p className="text-base font-semibold font-geist text-primary">
               Operator information
@@ -102,26 +122,6 @@ export default function UnassignApproverModal({
               readOnly
               onChange={() => {}}
             />
-          </div>
-
-          <div className="flex gap-2 flex-col mt-5">
-            <p className="text-base font-semibold font-geist text-primary">
-              Select approver
-            </p>
-
-            <div className="flex gap-2 w-full items-center relative">
-              <InputField
-                label="Approver"
-                id="approver"
-                value={approver?.value}
-                required
-                readOnly={isLoadingUsers}
-                options={usersData}
-                type="select"
-                onChange={(e) => handleAssign(e.target.value)}
-              />
-              {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
-            </div>
           </div>
         </div>
 

@@ -57,11 +57,14 @@ export default function CreateLogbookModal({
   const { mutateAsync, isPending: isLoading } = useCreateChecklists({
     onSuccess: (response) => {
       const checkListToNavigateTo = response?.data?.checklist?.checklistId;
+      const checkListTitleToNavigateTo = response?.data?.checklist?.title;
 
       showSuccess('Checklist created successfully');
       handleCancel();
 
-      navigate(`/admin/entries/${checkListToNavigateTo}`);
+      navigate(
+        `/admin/entries/${checkListToNavigateTo}/${checkListTitleToNavigateTo || 'Entries'}`,
+      );
     },
   });
 
@@ -199,24 +202,6 @@ export default function CreateLogbookModal({
         </div>
 
         <div className="flex-1 gap-3 flex flex-col mt-7">
-          <InputField
-            label="Logbook title"
-            id="logbookTitle"
-            required
-            className="mb-1"
-            value={formData.logbookTitle}
-            onChange={handleInputChange}
-          />
-
-          <InputField
-            label="Document Number"
-            id="documentNumber"
-            required
-            className="mb-1"
-            value={formData.documentNumber}
-            onChange={handleInputChange}
-          />
-
           <div className="flex items-center">
             <InputField
               label="Department"
@@ -257,6 +242,24 @@ export default function CreateLogbookModal({
               onChange={handleInputChange}
             />
           )}
+
+          <InputField
+            label="Logbook title"
+            id="logbookTitle"
+            required
+            className="mb-1"
+            value={formData.logbookTitle}
+            onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Document Number"
+            id="documentNumber"
+            required
+            className="mb-1"
+            value={formData.documentNumber}
+            onChange={handleInputChange}
+          />
         </div>
 
         <div className="flex items-center mt-6 justify-end gap-3">
