@@ -309,7 +309,7 @@ export default function DropdownOptionsModal({
                     <Button
                       className="flex gap-1 items-center p-3 border-primary-300 border bg-tertiary-700 rounded-[10px] disabled:opacity-30"
                       onClick={handleAddItem}
-                      disabled={item.length < 3}
+                      disabled={item.length < 1}
                     >
                       <IoAddOutline className="text-primary" size={14} />
                       Add
