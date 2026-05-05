@@ -238,7 +238,7 @@ export default function SuperAdminLayout() {
           `}
             onClick={() => navigate('/superadmin/settings')}
           >
-            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
+            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold shrink-0">
               {getInitials(`${user.firstName} ${user.lastName}`)}
             </div>
             {(!isCollapsed || !isDesktop) && (
