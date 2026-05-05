@@ -56,6 +56,13 @@ export const updateChecklistEntries = async (id, payload) => {
   return data;
 };
 
+export const deleteChecklistEntries = async (id) => {
+  const { data } = await axiosInstance.delete(
+    `/checklists/admin/entries/${id}`,
+  );
+  return data;
+};
+
 export const fetchChecklistCatalogs = async (params = {}) => {
   const { data } = await axiosInstance.get(
     '/checklists/admin/get-all-catalogs',
