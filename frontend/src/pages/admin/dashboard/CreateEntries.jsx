@@ -140,6 +140,8 @@ export default function CreateEntries() {
     }
   };
 
+  const numberFields = fields.filter((field) => field.type === 'number');
+
   return (
     <div className="flex h-full w-full flex-col bg-white">
       <header className="flex flex-col items-start justify-between gap-3 border-b border-secondary-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
@@ -346,6 +348,7 @@ export default function CreateEntries() {
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        numberFields={numberFields}
       />
 
       <AssignLogbookModal
