@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import {
   useCreateOperatorChecklistEntries,
@@ -14,6 +14,7 @@ import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import { queueSubmission } from '../../lib/offlineQueue';
 import { evaluateFormula } from '../../shared/utils/formula';
+import { saveToCache, getFromCache, saveDraft, getDraft, clearDraft } from '../../lib/offlineCache';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -26,6 +27,22 @@ export default function CreateOperatorEntry() {
   const { showError, showSuccess } = useToast();
 
   const [formData, setFormData] = useState({});
+  const [cachedChecklist, setCachedChecklist] = useState(null);
+
+  // Load cached checklist entries and any saved draft on mount
+  useEffect(() => {
+    getFromCache(`checklist-${checklistId}`).then(setCachedChecklist);
+    getDraft(checklistId).then((draft) => {
+      if (draft) setFormData(draft);
+    });
+  }, [checklistId]);
+
+  // Auto-save draft whenever formData changes (debounced 500ms)
+  useEffect(() => {
+    if (Object.keys(formData).length === 0) return;
+    const timer = setTimeout(() => saveDraft(checklistId, formData), 500);
+    return () => clearTimeout(timer);
+  }, [formData, checklistId]);
 
   // When submitting, you can convert formData object to an array if needed:
   const handleSubmit = async () => {
@@ -42,7 +59,7 @@ export default function CreateOperatorEntry() {
     const formDataArray = Object.values(enrichedFormData);
 
     if (!navigator.onLine) {
-      await queueSubmission({ data: formDataArray });
+      await queueSubmission({ checklistId, payload: { data: formDataArray } });
       showSuccess('Saved offline — will sync when reconnected');
       return;
     }
@@ -50,18 +67,28 @@ export default function CreateOperatorEntry() {
     try {
       await submitEntries({ payload: { data: formDataArray } });
       showSuccess('Entries submitted successfully');
+      await clearDraft(checklistId);
       setFormData({});
       navigate('/operator/');
     } catch (err) {
       console.log(err);
-      showError('Something went wrong');
-      await queueSubmission({ data: formDataArray });
-      showSuccess('Saved offline — will sync when reconnected');
+      const isNetworkError = !err.response;
+      if (isNetworkError) {
+        await queueSubmission({ checklistId, payload: { data: formDataArray } });
+        showSuccess('Saved offline — will sync when reconnected');
+      } else {
+        showError('Something went wrong');
+      }
     }
   };
 
-  const { data, isPending: isLoadingChecklistEntries } =
-    useOperatorChecklist(checklistId);
+  const { data, isPending: isLoadingChecklistEntries } = useOperatorChecklist(checklistId, {
+    placeholderData: cachedChecklist,
+  });
+
+  useEffect(() => {
+    if (data) saveToCache(`checklist-${checklistId}`, data);
+  }, [data, checklistId]);
 
   const entriesData = data?.data?.assignment?.checklist?.entries;
 
