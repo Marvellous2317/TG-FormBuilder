@@ -253,7 +253,7 @@ export class AdminRepository {
         paranoid: false 
       });
 
-      console.log("Existing user check:", existingUser);
+      
       
       if (existingUser) {
         if (existingUser.deletedAt) {
@@ -602,7 +602,6 @@ export class AdminRepository {
       const offset = (page - 1) * limit;
       const where = {};
 
-      // Determine paranoid setting based on deleted filter
       let paranoid = true;
       if (deleted === "true") {
         paranoid = false;
@@ -629,16 +628,29 @@ export class AdminRepository {
         ];
       }
 
-      const { rows: companies, count } = await Company.findAndCountAll({
-        where,
-        limit,
-        offset,
-        order: [["createdAt", "DESC"]],
-        paranoid,
-      });
-
-      // Get total users count across all companies
-      const totalUsersCount = await User.count();
+      const [{ rows: companies, count }, totalUsersCount] = await Promise.all([
+        Company.findAndCountAll({
+          where,
+          limit,
+          offset,
+          order: [["createdAt", "DESC"]],
+          paranoid,
+          attributes: {
+            include: [
+              [
+                Sequelize.literal(`(
+                  SELECT COUNT(*)::integer
+                  FROM "packing_check_users" AS "users"
+                  WHERE "users"."companyId" = "packing_check_company"."companyId"
+                    AND "users"."deletedAt" IS NULL
+                )`),
+                'userCount'
+              ]
+            ]
+          }
+        }),
+        User.count()
+      ]);
 
       return {
         companies,
@@ -651,7 +663,7 @@ export class AdminRepository {
         },
       };
     } catch (error) {
-      //console.log("Error in getAllCompanies:", error);
+
       throw new ApplicationError("Failed to fetch companies", 500);
     }
   }
@@ -661,7 +673,7 @@ export class AdminRepository {
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
       
-      // Get users count for this specific company
+
       const usersCount = await User.count({ where: { companyId } });
       
       return { company: { ...company.toJSON(), usersCount } };
