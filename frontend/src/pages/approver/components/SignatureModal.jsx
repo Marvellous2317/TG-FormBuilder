@@ -30,21 +30,68 @@ export default function SignatureModal({
 
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size (physical pixels) to match display size
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    // Set drawing style
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#000';
-
-    // Start with a blank canvas (white background)
-    ctx.fillStyle = '#f6f6f4';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [isSignatureModalOpen]);
+
+  const trimCanvasToDataURL = (canvas) => {
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas;
+    const pixels = ctx.getImageData(0, 0, width, height).data;
+
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (pixels[(y * width + x) * 4 + 3] > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (minX > maxX || minY > maxY) return null;
+
+    const pad = 10;
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(width - 1, maxX + pad);
+    maxY = Math.min(height - 1, maxY + pad);
+
+    const trimmed = document.createElement('canvas');
+    trimmed.width = maxX - minX + 1;
+    trimmed.height = maxY - minY + 1;
+    trimmed.getContext('2d').drawImage(
+      canvas,
+      minX, minY, trimmed.width, trimmed.height,
+      0, 0, trimmed.width, trimmed.height,
+    );
+    return trimmed.toDataURL('image/png');
+  };
+
+  const compressImage = (dataUrl) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 500;
+        const maxH = 250;
+        let { width: w, height: h } = img;
+        if (w > maxW) { h = (h * maxW) / w; w = maxW; }
+        if (h > maxH) { w = (w * maxH) / h; h = maxH; }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = dataUrl;
+    });
 
   // Drawing logic
   const startDrawing = (e) => {
@@ -120,15 +167,19 @@ export default function SignatureModal({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#f6f6f4';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
   };
 
   const confirmSignature = async () => {
-    const signatureDataURL = uploadedImageDataUrl
-      ? uploadedImageDataUrl
-      : canvasRef.current?.toDataURL('image/png');
+    let signatureDataURL;
+
+    if (uploadedImageDataUrl) {
+      signatureDataURL = await compressImage(uploadedImageDataUrl);
+    } else {
+      signatureDataURL = canvasRef.current
+        ? trimCanvasToDataURL(canvasRef.current)
+        : null;
+    }
 
     if (!signatureDataURL) {
       showError('Please add a signature before saving.');

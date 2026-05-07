@@ -13,6 +13,7 @@ import {
 } from '../../shared/hooks/approver/useApprover';
 import Button from '../../shared/components/Button';
 import ApproverConfirmationModal from './components/ApproverConfirmationModal';
+import { evaluateFormula } from '../../shared/utils/formula';
 import useToast from '../../shared/hooks/useToast';
 import Icons from '../../assets/icons';
 import jsPDF from 'jspdf';
@@ -251,6 +252,19 @@ export default function ViewApproverEntries() {
     }
   };
 
+  const computeFormulaValue = (entry) => {
+    const expression = entry.config?.expression;
+    if (!expression) return '';
+    const scope = {};
+    entriesData?.forEach((e) => {
+      if (e.type === 'number' && e.config?.fieldRef) {
+        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+      }
+    });
+    const { value, error } = evaluateFormula(expression, scope);
+    return error ? 'Invalid formula' : (value ?? '');
+  };
+
   return (
     <div
       className={`flex ${entriesData?.length > 0 ? 'min-h-screen' : ''} w-full flex-col bg-white py-6`}
@@ -344,6 +358,14 @@ export default function ViewApproverEntries() {
                       formData={formData}
                       setFormData={setFormData}
                       readOnly={previousLocation === 'pending' ? false : true}
+                    />
+                  )}
+                  {entry.type === 'formular' && (
+                    <BasicForm
+                      entry={{ ...entry, type: 'number', value: computeFormulaValue(entry) }}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly
                     />
                   )}
                 </div>

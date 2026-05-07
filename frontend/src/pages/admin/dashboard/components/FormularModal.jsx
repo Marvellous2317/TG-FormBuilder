@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
+import { validateFormula } from '../../../../shared/utils/formula';
 
 const mathematical = ['sum', 'subtract', 'multiply', 'divide', 'average'];
 const aggregation = ['count', 'min', 'max'];
@@ -15,14 +16,27 @@ export default function FormularModal({
   numberFields,
 }) {
   const [expression, setExpression] = useState(initialValue?.expression ?? '');
+  const [testResult, setTestResult] = useState(null);
 
   const handleSave = () => {
+    const fieldRefs = numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+    const { valid, error } = validateFormula(expression, fieldRefs);
+    if (!valid) {
+      setTestResult({ valid: false, error });
+      return;
+    }
     onSave({ expression });
     setIsFormularModal(false);
   };
 
+  const handleTest = () => {
+    const fieldRefs = numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+    setTestResult(validateFormula(expression, fieldRefs));
+  };
+
   const insertAtCursor = (e, textToInsert) => {
     e.preventDefault();
+    setTestResult(null);
     setExpression((prev) => prev + textToInsert.toUpperCase());
   };
 
@@ -57,14 +71,22 @@ export default function FormularModal({
             <div className="flex items-start gap-3 w-full justify-start">
               <p
                 className="text-tertiary text-sm cursor-pointer"
-                onClick={() => setExpression('')}
+                onClick={() => { setExpression(''); setTestResult(null); }}
               >
                 Clear
               </p>
-              <p className="underline text-primary-200 text-sm cursor-pointer">
+              <p
+                className="underline text-primary-200 text-sm cursor-pointer"
+                onClick={handleTest}
+              >
                 Test formular
               </p>
             </div>
+            {testResult && (
+              <p className={`mt-2 text-xs ${testResult.valid ? 'text-green-600' : 'text-red-500'}`}>
+                {testResult.valid ? 'Valid expression' : testResult.error}
+              </p>
+            )}
           </div>
 
           <div className="w-full mt-6">
@@ -81,7 +103,7 @@ export default function FormularModal({
                   >
                     <Button
                       className=" text-secondary text-sm uppercase"
-                      onClick={(e) => insertAtCursor(e, item)}
+                      onClick={(e) => insertAtCursor(e, item + '(')}
                     >
                       {item}
                     </Button>
@@ -99,7 +121,7 @@ export default function FormularModal({
                   >
                     <Button
                       className=" text-secondary text-sm uppercase"
-                      onClick={(e) => insertAtCursor(e, item)}
+                      onClick={(e) => insertAtCursor(e, item + '(')}
                     >
                       {item}
                     </Button>
@@ -117,7 +139,7 @@ export default function FormularModal({
                   >
                     <Button
                       className=" text-secondary text-sm uppercase"
-                      onClick={(e) => insertAtCursor(e, item)}
+                      onClick={(e) => insertAtCursor(e, item + '(')}
                     >
                       {item}
                     </Button>
@@ -143,14 +165,24 @@ export default function FormularModal({
                           isLastItem && 'border-b-0'
                         }`}
                       >
-                        <p className=" text-secondary text-sm uppercase">
-                          {item.name}
-                        </p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-secondary text-sm">{item.name}</p>
+                          {item.config?.fieldRef && (
+                            <p className="text-tertiary text-xs uppercase">
+                              {item.config.fieldRef}
+                            </p>
+                          )}
+                        </div>
                         <div className="flex items-center gap-3">
                           <p className="text-tertiary text-sm">Number</p>
                           <Button
                             className="text-primary-200 text-sm"
-                            onClick={(e) => insertAtCursor(e, item.name)}
+                            onClick={(e) =>
+                              insertAtCursor(
+                                e,
+                                item.config?.fieldRef || item.name,
+                              )
+                            }
                           >
                             Insert field
                           </Button>
