@@ -19,6 +19,8 @@ export default function Settings() {
     role: user?.role?.roleName || '',
   });
 
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+
   const { data: profile, isPending: isLoadingProfile } = useProfile();
 
   const profileData = profile?.data?.user;
@@ -134,20 +136,32 @@ export default function Settings() {
                 // inputClassName="bg-secondary-700! cursor-not-allowed"
                 // className="w-full cursor-not-allowed"
               />
-            </div>
 
-            {profileData?.signature && (
-              <div className="flex flex-col items-center">
-                <h2 className="mt-4 mb-2 block font-geist text-sm font-regular text-secondary">
-                  Approver signature
-                </h2>
-                <img
-                  src={profileData?.signature}
-                  alt="User Profile"
-                  className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
-                />
-              </div>
-            )}
+              {user?.role?.roleName?.toLowerCase() === 'approval' &&
+                profileData?.signature && (
+                  <div className="flex flex-col md:flex-row gap-2 items-end">
+                    <div>
+                      <h2 className=" mb-2 block font-geist text-sm font-regular text-secondary">
+                        Approver signature
+                      </h2>
+                      <img
+                        src={profileData?.signature}
+                        alt="User Profile"
+                        className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      className="bg-primary-200 px-3 py-3 rounded-xl"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                    >
+                      <p className="text-white font-geist font-medium text-sm">
+                        Update signature
+                      </p>
+                    </Button>
+                  </div>
+                )}
+            </div>
 
             <div className="flex justify-end mt-10">
               <Button
@@ -166,10 +180,10 @@ export default function Settings() {
           </div>
         </section>
       )}
-      {/* <SignatureModal
+      <SignatureModal
         isSignatureModalOpen={isSignatureModalOpen}
         setIsSignatureModalOpen={setIsSignatureModalOpen}
-      /> */}
+      />
     </div>
   );
 }

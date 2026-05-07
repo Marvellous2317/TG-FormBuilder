@@ -81,10 +81,15 @@ export function useApproverRejectChecklistEntries(checklistId, options = {}) {
 
 export function useApproverSignature(options = {}) {
   const { onSuccess, ...mutationOptions } = options;
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload) => uploadSignature(payload),
     onSuccess: async (response, variables, context) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'profile'],
+      });
+
       if (onSuccess) {
         await onSuccess(response, variables, context);
       }

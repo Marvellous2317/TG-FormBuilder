@@ -45,7 +45,10 @@ export default function SignatureModal({
     const { width, height } = canvas;
     const pixels = ctx.getImageData(0, 0, width, height).data;
 
-    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let minX = width,
+      minY = height,
+      maxX = 0,
+      maxY = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (pixels[(y * width + x) * 4 + 3] > 0) {
@@ -68,11 +71,19 @@ export default function SignatureModal({
     const trimmed = document.createElement('canvas');
     trimmed.width = maxX - minX + 1;
     trimmed.height = maxY - minY + 1;
-    trimmed.getContext('2d').drawImage(
-      canvas,
-      minX, minY, trimmed.width, trimmed.height,
-      0, 0, trimmed.width, trimmed.height,
-    );
+    trimmed
+      .getContext('2d')
+      .drawImage(
+        canvas,
+        minX,
+        minY,
+        trimmed.width,
+        trimmed.height,
+        0,
+        0,
+        trimmed.width,
+        trimmed.height,
+      );
     return trimmed.toDataURL('image/png');
   };
 
@@ -83,10 +94,17 @@ export default function SignatureModal({
         const maxW = 500;
         const maxH = 250;
         let { width: w, height: h } = img;
-        if (w > maxW) { h = (h * maxW) / w; w = maxW; }
-        if (h > maxH) { w = (w * maxH) / h; h = maxH; }
+        if (w > maxW) {
+          h = (h * maxW) / w;
+          w = maxW;
+        }
+        if (h > maxH) {
+          w = (w * maxH) / h;
+          h = maxH;
+        }
         const c = document.createElement('canvas');
-        c.width = w; c.height = h;
+        c.width = w;
+        c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
         resolve(c.toDataURL('image/jpeg', 0.75));
       };
@@ -230,7 +248,7 @@ export default function SignatureModal({
           />
 
           {uploadedImageDataUrl ? (
-            <div className="w-full h-50 overflow-hidden rounded-md bg-primary">
+            <div className="w-full h-50 overflow-hidden rounded-md bg-secondary-700">
               <img
                 src={uploadedImageDataUrl}
                 alt="Uploaded signature preview"
@@ -240,7 +258,7 @@ export default function SignatureModal({
           ) : (
             <canvas
               ref={canvasRef}
-              className="w-full h-50 touch-none cursor-crosshair bg-primary"
+              className="w-full h-50 touch-none cursor-crosshair bg-secondary-700"
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
