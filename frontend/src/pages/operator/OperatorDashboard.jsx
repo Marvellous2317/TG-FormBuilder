@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminCard from '../admin/dashboard/components/AdminCard';
 import Icons from '../../assets/icons';
 import { FiSearch } from 'react-icons/fi';
@@ -8,6 +8,7 @@ import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
 import { OfflineBanner } from '../../shared/components/OfflineBanner';
+import { saveToCache, getFromCache } from '../../lib/offlineCache';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
@@ -19,7 +20,20 @@ export default function OperatorDashboard() {
     limit: 20,
   });
 
-  const { data, isPending: isLoading } = useOperatorChecklists(usersPagination);
+  const [cachedChecklists, setCachedChecklists] = useState(null);
+
+  useEffect(() => {
+    getFromCache('operator-checklists').then(setCachedChecklists);
+  }, []);
+
+  const { data, isPending: isLoading } = useOperatorChecklists(usersPagination, {
+    placeholderData: cachedChecklists,
+  });
+
+  useEffect(() => {
+    if (data) saveToCache('operator-checklists', data);
+  }, [data]);
+
   const { data: userAnalytics, isPending: isLoadingUserAnalytics } =
     useUserAnalytics();
 

@@ -1,24 +1,29 @@
-import axios from 'axios';
+import axiosInstance from '../shared/utils/axios';
 import { getPendingSubmissions, removeSubmission } from './offlineQueue';
 
 export async function syncPendingSubmissions() {
   const pending = await getPendingSubmissions();
   if (pending.length === 0) return;
 
-  console.log(`Syncing ${pending.length} pending submissions...`);
-
   for (const item of pending) {
-    try {
-      // TODO: CHANGE DOMAIN
-      await axios.post(
-        'https://tgpackagingappprd.azurewebsites.net/api/submissions',
-        item.data,
-      );
+    const { checklistId, payload } = item.data;
+
+    if (!checklistId || !payload) {
+      // Malformed queue item — discard it
       await removeSubmission(item.id);
-      console.log(`Synced submission ${item.id}`);
+      continue;
+    }
+
+    try {
+      await axiosInstance.post(`/checklists/operator/${checklistId}/submit`, payload);
+      await removeSubmission(item.id);
     } catch (err) {
-      console.error(`Failed to sync submission ${item.id}`, err);
-      break; // stop if still offline
+      const status = err.response?.status;
+      if (status >= 400 && status < 500) {
+        // 4xx means bad data — won't succeed on retry, discard
+        await removeSubmission(item.id);
+      }
+      // Network error or 5xx — leave in queue, try again next time
     }
   }
 }
