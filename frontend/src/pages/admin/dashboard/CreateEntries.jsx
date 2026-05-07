@@ -15,6 +15,7 @@ import {
   useChecklist,
   useChecklistEntries,
   useCreateChecklistEntries,
+  useDeleteChecklistEntries,
   useUpdateChecklistEntries,
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
@@ -42,6 +43,9 @@ export default function CreateEntries() {
 
   const { mutateAsync: updateEntries, isPending: isUpdatingEntries } =
     useUpdateChecklistEntries(checklistId);
+
+  const { mutateAsync: deleteEntries, isPending: isDeletingEntries } =
+    useDeleteChecklistEntries();
 
   const { showError, showSuccess } = useToast();
 
@@ -74,11 +78,27 @@ export default function CreateEntries() {
   };
 
   const handleFieldChange = (id, key, value) => {
-    setFields((currentFields) =>
-      currentFields.map((field) =>
+    setFields((currentFields) => {
+      const updated = currentFields.map((field) =>
         field.id === id ? { ...field, [key]: value } : field,
-      ),
-    );
+      );
+
+      if (key === 'type' && value === 'number') {
+        const field = currentFields.find((f) => f.id === id);
+        if (!field?.config?.fieldRef) {
+          const existingRefs = currentFields
+            .filter((f) => f.type === 'number' && f.id !== id && f.config?.fieldRef)
+            .map((f) => f.config.fieldRef);
+          let n = 1;
+          while (existingRefs.includes(`field${n}`)) n++;
+          return updated.map((f) =>
+            f.id === id ? { ...f, config: { fieldRef: `field${n}` } } : f,
+          );
+        }
+      }
+
+      return updated;
+    });
 
     switch (value) {
       case 'dropdown':
@@ -106,7 +126,16 @@ export default function CreateEntries() {
     setFields((currentFields) => [...currentFields, createField()]);
   };
 
-  const handleRemoveField = (id) => {
+  const handleRemoveField = async (id, entryId) => {
+    if (entriesData?.length > 0 && entryId) {
+      try {
+        await deleteEntries(entryId);
+        showSuccess('Entry deleted successfully');
+      } catch (err) {
+        console.log(err);
+        showError('Something went wrong');
+      }
+    }
     setFields((currentFields) =>
       currentFields.filter((field) => field.id !== id),
     );
@@ -270,7 +299,9 @@ export default function CreateEntries() {
                     <div className="w-[15%]">
                       <Button
                         type="button"
-                        onClick={() => handleRemoveField(field.id)}
+                        onClick={() =>
+                          handleRemoveField(field.id, field?.entryId)
+                        }
                         className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
                         aria-label={`Remove field ${index + 1}`}
                       >

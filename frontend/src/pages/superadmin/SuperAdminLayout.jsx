@@ -57,9 +57,7 @@ export default function SuperAdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  const { clearAuth, user } = useAuthStore();
-
-  const location = useLocation();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const handleResize = () => {
@@ -238,7 +236,7 @@ export default function SuperAdminLayout() {
           `}
             onClick={() => navigate('/superadmin/settings')}
           >
-            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold flex-shrink-0">
+            <div className="p-1.5 md:p-2 bg-primary-200 text-xs md:text-sm rounded-full font-geist font-semibold shrink-0">
               {getInitials(`${user.firstName} ${user.lastName}`)}
             </div>
             {(!isCollapsed || !isDesktop) && (

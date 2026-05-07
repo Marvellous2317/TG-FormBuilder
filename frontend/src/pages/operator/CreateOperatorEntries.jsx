@@ -13,6 +13,7 @@ import Loader from '../../shared/components/Loader';
 import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import { queueSubmission } from '../../lib/offlineQueue';
+import { evaluateFormula } from '../../shared/utils/formula';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -28,7 +29,17 @@ export default function CreateOperatorEntry() {
 
   // When submitting, you can convert formData object to an array if needed:
   const handleSubmit = async () => {
-    const formDataArray = Object.values(formData);
+    const enrichedFormData = { ...formData };
+    entriesData
+      ?.filter((e) => e.type === 'formular')
+      .forEach((entry) => {
+        enrichedFormData[entry.entryId] = {
+          entryId: entry.entryId,
+          value: String(computeFormulaValue(entry)),
+        };
+      });
+
+    const formDataArray = Object.values(enrichedFormData);
 
     if (!navigator.onLine) {
       await queueSubmission({ data: formDataArray });
@@ -53,6 +64,21 @@ export default function CreateOperatorEntry() {
     useOperatorChecklist(checklistId);
 
   const entriesData = data?.data?.assignment?.checklist?.entries;
+
+  const computeFormulaValue = (entry) => {
+    const expression = entry.config?.expression;
+    if (!expression) return '';
+    const scope = {};
+    entriesData?.forEach((e) => {
+      if (e.type === 'number' && e.config?.fieldRef) {
+        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+      }
+    });
+    const { value, error } = evaluateFormula(expression, scope);
+    return error ? 'Invalid formula' : (value ?? '');
+  };
+
+  console.log(entriesData);
 
   return (
     <div
@@ -117,6 +143,25 @@ export default function CreateOperatorEntry() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                    />
+                  )}
+                  {entry.type === 'formular' && (
+                    <BasicForm
+                      entry={{
+                        ...entry,
+                        type: 'number',
+                        value: (() => {
+                          const anyNumberFieldEdited = entriesData?.some(
+                            (e) => e.type === 'number' && formData[e.entryId] !== undefined,
+                          );
+                          return anyNumberFieldEdited || entry.value == null || entry.value === ''
+                            ? computeFormulaValue(entry)
+                            : entry.value;
+                        })(),
+                      }}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly
                     />
                   )}
                 </div>

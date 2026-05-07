@@ -139,14 +139,14 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                           readOnly={readOnly}
                         />
                       )}
-                      {field.type === 'section' && (
+                      {/* {field.type === 'section' && (
                         <SectionForm
                           entry={rowEntry}
                           formData={rowFormData}
                           setFormData={rowSetFormData}
                           readOnly={readOnly}
                         />
-                      )}
+                      )} */}
                     </div>
                   );
                 })}

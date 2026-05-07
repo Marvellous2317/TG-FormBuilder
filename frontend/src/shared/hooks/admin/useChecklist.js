@@ -6,6 +6,7 @@ import {
   createChecklistEntries,
   deleteChecklist,
   deleteChecklistCatalog,
+  deleteChecklistEntries,
   fetchChecklist,
   fetchChecklistCatalog,
   fetchChecklistCatalogs,
@@ -111,6 +112,35 @@ export function useCreateChecklists(options = {}) {
       await queryClient.invalidateQueries({
         queryKey: ['admin', 'checklists'],
       });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useDeleteChecklistEntries(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (entryId) => deleteChecklistEntries(entryId),
+    onSuccess: async (response, variables, context) => {
+      const { checklistId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'entries', checklistId],
+      });
+
+      // Also remove the individual checklist query if it exists
+      if (checklistId) {
+        queryClient.removeQueries({
+          queryKey: ['admin', 'checklists', 'entries', checklistId],
+        });
+      }
 
       if (onSuccess) {
         await onSuccess(response, variables, context);

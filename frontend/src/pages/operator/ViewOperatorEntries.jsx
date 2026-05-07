@@ -17,6 +17,7 @@ import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
+import { evaluateFormula } from '../../shared/utils/formula';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
@@ -54,6 +55,19 @@ export default function ViewOperatorEntries() {
       console.log(err);
       showError('Something went wrong');
     }
+  };
+
+  const computeFormulaValue = (entry) => {
+    const expression = entry.config?.expression;
+    if (!expression) return '';
+    const scope = {};
+    entriesData?.forEach((e) => {
+      if (e.type === 'number' && e.config?.fieldRef) {
+        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+      }
+    });
+    const { value, error } = evaluateFormula(expression, scope);
+    return error ? 'Invalid formula' : (value ?? '');
   };
 
   return (
@@ -107,7 +121,7 @@ export default function ViewOperatorEntries() {
                         entry={entry}
                         formData={formData}
                         setFormData={setFormData}
-                        readOnly={true}
+                        readOnly={previousLocation === 'pending' ? false : true}
                       />
                     )}
                     {entry.type === 'enum' && (
@@ -132,6 +146,14 @@ export default function ViewOperatorEntries() {
                         formData={formData}
                         setFormData={setFormData}
                         readOnly={previousLocation === 'pending' ? false : true}
+                      />
+                    )}
+                    {entry.type === 'formular' && (
+                      <BasicForm
+                        entry={{ ...entry, type: 'number', value: computeFormulaValue(entry) }}
+                        formData={formData}
+                        setFormData={setFormData}
+                        readOnly
                       />
                     )}
                   </div>
