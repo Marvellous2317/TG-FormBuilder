@@ -153,11 +153,20 @@ export function useUserAnalytics(userId, options = {}) {
 }
 
 export function useProfile(options = {}) {
+  const { setUser } = useAuthStore();
   return useQuery({
     queryKey: ['user', 'profile'],
     queryFn: () => getUserProfile(),
     keepPreviousData: true,
     ...options,
+    onSuccess: (data) => {
+      const profileData = data?.data?.user ?? data?.data;
+      if (profileData) {
+        const current = useAuthStore.getState().user;
+        setUser({ ...current, ...profileData });
+      }
+      options.onSuccess?.(data);
+    },
   });
 }
 
