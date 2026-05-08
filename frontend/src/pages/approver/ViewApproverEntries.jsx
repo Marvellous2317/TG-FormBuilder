@@ -362,7 +362,11 @@ export default function ViewApproverEntries() {
                   )}
                   {entry.type === 'formular' && (
                     <BasicForm
-                      entry={{ ...entry, type: 'number', value: computeFormulaValue(entry) }}
+                      entry={{
+                        ...entry,
+                        type: 'number',
+                        value: computeFormulaValue(entry),
+                      }}
                       formData={formData}
                       setFormData={setFormData}
                       readOnly

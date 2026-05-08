@@ -87,7 +87,9 @@ export default function CreateEntries() {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
-            .filter((f) => f.type === 'number' && f.id !== id && f.config?.fieldRef)
+            .filter(
+              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+            )
             .map((f) => f.config.fieldRef);
           let n = 1;
           while (existingRefs.includes(`field${n}`)) n++;
@@ -161,6 +163,7 @@ export default function CreateEntries() {
       } else {
         await createEntries({ entries: fields });
         showSuccess('Entries saved successfully');
+        setIsShowAssignLogbookModal(true);
       }
     } catch (error) {
       showError(
@@ -339,14 +342,14 @@ export default function CreateEntries() {
             <Loader size="h-4 w-4" />
           )}
         </Button>
-        <Button
+        {/* <Button
           type="button"
           disabled={fields.length < 1}
           onClick={() => setIsShowAssignLogbookModal(true)}
           className="justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
           Assign logbook
-        </Button>
+        </Button> */}
       </footer>
 
       <DropdownOptionsModal
