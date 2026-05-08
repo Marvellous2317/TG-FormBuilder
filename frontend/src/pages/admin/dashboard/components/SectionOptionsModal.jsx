@@ -14,7 +14,6 @@ import DropdownOptionsModal from './DropdownOptionsModal';
 import EnumOptionsModal from './EnumOptionsModal';
 import FormularModal from './FormularModal';
 import useToast from '../../../../shared/hooks/useToast';
-import { number } from 'mathjs';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -53,11 +52,29 @@ export default function SectionOptionsModal({
   };
 
   const handleFieldChange = (id, key, value) => {
-    setFields((currentFields) =>
-      currentFields.map((field) =>
+    setFields((currentFields) => {
+      const updated = currentFields.map((field) =>
         field.id === id ? { ...field, [key]: value } : field,
-      ),
-    );
+      );
+
+      if (key === 'type' && value === 'number') {
+        const field = currentFields.find((f) => f.id === id);
+        if (!field?.config?.fieldRef) {
+          const existingRefs = currentFields
+            .filter(
+              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+            )
+            .map((f) => f.config.fieldRef);
+          let n = 1;
+          while (existingRefs.includes(`field${n}`)) n++;
+          return updated.map((f) =>
+            f.id === id ? { ...f, config: { fieldRef: `field${n}` } } : f,
+          );
+        }
+      }
+
+      return updated;
+    });
 
     switch (value) {
       case 'dropdown':
@@ -70,7 +87,7 @@ export default function SectionOptionsModal({
         break;
       case 'section':
         setActiveFieldId(id);
-        setIsSectionsOptionsModal(true);
+        setIsSectionOptionsModal(true);
         break;
       case 'formular':
         setActiveFieldId(id);
@@ -220,7 +237,9 @@ export default function SectionOptionsModal({
                     <div className="w-[10%]">
                       <Button
                         type="button"
-                        onClick={() => handleRemoveField(field.id)}
+                        onClick={() =>
+                          handleRemoveField(field.id, field?.entryId)
+                        }
                         className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
                         aria-label={`Remove field ${index + 1}`}
                       >
