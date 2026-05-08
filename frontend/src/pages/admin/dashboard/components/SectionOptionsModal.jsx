@@ -14,6 +14,7 @@ import DropdownOptionsModal from './DropdownOptionsModal';
 import EnumOptionsModal from './EnumOptionsModal';
 import FormularModal from './FormularModal';
 import useToast from '../../../../shared/hooks/useToast';
+import { number } from 'mathjs';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -89,6 +90,8 @@ export default function SectionOptionsModal({
       currentFields.filter((field) => field.id !== id),
     );
   };
+
+  const numberFields = fields.filter((field) => field.type === 'number');
 
   return (
     <Modal
@@ -282,6 +285,7 @@ export default function SectionOptionsModal({
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        numberFields={numberFields}
       />
 
       <SectionOptionsModal
