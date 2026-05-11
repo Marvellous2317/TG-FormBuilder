@@ -8,10 +8,12 @@ import Loader from '../../../../shared/components/Loader';
 import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useCompaniesInfinite } from '../../../../shared/hooks/superadmin/useCompanies';
 import { useCreateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
+import { useAuthStore } from '../../../../shared/store/authStore';
 
 export default function CreateAdminUserModal({
   isCreateUserModalOpen,
   setIsCreateUserModalOpen,
+  isFromAdmin = false,
 }) {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -26,6 +28,8 @@ export default function CreateAdminUserModal({
   const [entitySearch, setEntitySearch] = useState('');
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
+
+  const { user } = useAuthStore.getState();
 
   useEffect(() => {
     const timer = setTimeout(() => setEntitySearch(entitySearchInput), 500);
@@ -138,10 +142,14 @@ export default function CreateAdminUserModal({
       !lastName ||
       !email ||
       !role?.roleId ||
-      !entity?.companyId ||
       !department?.departmentId
     ) {
       showError('Enter all fields');
+      return;
+    }
+
+    if (!entity?.companyId && !isFromAdmin) {
+      showError('Select an entity');
       return;
     }
 
@@ -151,7 +159,7 @@ export default function CreateAdminUserModal({
         lastName,
         email,
         roleId: role?.roleId,
-        companyId: entity?.companyId,
+        companyId: selectedEntity?.companyId || entity?.companyId,
         department: department.label,
       });
       showSuccess('Admin User created successfully');
@@ -179,6 +187,10 @@ export default function CreateAdminUserModal({
     setDepartmentSearch('');
     setIsCreateUserModalOpen(false);
   };
+
+  const selectedEntity = companiesList.find(
+    (company) => company.companyId === user.companyId,
+  );
 
   return (
     <Modal
@@ -219,9 +231,13 @@ export default function CreateAdminUserModal({
               label="Entity"
               id="entity"
               className=""
-              value={formData.entity?.companyId}
+              value={
+                isFromAdmin
+                  ? selectedEntity?.companyId
+                  : formData.entity?.companyId
+              }
               required
-              disabled={isLoadingEntities}
+              disabled={isLoadingEntities || isFromAdmin}
               options={companiesList}
               type="select"
               searchable
@@ -230,6 +246,7 @@ export default function CreateAdminUserModal({
               hasNextPage={hasNextEntitiesPage}
               isFetchingNextPage={isFetchingNextEntitiesPage}
               onChange={(e) => handleSetEntity(e.target.value)}
+              readOnly={isFromAdmin}
             />
             {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
