@@ -12,7 +12,6 @@ import SectionOptionsModal from './components/SectionOptionsModal';
 import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
 import FormularModal from './components/FormularModal';
 import {
-  useChecklist,
   useChecklistEntries,
   useCreateChecklistEntries,
   useDeleteChecklistEntries,
