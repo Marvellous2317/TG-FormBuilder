@@ -75,7 +75,7 @@ export const validateCreateEntries = [
   body("entries").isArray({ min: 1 }).withMessage("entries must be a non-empty array"),
   body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
     .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
-  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formula", "section"])
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
   body("entries.*.order").optional().isInt({ min: 0 }).withMessage("Order must be a positive integer"),
@@ -84,8 +84,8 @@ export const validateCreateEntries = [
   body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
   body("entries").custom((entries) => {
     for (const [i, entry] of entries.entries()) {
-      if (entry.type === "formula" && !entry.formulaExpression) {
-        throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
+      if (entry.type === "formular" && !entry.formulaExpression) {
+        throw new Error(`entries[${i}]: formulaExpression is required when type is formular`);
       }
     
     }
@@ -106,12 +106,12 @@ export const validateCreateOrUpdateEntries = [
   body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
   body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
   body("entries").custom((entries) => {
-    for (const [i, entry] of entries.entries()) {
-      if (entry.type === "formula" && !entry.formulaExpression) {
-        throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
-      }
+    // for (const [i, entry] of entries.entries()) {
+    //   if (entry.type === "formula" && !entry.formulaExpression) {
+    //     throw new Error(`entries[${i}]: formulaExpression is required when type is formula`);
+    //   }
      
-    }
+    // }
     return true;
   }),
   validate,
