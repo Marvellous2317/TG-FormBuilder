@@ -55,6 +55,18 @@ export function useCreateOperatorChecklistEntries(checklistId, options = {}) {
         queryKey: ['operator', 'checklists', 'entries', checklistId],
       });
 
+      await queryClient.invalidateQueries({
+        queryKey: ['operator', 'checklists', 'entries'],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['operator', 'checklists'],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'analytics'],
+      });
+
       if (onSuccess) {
         await onSuccess(response, variables, context);
       }
