@@ -21,6 +21,7 @@ import {
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
 import AssignLogbookModal from './components/AssignLogbookModal';
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 export default function CreateEntries() {
   let { id: checklistId, title: checklistTitle } = useLoaderData();
@@ -126,6 +127,27 @@ export default function CreateEntries() {
 
   const handleAddField = () => {
     setFields((currentFields) => [...currentFields, createField()]);
+  };
+
+  const handleFieldVisibility = (id) => {
+    setFields((currentFields) =>
+      currentFields.map((field) => {
+        if (field.id === id) {
+          const isCurrentlyVisible = field.config?.visible !== false;
+
+          return {
+            ...field,
+            config: {
+              ...field.config,
+              visible: !isCurrentlyVisible,
+            },
+          };
+        }
+        return field;
+      }),
+    );
+
+    console.log(fields.find((f) => f.id === id));
   };
 
   const handleRemoveField = async (id, entryId) => {
@@ -299,7 +321,7 @@ export default function CreateEntries() {
                         </p>
                       )}
                     </div>
-                    <div className="w-[15%]">
+                    <div className="w-[15%] flex items-center justify-between">
                       <Button
                         type="button"
                         onClick={() =>
@@ -307,8 +329,25 @@ export default function CreateEntries() {
                         }
                         className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
                         aria-label={`Remove field ${index + 1}`}
+                        disabled={isDeletingEntries}
                       >
-                        <RiDeleteBinLine size={18} />
+                        {isDeletingEntries ? (
+                          <Loader />
+                        ) : (
+                          <RiDeleteBinLine size={18} />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleFieldVisibility(field.id)}
+                        className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+                        aria-label={`Toggle visibility for field ${index + 1}`}
+                      >
+                        {field.config?.visible === false ? (
+                          <IoEyeOff size={18} className="text-gray-400" />
+                        ) : (
+                          <IoEye size={18} />
+                        )}
                       </Button>
                     </div>
                   </div>
