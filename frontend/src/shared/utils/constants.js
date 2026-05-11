@@ -5,7 +5,7 @@ const createField = () => ({
   id: createFieldId(),
   name: '',
   type: '',
-  config: null,
+  config: {},
 });
 
 const fieldTypeOptions = [

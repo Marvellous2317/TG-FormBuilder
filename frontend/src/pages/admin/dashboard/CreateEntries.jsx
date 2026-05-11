@@ -21,6 +21,7 @@ import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
 import AssignLogbookModal from './components/AssignLogbookModal';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
+import DefaultValueModal from './components/DefaultValueModal';
 
 export default function CreateEntries() {
   let { id: checklistId, title: checklistTitle } = useLoaderData();
@@ -32,6 +33,7 @@ export default function CreateEntries() {
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
+  const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
 
   const { data, isPending: isLoadingChecklistEntries } =
     useChecklistEntries(checklistId);
@@ -133,20 +135,24 @@ export default function CreateEntries() {
       currentFields.map((field) => {
         if (field.id === id) {
           const isCurrentlyVisible = field.config?.visible !== false;
+          const willBeVisible = !isCurrentlyVisible;
+
+          if (field.type === 'number' && willBeVisible === false) {
+            setActiveFieldId(id);
+            setIsShowDefaultValueModal(true);
+          }
 
           return {
             ...field,
             config: {
               ...field.config,
-              visible: !isCurrentlyVisible,
+              visible: willBeVisible,
             },
           };
         }
         return field;
       }),
     );
-
-    console.log(fields.find((f) => f.id === id));
   };
 
   const handleRemoveField = async (id, entryId) => {
@@ -275,6 +281,19 @@ export default function CreateEntries() {
                       />
                     </div>
                     <div className="w-[25%]">
+                      {field.type === 'number' &&
+                        field.config &&
+                        !field.config.visible && (
+                          <p
+                            onClick={() => {
+                              setActiveFieldId(field.id);
+                              setIsShowDefaultValueModal(true);
+                            }}
+                            className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+                          >
+                            {field.config.defaultValue}
+                          </p>
+                        )}
                       {field.type === 'enum' && field.config && (
                         <p
                           onClick={() => {
@@ -428,6 +447,14 @@ export default function CreateEntries() {
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
         checklistId={checklistId}
         action="assign"
+      />
+
+      <DefaultValueModal
+        key={`default-val-${activeFieldId}`}
+        isShowDefaultValueModal={isShowDefaultValueModal}
+        setIsShowDefaultValueModal={setIsShowDefaultValueModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
       />
     </div>
   );
