@@ -5,6 +5,9 @@ import { pluginPWA } from 'rsbuild-plugin-pwa';
 
 const config = {
   plugins: [pluginReact()],
+  dev: {
+    lazyCompilation: true,
+  },
   html: {
     template: './index.html',
   },
@@ -41,9 +44,9 @@ if (process.env.NODE_ENV === 'production') {
       // manifest config
       webAppManifest: {
         content: {
-          name: 'Packaging checklist App',
-          short_name: 'Packaging checklist',
-          description: 'Packaging checklist form builder',
+          name: 'DigiForms App',
+          short_name: 'DigiForms',
+          description: 'Digitalization form builder',
           start_url: '/login',
           display: 'standalone',
           background_color: '#2463eb',

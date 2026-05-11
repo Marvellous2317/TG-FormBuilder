@@ -4,6 +4,7 @@ import EnumForm from './EnumForm';
 import DropdownForm from './DropdownForm';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Button from '../Button';
+import { evaluateFormula } from '../../utils/formula';
 
 export default function SectionForm({ entry, setFormData, readOnly }) {
   const sectionEntryId = entry?.entryId || entry?.id || entry?.name;
@@ -68,6 +69,23 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   const sortedEntries = entriesData
     ?.slice()
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+  const computeFormulaValue = (entry) => {
+    const expression = entry.config?.expression;
+    if (!expression) return '';
+    const scope = {};
+    entriesData?.forEach((e) => {
+      if (e.type === 'number' && e.config?.fieldRef) {
+        scope[e.config.fieldRef] = rowsData[e.entryId]?.value ?? e.value ?? '';
+      }
+    });
+    const { value, error } = evaluateFormula(expression, scope);
+    return error ? 'Invalid formula' : (value ?? '');
+  };
+
+  const isVisible =
+    entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+  if (!isVisible) return null;
 
   return (
     <div className="mt-6 flex flex-col border border-secondary-200 w-full overflow-hidden">
@@ -137,6 +155,18 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                           formData={rowFormData}
                           setFormData={rowSetFormData}
                           readOnly={readOnly}
+                        />
+                      )}
+                      {entry.type === 'formular' && (
+                        <BasicForm
+                          entry={{
+                            ...rowEntry,
+                            type: 'number',
+                            value: computeFormulaValue(rowEntry),
+                          }}
+                          formData={rowFormData}
+                          setFormData={rowSetFormData}
+                          readOnly
                         />
                       )}
                       {/* {field.type === 'section' && (

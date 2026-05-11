@@ -12,7 +12,6 @@ import SectionOptionsModal from './components/SectionOptionsModal';
 import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
 import FormularModal from './components/FormularModal';
 import {
-  useChecklist,
   useChecklistEntries,
   useCreateChecklistEntries,
   useDeleteChecklistEntries,
@@ -21,6 +20,7 @@ import {
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
 import AssignLogbookModal from './components/AssignLogbookModal';
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 export default function CreateEntries() {
   let { id: checklistId, title: checklistTitle } = useLoaderData();
@@ -87,7 +87,9 @@ export default function CreateEntries() {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
-            .filter((f) => f.type === 'number' && f.id !== id && f.config?.fieldRef)
+            .filter(
+              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+            )
             .map((f) => f.config.fieldRef);
           let n = 1;
           while (existingRefs.includes(`field${n}`)) n++;
@@ -126,6 +128,27 @@ export default function CreateEntries() {
     setFields((currentFields) => [...currentFields, createField()]);
   };
 
+  const handleFieldVisibility = (id) => {
+    setFields((currentFields) =>
+      currentFields.map((field) => {
+        if (field.id === id) {
+          const isCurrentlyVisible = field.config?.visible !== false;
+
+          return {
+            ...field,
+            config: {
+              ...field.config,
+              visible: !isCurrentlyVisible,
+            },
+          };
+        }
+        return field;
+      }),
+    );
+
+    console.log(fields.find((f) => f.id === id));
+  };
+
   const handleRemoveField = async (id, entryId) => {
     if (entriesData?.length > 0 && entryId) {
       try {
@@ -161,6 +184,7 @@ export default function CreateEntries() {
       } else {
         await createEntries({ entries: fields });
         showSuccess('Entries saved successfully');
+        setIsShowAssignLogbookModal(true);
       }
     } catch (error) {
       showError(
@@ -296,7 +320,7 @@ export default function CreateEntries() {
                         </p>
                       )}
                     </div>
-                    <div className="w-[15%]">
+                    <div className="w-[15%] flex items-center justify-between">
                       <Button
                         type="button"
                         onClick={() =>
@@ -304,8 +328,25 @@ export default function CreateEntries() {
                         }
                         className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
                         aria-label={`Remove field ${index + 1}`}
+                        disabled={isDeletingEntries}
                       >
-                        <RiDeleteBinLine size={18} />
+                        {isDeletingEntries ? (
+                          <Loader />
+                        ) : (
+                          <RiDeleteBinLine size={18} />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleFieldVisibility(field.id)}
+                        className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+                        aria-label={`Toggle visibility for field ${index + 1}`}
+                      >
+                        {field.config?.visible === false ? (
+                          <IoEyeOff size={18} className="text-gray-400" />
+                        ) : (
+                          <IoEye size={18} />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -339,14 +380,14 @@ export default function CreateEntries() {
             <Loader size="h-4 w-4" />
           )}
         </Button>
-        <Button
+        {/* <Button
           type="button"
           disabled={fields.length < 1}
           onClick={() => setIsShowAssignLogbookModal(true)}
           className="justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
           Assign logbook
-        </Button>
+        </Button> */}
       </footer>
 
       <DropdownOptionsModal

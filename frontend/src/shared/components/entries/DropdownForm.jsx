@@ -39,6 +39,9 @@ export default function DropdownForm({
 
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
+  const isVisible = entry?.config?.visible ? entry?.config?.visible : true;
+  if (!isVisible) return null;
+
   return (
     <div className="mt-5 flex flex-col items-center justify-between w-full gap-2">
       <h2 className="block w-full font-geist text-sm font-regul text-secondary">

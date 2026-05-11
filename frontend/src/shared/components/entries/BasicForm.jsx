@@ -21,6 +21,12 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
   // Get current value for this entry (if exists)
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
+  const isVisible =
+    entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+  if (!isVisible) return null;
+
+  console.log(entry, isVisible);
+
   return (
     <div className="mt-5 w-full">
       <InputField

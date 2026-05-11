@@ -114,6 +114,10 @@ export default function ViewApproverEntries() {
       const entryId = entry.entryId;
       const entryValue = formData[entryId]?.value ?? entry.value ?? '';
 
+      const isVisible =
+        entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+      if (!isVisible) return;
+
       if (entry.type === 'section') {
         flushPendingRows();
 
@@ -141,6 +145,9 @@ export default function ViewApproverEntries() {
 
         const sectionFields = (entry.config?.items || [])
           .slice()
+          .filter((f) =>
+            f.config.visible !== undefined ? f.config.visible : true,
+          )
           .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
         if (sectionFields.length > 0 && sectionRows.length > 0) {
@@ -362,7 +369,11 @@ export default function ViewApproverEntries() {
                   )}
                   {entry.type === 'formular' && (
                     <BasicForm
-                      entry={{ ...entry, type: 'number', value: computeFormulaValue(entry) }}
+                      entry={{
+                        ...entry,
+                        type: 'number',
+                        value: computeFormulaValue(entry),
+                      }}
                       formData={formData}
                       setFormData={setFormData}
                       readOnly

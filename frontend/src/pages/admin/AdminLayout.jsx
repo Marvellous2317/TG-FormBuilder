@@ -125,14 +125,17 @@ export default function AdminLayout() {
           />
           {(!isCollapsed || !isDesktop) && (
             <div className="flex items-end justify-between w-full">
-              <div className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden">
+              <a
+                href="/"
+                className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden"
+              >
                 <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
                   Packaging Logbook
                 </h1>
                 <p className="text-xs text-secondary-400 font-geist font-medium hidden sm:block truncate">
                   Digitalization Portal
                 </p>
-              </div>
+              </a>
               <Button
                 onClick={toggleSidebar}
                 className=" transform -translate-y-1/2

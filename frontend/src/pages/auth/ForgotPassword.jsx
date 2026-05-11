@@ -44,7 +44,7 @@ export default function ForgotPassword() {
             className="h-8 w-8 md:h-11 md:w-11"
           />
           <h1 className="mt-4 font-geist text-2xl font-semibold leading-tight text-white md:text-[32px] md:leading-12">
-            KTNL Logbook
+            Digitalization Logbook
           </h1>
           <p className="mt-2 text-sm font-medium text-white md:mt-1.25 md:text-base lg:w-120 font-geist">
             Track, manage, and secure your operational records in one
