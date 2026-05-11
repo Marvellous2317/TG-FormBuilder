@@ -5,6 +5,9 @@ import { pluginPWA } from 'rsbuild-plugin-pwa';
 
 const config = {
   plugins: [pluginReact()],
+  dev: {
+    lazyCompilation: true,
+  },
   html: {
     template: './index.html',
   },
