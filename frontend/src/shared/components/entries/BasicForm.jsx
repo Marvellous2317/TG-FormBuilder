@@ -18,14 +18,27 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
     }));
   };
 
+  // const isNumber = entry?.type === 'number';
+
   // Get current value for this entry (if exists)
-  const currentValue = formData[entryId]?.value || entry?.value || '';
+  const currentValue =
+    formData[entryId]?.config?.defaultValue ||
+    entry?.config?.defaultValue ||
+    formData[entryId]?.value ||
+    entry?.value ||
+    '';
 
   const isVisible =
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
   if (!isVisible) return null;
 
-  console.log(entry, isVisible);
+  // // Get current value for this entry (if exists)
+  // const currentValue =
+  //   isNumber && !isVisible
+  //     ? formData[entryId]?.config?.defaultValue ||
+  //       entry?.config?.defaultValue ||
+  //       ''
+  //     : formData[entryId]?.value || entry?.value || '';
 
   return (
     <div className="mt-5 w-full">

@@ -110,11 +110,18 @@ export default function CreateOperatorEntry() {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+        const rawValue = formData[e.entryId]?.value ?? e.value;
+
+        scope[e.config.fieldRef] =
+          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
-    return error ? 'Invalid formula' : (value ?? '');
+    if (error || (typeof value === 'number' && !isFinite(value))) {
+      return 'Invalid formula';
+    }
+
+    return value ?? '';
   };
 
   return (
