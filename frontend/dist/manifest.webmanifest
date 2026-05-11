@@ -1,5 +1,5 @@
 {
-  "short_name": "Packaging checklist",
+  "short_name": "DigiForms",
   "display": "standalone",
   "background_color": "#2463eb",
   "theme_color": "#2463eb",
@@ -31,8 +31,8 @@
       "purpose": "maskable"
     }
   ],
-  "name": "Packaging checklist App",
+  "name": "DigiForms App",
   "scope": "/",
   "start_url": "/login",
-  "description": "Packaging checklist form builder"
+  "description": "Digitalization form builder"
 }

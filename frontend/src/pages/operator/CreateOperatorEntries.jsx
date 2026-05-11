@@ -14,7 +14,13 @@ import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import { queueSubmission } from '../../lib/offlineQueue';
 import { evaluateFormula } from '../../shared/utils/formula';
-import { saveToCache, getFromCache, saveDraft, getDraft, clearDraft } from '../../lib/offlineCache';
+import {
+  saveToCache,
+  getFromCache,
+  saveDraft,
+  getDraft,
+  clearDraft,
+} from '../../lib/offlineCache';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -74,7 +80,10 @@ export default function CreateOperatorEntry() {
       console.log(err);
       const isNetworkError = !err.response;
       if (isNetworkError) {
-        await queueSubmission({ checklistId, payload: { data: formDataArray } });
+        await queueSubmission({
+          checklistId,
+          payload: { data: formDataArray },
+        });
         showSuccess('Saved offline — will sync when reconnected');
       } else {
         showError('Something went wrong');
@@ -82,9 +91,12 @@ export default function CreateOperatorEntry() {
     }
   };
 
-  const { data, isPending: isLoadingChecklistEntries } = useOperatorChecklist(checklistId, {
-    placeholderData: cachedChecklist,
-  });
+  const { data, isPending: isLoadingChecklistEntries } = useOperatorChecklist(
+    checklistId,
+    {
+      placeholderData: cachedChecklist,
+    },
+  );
 
   useEffect(() => {
     if (data) saveToCache(`checklist-${checklistId}`, data);
@@ -104,8 +116,6 @@ export default function CreateOperatorEntry() {
     const { value, error } = evaluateFormula(expression, scope);
     return error ? 'Invalid formula' : (value ?? '');
   };
-
-  console.log(entriesData);
 
   return (
     <div
@@ -179,9 +189,13 @@ export default function CreateOperatorEntry() {
                         type: 'number',
                         value: (() => {
                           const anyNumberFieldEdited = entriesData?.some(
-                            (e) => e.type === 'number' && formData[e.entryId] !== undefined,
+                            (e) =>
+                              e.type === 'number' &&
+                              formData[e.entryId] !== undefined,
                           );
-                          return anyNumberFieldEdited || entry.value == null || entry.value === ''
+                          return anyNumberFieldEdited ||
+                            entry.value == null ||
+                            entry.value === ''
                             ? computeFormulaValue(entry)
                             : entry.value;
                         })(),

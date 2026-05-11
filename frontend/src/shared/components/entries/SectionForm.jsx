@@ -83,6 +83,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     return error ? 'Invalid formula' : (value ?? '');
   };
 
+  const isVisible =
+    entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+  if (!isVisible) return null;
+
   return (
     <div className="mt-6 flex flex-col border border-secondary-200 w-full overflow-hidden">
       <h2 className="block w-full font-geist text-base font-medium text-secondary border-b border-secondary-200 px-4 py-4.5 bg-gray-50/50">
