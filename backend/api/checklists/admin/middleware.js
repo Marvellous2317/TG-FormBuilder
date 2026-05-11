@@ -83,12 +83,12 @@ export const validateCreateEntries = [
   body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
   body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
   body("entries").custom((entries) => {
-    for (const [i, entry] of entries.entries()) {
-      if (entry.type === "formular" && !entry.formulaExpression) {
-        throw new Error(`entries[${i}]: formulaExpression is required when type is formular`);
-      }
+    // for (const [i, entry] of entries.entries()) {
+    //   if (entry.type === "formular" && !entry.formulaExpression) {
+    //     throw new Error(`entries[${i}]: formulaExpression is required when type is formular`);
+    //   }
     
-    }
+    // }
     return true;
   }),
   validate,
