@@ -33,7 +33,7 @@ export default function OperatorWorkspaceLayout() {
 
             <div className="hidden sm:flex flex-col">
               <h1 className="text-white text-sm font-semibold truncate">
-                Packaging Logbook
+                DigiForms
               </h1>
               <p className="text-xs text-secondary-400 truncate">
                 Digitalization Portal
