@@ -130,65 +130,68 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                 </div>
               )}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] xl:grid-cols-4 gap-x-4 gap-y-1 w-full overflow-y-auto">
-                {sortedEntries?.map((field) => {
-                  const rowEntry = getRowEntry(field, rowIndex);
-                  const rowFormData = rowsData[rowIndex] || {};
-                  const rowSetFormData = createRowSetFormData(rowIndex);
-                  const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
-                  console.log(field);
-                  return (
-                    <div key={entryKey} className="flex-1 min-w-40">
-                      {(field.type === 'text' ||
-                        field.type === 'date' ||
-                        field.type === 'time' ||
-                        field.type === 'number') && (
-                        <BasicForm
-                          entry={rowEntry}
-                          formData={rowFormData}
-                          setFormData={rowSetFormData}
-                          readOnly={readOnly}
-                        />
-                      )}
-                      {field.type === 'enum' && (
-                        <EnumForm
-                          entry={rowEntry}
-                          formData={rowFormData}
-                          setFormData={rowSetFormData}
-                          readOnly={readOnly}
-                        />
-                      )}
-                      {field.type === 'dropdown' && (
-                        <DropdownForm
-                          entry={rowEntry}
-                          formData={rowFormData}
-                          setFormData={rowSetFormData}
-                          readOnly={readOnly}
-                        />
-                      )}
-                      {field.type === 'formular' && (
-                        <BasicForm
-                          entry={{
-                            ...rowEntry,
-                            type: 'number',
-                            value: (() => {
-                              const anyNumberFieldEdited = sortedEntries?.some(
-                                (e) =>
-                                  e.type === 'number' &&
-                                  rowFormData[e.entryId] !== undefined,
-                              );
-                              return anyNumberFieldEdited ||
-                                rowEntry.value == null ||
-                                rowEntry.value === ''
-                                ? computeFormulaValue(rowEntry)
-                                : rowEntry.value;
-                            })(),
-                          }}
-                          formData={rowFormData}
-                          setFormData={rowSetFormData}
-                          readOnly
-                        />
-                      )}
-                      {/* {field.type === 'section' && (
+                {sortedEntries
+                  .filter((e) => e.config?.visible !== false)
+                  ?.map((field) => {
+                    const rowEntry = getRowEntry(field, rowIndex);
+                    const rowFormData = rowsData[rowIndex] || {};
+                    const rowSetFormData = createRowSetFormData(rowIndex);
+                    const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
+                    console.log(field);
+                    return (
+                      <div key={entryKey} className="flex-1 min-w-40">
+                        {(field.type === 'text' ||
+                          field.type === 'date' ||
+                          field.type === 'time' ||
+                          field.type === 'number') && (
+                          <BasicForm
+                            entry={rowEntry}
+                            formData={rowFormData}
+                            setFormData={rowSetFormData}
+                            readOnly={readOnly}
+                          />
+                        )}
+                        {field.type === 'enum' && (
+                          <EnumForm
+                            entry={rowEntry}
+                            formData={rowFormData}
+                            setFormData={rowSetFormData}
+                            readOnly={readOnly}
+                          />
+                        )}
+                        {field.type === 'dropdown' && (
+                          <DropdownForm
+                            entry={rowEntry}
+                            formData={rowFormData}
+                            setFormData={rowSetFormData}
+                            readOnly={readOnly}
+                          />
+                        )}
+                        {field.type === 'formular' && (
+                          <BasicForm
+                            entry={{
+                              ...rowEntry,
+                              type: 'number',
+                              value: (() => {
+                                const anyNumberFieldEdited =
+                                  sortedEntries?.some(
+                                    (e) =>
+                                      e.type === 'number' &&
+                                      rowFormData[e.entryId] !== undefined,
+                                  );
+                                return anyNumberFieldEdited ||
+                                  rowEntry.value == null ||
+                                  rowEntry.value === ''
+                                  ? computeFormulaValue(rowEntry)
+                                  : rowEntry.value;
+                              })(),
+                            }}
+                            formData={rowFormData}
+                            setFormData={rowSetFormData}
+                            readOnly
+                          />
+                        )}
+                        {/* {field.type === 'section' && (
                         <SectionForm
                           entry={rowEntry}
                           formData={rowFormData}
@@ -196,9 +199,9 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                           readOnly={readOnly}
                         />
                       )} */}
-                    </div>
-                  );
-                })}
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           ))}
