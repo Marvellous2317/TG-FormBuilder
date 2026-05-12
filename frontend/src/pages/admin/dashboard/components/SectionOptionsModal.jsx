@@ -15,6 +15,7 @@ import EnumOptionsModal from './EnumOptionsModal';
 import FormularModal from './FormularModal';
 import useToast from '../../../../shared/hooks/useToast';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
+import DefaultValueModal from './DefaultValueModal';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -27,6 +28,7 @@ export default function SectionOptionsModal({
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
+  const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [isSectionsOptionsModal, setIsSectionsOptionsModal] = useState(false);
   const [fields, setFields] = useState(
     () => initialValue?.items ?? Array.from({ length: 1 }, () => createField()),
@@ -345,6 +347,14 @@ export default function SectionOptionsModal({
         key={`section-${activeFieldId}`}
         isSectionOptionsModal={isSectionsOptionsModal}
         setIsSectionOptionsModal={setIsSectionsOptionsModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
+      />
+
+      <DefaultValueModal
+        key={`default-val-${activeFieldId}`}
+        isShowDefaultValueModal={isShowDefaultValueModal}
+        setIsShowDefaultValueModal={setIsShowDefaultValueModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
       />
