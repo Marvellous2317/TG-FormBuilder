@@ -66,9 +66,9 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
       : { ...fieldWithEntryId, value: '' };
   };
 
-  const sortedEntries = entriesData
-    ?.slice()
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const sortedEntries = entriesData.sort(
+    (a, b) => (a.order ?? 999) - (b.order ?? 999),
+  );
 
   const computeFormulaValue = (entry) => {
     const expression = entry.config?.expression;
@@ -76,11 +76,18 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        scope[e.config.fieldRef] = rowsData[e.entryId]?.value ?? e.value ?? '';
+        const rawValue = rowsData[e.entryId]?.value ?? e.value;
+
+        scope[e.config.fieldRef] =
+          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
-    return error ? 'Invalid formula' : (value ?? '');
+    if (error || (typeof value === 'number' && !isFinite(value))) {
+      return 'Invalid formula';
+    }
+
+    return value ?? '';
   };
 
   const isVisible =
@@ -128,6 +135,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   const rowFormData = rowsData[rowIndex] || {};
                   const rowSetFormData = createRowSetFormData(rowIndex);
                   const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
+                  console.log(field);
                   return (
                     <div key={entryKey} className="flex-1 min-w-40">
                       {(field.type === 'text' ||
@@ -157,12 +165,23 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                           readOnly={readOnly}
                         />
                       )}
-                      {entry.type === 'formular' && (
+                      {field.type === 'formular' && (
                         <BasicForm
                           entry={{
                             ...rowEntry,
                             type: 'number',
-                            value: computeFormulaValue(rowEntry),
+                            value: (() => {
+                              const anyNumberFieldEdited = sortedEntries?.some(
+                                (e) =>
+                                  e.type === 'number' &&
+                                  rowFormData[e.entryId] !== undefined,
+                              );
+                              return anyNumberFieldEdited ||
+                                rowEntry.value == null ||
+                                rowEntry.value === ''
+                                ? computeFormulaValue(rowEntry)
+                                : rowEntry.value;
+                            })(),
                           }}
                           formData={rowFormData}
                           setFormData={rowSetFormData}
