@@ -48,6 +48,9 @@ export function useApproverApproveChecklistEntries(checklistId, options = {}) {
       await queryClient.invalidateQueries({
         queryKey: ['approver', 'checklists', 'history'],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ['user', 'analytics'],
+      });
 
       if (onSuccess) {
         await onSuccess(response, variables, context);

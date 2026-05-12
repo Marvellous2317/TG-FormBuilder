@@ -28,6 +28,10 @@ export default function EnumForm({
   // Get current value for this entry (if exists)
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
+  const isVisible =
+    entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+  if (!isVisible) return null;
+
   return (
     <div className="mt-5 flex w-full items-center justify-between gap-2">
       <h2 className="block font-geist text-sm font-regul text-secondary">

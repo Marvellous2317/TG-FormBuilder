@@ -14,6 +14,7 @@ import DropdownOptionsModal from './DropdownOptionsModal';
 import EnumOptionsModal from './EnumOptionsModal';
 import FormularModal from './FormularModal';
 import useToast from '../../../../shared/hooks/useToast';
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -96,6 +97,27 @@ export default function SectionOptionsModal({
       default:
         break;
     }
+  };
+
+  const handleFieldVisibility = (id) => {
+    setFields((currentFields) =>
+      currentFields.map((field) => {
+        if (field.id === id) {
+          const isCurrentlyVisible = field.config?.visible !== false;
+
+          return {
+            ...field,
+            config: {
+              ...field.config,
+              visible: !isCurrentlyVisible,
+            },
+          };
+        }
+        return field;
+      }),
+    );
+
+    console.log(fields.find((f) => f.id === id));
   };
 
   const handleAddField = () => {
@@ -234,7 +256,7 @@ export default function SectionOptionsModal({
                         </p>
                       )}
                     </div>
-                    <div className="w-[10%]">
+                    <div className="w-[20%] flex items-center justify-between">
                       <Button
                         type="button"
                         onClick={() =>
@@ -244,6 +266,18 @@ export default function SectionOptionsModal({
                         aria-label={`Remove field ${index + 1}`}
                       >
                         <RiDeleteBinLine size={18} />
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleFieldVisibility(field.id)}
+                        className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+                        aria-label={`Toggle visibility for field ${index + 1}`}
+                      >
+                        {field.config?.visible === false ? (
+                          <IoEyeOff size={18} className="text-gray-400" />
+                        ) : (
+                          <IoEye size={18} />
+                        )}
                       </Button>
                     </div>
                   </div>

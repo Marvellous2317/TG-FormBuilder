@@ -114,6 +114,10 @@ export default function ViewApproverEntries() {
       const entryId = entry.entryId;
       const entryValue = formData[entryId]?.value ?? entry.value ?? '';
 
+      const isVisible =
+        entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+      if (!isVisible) return;
+
       if (entry.type === 'section') {
         flushPendingRows();
 
@@ -141,6 +145,9 @@ export default function ViewApproverEntries() {
 
         const sectionFields = (entry.config?.items || [])
           .slice()
+          .filter((f) =>
+            f.config.visible !== undefined ? f.config.visible : true,
+          )
           .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
         if (sectionFields.length > 0 && sectionRows.length > 0) {
@@ -258,11 +265,18 @@ export default function ViewApproverEntries() {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+        const rawValue = formData[e.entryId]?.value ?? e.value;
+
+        scope[e.config.fieldRef] =
+          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
-    return error ? 'Invalid formula' : (value ?? '');
+    if (error || (typeof value === 'number' && !isFinite(value))) {
+      return 'Invalid formula';
+    }
+
+    return value ?? '';
   };
 
   return (

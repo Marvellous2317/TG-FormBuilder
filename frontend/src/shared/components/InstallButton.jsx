@@ -15,7 +15,16 @@ export function InstallButton() {
           aria-label="Dismiss"
           className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -28,8 +37,12 @@ export function InstallButton() {
             className="w-12 h-12 rounded-xl shrink-0"
           />
           <div className="min-w-0">
-            <p className="font-semibold text-gray-900 text-sm truncate">Packaging Checklist</p>
-            <p className="text-xs text-gray-500 mt-0.5">Install for quick offline access</p>
+            <p className="font-semibold text-gray-900 text-sm truncate">
+              DigiForms
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Install for quick offline access
+            </p>
           </div>
         </div>
 

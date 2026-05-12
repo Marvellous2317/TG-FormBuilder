@@ -23,7 +23,7 @@ export default function ApproverWorkspaceLayout() {
         {/* LEFT */}
         <div className="flex items-center gap-6 w-full">
           {/* LOGO */}
-          <div className="flex items-center gap-2 shrink-0">
+          <a href="/" className="flex items-center gap-2 shrink-0">
             <img
               src={Images.logo}
               alt="logo"
@@ -38,7 +38,7 @@ export default function ApproverWorkspaceLayout() {
                 Digitalization Portal
               </p>
             </div>
-          </div>
+          </a>
 
           {/* DESKTOP NAV */}
           <nav className="hidden lg:flex flex-1 items-center gap-3 overflow-x-auto">

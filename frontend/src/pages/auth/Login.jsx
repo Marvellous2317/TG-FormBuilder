@@ -52,7 +52,7 @@ function Login() {
             className="h-8 w-8 md:h-11 md:w-11"
           />
           <h1 className="mt-4 font-geist text-2xl font-semibold leading-tight text-white md:text-[32px] md:leading-12">
-            KTNL Logbook
+            Digitalization Logbook
           </h1>
           <p className="mt-2 text-sm font-medium text-white md:mt-1.25 md:text-base lg:w-120 font-geist">
             Track, manage, and secure your operational records in one
@@ -66,7 +66,7 @@ function Login() {
       <section className="flex w-full flex-col items-center justify-center overflow-y-auto p-4 md:w-1/2 md:p-10 lg:p-16">
         <div className="w-full max-w-99">
           <h1 className="font-geist text-xl font-semibold text-primary">
-            Welcome to KTNL Portal
+            Welcome to Digitalization Portal
           </h1>
           <p className="mb-6 mt-1 font-geist text-xs text-tertiary md:mb-7">
             Enter your credentials to continue

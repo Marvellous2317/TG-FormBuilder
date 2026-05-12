@@ -63,11 +63,18 @@ export default function ViewOperatorEntries() {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        scope[e.config.fieldRef] = formData[e.entryId]?.value ?? e.value ?? '';
+        const rawValue = formData[e.entryId]?.value ?? e.value;
+
+        scope[e.config.fieldRef] =
+          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
-    return error ? 'Invalid formula' : (value ?? '');
+    if (error || (typeof value === 'number' && !isFinite(value))) {
+      return 'Invalid formula';
+    }
+
+    return value ?? '';
   };
 
   return (
@@ -150,7 +157,11 @@ export default function ViewOperatorEntries() {
                     )}
                     {entry.type === 'formular' && (
                       <BasicForm
-                        entry={{ ...entry, type: 'number', value: computeFormulaValue(entry) }}
+                        entry={{
+                          ...entry,
+                          type: 'number',
+                          value: computeFormulaValue(entry),
+                        }}
                         formData={formData}
                         setFormData={setFormData}
                         readOnly
