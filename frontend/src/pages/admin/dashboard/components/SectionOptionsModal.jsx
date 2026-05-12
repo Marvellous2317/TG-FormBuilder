@@ -106,6 +106,12 @@ export default function SectionOptionsModal({
       currentFields.map((field) => {
         if (field.id === id) {
           const isCurrentlyVisible = field.config?.visible !== false;
+          const willBeVisible = !isCurrentlyVisible;
+
+          if (field.type === 'number' && willBeVisible === false) {
+            setActiveFieldId(id);
+            setIsShowDefaultValueModal(true);
+          }
 
           return {
             ...field,
@@ -118,8 +124,6 @@ export default function SectionOptionsModal({
         return field;
       }),
     );
-
-    console.log(fields.find((f) => f.id === id));
   };
 
   const handleAddField = () => {
@@ -213,6 +217,19 @@ export default function SectionOptionsModal({
                       />
                     </div>
                     <div className="w-[20%]">
+                      {field.type === 'number' &&
+                        field.config &&
+                        !field.config.visible && (
+                          <p
+                            onClick={() => {
+                              setActiveFieldId(field.id);
+                              setIsShowDefaultValueModal(true);
+                            }}
+                            className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+                          >
+                            {field.config.defaultValue}
+                          </p>
+                        )}
                       {field.type === 'enum' && field.config && (
                         <p
                           onClick={() => {
