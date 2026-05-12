@@ -35,7 +35,7 @@ export class ApprovalRepository {
             ],
           },
         ],
-        order: [["submittedAt", "ASC"]],
+        order: [["submittedAt", "DESC"]],
         limit,
         offset,
       });
