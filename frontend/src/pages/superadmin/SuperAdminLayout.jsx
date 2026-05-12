@@ -146,7 +146,7 @@ export default function SuperAdminLayout() {
                 className="flex flex-col items-start gap-0.5 md:gap-1 overflow-hidden"
               >
                 <h1 className="text-white text-xs md:text-sm font-geist font-semibold truncate">
-                  Packaging Logbook
+                  DigiForms
                 </h1>
                 <p className="text-xs text-secondary-400 font-geist font-medium hidden sm:block truncate">
                   Digitalization Portal
