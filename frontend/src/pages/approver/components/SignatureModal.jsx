@@ -5,6 +5,7 @@ import Icons from '../../../assets/icons';
 import { useApproverSignature } from '../../../shared/hooks/approver/useApprover';
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
+import { useAuthStore } from '../../../shared/store/authStore';
 
 export default function SignatureModal({
   isSignatureModalOpen,
@@ -20,6 +21,8 @@ export default function SignatureModal({
     useApproverSignature();
 
   const { showError, showSuccess } = useToast();
+
+  const { setUser, user } = useAuthStore();
 
   // Initialize canvas context and set up drawing
   useEffect(() => {
@@ -207,6 +210,7 @@ export default function SignatureModal({
     try {
       await saveSignature({ signature: signatureDataURL });
       showSuccess('Signature saved successfully');
+      setUser({ ...user, signature: signatureDataURL });
     } catch (error) {
       console.error('Error saving signature', error);
       showError('Unable to save signature. Please try again.');
