@@ -70,14 +70,16 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     (a, b) => (a.order ?? 999) - (b.order ?? 999),
   );
 
-  const computeFormulaValue = (entry) => {
- 
+  const computeFormulaValue = (entry, rowIndex) => {
     const expression = entry.config?.expression;
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue = rowsData[0]?.[e.id]?.value ?? e.value ?? e?.config?.defaultValue;
+        const rawValue =
+          rowsData[rowIndex]?.[e.id]?.value ??
+          e.value ??
+          e?.config?.defaultValue;
 
         scope[e.config.fieldRef] =
           rawValue === '' || rawValue == null ? 0 : Number(rawValue);
@@ -182,7 +184,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                                 return anyNumberFieldEdited ||
                                   rowEntry.value == null ||
                                   rowEntry.value === ''
-                                  ? computeFormulaValue(rowEntry)
+                                  ? computeFormulaValue(rowEntry, rowIndex)
                                   : rowEntry.value;
                               })(),
                             }}
