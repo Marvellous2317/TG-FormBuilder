@@ -19,7 +19,7 @@ function Login() {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value.trim(),
+      [name]: value,
     }));
   };
 
@@ -32,7 +32,10 @@ function Login() {
       return;
     }
 
-    await login(formData);
+    const trimmedPassword = formData.password.trim();
+    const loginData = { ...formData, password: trimmedPassword };
+
+    await login(loginData);
   };
 
   return (
