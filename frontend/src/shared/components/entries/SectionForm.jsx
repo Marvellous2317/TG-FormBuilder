@@ -76,7 +76,6 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      console.log(e)
       if (e.type === 'number' && e.config?.fieldRef) {
         const rawValue = rowsData[0]?.[e.id]?.value ?? e.value ?? e?.config?.defaultValue;
 
