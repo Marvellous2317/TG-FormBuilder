@@ -172,33 +172,6 @@ export default function EditAdminUserModal({
         </div>
 
         <div className="flex-1 flex flex-col gap-4 mt-7">
-          <InputField
-            label="First name"
-            id="firstName"
-            className=""
-            value={formData.firstName}
-            required
-            onChange={handleInputChange}
-          />
-
-          <InputField
-            label="Last name"
-            id="lastName"
-            className=""
-            value={formData.lastName}
-            required
-            onChange={handleInputChange}
-          />
-
-          <InputField
-            label="Email"
-            id="email"
-            className=""
-            value={formData.email}
-            required
-            onChange={handleInputChange}
-          />
-
           <div className="flex gap-2 w-full items-center relative">
             <InputField
               label="Role"
@@ -244,6 +217,33 @@ export default function EditAdminUserModal({
             />
             {isLoadingDepartments && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
+
+          <InputField
+            label="First name"
+            id="firstName"
+            className=""
+            value={formData.firstName}
+            required
+            onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Last name"
+            id="lastName"
+            className=""
+            value={formData.lastName}
+            required
+            onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Email"
+            id="email"
+            className=""
+            value={formData.email}
+            required
+            onChange={handleInputChange}
+          />
         </div>
 
         <div className="flex items-center mt-6 pb-5 justify-end gap-3">
