@@ -2,7 +2,7 @@
 import { col, fn, literal, Op, Sequelize } from "sequelize";
 import fs from "fs";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
-import { User, Role, Company, Verification, SubmittedChecklist } from "../../models/index.js";
+import { User, Role, Company, Verification, SubmittedChecklist, OperatorApprover, ChecklistAssignment } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";
@@ -338,9 +338,23 @@ static async deleteAccount(userId) {
         const totalRejected = await SubmittedChecklist.count({ where: { approvedBy: userId, status: "rejected" } });
         const totalReviewed = await SubmittedChecklist.count({ where: { approvedBy: userId } });
 
-        const totalPending = await SubmittedChecklist.count({ 
-          where: { companyId, status: "pending" } 
+
+        const links = await OperatorApprover.findAll({
+          where: { approverId: userId },
+          attributes: ["operatorId", "createdAt"],
         });
+        let totalPending = 0;
+        if (links.length > 0) {
+          const orConditions = links.map((link) => ({
+            submittedAt: { [Op.gte]: link.createdAt },
+            "$assignment.assignedTo$": link.operatorId,
+          }));
+          totalPending = await SubmittedChecklist.count({
+            where: { status: "pending", [Op.or]: orConditions },
+            include: [{ model: ChecklistAssignment, as: "assignment", attributes: [] }],
+            subQuery: false,
+          });
+        }
 
         return {
           scope: "personal",
