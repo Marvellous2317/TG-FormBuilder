@@ -612,6 +612,8 @@ export class AdminRepository {
 
       if (status) {
         where.status = status;
+      } else {
+        where.status = { [Op.ne]: "suspended" };
       }
 
       if (startDate || endDate) {

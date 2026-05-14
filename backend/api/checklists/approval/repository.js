@@ -18,24 +18,33 @@ export class ApprovalRepository {
 
   static async getPendingSubmissions(approverId, { page = 1, limit = 20 }) {
     try {
-      const operatorIds = await this._getOperatorIds(approverId);
-      if (operatorIds.length === 0) {
+      const links = await OperatorApprover.findAll({
+        where: { approverId },
+        attributes: ["operatorId", "createdAt"],
+      });
+      if (links.length === 0) {
         return { submissions: [], pagination: { page: Number(page), limit: Number(limit), total: 0, totalPages: 0 } };
       }
 
+      // Only show submissions submitted AFTER the approver was linked to that operator
+      const orConditions = links.map((link) => ({
+        submittedAt: { [Op.gte]: link.createdAt },
+        "$assignment.assignedTo$": link.operatorId,
+      }));
+
       const offset = (page - 1) * limit;
       const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
-        where: { status: "pending" },
+        where: { status: "pending", [Op.or]: orConditions },
         include: [
           {
             model: ChecklistAssignment, as: "assignment",
-            where: { assignedTo: { [Op.in]: operatorIds } },
             include: [
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName"] },
             ],
           },
         ],
         order: [["submittedAt", "DESC"]],
+        subQuery: false,
         limit,
         offset,
       });
