@@ -8,8 +8,10 @@ import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
 import clearAllCaches from '../../lib/clearCache';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Settings() {
+  const queryClient = useQueryClient();
   const { clearAuth, user, setUser } = useAuthStore();
   const { showSuccess, showError } = useToast();
 
@@ -36,7 +38,7 @@ export default function Settings() {
       email: user?.email || '',
       role: user?.role?.roleName || '',
     });
-    if (profileData) setUser(profileData);
+    // if (profileData) setUser(profileData);
   }, [user, profile]);
 
   const handleInputChange = (e) => {
@@ -62,6 +64,7 @@ export default function Settings() {
   const handleLogout = () => {
     clearAuth();
     clearAllCaches();
+    queryClient.clear();
   };
 
   return (
