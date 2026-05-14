@@ -84,7 +84,7 @@ export default function AdminUserManagement() {
           <AdminCard
             icon={Icons.totalUsers}
             title="Total users"
-            count={userStatistics?.totalUsers || 0}
+            count={userStatistics?.userCount || 0}
             loading={isLoadingUserStatistics}
           />
           <AdminCard
