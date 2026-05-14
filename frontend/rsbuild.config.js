@@ -22,6 +22,8 @@ if (process.env.NODE_ENV === 'production') {
         mode: 'generateSw',
         workboxOptions: {
           navigateFallback: '/index.html',
+          skipWaiting: true,
+          clientsClaim: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/tgpackagingappprd\.azurewebsites\.net\//,

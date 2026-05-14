@@ -16,6 +16,7 @@ const clearAllCaches = async () => {
   }
 
   localStorage.clear();
+  sessionStorage.clear();
 };
 
 export default clearAllCaches;
