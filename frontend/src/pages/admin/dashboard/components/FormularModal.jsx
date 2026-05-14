@@ -6,7 +6,7 @@ import { validateFormula } from '../../../../shared/utils/formula';
 
 const mathematical = ['sum', 'subtract', 'multiply', 'divide', 'average'];
 const aggregation = ['count', 'min', 'max'];
-const advanced = ['if', 'round', 'abs', 'concat'];
+const advanced = ['if', 'round', 'abs', 'concat', 'compare'];
 
 export default function FormularModal({
   isFormularModal,
@@ -19,7 +19,8 @@ export default function FormularModal({
   const [testResult, setTestResult] = useState(null);
 
   const handleSave = () => {
-    const fieldRefs = numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+    const fieldRefs =
+      numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
     const { valid, error } = validateFormula(expression, fieldRefs);
     if (!valid) {
       setTestResult({ valid: false, error });
@@ -30,7 +31,8 @@ export default function FormularModal({
   };
 
   const handleTest = () => {
-    const fieldRefs = numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+    const fieldRefs =
+      numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
     setTestResult(validateFormula(expression, fieldRefs));
   };
 
@@ -71,7 +73,10 @@ export default function FormularModal({
             <div className="flex items-start gap-3 w-full justify-start">
               <p
                 className="text-tertiary text-sm cursor-pointer"
-                onClick={() => { setExpression(''); setTestResult(null); }}
+                onClick={() => {
+                  setExpression('');
+                  setTestResult(null);
+                }}
               >
                 Clear
               </p>
@@ -83,7 +88,9 @@ export default function FormularModal({
               </p>
             </div>
             {testResult && (
-              <p className={`mt-2 text-xs ${testResult.valid ? 'text-green-600' : 'text-red-500'}`}>
+              <p
+                className={`mt-2 text-xs ${testResult.valid ? 'text-green-600' : 'text-red-500'}`}
+              >
                 {testResult.valid ? 'Valid expression' : testResult.error}
               </p>
             )}
@@ -145,6 +152,37 @@ export default function FormularModal({
                     </Button>
                   </li>
                 ))}
+              </ul>
+            </div>
+            <div className="mt-3 flex flex-col items-start">
+              <p className="text-sm text-tertiary">Misc</p>
+              <ul className="mt-2 flex items-center gap-3">
+                <li className="border border-secondary-200 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <Button
+                    className=" text-secondary text-sm uppercase"
+                    onClick={(e) => insertAtCursor(e, ')')}
+                  >
+                    Close
+                  </Button>
+                </li>
+
+                <li className="border border-secondary-200 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <Button
+                    className=" text-secondary text-sm uppercase"
+                    onClick={(e) => insertAtCursor(e, ',')}
+                  >
+                    Comma
+                  </Button>
+                </li>
+
+                <li className="border border-secondary-200 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <Button
+                    className=" text-secondary text-sm uppercase"
+                    onClick={(e) => insertAtCursor(e, '==')}
+                  >
+                    Compare
+                  </Button>
+                </li>
               </ul>
             </div>
           </div>

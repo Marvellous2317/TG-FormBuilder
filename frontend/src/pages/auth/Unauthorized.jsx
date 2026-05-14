@@ -50,12 +50,12 @@ export default function Unauthorized() {
           >
             Go Back
           </Button>
-          <a
-            href="/login"
-            className="w-full block bg-transparent border-2 border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+          <Button
+            onClick={() => (window.location.href = '/login')}
+            className="w-full bg-transparent border-2 border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
           >
             Back to Login
-          </a>
+          </Button>
         </div>
 
         {/* Helpful Footer */}

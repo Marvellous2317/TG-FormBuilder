@@ -265,7 +265,7 @@ export default function ViewApproverEntries() {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue = formData[e.entryId]?.value ?? e.value;
+        const rawValue = formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
 
         scope[e.config.fieldRef] =
           rawValue === '' || rawValue == null ? 0 : Number(rawValue);
@@ -276,7 +276,7 @@ export default function ViewApproverEntries() {
       return 'Invalid formula';
     }
 
-    return value ?? '';
+    return value ?? 0;
   };
 
   return (

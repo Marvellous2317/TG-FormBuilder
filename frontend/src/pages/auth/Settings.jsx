@@ -7,6 +7,7 @@ import useToast from '../../shared/hooks/useToast';
 import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
+import clearAllCaches from '../../lib/clearCache';
 
 export default function Settings() {
   const { clearAuth, user, setUser } = useAuthStore();
@@ -58,6 +59,11 @@ export default function Settings() {
     }
   };
 
+  const handleLogout = () => {
+    clearAuth();
+    clearAllCaches();
+  };
+
   return (
     <div className="w-full min-h-screen bg-secondary-200/20">
       <section className="py-5 px-4 sm:px-6 lg:px-25 gap-1 border-b border-secondary-200">
@@ -80,9 +86,7 @@ export default function Settings() {
 
             <Button
               type="button"
-              onClick={() => {
-                clearAuth();
-              }}
+              onClick={() => handleLogout()}
               className="bg-tertiary-500 gap-1 p-2.5 px-6 rounded-xl transition-all hover:bg-tertiary-600"
             >
               <p className="text-white font-medium text-sm">Logout</p>

@@ -115,7 +115,7 @@ export default function EditEntityModal({
             />
 
             <InputField
-              label="Name of entityyyy"
+              label="Name of entity"
               id="entityName"
               className="mt-4"
               value={formData.entityName}

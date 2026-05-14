@@ -89,12 +89,12 @@ export default function UserManagement() {
             count={userStatistics?.suspendedUsers || 0}
             loading={isLoadingUserStatistics}
           />
-          <AdminCard
+          {/* <AdminCard
             icon={Icons.inactiveUsers}
             title="Total roles"
             count={userStatistics?.totalRoles || 0}
             loading={isLoadingUserStatistics}
-          />
+          /> */}
         </div>
       </section>
 

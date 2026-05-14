@@ -22,14 +22,16 @@ if (process.env.NODE_ENV === 'production') {
         mode: 'generateSw',
         workboxOptions: {
           navigateFallback: '/index.html',
+          skipWaiting: true,
+          clientsClaim: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/tgpackagingappprd\.azurewebsites\.net\//,
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'api-cache',
-                networkTimeoutSeconds: 5, // fallback to cache after 5s
-                expiration: { maxAgeSeconds: 60 * 60 * 24 }, // 1 day
+                networkTimeoutSeconds: 5,
+                expiration: { maxAgeSeconds: 60 * 60 * 24 },
               },
             },
             {

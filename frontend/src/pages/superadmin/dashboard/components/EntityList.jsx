@@ -199,7 +199,7 @@ export default function EntityList({
                       <p className="text-secondary text-sm">
                         {row.companyName}
                       </p>
-                      <p className="text-tertiary text-xs">{row.companyId}</p>
+                      {/* <p className="text-tertiary text-xs">{row.companyId}</p> */}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       <p className="text-secondary text-sm">
@@ -213,7 +213,7 @@ export default function EntityList({
                       {row.status}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
-                      {row?.totalUsers || 'N/A'}
+                      {row?.userCount || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {formatDate(row.createdAt)}

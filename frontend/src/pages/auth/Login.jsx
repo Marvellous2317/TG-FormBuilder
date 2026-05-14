@@ -19,7 +19,7 @@ function Login() {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value.trim(),
     }));
   };
 
@@ -83,6 +83,7 @@ function Login() {
               onChange={handleChange}
               required
               autoComplete="email"
+              autoFocus
             />
 
             <InputField
@@ -94,7 +95,6 @@ function Login() {
               value={formData.password}
               onChange={handleChange}
               required
-              autoComplete="current-password"
             />
 
             <a
