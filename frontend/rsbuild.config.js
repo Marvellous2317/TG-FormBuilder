@@ -28,8 +28,8 @@ if (process.env.NODE_ENV === 'production') {
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'api-cache',
-                networkTimeoutSeconds: 5, // fallback to cache after 5s
-                expiration: { maxAgeSeconds: 60 * 60 * 24 }, // 1 day
+                networkTimeoutSeconds: 5,
+                expiration: { maxAgeSeconds: 60 * 60 * 24 },
               },
             },
             {
