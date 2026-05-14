@@ -61,6 +61,7 @@ export default function useAuth() {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (response) => {
+      useAuthStore.getState().clearAuth();
       useAuthStore.getState().setAuthFromLogin(response);
 
       const user = response?.data?.user;
