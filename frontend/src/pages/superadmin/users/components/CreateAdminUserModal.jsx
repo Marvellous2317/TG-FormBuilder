@@ -159,7 +159,7 @@ export default function CreateAdminUserModal({
         lastName,
         email,
         roleId: role?.roleId,
-        companyId: selectedEntity?.companyId || entity?.companyId,
+        companyId: isFromAdmin ? selectedEntity?.companyId : entity?.companyId,
         department: department.label,
       });
       showSuccess('Admin User created successfully');
