@@ -63,7 +63,8 @@ export default function ViewOperatorEntries() {
     const scope = {};
     entriesData?.forEach((e) => {
       if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue = formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
+        const rawValue =
+          formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
 
         scope[e.config.fieldRef] =
           rawValue === '' || rawValue == null ? 0 : Number(rawValue);
@@ -71,7 +72,8 @@ export default function ViewOperatorEntries() {
     });
     const { value, error } = evaluateFormula(expression, scope);
     if (error || (typeof value === 'number' && !isFinite(value))) {
-      return 'Invalid formula';
+      console.log(error);
+      return 0;
     }
 
     return value ?? 0;
