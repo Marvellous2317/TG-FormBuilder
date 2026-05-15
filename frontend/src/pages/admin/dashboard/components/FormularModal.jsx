@@ -6,7 +6,7 @@ import { validateFormula } from '../../../../shared/utils/formula';
 
 const mathematical = ['sum', 'subtract', 'multiply', 'divide', 'average'];
 const aggregation = ['count', 'min', 'max'];
-const advanced = ['if', 'round', 'abs', 'concat', 'compare'];
+const advanced = ['if', 'round', 'abs', 'concat'];
 
 export default function FormularModal({
   isFormularModal,
