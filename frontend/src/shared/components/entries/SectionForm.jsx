@@ -88,7 +88,8 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
 
     const { value, error } = evaluateFormula(expression, scope);
     if (error || (typeof value === 'number' && !isFinite(value))) {
-      return 'Invalid formula';
+      console.log(error);
+      return 0;
     }
     return value ?? 0;
   };
