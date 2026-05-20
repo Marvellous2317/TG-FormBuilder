@@ -1,13 +1,17 @@
 import { Op } from "sequelize";
 import {
-  Checklist, ChecklistAssignment, ChecklistEntry,
-  SubmittedChecklist, SubmittedChecklistEntry, User, OperatorApprover,
+  Checklist,
+  ChecklistAssignment,
+  ChecklistEntry,
+  SubmittedChecklist,
+  SubmittedChecklistEntry,
+  User,
+  OperatorApprover,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
 
 export class ApprovalRepository {
-
   static async _getOperatorIds(approverId) {
     const links = await OperatorApprover.findAll({
       where: { approverId },
@@ -23,7 +27,15 @@ export class ApprovalRepository {
         attributes: ["operatorId", "createdAt"],
       });
       if (links.length === 0) {
-        return { submissions: [], pagination: { page: Number(page), limit: Number(limit), total: 0, totalPages: 0 } };
+        return {
+          submissions: [],
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total: 0,
+            totalPages: 0,
+          },
+        };
       }
 
       // Only show submissions submitted AFTER the approver was linked to that operator
@@ -33,25 +45,36 @@ export class ApprovalRepository {
       }));
 
       const offset = (page - 1) * limit;
-      const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
-        where: { status: "pending", [Op.or]: orConditions },
-        include: [
-          {
-            model: ChecklistAssignment, as: "assignment",
-            include: [
-              { model: User, as: "operator", attributes: ["userId", "firstName", "lastName"] },
-            ],
-          },
-        ],
-        order: [["submittedAt", "DESC"]],
-        subQuery: false,
-        limit,
-        offset,
-      });
+      const { rows: submissions, count: total } =
+        await SubmittedChecklist.findAndCountAll({
+          where: { status: "pending", [Op.or]: orConditions },
+          include: [
+            {
+              model: ChecklistAssignment,
+              as: "assignment",
+              include: [
+                {
+                  model: User,
+                  as: "operator",
+                  attributes: ["userId", "firstName", "lastName"],
+                },
+              ],
+            },
+          ],
+          order: [["submittedAt", "DESC"]],
+          subQuery: false,
+          limit,
+          offset,
+        });
 
       return {
         submissions,
-        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       };
     } catch (error) {
       throw new ApplicationError("Failed to fetch pending submissions", 500);
@@ -62,23 +85,49 @@ export class ApprovalRepository {
     try {
       const operatorIds = await this._getOperatorIds(approverId);
 
-      const submission = await SubmittedChecklist.findByPk(submittedChecklistId, {
-        attributes: ["submittedChecklistId"],
-        include: [
-          {
-            model: ChecklistAssignment, as: "assignment",
-            attributes: ["assignmentId" ],
-            where: { assignedTo: { [Op.in]: operatorIds } },
-            include: [
-              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
-              { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
-            ],
-          },
+      const submission = await SubmittedChecklist.findByPk(
+        submittedChecklistId,
+        {
+          attributes: ["submittedChecklistId"],
+          include: [
+            {
+              model: ChecklistAssignment,
+              as: "assignment",
+              attributes: ["assignmentId"],
+              where: { assignedTo: { [Op.in]: operatorIds } },
+              include: [
+                {
+                  model: Checklist,
+                  as: "checklist",
+                  attributes: ["checklistId", "title", "documentNumber"],
+                },
+                {
+                  model: User,
+                  as: "operator",
+                  attributes: ["userId", "firstName", "lastName", "email"],
+                },
+              ],
+            },
 
-  
-          { model: SubmittedChecklistEntry, as: "entries", order: [["order", "ASC"]], attributes: ["entryId","formulaExpression", "options", "required","config", "name", "value", "type", "order"] },
-        ],
-      });
+            {
+              model: SubmittedChecklistEntry,
+              as: "entries",
+              order: [["order", "ASC"]],
+              attributes: [
+                "entryId",
+                "formulaExpression",
+                "options",
+                "required",
+                "config",
+                "name",
+                "value",
+                "type",
+                "order",
+              ],
+            },
+          ],
+        },
+      );
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
       return { submission };
@@ -94,21 +143,35 @@ export class ApprovalRepository {
     try {
       const operatorIds = await this._getOperatorIds(approverId);
 
-      const submission = await SubmittedChecklist.findByPk(submittedChecklistId, {
-        include: [{
-          model: ChecklistAssignment, as: "assignment",
-          where: { assignedTo: { [Op.in]: operatorIds } },
-          include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
-        }],
-        transaction,
-      });
+      const submission = await SubmittedChecklist.findByPk(
+        submittedChecklistId,
+        {
+          include: [
+            {
+              model: ChecklistAssignment,
+              as: "assignment",
+              where: { assignedTo: { [Op.in]: operatorIds } },
+              include: [
+                {
+                  model: Checklist,
+                  as: "checklist",
+                  include: [{ model: ChecklistEntry, as: "entries" }],
+                },
+              ],
+            },
+          ],
+          transaction,
+        },
+      );
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
       if (submission.status !== "pending") {
-        throw new ApplicationError("Only pending submissions can be approved", 400);
+        throw new ApplicationError(
+          "Only pending submissions can be approved",
+          400,
+        );
       }
 
-   
       // const requiredEntries = submission.assignment.checklist.entries.filter((e) => e.required);
       // const responseMap = new Map(data.map((r) => [r.entryId, r.value]));
 
@@ -125,20 +188,24 @@ export class ApprovalRepository {
       });
       const existingMap = new Map(existingEntries.map((e) => [e.entryId, e]));
 
-
       for (const item of data) {
         const existing = existingMap.get(item.entryId);
         if (existing && existing.value !== item.value) {
-          await existing.update({ value: item.value, status: "approved" }, { transaction });
+          await existing.update(
+            { value: item.value, status: "approved" },
+            { transaction },
+          );
         } else if (existing) {
           await existing.update({ status: "approved" }, { transaction });
         }
       }
 
-   
       await SubmittedChecklistEntry.update(
         { status: "approved" },
-        { where: { submittedChecklistId, status: { [Op.ne]: "approved" } }, transaction },
+        {
+          where: { submittedChecklistId, status: { [Op.ne]: "approved" } },
+          transaction,
+        },
       );
 
       submission.status = "approved";
@@ -146,7 +213,10 @@ export class ApprovalRepository {
       await submission.save({ transaction });
 
       await transaction.commit();
-      return { submittedChecklist: submission, message: "Submission approved successfully" };
+      return {
+        submittedChecklist: submission,
+        message: "Submission approved successfully",
+      };
     } catch (error) {
       await transaction.rollback();
       if (error instanceof ApplicationError) throw error;
@@ -159,17 +229,26 @@ export class ApprovalRepository {
     try {
       const operatorIds = await this._getOperatorIds(approverId);
 
-      const submission = await SubmittedChecklist.findByPk(submittedChecklistId, {
-        include: [{
-          model: ChecklistAssignment, as: "assignment",
-          where: { assignedTo: { [Op.in]: operatorIds } },
-        }],
-        transaction,
-      });
+      const submission = await SubmittedChecklist.findByPk(
+        submittedChecklistId,
+        {
+          include: [
+            {
+              model: ChecklistAssignment,
+              as: "assignment",
+              where: { assignedTo: { [Op.in]: operatorIds } },
+            },
+          ],
+          transaction,
+        },
+      );
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
       if (submission.status !== "pending") {
-        throw new ApplicationError("Only pending submissions can be rejected", 400);
+        throw new ApplicationError(
+          "Only pending submissions can be rejected",
+          400,
+        );
       }
 
       submission.status = "rejected";
@@ -190,9 +269,11 @@ export class ApprovalRepository {
     }
   }
 
-  static async getHistory(approverId, { status, search, startDate, endDate, page = 1, limit = 20 }) {
+  static async getHistory(
+    approverId,
+    { status, search, startDate, endDate, page = 1, limit = 20 },
+  ) {
     try {
-
       const where = { approvedBy: approverId };
 
       if (status) {
@@ -212,20 +293,29 @@ export class ApprovalRepository {
       }
 
       const offset = (page - 1) * limit;
-      const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
-        where,
-        include: [
-    
-          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName"] },
-        ],
-        order: [["updatedAt", "DESC"]],
-        limit,
-        offset,
-      });
+      const { rows: submissions, count: total } =
+        await SubmittedChecklist.findAndCountAll({
+          where,
+          include: [
+            {
+              model: User,
+              as: "submitter",
+              attributes: ["userId", "firstName", "lastName"],
+            },
+          ],
+          order: [["updatedAt", "DESC"]],
+          limit,
+          offset,
+        });
 
       return {
         submissions,
-        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       };
     } catch (error) {
       throw new ApplicationError("Failed to fetch review history", 500);

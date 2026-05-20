@@ -1,7 +1,14 @@
 import { Op, Sequelize } from "sequelize";
 import crypto from "crypto";
 
-import { User, Role, Company, Department, OperatorApprover, SubmittedChecklist } from "../../models/index.js";
+import {
+  User,
+  Role,
+  Company,
+  Department,
+  OperatorApprover,
+  SubmittedChecklist,
+} from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 
 import { generateJWT } from "../auth/helper.js";
@@ -10,11 +17,7 @@ import { sequelize } from "../../config/database.js";
 import { generateRandomPassword } from "./helper.js";
 import e from "express";
 
-
-
-
 export class AdminRepository {
-
   static async signin(request) {
     try {
       const data = request.body;
@@ -29,7 +32,11 @@ export class AdminRepository {
         where: { email: email.toLowerCase() },
         include: [
           { model: Role, as: "role", attributes: ["roleId", "roleName"] },
-          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          {
+            model: Company,
+            as: "company",
+            attributes: ["companyId", "companyName"],
+          },
         ],
       });
 
@@ -52,28 +59,35 @@ export class AdminRepository {
       const token = generateJWT(user.userId);
       const requiresPasswordChange = userRaw.newLogin === true;
 
-      return { token, user, message: "Signin successful", requiresPasswordChange };
+      return {
+        token,
+        user,
+        message: "Signin successful",
+        requiresPasswordChange,
+      };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError(error.message || "Signin failed", error.statusCode || 500);
+      throw new ApplicationError(
+        error.message || "Signin failed",
+        error.statusCode || 500,
+      );
     }
   }
 
-
   static async getAllRoles(user, { deleted } = {}) {
     const role = user.roleId ? await Role.findByPk(user.roleId) : null;
-    
+
     // Determine paranoid setting based on deleted filter
     let paranoid = true;
     let deletedAtCondition = null;
-    
+
     if (deleted === "true") {
       paranoid = false;
       deletedAtCondition = { deletedAt: { [Op.ne]: null } };
     } else if (deleted === "all") {
       paranoid = false;
     }
-    
+
     if (role?.roleName === "superAdmin") {
       try {
         const where = deletedAtCondition || {};
@@ -89,7 +103,10 @@ export class AdminRepository {
     }
 
     try {
-      const where = { isActive: true, roleName: { [Op.notIn]: ["superAdmin"] } };
+      const where = {
+        isActive: true,
+        roleName: { [Op.notIn]: ["superAdmin"] },
+      };
       if (deletedAtCondition) {
         Object.assign(where, deletedAtCondition);
       }
@@ -117,30 +134,33 @@ export class AdminRepository {
 
   static async createRole({ roleName, description }) {
     try {
-        const existing = await Role.findOne({
-            where: {
-                roleName: roleName.toLowerCase()
-            },
-            paranoid: false 
-        });
-        
-        if (existing) {
-            if (existing.deletedAt) {
-                throw new ApplicationError("Role already exists but has been deleted", 400);
-            }
-            throw new ApplicationError("Role already exists", 400);
+      const existing = await Role.findOne({
+        where: {
+          roleName: roleName.toLowerCase(),
+        },
+        paranoid: false,
+      });
+
+      if (existing) {
+        if (existing.deletedAt) {
+          throw new ApplicationError(
+            "Role already exists but has been deleted",
+            400,
+          );
         }
+        throw new ApplicationError("Role already exists", 400);
+      }
 
-        const role = await Role.create({
-            roleName: roleName.toLowerCase(),
-            description,
-        });
+      const role = await Role.create({
+        roleName: roleName.toLowerCase(),
+        description,
+      });
 
-        return { message: "Role created successfully", role };
+      return { message: "Role created successfully", role };
     } catch (error) {
-        if (error instanceof ApplicationError) throw error;
-        console.log("Error in createRole:", error);
-        throw new ApplicationError("Failed to create role", 500);
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in createRole:", error);
+      throw new ApplicationError("Failed to create role", 500);
     }
   }
 
@@ -149,7 +169,11 @@ export class AdminRepository {
       const role = await Role.findByPk(roleId);
       if (!role) throw new ApplicationError("Role not found", 404);
 
-      if (role.roleName === "superAdmin" && data.roleName && data.roleName !== "superAdmin") {
+      if (
+        role.roleName === "superAdmin" &&
+        data.roleName &&
+        data.roleName !== "superAdmin"
+      ) {
         throw new ApplicationError("Cannot rename superAdmin role", 400);
       }
 
@@ -175,10 +199,12 @@ export class AdminRepository {
         throw new ApplicationError("Cannot delete protected system role", 400);
       }
 
-
       const usersWithRole = await User.count({ where: { roleId } });
       if (usersWithRole > 0) {
-        throw new ApplicationError(`Cannot delete role. ${usersWithRole} user(s) are assigned to this role.`, 400);
+        throw new ApplicationError(
+          `Cannot delete role. ${usersWithRole} user(s) are assigned to this role.`,
+          400,
+        );
       }
 
       await role.destroy();
@@ -193,7 +219,7 @@ export class AdminRepository {
     try {
       const role = await Role.findByPk(roleId, { paranoid: false });
       if (!role) throw new ApplicationError("Role not found", 404);
-      
+
       if (!role.deletedAt) {
         throw new ApplicationError("Role is not deleted", 400);
       }
@@ -206,14 +232,16 @@ export class AdminRepository {
     }
   }
 
-
-
   static async getUser(id) {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["password", "updatedAt"] },
       include: [
         { model: Role, as: "role", attributes: ["roleId", "roleName"] },
-        { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+        {
+          model: Company,
+          as: "company",
+          attributes: ["companyId", "companyName"],
+        },
       ],
     });
 
@@ -233,7 +261,7 @@ export class AdminRepository {
     try {
       const user = await User.findByPk(userId, { paranoid: false });
       if (!user) throw new ApplicationError("User not found", 404);
-      
+
       if (!user.deletedAt) {
         throw new ApplicationError("User is not deleted", 400);
       }
@@ -246,18 +274,22 @@ export class AdminRepository {
     }
   }
 
-  static async addUser( admin,{ email, firstName, lastName, roleId, companyId, department }) {
+  static async addUser(
+    admin,
+    { email, firstName, lastName, roleId, companyId, department },
+  ) {
     try {
-      const existingUser = await User.findOne({ 
+      const existingUser = await User.findOne({
         where: { email: email.toLowerCase().trim() },
-        paranoid: false 
+        paranoid: false,
       });
 
-      
-      
       if (existingUser) {
         if (existingUser.deletedAt) {
-          throw new ApplicationError("User with this email already exists but has been deleted", 400);
+          throw new ApplicationError(
+            "User with this email already exists but has been deleted",
+            400,
+          );
         }
         throw new ApplicationError("User with this email already exists", 400);
       }
@@ -269,12 +301,17 @@ export class AdminRepository {
       if (companyId) {
         const company = await Company.findByPk(companyId);
         if (!company) throw new ValidationError("Invalid company ID");
-
       }
 
       const checkAdminRole = await Role.findByPk(admin.roleId);
-      if (role.roleName === "superAdmin" && checkAdminRole.roleName !== "superAdmin") {
-        throw new ApplicationError("Only SuperAdmin is Allowed to add SuperAdmin", 403);
+      if (
+        role.roleName === "superAdmin" &&
+        checkAdminRole.roleName !== "superAdmin"
+      ) {
+        throw new ApplicationError(
+          "Only SuperAdmin is Allowed to add SuperAdmin",
+          403,
+        );
       }
 
       const password = generateRandomPassword();
@@ -287,23 +324,42 @@ export class AdminRepository {
         roleId,
         companyId: companyId || null,
         department: department || null,
-        newLogin: true, 
+        newLogin: true,
       });
 
       await user.setPassword(password);
       await user.save();
 
-      sendPasswordMail({ email: user.email, password, firstName: user.firstName });
+      sendPasswordMail({
+        email: user.email,
+        password,
+        firstName: user.firstName,
+      });
 
       return { message: "User added successfully" };
     } catch (error) {
-      if (error instanceof ApplicationError || error instanceof ValidationError) throw error;
+      if (error instanceof ApplicationError || error instanceof ValidationError)
+        throw error;
       console.log("Error in addUser:", error);
       throw new ApplicationError("Failed to add user", 500);
     }
   }
 
-  static async getAllUsers({ status, roleId, companyId, department, page = 1, limit = 20, search, startDate, endDate, deleted }, user) {
+  static async getAllUsers(
+    {
+      status,
+      roleId,
+      companyId,
+      department,
+      page = 1,
+      limit = 20,
+      search,
+      startDate,
+      endDate,
+      deleted,
+    },
+    user,
+  ) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -327,7 +383,9 @@ export class AdminRepository {
 
       if (!isSuperAdmin) {
         where.roleId = {
-          [Op.notIn]: Sequelize.literal(`(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`)
+          [Op.notIn]: Sequelize.literal(
+            `(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`,
+          ),
         };
       }
 
@@ -340,8 +398,12 @@ export class AdminRepository {
           where.roleId = {
             [Op.and]: [
               { [Op.eq]: roleId },
-              { [Op.notIn]: Sequelize.literal(`(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`) }
-            ]
+              {
+                [Op.notIn]: Sequelize.literal(
+                  `(SELECT "roleId" FROM "packing_check_roles" WHERE "roleName" = 'superAdmin')`,
+                ),
+              },
+            ],
           };
         } else {
           where.roleId = roleId;
@@ -372,8 +434,23 @@ export class AdminRepository {
         attributes: { exclude: ["password"] },
         include: [
           { model: Role, as: "role", attributes: ["roleId", "roleName"] },
-          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
-          { model: OperatorApprover, as: "operatorApprovers",attributes: ["id"]  , include: [{ model: User, as: "approver", attributes: ["firstName", "lastName", "userId"] }] }
+          {
+            model: Company,
+            as: "company",
+            attributes: ["companyId", "companyName"],
+          },
+          {
+            model: OperatorApprover,
+            as: "operatorApprovers",
+            attributes: ["id"],
+            include: [
+              {
+                model: User,
+                as: "approver",
+                attributes: ["firstName", "lastName", "userId"],
+              },
+            ],
+          },
         ],
         limit,
         offset,
@@ -398,14 +475,18 @@ export class AdminRepository {
   static async getUserStatistics(user) {
     const where = {};
 
-    if (user?.role?.roleName !== "superAdmin") { 
+    if (user?.role?.roleName !== "superAdmin") {
       where.companyId = user.companyId;
     }
     try {
       const totalUsers = await User.count({ where });
-      const activeUsers = await User.count({ where: { ...where, status: "active" } });
-      const suspendedUsers = await User.count({ where: { ...where, status: "suspended" } });
-   
+      const activeUsers = await User.count({
+        where: { ...where, status: "active" },
+      });
+      const suspendedUsers = await User.count({
+        where: { ...where, status: "suspended" },
+      });
+
       return {
         totalUsers,
         activeUsers,
@@ -431,7 +512,10 @@ export class AdminRepository {
       if (!user) throw new ApplicationError("User not found", 404);
 
       if (user.userId === admin.userId) {
-        throw new ApplicationError("You cannot modify your own profile, contact an Administrator", 400);
+        throw new ApplicationError(
+          "You cannot modify your own profile, contact an Administrator",
+          400,
+        );
       }
 
       if (firstName) user.firstName = firstName;
@@ -463,7 +547,8 @@ export class AdminRepository {
       await user.save();
       return { message: "User updated successfully" };
     } catch (error) {
-      if (error instanceof ApplicationError || error instanceof ValidationError) throw error;
+      if (error instanceof ApplicationError || error instanceof ValidationError)
+        throw error;
       throw new ApplicationError("Failed to update user", 500);
     }
   }
@@ -473,21 +558,28 @@ export class AdminRepository {
     if (!user) throw new ApplicationError("User not found", 404);
 
     if (user.userId === admin.userId)
-      throw new ApplicationError("You cannot reset your own password this way", 400);
+      throw new ApplicationError(
+        "You cannot reset your own password this way",
+        400,
+      );
 
-  
     const password = generateRandomPassword();
 
     await user.setPassword(password);
-    user.newLogin = true; 
+    user.newLogin = true;
     await user.save();
 
-    sendPasswordMail({ email: user.email, password, firstName: user.firstName });
+    sendPasswordMail({
+      email: user.email,
+      password,
+      firstName: user.firstName,
+    });
 
-    return { message: "Password reset successfully. User will be required to change password on next login." };
+    return {
+      message:
+        "Password reset successfully. User will be required to change password on next login.",
+    };
   }
-
-
 
   static async suspendUser(userId) {
     try {
@@ -542,13 +634,20 @@ export class AdminRepository {
       });
       if (!approver) throw new ApplicationError("Approver not found", 404);
       if (approver.role?.roleName !== "approval") {
-        throw new ApplicationError("Selected user does not have approval role", 400);
+        throw new ApplicationError(
+          "Selected user does not have approval role",
+          400,
+        );
       }
 
       const existing = await OperatorApprover.findOne({
         where: { operatorId, approverId },
       });
-      if (existing) throw new ApplicationError("Approver is already assigned to this operator", 400);
+      if (existing)
+        throw new ApplicationError(
+          "Approver is already assigned to this operator",
+          400,
+        );
 
       await OperatorApprover.create({ operatorId, approverId });
 
@@ -564,7 +663,11 @@ export class AdminRepository {
       const record = await OperatorApprover.findOne({
         where: { operatorId, approverId },
       });
-      if (!record) throw new ApplicationError("Approver is not assigned to this operator", 404);
+      if (!record)
+        throw new ApplicationError(
+          "Approver is not assigned to this operator",
+          404,
+        );
 
       await record.destroy();
 
@@ -584,7 +687,13 @@ export class AdminRepository {
 
       const approvers = await OperatorApprover.findAll({
         where: { operatorId },
-        include: [{ model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] }],
+        include: [
+          {
+            model: User,
+            as: "approver",
+            attributes: ["userId", "firstName", "lastName", "email"],
+          },
+        ],
       });
 
       return { approvers: approvers.map((r) => r.approver) };
@@ -594,8 +703,15 @@ export class AdminRepository {
     }
   }
 
-
-  static async getAllCompanies({ status, search, page = 1, limit = 20, startDate, endDate, deleted }) {
+  static async getAllCompanies({
+    status,
+    search,
+    page = 1,
+    limit = 20,
+    startDate,
+    endDate,
+    deleted,
+  }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -646,12 +762,12 @@ export class AdminRepository {
                   WHERE "users"."companyId" = "packing_check_company"."companyId"
                     AND "users"."deletedAt" IS NULL
                 )`),
-                'userCount'
-              ]
-            ]
-          }
+                "userCount",
+              ],
+            ],
+          },
         }),
-        User.count()
+        User.count(),
       ]);
 
       return {
@@ -665,7 +781,6 @@ export class AdminRepository {
         },
       };
     } catch (error) {
-
       throw new ApplicationError("Failed to fetch companies", 500);
     }
   }
@@ -674,10 +789,9 @@ export class AdminRepository {
     try {
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
-      
 
       const usersCount = await User.count({ where: { companyId } });
-      
+
       return { company: { ...company.toJSON(), usersCount } };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -685,20 +799,31 @@ export class AdminRepository {
     }
   }
 
-  static async createCompany({ companyName, address, contactEmail, contactFullName }) {
+  static async createCompany({
+    companyName,
+    address,
+    contactEmail,
+    contactFullName,
+  }) {
     try {
-      const existing = await Company.findOne({ 
+      const existing = await Company.findOne({
         where: {
-           companyName: { [Op.iLike]: companyName.trim() },
+          companyName: { [Op.iLike]: companyName.trim() },
         },
-        paranoid: false 
+        paranoid: false,
       });
-      
+
       if (existing) {
         if (existing.deletedAt) {
-          throw new ApplicationError("Company with this name already exists but has been deleted", 400);
+          throw new ApplicationError(
+            "Company with this name already exists but has been deleted",
+            400,
+          );
         }
-        throw new ApplicationError("Company with this name already exists", 400);
+        throw new ApplicationError(
+          "Company with this name already exists",
+          400,
+        );
       }
 
       const company = await Company.create({
@@ -706,7 +831,6 @@ export class AdminRepository {
         address: address?.trim() || null,
         contactEmail: contactEmail?.toLowerCase().trim() || null,
         contactFullName: contactFullName?.trim() || null,
-
       });
 
       return { message: "Company created successfully", company };
@@ -728,14 +852,20 @@ export class AdminRepository {
             companyId: { [Op.ne]: companyId },
           },
         });
-        if (existing) throw new ApplicationError("Company with this name already exists", 400);
+        if (existing)
+          throw new ApplicationError(
+            "Company with this name already exists",
+            400,
+          );
         company.companyName = data.companyName.trim();
       }
 
-      if (data.address !== undefined) company.address = data.address?.trim() || null;
-      if (data.contactEmail !== undefined) company.contactEmail = data.contactEmail?.toLowerCase().trim() || null;
-      if (data.contactFullName !== undefined) company.contactFullName = data.contactFullName?.trim() || null;
-   
+      if (data.address !== undefined)
+        company.address = data.address?.trim() || null;
+      if (data.contactEmail !== undefined)
+        company.contactEmail = data.contactEmail?.toLowerCase().trim() || null;
+      if (data.contactFullName !== undefined)
+        company.contactFullName = data.contactFullName?.trim() || null;
 
       await company.save();
       return { message: "Company updated successfully", company };
@@ -754,7 +884,7 @@ export class AdminRepository {
       if (usersInCompany > 0) {
         throw new ApplicationError(
           `Cannot delete company. ${usersInCompany} user(s) are assigned to this company.`,
-          400
+          400,
         );
       }
 
@@ -770,7 +900,7 @@ export class AdminRepository {
     try {
       const company = await Company.findByPk(companyId, { paranoid: false });
       if (!company) throw new ApplicationError("Company not found", 404);
-      
+
       if (!company.deletedAt) {
         throw new ApplicationError("Company is not deleted", 400);
       }
@@ -822,8 +952,14 @@ export class AdminRepository {
     }
   }
 
-
-  static async getAllDepartments({ status, search, page = 1, limit = 20, startDate, endDate }) {
+  static async getAllDepartments({
+    status,
+    search,
+    page = 1,
+    limit = 20,
+    startDate,
+    endDate,
+  }) {
     try {
       page = Number(page) || 1;
       limit = Number(limit) || 20;
@@ -890,9 +1026,15 @@ export class AdminRepository {
 
       if (existing) {
         if (existing.deletedAt) {
-          throw new ApplicationError("Department with this name already exists but has been deleted", 400);
+          throw new ApplicationError(
+            "Department with this name already exists but has been deleted",
+            400,
+          );
         }
-        throw new ApplicationError("Department with this name already exists", 400);
+        throw new ApplicationError(
+          "Department with this name already exists",
+          400,
+        );
       }
 
       const department = await Department.create({
@@ -919,11 +1061,16 @@ export class AdminRepository {
             departmentId: { [Op.ne]: departmentId },
           },
         });
-        if (existing) throw new ApplicationError("Department with this name already exists", 400);
+        if (existing)
+          throw new ApplicationError(
+            "Department with this name already exists",
+            400,
+          );
         department.departmentName = data.departmentName.trim();
       }
 
-      if (data.description !== undefined) department.description = data.description?.trim() || null;
+      if (data.description !== undefined)
+        department.description = data.description?.trim() || null;
       if (data.status !== undefined) department.status = data.status;
 
       await department.save();
@@ -987,25 +1134,21 @@ export class AdminRepository {
 
   static async getGlobalAnalytics() {
     try {
-
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-   
       const startOfWeek = new Date(today);
       const dayOfWeek = today.getDay();
-      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       startOfWeek.setDate(today.getDate() - diff);
       startOfWeek.setHours(0, 0, 0, 0);
 
-  
       const totalActiveCompanies = await Company.count({
         where: { status: "active" },
       });
 
-  
       const totalActiveUsers = await User.count({
         where: { status: "active" },
       });
@@ -1018,7 +1161,6 @@ export class AdminRepository {
           },
         },
       });
-
 
       const totalChecklistsThisWeek = await SubmittedChecklist.count({
         where: {
@@ -1043,29 +1185,24 @@ export class AdminRepository {
 
   static async getCompanyAnalytics(companyId) {
     try {
-
       const company = await Company.findByPk(companyId);
       if (!company) throw new ApplicationError("Company not found", 404);
-
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-  
       const startOfWeek = new Date(today);
       const dayOfWeek = today.getDay();
-      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       startOfWeek.setDate(today.getDate() - diff);
       startOfWeek.setHours(0, 0, 0, 0);
-
 
       const totalActiveUsers = await User.count({
         where: { companyId, status: "active" },
       });
 
-   
       const totalChecklistsToday = await SubmittedChecklist.count({
         where: {
           companyId,
@@ -1075,7 +1212,6 @@ export class AdminRepository {
           },
         },
       });
-
 
       const totalChecklistsThisWeek = await SubmittedChecklist.count({
         where: {
