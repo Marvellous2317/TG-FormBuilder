@@ -1,28 +1,34 @@
-
 import { col, fn, literal, Op, Sequelize } from "sequelize";
 import fs from "fs";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
-import { User, Role, Company, Verification, SubmittedChecklist } from "../../models/index.js";
+import {
+  User,
+  Role,
+  Company,
+  Verification,
+  SubmittedChecklist,
+  OperatorApprover,
+  ChecklistAssignment,
+} from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";
-import { AzureImageDownloader, uploadFileToAzureBlob } from "../../utils/azureService.js";
+import {
+  AzureImageDownloader,
+  uploadFileToAzureBlob,
+} from "../../utils/azureService.js";
 import { sequelize } from "../../config/database.js";
 import { messages } from "@trycourier/courier/api/index.js";
 
-
 export class UserRepository {
-
-
-
-static async updateUser(userId, data) {
-     const user = await User.findByPk(userId);
-      if (!user) throw new ApplicationError("User not found");
+  static async updateUser(userId, data) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new ApplicationError("User not found");
     try {
       await user.update(data);
       return user;
     } catch (error) {
-     throw new ApplicationError("An error occur");
+      throw new ApplicationError("An error occur");
     }
   }
 
@@ -30,7 +36,7 @@ static async updateUser(userId, data) {
     const user = await User.findByPk(userId);
     if (!user) throw new ApplicationError("User not found", 404);
 
-    const allowedFields = ['firstName', 'lastName', "department"];
+    const allowedFields = ["firstName", "lastName", "department"];
     const filteredData = {};
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
@@ -44,65 +50,60 @@ static async updateUser(userId, data) {
 
     try {
       await user.update(filteredData);
-      return {messages : "User details updated successfully"  };
+      return { messages: "User details updated successfully" };
     } catch (error) {
       throw new ApplicationError("Failed to update user details");
     }
   }
 
-   
-
   static async changePassword(userId, data) {
-
     const password = data.password;
     const newPassword = data.newPassword;
 
     if (!password || password.length < 5) {
-      throw new ApplicationError("Password must be greater than four characters", 400);
+      throw new ApplicationError(
+        "Password must be greater than four characters",
+        400,
+      );
     }
 
     const user = await User.findOne({
-      where: { userId: userId}
+      where: { userId: userId },
     });
 
     if (!user) {
       throw new ApplicationError("User not found", 404);
     }
 
-     const password_check =await user.checkPassword(password)
-    if (!password_check) throw new ApplicationError("Invalid Credentials", 400)
-  try {
-    await user.setPassword(newPassword); 
-    await user.save();
+    const password_check = await user.checkPassword(password);
+    if (!password_check) throw new ApplicationError("Invalid Credentials", 400);
+    try {
+      await user.setPassword(newPassword);
+      await user.save();
 
-    const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId);
 
-    return { 
-      token, 
-      user, 
-      message: 'Password changed successfully' 
-    };
-
-  } catch (error) {
-   
-    throw new ApplicationError("An error occur");
+      return {
+        token,
+        user,
+        message: "Password changed successfully",
+      };
+    } catch (error) {
+      throw new ApplicationError("An error occur");
+    }
   }
-}
 
-
-
-  static async forgotPassword({data, email}) {
-
-       const {password, otp} = data
+  static async forgotPassword({ data, email }) {
+    const { password, otp } = data;
     if (!password || password.length < 5) {
-      throw new ApplicationError("Password must be greater than four characters", 400);
+      throw new ApplicationError(
+        "Password must be greater than four characters",
+        400,
+      );
     }
 
-
- 
     const user = await User.findOne({
       where: { email: email },
-   
     });
 
     if (!user) {
@@ -110,132 +111,106 @@ static async updateUser(userId, data) {
     }
 
     let verifyOtp = await Verification.findOne({
-      where:{
-        email :email,
-        otp : otp
-      }
-    })
+      where: {
+        email: email,
+        otp: otp,
+      },
+    });
 
     if (!verifyOtp) throw new ApplicationError("Invalid OTP", 400);
-    if (verifyOtp.expiry < new Date()) throw new ApplicationError("OTP expired", 400);
-  try {
-    await user.setPassword(password); 
-    await user.save();
-    await verifyOtp.destroy();
-    const token = generateJWT(user.userId);
-    return { 
-      token, 
-      user, 
-      message: 'Password changed successfully' 
-    };
-
-  } catch (error) {
-   
-    throw new ApplicationError("An error Occur");
+    if (verifyOtp.expiry < new Date())
+      throw new ApplicationError("OTP expired", 400);
+    try {
+      await user.setPassword(password);
+      await user.save();
+      await verifyOtp.destroy();
+      const token = generateJWT(user.userId);
+      return {
+        token,
+        user,
+        message: "Password changed successfully",
+      };
+    } catch (error) {
+      throw new ApplicationError("An error Occur");
+    }
   }
-  }
 
-
-  
   static async resetPassword(email) {
-      const user = await User.findOne({
-      where: { email: email }
-
+    const user = await User.findOne({
+      where: { email: email },
     });
 
     if (!user) {
       throw new ApplicationError("User not found", 404);
     }
 
-  try {
+    try {
+      const { otp, expiry } = generateOpt();
 
+      await Verification.create({
+        email: email,
+        otp,
+        expiry,
+        userId: user.userId,
+      });
 
-    const {otp, expiry} = generateOpt()
-    
-   await Verification.create({ email: email, otp, expiry, userId: user.userId });
-  
-    await sendVerificationMail({email:user.email ,otp, firstName:user.firstName});
+      await sendVerificationMail({
+        email: user.email,
+        otp,
+        firstName: user.firstName,
+      });
 
-    return { 
-      message: 'OTP sent to your email successfully' 
-    };
+      return {
+        message: "OTP sent to your email successfully",
+      };
+    } catch (error) {
+      console.log(error);
 
-  } catch (error) {
-    console.log(error)
-   
-    throw new ApplicationError("An Error occur");
+      throw new ApplicationError("An Error occur");
+    }
   }
-  }
-
-
-
-
-
-
-
 
   static async getUser(userId) {
- 
     try {
-      let user = await User.findOne( {
-        where:{userId : userId},
+      let user = await User.findOne({
+        where: { userId: userId },
         include: [{ model: Role, as: "role" }],
         attributes: { exclude: ["password"] },
       });
       if (!user) throw new ValidationError("User not found");
-  
 
-      
-
-  return {user};
-
+      return { user };
     } catch (error) {
       throw error;
     }
   }
 
-
-
-
-
-
-
-static async uploadSignature({userId, signature}) {
-      const user = await User.findByPk(userId);
+  static async uploadSignature({ userId, signature }) {
+    const user = await User.findByPk(userId);
     if (!user) throw new ApplicationError("User not found");
 
-  try {
+    try {
+      await user.update({ signature: signature }, { where: { userId } });
 
-    
-    await user.update(
-      { signature: signature }, 
-      { where: { userId } }
-    );
-
-
-    return {message : "Signature uploaded successfully"};
-  } catch (error) {
-    throw error;
+      return { message: "Signature uploaded successfully" };
+    } catch (error) {
+      throw error;
+    }
   }
-}
 
-
-
-static async deleteAccount(userId) {
+  static async deleteAccount(userId) {
     const user = await User.findOne({ where: { userId } });
 
     if (!user) {
       throw new ApplicationError(`No user found with ID:`, 400);
     }
-  try {
-  
-    await user.destroy()
-    return { success: true, message: "Account deleted successfully" };
-  } catch (error) {
-    throw new ApplicationError(`Failed to delete account`);
+    try {
+      await user.destroy();
+      return { success: true, message: "Account deleted successfully" };
+    } catch (error) {
+      throw new ApplicationError(`Failed to delete account`);
+    }
   }
-}
-
 
   static async getUserAnalytics(user) {
     try {
@@ -255,17 +230,27 @@ static async deleteAccount(userId) {
       startOfWeek.setHours(0, 0, 0, 0);
 
       if (role === "superAdmin") {
-        const totalActiveCompanies = await Company.count({ where: { status: "active" } });
-        const totalActiveUsers = await User.count({ where: { status: "active" } });
+        const totalActiveCompanies = await Company.count({
+          where: { status: "active" },
+        });
+        const totalActiveUsers = await User.count({
+          where: { status: "active" },
+        });
         const totalChecklistsToday = await SubmittedChecklist.count({
           where: { createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
         });
         const totalChecklistsThisWeek = await SubmittedChecklist.count({
           where: { createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
         });
-        const pendingChecklists = await SubmittedChecklist.count({ where: { status: "pending" } });
-        const approvedChecklists = await SubmittedChecklist.count({ where: { status: "approved" } });
-        const rejectedChecklists = await SubmittedChecklist.count({ where: { status: "rejected" } });
+        const pendingChecklists = await SubmittedChecklist.count({
+          where: { status: "pending" },
+        });
+        const approvedChecklists = await SubmittedChecklist.count({
+          where: { status: "approved" },
+        });
+        const rejectedChecklists = await SubmittedChecklist.count({
+          where: { status: "rejected" },
+        });
 
         return {
           scope: "global",
@@ -280,18 +265,33 @@ static async deleteAccount(userId) {
       }
 
       if (role === "admin") {
-        if (!companyId) throw new ApplicationError("Admin must belong to a company", 400);
+        if (!companyId)
+          throw new ApplicationError("Admin must belong to a company", 400);
 
-        const totalActiveUsers = await User.count({ where: { companyId, status: "active" } });
+        const totalActiveUsers = await User.count({
+          where: { companyId, status: "active" },
+        });
         const totalChecklistsToday = await SubmittedChecklist.count({
-          where: { companyId, createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+          where: {
+            companyId,
+            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+          },
         });
         const totalChecklistsThisWeek = await SubmittedChecklist.count({
-          where: { companyId, createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+          where: {
+            companyId,
+            createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
+          },
         });
-        const totalPending = await SubmittedChecklist.count({ where: { companyId, status: "pending" } });
-        const totalApproved = await SubmittedChecklist.count({ where: { companyId, status: "approved" } });
-        const totalRejected = await SubmittedChecklist.count({ where: { companyId, status: "rejected" } });
+        const totalPending = await SubmittedChecklist.count({
+          where: { companyId, status: "pending" },
+        });
+        const totalApproved = await SubmittedChecklist.count({
+          where: { companyId, status: "approved" },
+        });
+        const totalRejected = await SubmittedChecklist.count({
+          where: { companyId, status: "rejected" },
+        });
 
         return {
           scope: "company",
@@ -306,15 +306,29 @@ static async deleteAccount(userId) {
 
       if (role === "operator") {
         const myChecklistsToday = await SubmittedChecklist.count({
-          where: { submittedBy: userId, createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+          where: {
+            submittedBy: userId,
+            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+          },
         });
         const myChecklistsThisWeek = await SubmittedChecklist.count({
-          where: { submittedBy: userId, createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+          where: {
+            submittedBy: userId,
+            createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
+          },
         });
-        const totalPending = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "pending" } });
-        const totalApproved = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "approved" } });
-        const totalRejected = await SubmittedChecklist.count({ where: { submittedBy: userId, status: "rejected" } });
-        const totalChecklists = await SubmittedChecklist.count({ where: { submittedBy: userId } });
+        const totalPending = await SubmittedChecklist.count({
+          where: { submittedBy: userId, status: "pending" },
+        });
+        const totalApproved = await SubmittedChecklist.count({
+          where: { submittedBy: userId, status: "approved" },
+        });
+        const totalRejected = await SubmittedChecklist.count({
+          where: { submittedBy: userId, status: "rejected" },
+        });
+        const totalChecklists = await SubmittedChecklist.count({
+          where: { submittedBy: userId },
+        });
 
         return {
           scope: "personal",
@@ -329,28 +343,55 @@ static async deleteAccount(userId) {
 
       if (role === "approval") {
         const myChecklistsToday = await SubmittedChecklist.count({
-          where: { approvedBy: userId, updatedAt: { [Op.gte]: today, [Op.lt]: tomorrow } },
+          where: {
+            approvedBy: userId,
+            updatedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+          },
         });
         const myChecklistsThisWeek = await SubmittedChecklist.count({
-          where: { approvedBy: userId, updatedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } },
+          where: {
+            approvedBy: userId,
+            updatedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
+          },
         });
-        const totalApproved = await SubmittedChecklist.count({ where: { approvedBy: userId, status: "approved" } });
-        const totalRejected = await SubmittedChecklist.count({ where: { approvedBy: userId, status: "rejected" } });
-        const totalReviewed = await SubmittedChecklist.count({ where: { approvedBy: userId } });
+        const totalApproved = await SubmittedChecklist.count({
+          where: { approvedBy: userId, status: "approved" },
+        });
+        const totalRejected = await SubmittedChecklist.count({
+          where: { approvedBy: userId, status: "rejected" },
+        });
+        const totalReviewed = await SubmittedChecklist.count({
+          where: { approvedBy: userId },
+        });
 
-        const totalPending = await SubmittedChecklist.count({ 
-          where: { companyId, status: "pending" } 
+        const links = await OperatorApprover.findAll({
+          where: { approverId: userId },
+          attributes: ["operatorId", "createdAt"],
         });
+        let totalPending = 0;
+        if (links.length > 0) {
+          const orConditions = links.map((link) => ({
+            submittedAt: { [Op.gte]: link.createdAt },
+            "$assignment.assignedTo$": link.operatorId,
+          }));
+          totalPending = await SubmittedChecklist.count({
+            where: { status: "pending", [Op.or]: orConditions },
+            include: [
+              { model: ChecklistAssignment, as: "assignment", attributes: [] },
+            ],
+            subQuery: false,
+          });
+        }
 
         return {
           scope: "personal",
-           myChecklistsToday,
+          myChecklistsToday,
           myChecklistsThisWeek,
           totalApproved,
           totalRejected,
           totalReviewed,
           totalPending,
-        }
+        };
       }
 
       throw new ApplicationError("Invalid role for analytics", 403);
@@ -360,6 +401,4 @@ static async deleteAccount(userId) {
       throw new ApplicationError("Failed to fetch user analytics", 500);
     }
   }
-
 }
-
