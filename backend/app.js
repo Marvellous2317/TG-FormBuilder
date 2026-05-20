@@ -38,8 +38,9 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://appinterface.tolaram.com",
-    "https://tolaram.com"
+    "https://digiforms.tolaram.com",
+    "https://tolaram.com",
+    "https://digiforms.tolaram.com"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -222,7 +223,8 @@ const distPathAzure = path.join(__dirname, 'dist');
 const distPathLocal = path.join(__dirname, '..', 'frontend', 'dist');
 const distPath = fs.existsSync(path.join(distPathAzure, 'index.html')) ? distPathAzure : distPathLocal;
 
-app.use(express.static(distPath));
+app.use('/assets', express.static(path.join(distPath, 'assets')));
+app.use(express.static(distPath, { index: false }));
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) {
