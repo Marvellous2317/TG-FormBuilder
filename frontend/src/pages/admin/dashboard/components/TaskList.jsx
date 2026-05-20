@@ -108,6 +108,16 @@ export default function TaskList({
 
   const dropOptions = [
     {
+      title: 'Entries',
+      value: 'entries',
+      onClick: () => {
+        setActiveMenuId(null);
+        navigate(
+          `/admin/entries/${checklistToEdit?.checklistId}/${encodeURIComponent(checklistToEdit?.title)}`,
+        );
+      },
+    },
+    {
       title: 'Unassign log',
       value: 'unassign',
       onClick: () => {
@@ -126,13 +136,11 @@ export default function TaskList({
       },
     },
     {
-      title: 'Entries',
-      value: 'entries',
+      title: 'Edit log',
+      value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
-        navigate(
-          `/admin/entries/${checklistToEdit?.checklistId}/${checklistToEdit?.title}`,
-        );
+        setIsEditChecklistModalOpen(true);
       },
     },
     {
