@@ -2,8 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const baseURL =
-  import.meta.env.VITE_API_BASE_URL ??
-  'https://tgpackagingappprd.azurewebsites.net/api/v1/';
+  import.meta.env.VITE_API_BASE_URL ?? 'https://digiforms.tolaram.com/api/v1/';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -34,10 +33,7 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 ||
-      error.response?.status === 403
-    ) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       useAuthStore.getState().clearAuth();
     }
 
