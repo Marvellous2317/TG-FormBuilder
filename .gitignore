@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 appConfig.json
 design.md
 docs
+
+commit.sh
