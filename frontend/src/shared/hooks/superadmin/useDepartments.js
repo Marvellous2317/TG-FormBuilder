@@ -9,6 +9,7 @@ import {
   deleteDepartment,
   fetchDepartment,
   fetchDepartments,
+  restoreDepartment,
   updateDepartment,
 } from '../../../core/api/superadmin';
 
@@ -49,6 +50,35 @@ export function useDeleteDepartment(options = {}) {
 
   return useMutation({
     mutationFn: ({ departmentId }) => deleteDepartment(departmentId),
+    onSuccess: async (response, variables, context) => {
+      const { departmentId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'departments'],
+      });
+
+      // Also remove the individual department query if it exists
+      if (departmentId) {
+        queryClient.removeQueries({
+          queryKey: ['superadmin', 'departments', departmentId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useRestoreDepartment(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ departmentId }) => restoreDepartment(departmentId),
     onSuccess: async (response, variables, context) => {
       const { departmentId } = variables;
 

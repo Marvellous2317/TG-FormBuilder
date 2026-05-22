@@ -103,6 +103,11 @@ export const deleteDepartment = async (id) => {
   return data;
 };
 
+export const restoreDepartment = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/departments/${id}/restore`);
+  return data;
+};
+
 export const createDepartment = async (payload) => {
   const { data } = await axiosInstance.post(`/admin/departments`, payload);
   return data;

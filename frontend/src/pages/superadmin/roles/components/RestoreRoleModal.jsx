@@ -7,7 +7,7 @@ import { useRestoreRole } from '../../../../shared/hooks/superadmin/useRoles';
 import useToast from '../../../../shared/hooks/useToast';
 import Loader from '../../../../shared/components/Loader';
 
-export default function RestoreUserModal({
+export default function RestoreRoleModal({
   isRestoreRoleModalOpen,
   setIsRestoreModalOpen,
   roleToRestore,

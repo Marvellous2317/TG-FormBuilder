@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import CreateDepartmentModal from './components/CreateDepartmentModal';
 import EditDepartmentModal from './components/EditDepartmentModal';
 import DeleteDepartmentModal from './components/DeleteDepartmentModal';
-import EmptyDepartmentList from './components/EmptyDepartmentList';
 import DepartmentList from './components/DepartmentList';
 import { useDepartments } from '../../../shared/hooks/superadmin/useDepartments';
-import Loader from '../../../shared/components/Loader';
+import RestoreDepartmentModal from './components/RestoreDepartmentModal';
 
 export default function DepartmentManagement() {
   const [isCreateDepartmentModal, setIsCreateDepartmentModal] = useState(false);
   const [isEditDepartmentModal, setIsEditDepartmentModal] = useState(false);
   const [departmentToEdit, setDepartmentToEdit] = useState(null);
+  const [depertmentToRestore, setDepertmentToRestore] = useState(null);
+  const [isRestoreDepartmentModalOpen, setIsRestoreDepartmentModalOpen] =
+    useState(false);
   const [isDeleteDepartmentModalOpen, setIsDeleteDepartmentModalOpen] =
     useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
@@ -20,19 +22,39 @@ export default function DepartmentManagement() {
   const [departmentPagination, setDepartmentPagination] = useState({
     page: 1,
     limit: 20,
+    search: '',
+    status: 'active',
+    deleted: 'false',
   });
 
-  const { data, isPending: isLoading } = useDepartments(departmentPagination);
-
-  const handlePagination = ({ page, pageSize }) => {
-    setDepartmentPagination({
-      page: Number(page) || 1,
-      limit: Number(pageSize) || 20,
-    });
-  };
+  const { data, isFetching } = useDepartments(departmentPagination);
 
   const pagination = data?.data?.pagination;
   const departments = data?.data?.departments;
+
+  const handleSearch = useCallback((searchValue) => {
+    setDepartmentPagination((prev) => ({
+      ...prev,
+      search: searchValue,
+      page: 1,
+    }));
+  }, []);
+
+  const handleStatusChange = useCallback((status) => {
+    setDepartmentPagination((prev) => ({ ...prev, status, page: 1 }));
+  }, []);
+
+  const handlePagination = useCallback(({ page, pageSize }) => {
+    setDepartmentPagination((prev) => ({
+      ...prev,
+      page: Number(page) || 1,
+      limit: Number(pageSize) || 20,
+    }));
+  }, []);
+
+  const handleDeletedChange = useCallback((deleted) => {
+    setDepartmentPagination((prev) => ({ ...prev, deleted, page: 1 }));
+  }, []);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -57,55 +79,52 @@ export default function DepartmentManagement() {
         </Button>
       </header>
 
-      {isLoading ? (
-        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
-      ) : (
-        <section className="py-6 px-8 min-h-full relative">
-          {departments.length > 0 ? (
-            <DepartmentList
-              setIsEditDepartmentModal={setIsEditDepartmentModal}
-              setIsDeleteDepartmentModalOpen={setIsDeleteDepartmentModalOpen}
-              setDepartmentToDelete={setDepartmentToDelete}
-              departments={departments}
-              pagination={pagination}
-              handleDepartmentPageChange={handlePagination}
-              setDepartmentToEdit={setDepartmentToEdit}
-            />
-          ) : (
-            <EmptyDepartmentList
-              setIsCreateDepartmentModal={setIsCreateDepartmentModal}
-            />
-          )}
-        </section>
-      )}
+      <section className="py-6 px-8 min-h-full relative">
+        <DepartmentList
+          setIsEditDepartmentModal={setIsEditDepartmentModal}
+          setIsDeleteDepartmentModalOpen={setIsDeleteDepartmentModalOpen}
+          setDepartmentToDelete={setDepartmentToDelete}
+          departments={departments}
+          pagination={pagination}
+          handleDepartmentPageChange={handlePagination}
+          setDepartmentToEdit={setDepartmentToEdit}
+          isFetching={isFetching}
+          handleSearch={handleSearch}
+          handleStatusChange={handleStatusChange}
+          setIsCreateDepartmentModal={setIsCreateDepartmentModal}
+          handleDeletedChange={handleDeletedChange}
+          setIsRestoreDepartmentModalOpen={setIsRestoreDepartmentModalOpen}
+          setDepertmentToRestore={setDepertmentToRestore}
+        />
+      </section>
 
       <CreateDepartmentModal
         isCreateDepartmentModal={isCreateDepartmentModal}
         setIsCreateDepartmentModal={setIsCreateDepartmentModal}
       />
 
-      {/* <EditDepartmentModal
-        isEditDepartmentModal={isEditDepartmentModal}
-        setIsEditDepartmentModal={setIsEditDepartmentModal}
-        key={departmentToEdit?.departmentId}
-        departmentToEdit={departmentToEdit}
-        setDepartmentToEdit={setDepartmentToEdit}
-      /> */}
-
       <EditDepartmentModal
+        key={`edit-${departmentToEdit?.departmentId}`}
         isEditDepartmentModal={isEditDepartmentModal}
         setIsEditDepartmentModal={setIsEditDepartmentModal}
-        key={departmentToEdit?.departmentName}
         departmentToEdit={departmentToEdit}
         setDepartmentToEdit={setDepartmentToEdit}
       />
 
       <DeleteDepartmentModal
-        key={departmentToDelete?.departmentId}
+        key={`delete-${departmentToDelete?.departmentId}`}
         isDeleteDepartmentModalOpen={isDeleteDepartmentModalOpen}
         setIsDeleteDepartmentModalOpen={setIsDeleteDepartmentModalOpen}
         departmentToDelete={departmentToDelete}
         setDepartmentToDelete={setDepartmentToDelete}
+      />
+
+      <RestoreDepartmentModal
+        key={`restore-${depertmentToRestore?.departmentId}`}
+        isRestoreDepartmentModalOpen={isRestoreDepartmentModalOpen}
+        setIsRestoreDepartmentModalOpen={setIsRestoreDepartmentModalOpen}
+        depertmentToRestore={depertmentToRestore}
+        setDepertmentToRestore={setDepertmentToRestore}
       />
     </div>
   );
