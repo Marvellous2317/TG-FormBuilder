@@ -39,7 +39,10 @@ export function isAuthenticated(req, res, next) {
       if (!user) {
         return ResponseManager.error(res, "AuthenticationError", "Invalid user", 401);
       }
+
       req.user = user;
+
+      
       next();
     })
     .catch((err) => {

@@ -8,10 +8,10 @@ import { sequelize } from "../../../config/database.js";
 
 export class OperatorRepository {
 
-  static async getOperatorCheckList(userId, {page = 1, limit = 20 }) {
+  static async getOperatorCheckList(userId, companyId, {page = 1, limit = 20 }) {
     try {
-      const where = { assignedTo: userId };
 
+      const where = { assignedTo: userId, companyId };
       const offset = (page - 1) * limit;
       const { rows: assignments, count: total } = await ChecklistAssignment.findAndCountAll({
         where,

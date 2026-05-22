@@ -5,9 +5,10 @@ export class OperatorController {
 
   static async getOperatorCheckList(req, res, next) {
     try {
-      const userId = req.user.userId;
+
+      const {userId, companyId} = req.user;
       const { status, page, limit } = req.query;
-      const result = await OperatorRepository.getOperatorCheckList(userId, { status, page, limit });
+      const result = await OperatorRepository.getOperatorCheckList(userId, companyId, { status, page, limit });
       return ResponseManager.success(res, result, 200, "Assignments fetched successfully");
     } catch (e) { next(e); }
   }
