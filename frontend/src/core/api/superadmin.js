@@ -143,6 +143,11 @@ export const deleteUser = async (id) => {
   return data;
 };
 
+export const restoreUser = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/users/${id}/restore`);
+  return data;
+};
+
 export const addUser = async (payload) => {
   const { data } = await axiosInstance.post(`/admin/add-user`, payload);
   return data;
