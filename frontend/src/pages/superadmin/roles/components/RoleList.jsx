@@ -1,16 +1,15 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { formatDate } from '../../../../shared/utils/constants';
 import DeleteRoleModal from './DeleteRoleModal';
+import Loader from '../../../../shared/components/Loader';
 
 const statusOptions = [
-  { title: 'All status', value: 'all' },
+  { title: 'All status', value: '' },
   { title: 'Active', value: 'active' },
   { title: 'Inactive', value: 'inactive' },
 ];
@@ -21,38 +20,36 @@ export default function RoleList({
   pagination,
   setRoleToEdit,
   setIsDeleteRoleModalOpen,
+  handleSearch,
+  isFetching,
+  setIsCreateRoleModal,
+  handleStatusChange,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('all');
+  const [currentStatus, setCurrentStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const itemsPerPage = 10;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleStatusChange(currentStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStatus]);
+
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
   };
-
-  // Filter data based on search and status
-  const filteredData = roles.filter((row) => {
-    const matchesSearch =
-      row.roleName.toLowerCase().includes(search.toLowerCase()) ||
-      row.description.toLowerCase().includes(search.toLowerCase());
-
-    let status = '';
-    if (row.status) {
-      status = 'Active';
-    } else {
-      status = 'Inactive';
-    }
-
-    const matchesStatus =
-      currentStatus === 'all' ||
-      status.toLowerCase() === currentStatus.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
 
   const handlePageChange = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -176,8 +173,14 @@ export default function RoleList({
             </thead>
 
             <tbody>
-              {filteredData?.length > 0 ? (
-                filteredData.map((row, index) => (
+              {isFetching ? (
+                <tr>
+                  <td colSpan="5" className="p-12 text-center">
+                    <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                  </td>
+                </tr>
+              ) : roles?.length > 0 ? (
+                roles.map((row, index) => (
                   <tr
                     key={index}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
@@ -200,7 +203,7 @@ export default function RoleList({
                         onClick={(event) =>
                           toggleRowMenu(row.roleId, event, index, row)
                         }
-                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
+                        className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
                           size={16}
@@ -212,11 +215,19 @@ export default function RoleList({
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-8 text-center text-gray-500 font-geist text-sm"
-                  >
-                    No results found
+                  <td colSpan="5" className="p-12 text-center">
+                    <p className="text-gray-500 font-geist text-sm mb-3">
+                      No roles found
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => setIsCreateRoleModal(true)}
+                      className="bg-primary-200 gap-1 p-2.5 rounded-[10px] mx-auto"
+                    >
+                      <p className="text-white font-geist font-medium text-sm">
+                        Create a role
+                      </p>
+                    </Button>
                   </td>
                 </tr>
               )}

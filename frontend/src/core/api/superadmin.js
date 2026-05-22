@@ -1,7 +1,7 @@
 import axiosInstance from '../../shared/utils/axios';
 
-export const fetchRoles = async () => {
-  const { data } = await axiosInstance.get('/admin/roles');
+export const fetchRoles = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/roles', { params });
   return data;
 };
 

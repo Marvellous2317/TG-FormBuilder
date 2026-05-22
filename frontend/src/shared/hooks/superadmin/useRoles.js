@@ -7,10 +7,11 @@ import {
   updateRole,
 } from '../../../core/api/superadmin';
 
-export function useRoles(options = {}) {
+export function useRoles(queryParams = {}, options = {}) {
   return useQuery({
-    queryKey: ['superadmin', 'roles'],
-    queryFn: fetchRoles,
+    queryKey: ['superadmin', 'roles', queryParams],
+    queryFn: () => fetchRoles(queryParams),
+    keepPreviousData: true,
     ...options,
   });
 }
