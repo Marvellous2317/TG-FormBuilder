@@ -4,33 +4,39 @@ import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
-import { formatDate } from '../../../../shared/utils/constants';
+import {
+  deletedOptions,
+  formatDate,
+  statusOptions,
+} from '../../../../shared/utils/constants';
 import DeleteRoleModal from './DeleteRoleModal';
 import Loader from '../../../../shared/components/Loader';
-
-const statusOptions = [
-  { title: 'All status', value: '' },
-  { title: 'Active', value: 'active' },
-  { title: 'Inactive', value: 'inactive' },
-];
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function RoleList({
   setIsEditRoleModal,
   roles,
   pagination,
   setRoleToEdit,
+  setRoleToRestore,
   setIsDeleteRoleModalOpen,
   handleSearch,
   isFetching,
   setIsCreateRoleModal,
+  setIsRestoreRoleModalOpen,
   handleStatusChange,
+  handleDeletedChange,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('');
+  const [deleted, setDeleted] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState('active');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuRow, setActiveMenuRow] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const itemsPerPage = 10;
+
+  const { showError } = useToast();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +52,13 @@ export default function RoleList({
     return () => clearTimeout(timer);
   }, [currentStatus]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleDeletedChange(deleted);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [deleted]);
+
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
@@ -60,10 +73,14 @@ export default function RoleList({
       return undefined;
     }
 
-    const closeMenu = () => setActiveMenuId(null);
+    const closeMenu = () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+    };
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
       }
     };
 
@@ -91,8 +108,26 @@ export default function RoleList({
       title: 'Delete',
       value: 'delete',
       onClick: () => {
+        if (activeMenuRow?.deletedAt) {
+          showError('Role is already deleted');
+          return;
+        }
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsDeleteRoleModalOpen(true);
+      },
+    },
+    {
+      title: 'Restore',
+      value: 'restore',
+      onClick: () => {
+        if (!activeMenuRow?.deletedAt) {
+          showError('Role is not deleted');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsRestoreRoleModalOpen(true);
       },
     },
   ];
@@ -116,12 +151,17 @@ export default function RoleList({
 
     if (activeMenuId === rowId) {
       setActiveMenuId(null);
+      setActiveMenuRow(null);
       return;
     }
 
     setActiveMenuId(rowId);
 
+    setActiveMenuRow(row);
+
     setRoleToEdit(row);
+
+    setRoleToRestore(row);
   };
 
   return (
@@ -140,14 +180,30 @@ export default function RoleList({
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <DropdownSelect
-              value={currentStatus}
-              options={statusOptions}
-              onChange={(value) => setCurrentStatus(value)}
-              placeholder="All status"
-              buttonClassName="px-3! py-2! rounded-lg!"
-              menuClassName=""
-            />
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">Status: </h2>
+              <DropdownSelect
+                value={currentStatus}
+                options={statusOptions}
+                onChange={(value) => setCurrentStatus(value)}
+                placeholder="Active"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">
+                Show deleted:{' '}
+              </h2>
+              <DropdownSelect
+                value={deleted}
+                options={deletedOptions}
+                onChange={(value) => setDeleted(value)}
+                placeholder="False"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
           </div>
         </div>
 
@@ -246,7 +302,10 @@ export default function RoleList({
         ? createPortal(
             <div
               className="fixed inset-0 z-50"
-              onClick={() => setActiveMenuId(null)}
+              onClick={() => {
+                setActiveMenuId(null);
+                setActiveMenuRow(null);
+              }}
               role="presentation"
             >
               <div

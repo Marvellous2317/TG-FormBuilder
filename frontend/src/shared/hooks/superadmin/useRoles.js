@@ -4,6 +4,7 @@ import {
   deleteRole,
   fetchRole,
   fetchRoles,
+  restoreRole,
   updateRole,
 } from '../../../core/api/superadmin';
 
@@ -31,6 +32,35 @@ export function useDeleteRole(options = {}) {
 
   return useMutation({
     mutationFn: ({ roleId }) => deleteRole(roleId),
+    onSuccess: async (response, variables, context) => {
+      const { roleId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'roles'],
+      });
+
+      // Also remove the individual role query if it exists
+      if (roleId) {
+        queryClient.removeQueries({
+          queryKey: ['superadmin', 'roles', roleId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useRestoreRole(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ roleId }) => restoreRole(roleId),
     onSuccess: async (response, variables, context) => {
       const { roleId } = variables;
 

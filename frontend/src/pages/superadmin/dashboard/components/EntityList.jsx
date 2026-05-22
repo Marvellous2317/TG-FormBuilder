@@ -1,31 +1,45 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaArrowRight, FaChevronDown } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import { Link, useNavigate } from 'react-router-dom';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
-import { formatDate } from '../../../../shared/utils/constants';
-
-const statusOptions = [
-  { title: 'All status', value: 'all' },
-  { title: 'Active', value: 'active' },
-  { title: 'Inactive', value: 'inactive' },
-];
+import { formatDate, statusOptions } from '../../../../shared/utils/constants';
+import Loader from '../../../../shared/components/Loader';
 
 export default function EntityList({
   isFromDashboard = false,
   entities,
   pagination,
   handlePageChange,
+  isFetching,
+  handleSearch,
+  handleStatusChange,
+  setIsCreateEntityModal,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('all');
+  const [currentStatus, setCurrentStatus] = useState('active');
   const [activeMenuId, setActiveMenuId] = useState(null);
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? 20;
+
+  useEffect(() => {
+    if (!handleSearch) return;
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    if (!handleStatusChange) return;
+    const timer = setTimeout(() => {
+      handleStatusChange(currentStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStatus]);
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -62,27 +76,6 @@ export default function EntityList({
       handlePageChange({ page: 1, pageSize: nextSize });
     }
   };
-
-  // Filter data based on search and status
-  const filteredData = entities?.filter((row) => {
-    const matchesSearch =
-      row.companyName.toLowerCase().includes(search.toLowerCase()) ||
-      row.address.toLowerCase().includes(search.toLowerCase()) ||
-      row.contactEmail.toLowerCase().includes(search.toLowerCase());
-
-    let status = '';
-    if (row.status) {
-      status = 'active';
-    } else {
-      status = 'inactive';
-    }
-
-    const matchesStatus =
-      currentStatus === 'all' ||
-      status.toLowerCase() === currentStatus.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
 
   useEffect(() => {
     if (activeMenuId === null) {
@@ -149,7 +142,8 @@ export default function EntityList({
                 />
               </Link>
             ) : (
-              <div className="">
+              <div className="flex items-center gap-2">
+                <h2 className="text-primary font-geist text-sm">Status: </h2>
                 <DropdownSelect
                   value={currentStatus}
                   options={statusOptions}
@@ -183,13 +177,18 @@ export default function EntityList({
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Created at
                 </th>
-                {/* <th className="p-3 md:p-4 w-10 md:w-12 border-b border-gray-200 bg-tertiary-300"></th> */}
               </tr>
             </thead>
 
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((row) => (
+              {isFetching ? (
+                <tr>
+                  <td colSpan="5" className="p-12 text-center">
+                    <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                  </td>
+                </tr>
+              ) : entities?.length > 0 ? (
+                entities.map((row) => (
                   <tr
                     key={row.companyId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -199,7 +198,6 @@ export default function EntityList({
                       <p className="text-secondary text-sm">
                         {row.companyName}
                       </p>
-                      {/* <p className="text-tertiary text-xs">{row.companyId}</p> */}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
                       <p className="text-secondary text-sm">
@@ -218,30 +216,25 @@ export default function EntityList({
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {formatDate(row.createdAt)}
                     </td>
-                    {/* <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
-                      <Button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleRowMenu(row.id, event);
-                        }}
-                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
-                      >
-                        <FiMoreVertical
-                          size={16}
-                          className="mx-auto md:w-4.5 md:h-4.5"
-                        />
-                      </Button>
-                    </td> */}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-8 text-center text-gray-500 font-geist text-sm"
-                  >
-                    No results found
+                  <td colSpan="5" className="p-12 text-center">
+                    <p className="text-gray-500 font-geist text-sm mb-3">
+                      No entities found
+                    </p>
+                    {setIsCreateEntityModal && (
+                      <Button
+                        type="button"
+                        onClick={() => setIsCreateEntityModal(true)}
+                        className="bg-primary-200 gap-1 p-2.5 rounded-[10px] mx-auto"
+                      >
+                        <p className="text-white font-geist font-medium text-sm">
+                          Onboard entity
+                        </p>
+                      </Button>
+                    )}
                   </td>
                 </tr>
               )}

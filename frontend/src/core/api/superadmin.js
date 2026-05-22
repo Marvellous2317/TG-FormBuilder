@@ -10,6 +10,11 @@ export const fetchRole = async (id) => {
   return data;
 };
 
+export const restoreRole = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/roles/${id}/restore`);
+  return data;
+};
+
 export const deleteRole = async (id) => {
   const { data } = await axiosInstance.delete(`/admin/roles/${id}`);
   return data;

@@ -6,17 +6,21 @@ import CreateRoleModal from './components/CreateRoleModal';
 import EditRoleModal from './components/EditRoleModal';
 import { useRoles } from '../../../shared/hooks/superadmin/useRoles';
 import DeleteRoleModal from './components/DeleteRoleModal';
+import RestoreRoleModal from './components/RestoreRoleModal';
 
 export default function RoleManagement() {
   const [isCreateRoleModal, setIsCreateRoleModal] = useState(false);
   const [isEditRoleModal, setIsEditRoleModal] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState(null);
+  const [roleToRestore, setRoleToRestore] = useState(null);
   const [isDeleteRoleModalOpen, setIsDeleteRoleModalOpen] = useState(false);
+  const [isRestoreRoleModalOpen, setIsRestoreRoleModalOpen] = useState(false);
   const [rolesPagination, setRolesPagination] = useState({
     page: 1,
     limit: 20,
     search: '',
-    status: '',
+    status: 'active',
+    deleted: 'false',
   });
 
   const { data, isFetching } = useRoles(rolesPagination);
@@ -29,6 +33,10 @@ export default function RoleManagement() {
 
   const handleStatusChange = useCallback((status) => {
     setRolesPagination((prev) => ({ ...prev, status, page: 1 }));
+  }, []);
+
+  const handleDeletedChange = useCallback((deleted) => {
+    setRolesPagination((prev) => ({ ...prev, deleted, page: 1 }));
   }, []);
 
   return (
@@ -59,10 +67,13 @@ export default function RoleManagement() {
           roles={roles}
           pagination={data?.data?.pagination}
           setRoleToEdit={setRoleToEdit}
+          setRoleToRestore={setRoleToRestore}
           handleSearch={handleSearch}
           isFetching={isFetching}
           setIsCreateRoleModal={setIsCreateRoleModal}
           handleStatusChange={handleStatusChange}
+          handleDeletedChange={handleDeletedChange}
+          setIsRestoreRoleModalOpen={setIsRestoreRoleModalOpen}
         />
       </section>
 
@@ -72,7 +83,7 @@ export default function RoleManagement() {
       />
 
       <EditRoleModal
-        key={roleToEdit?.roleName}
+        key={`edit-${roleToEdit?.roleId}`}
         isEditRoleModal={isEditRoleModal}
         setIsEditRoleModal={setIsEditRoleModal}
         roleToEdit={roleToEdit}
@@ -80,11 +91,19 @@ export default function RoleManagement() {
       />
 
       <DeleteRoleModal
-        key={roleToEdit?.roleId}
+        key={`delete-${roleToEdit?.roleId}`}
         isDeleteRoleModalOpen={isDeleteRoleModalOpen}
         setIsDeleteRoleModalOpen={setIsDeleteRoleModalOpen}
         roleToDelete={roleToEdit}
         setRoleToDelete={setRoleToEdit}
+      />
+
+      <RestoreRoleModal
+        key={`restore-${roleToRestore?.roleId}`}
+        isRestoreRoleModalOpen={isRestoreRoleModalOpen}
+        setIsRestoreModalOpen={setIsRestoreRoleModalOpen}
+        roleToRestore={roleToRestore}
+        setRoleToRestore={setRoleToRestore}
       />
     </div>
   );
