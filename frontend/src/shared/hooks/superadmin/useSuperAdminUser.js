@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   addUser,
   assignApproverToOperator,
@@ -6,6 +11,7 @@ import {
   fetchuser,
   fetchUsers,
   fetchUserStatistics,
+  restoreUser,
   unassignApproverToOperator,
   updateUser,
 } from '../../../core/api/superadmin';
@@ -87,6 +93,35 @@ export function useDeleteUser(options = {}) {
 
   return useMutation({
     mutationFn: ({ userId }) => deleteUser(userId),
+    onSuccess: async (response, variables, context) => {
+      const { userId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['superadmin', 'users'],
+      });
+
+      // Also remove the individual company query if it exists
+      if (userId) {
+        queryClient.removeQueries({
+          queryKey: ['superadmin', 'users', userId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useRestoreUser(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ userId }) => restoreUser(userId),
     onSuccess: async (response, variables, context) => {
       const { userId } = variables;
 

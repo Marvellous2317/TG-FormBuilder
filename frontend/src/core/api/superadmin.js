@@ -1,12 +1,17 @@
 import axiosInstance from '../../shared/utils/axios';
 
-export const fetchRoles = async () => {
-  const { data } = await axiosInstance.get('/admin/roles');
+export const fetchRoles = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/roles', { params });
   return data;
 };
 
 export const fetchRole = async (id) => {
   const { data } = await axiosInstance.get(`/admin/roles/${id}`);
+  return data;
+};
+
+export const restoreRole = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/roles/${id}/restore`);
   return data;
 };
 
@@ -98,6 +103,11 @@ export const deleteDepartment = async (id) => {
   return data;
 };
 
+export const restoreDepartment = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/departments/${id}/restore`);
+  return data;
+};
+
 export const createDepartment = async (payload) => {
   const { data } = await axiosInstance.post(`/admin/departments`, payload);
   return data;
@@ -130,6 +140,11 @@ export const fetchuser = async (id) => {
 
 export const deleteUser = async (id) => {
   const { data } = await axiosInstance.delete(`/admin/users/${id}`);
+  return data;
+};
+
+export const restoreUser = async (id) => {
+  const { data } = await axiosInstance.put(`/admin/users/${id}/restore`);
   return data;
 };
 

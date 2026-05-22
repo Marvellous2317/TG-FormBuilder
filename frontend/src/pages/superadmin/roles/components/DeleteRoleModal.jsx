@@ -51,8 +51,7 @@ export default function DeactivateUserModal({
             Delete role
           </p>
           <p className="text-sm font-geist w-3/4 text-tertiary">
-            Are you sure you want to delete this role? This action is
-            irreversible
+            Are you sure you want to delete this role?
           </p>
         </div>
 

@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
 import EntityList from '../dashboard/components/EntityList';
 import CreateEntityModal from '../dashboard/components/CreateEntityModal';
-import EmptyEntityList from '../dashboard/components/EmptyEntityList';
 import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
-import Loader from '../../../shared/components/Loader';
 
 export default function EntitiesManagement() {
   const [isCreateEntityModal, setIsCreateEntityModal] = useState(false);
+  const [companiesPagination, setCompaniesPagination] = useState({
+    page: 1,
+    limit: 20,
+    search: '',
+    status: 'active',
+  });
 
-  const { data, isPending: isLoading } = useCompanies();
+  const { data, isFetching } = useCompanies(companiesPagination);
 
   const companies = data?.data?.companies;
+
+  const handleSearch = useCallback((searchValue) => {
+    setCompaniesPagination((prev) => ({
+      ...prev,
+      search: searchValue,
+      page: 1,
+    }));
+  }, []);
+
+  const handleStatusChange = useCallback((status) => {
+    setCompaniesPagination((prev) => ({ ...prev, status, page: 1 }));
+  }, []);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -37,17 +53,16 @@ export default function EntitiesManagement() {
         </Button>
       </header>
 
-      {isLoading ? (
-        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
-      ) : (
-        <section className="py-6 px-8 min-h-full relative">
-          {companies?.length > 0 ? (
-            <EntityList entities={companies} />
-          ) : (
-            <EmptyEntityList setIsCreateEntityModal={setIsCreateEntityModal} />
-          )}
-        </section>
-      )}
+      <section className="py-6 px-8 min-h-full relative">
+        <EntityList
+          entities={companies}
+          pagination={data?.data?.pagination}
+          isFetching={isFetching}
+          handleSearch={handleSearch}
+          handleStatusChange={handleStatusChange}
+          setIsCreateEntityModal={setIsCreateEntityModal}
+        />
+      </section>
 
       <CreateEntityModal
         isCreateEntityModal={isCreateEntityModal}

@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Button from '../../../shared/components/Button';
 import { IoAddOutline } from 'react-icons/io5';
-import UserList from './components/UserList';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 import {
   useFetchUsers,
   useUserStatistics,
 } from '../../../shared/hooks/superadmin/useSuperAdminUser';
-import EmptyAdminUserList from './components/EmptyAdminUserList';
 import AdminUserList from './components/AdminUserList';
 import CreateAdminUserModal from './components/CreateAdminUserModal';
 import EditAdminUserModal from './components/EditAdminUserModal';
-import Loader from '../../../shared/components/Loader';
 import AssignApproverModal from './components/AssignApproverModal';
 import UnassignApproverModal from './components/UnassignApproverModal';
 import DeleteUserModal from './components/DeleteUserModal';
+import RestoreUserModal from './components/RestoreUserModal';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
@@ -23,32 +21,48 @@ export default function UserManagement() {
   const [userToEdit, setUserToEdit] = useState(null);
   const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isRestoreUserModalOpen, setIsRestoreUserModalOpen] = useState(false);
+  const [userToRestore, setUserToRestore] = useState(null);
   const [isAssignApproverModalOpen, setIsAssignApproverModalOpen] =
     useState(false);
-
   const [isUnassignApproverModalOpen, setIsUnassignApproverModalOpen] =
     useState(false);
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
     limit: 20,
+    search: '',
+    status: 'active',
+    deleted: 'false',
   });
 
-  const { data: users, isPending: isLoadingUsers } = useFetchUsers();
+  const { data: users, isFetching } = useFetchUsers(usersPagination);
   const { data: statistics, isPending: isLoadingUserStatistics } =
     useUserStatistics();
 
   const userStatistics = statistics?.data;
-
   const usersData = users?.data?.users;
   const pagination = users?.data?.pagination;
 
-  const handlePagination = ({ page, pageSize }) => {
-    setUsersPagination({
+  const handleSearch = useCallback((searchValue) => {
+    setUsersPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
+  }, []);
+
+  const handleStatusChange = useCallback((status) => {
+    setUsersPagination((prev) => ({ ...prev, status, page: 1 }));
+  }, []);
+
+  const handleDeletedChange = useCallback((deleted) => {
+    setUsersPagination((prev) => ({ ...prev, deleted, page: 1 }));
+  }, []);
+
+  const handlePagination = useCallback(({ page, pageSize }) => {
+    setUsersPagination((prev) => ({
+      ...prev,
       page: Number(page) || 1,
       limit: Number(pageSize) || 20,
-    });
-  };
+    }));
+  }, []);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -70,7 +84,7 @@ export default function UserManagement() {
       </header>
 
       <section className="py-6 px-8">
-        <div className="flex flex-col md:flex-row items-center w-full gap-9 ">
+        <div className="flex flex-col md:flex-row items-center w-full gap-9">
           <AdminCard
             icon={Icons.totalUsers}
             title="Total users"
@@ -89,39 +103,29 @@ export default function UserManagement() {
             count={userStatistics?.suspendedUsers || 0}
             loading={isLoadingUserStatistics}
           />
-          {/* <AdminCard
-            icon={Icons.inactiveUsers}
-            title="Total roles"
-            count={userStatistics?.totalRoles || 0}
-            loading={isLoadingUserStatistics}
-          /> */}
         </div>
       </section>
 
-      {isLoadingUsers ? (
-        <Loader size="h-12 w-12 !border-primary-200 mt-20" />
-      ) : (
-        <section className="py-6 px-8 min-h-full relative">
-          {usersData?.length > 0 ? (
-            <AdminUserList
-              setIsEditUserModalOpen={setIsEditUserModalOpen}
-              setUserToDelete={setUserToDelete}
-              users={usersData}
-              pagination={pagination}
-              handlePageChange={handlePagination}
-              setUserToEdit={setUserToEdit}
-              setIsDeleteUserModalOpen={setIsDeleteUserModalOpen}
-              setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
-              userToEdit={userToEdit}
-              setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
-            />
-          ) : (
-            <EmptyAdminUserList
-              setIsCreateUserModalOpen={setIsCreateUserModalOpen}
-            />
-          )}
-        </section>
-      )}
+      <section className="py-6 px-8 min-h-full relative">
+        <AdminUserList
+          setIsEditUserModalOpen={setIsEditUserModalOpen}
+          setUserToDelete={setUserToDelete}
+          setUserToRestore={setUserToRestore}
+          users={usersData}
+          pagination={pagination}
+          handlePageChange={handlePagination}
+          setUserToEdit={setUserToEdit}
+          setIsDeleteUserModalOpen={setIsDeleteUserModalOpen}
+          setIsRestoreUserModalOpen={setIsRestoreUserModalOpen}
+          setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
+          setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
+          isFetching={isFetching}
+          handleSearch={handleSearch}
+          handleStatusChange={handleStatusChange}
+          handleDeletedChange={handleDeletedChange}
+          setIsCreateUserModalOpen={setIsCreateUserModalOpen}
+        />
+      </section>
 
       <CreateAdminUserModal
         isCreateUserModalOpen={isCreateUserModalOpen}
@@ -129,34 +133,43 @@ export default function UserManagement() {
       />
 
       <DeleteUserModal
+        key={`delete-${userToDelete?.userId}`}
         isDeleteUserModalOpen={isDeleteUserModalOpen}
         setIsDeleteUserModalOpen={setIsDeleteUserModalOpen}
         userToDelete={userToDelete}
         setUserToDelete={setUserToDelete}
       />
 
+      <RestoreUserModal
+        key={`restore-${userToRestore?.userId}`}
+        isRestoreUserModalOpen={isRestoreUserModalOpen}
+        setIsRestoreUserModalOpen={setIsRestoreUserModalOpen}
+        userToRestore={userToRestore}
+        setUserToRestore={setUserToRestore}
+      />
+
       <AssignApproverModal
+        key={`assign-${userToEdit?.userId}`}
         isAssignApproverModalOpen={isAssignApproverModalOpen}
         setIsAssignApproverModalOpen={setIsAssignApproverModalOpen}
         userToEdit={userToEdit}
-        key={userToEdit?.userId}
       />
 
       <UnassignApproverModal
+        key={`unassign-${userToEdit?.userId}`}
         isUnassignApproverModalOpen={isUnassignApproverModalOpen}
         setIsUnassignApproverModalOpen={setIsUnassignApproverModalOpen}
         userToEdit={userToEdit}
         users={usersData}
-        isLoadingUsers={isLoadingUsers}
-        key={users?.userId}
+        isFetching={isFetching}
       />
 
       <EditAdminUserModal
+        key={`edit-${userToEdit?.userId}`}
         isEditUserModalOpen={isEditUserModalOpen}
         setIsEditUserModalOpen={setIsEditUserModalOpen}
         userToEdit={userToEdit}
         setUserToEdit={setUserToEdit}
-        key={userToEdit?.userId}
       />
     </div>
   );
