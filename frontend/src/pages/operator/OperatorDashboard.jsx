@@ -7,7 +7,6 @@ import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorCh
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { OfflineBanner } from '../../shared/components/OfflineBanner';
 import { saveToCache, getFromCache } from '../../lib/offlineCache';
 
 export default function OperatorDashboard() {
