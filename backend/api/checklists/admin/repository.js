@@ -25,7 +25,7 @@ export class AdminRepository {
     try {
       const existing = await Checklist.findOne({
         where: {
-          companyId,
+         // companyId,
           [Op.or]: [
             { documentNumber },
             { title }

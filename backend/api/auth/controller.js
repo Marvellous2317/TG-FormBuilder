@@ -8,7 +8,7 @@ export class AuthController {
     const { email, password } = req.body;
 
     try {
-      const data = await AuthRepository.signin({ email, password });
+      const data = await AuthRepository.signin({ email, password }, req);
       return ResponseManager.success(res, data, 200, data.message);
     } catch (e) {
       next(e);
@@ -56,6 +56,24 @@ export class AuthController {
   static async createBulkUsersApi(req, res, next) {
     try {
       const response = await AuthRepository.createBulkUsers();
+      return ResponseManager.success(res, response, 200, response.message);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async refreshTokenApi(req, res, next) {
+    try {
+      const response = await AuthRepository.refreshToken(req);
+      return ResponseManager.success(res, response, 200, response.message);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async signoutApi(req, res, next) {
+    try {
+      const response = await AuthRepository.signout(req);
       return ResponseManager.success(res, response, 200, response.message);
     } catch (err) {
       next(err);

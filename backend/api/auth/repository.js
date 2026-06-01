@@ -1,14 +1,45 @@
 
-import { generateJWT, generateOpt } from "./helper.js";
+import { generateJWT, generateOpt, generateRefreshSecret, hashRefreshSecret, compareRefreshSecret, composeRefreshToken, parseRefreshToken, getRefreshTokenTtlMs } from "./helper.js";
 
-import { User, Verification, Role, Company } from "../../models/index.js";
+import { User, Verification, Role, Company, RefreshToken } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 import config from "../../appConfig.js";
 import { sendPasswordMail, sendVerificationMail } from "../../views/index.js";
 import crypto from "crypto";
 
+async function issueRefreshToken(userId, { userAgent, ipAddress } = {}) {
+  const secret = generateRefreshSecret();
+  const tokenHash = await hashRefreshSecret(secret);
+  const expiresAt = new Date(Date.now() + getRefreshTokenTtlMs());
+
+  const record = await RefreshToken.create({
+    userId,
+    tokenHash,
+    expiresAt,
+    userAgent: userAgent ? String(userAgent).slice(0, 255) : null,
+    ipAddress: ipAddress ? String(ipAddress).slice(0, 64) : null,
+  });
+
+  return {
+    refreshToken: composeRefreshToken(record.tokenId, secret),
+    refreshTokenId: record.tokenId,
+    refreshTokenExpiresAt: expiresAt,
+  };
+}
+
+function getRequestContext(request) {
+  if (!request) return {};
+  return {
+    userAgent: request.headers?.["user-agent"],
+    ipAddress:
+      (request.headers?.["x-forwarded-for"] || "").toString().split(",")[0].trim() ||
+      request.ip ||
+      request.connection?.remoteAddress,
+  };
+}
+
 export class AuthRepository {
-  static async signin({ email, password }) {
+  static async signin({ email, password }, request) {
     try {
       if (!email || !password) throw new ApplicationError("Missing email or password", 400);
 
@@ -30,11 +61,16 @@ export class AuthRepository {
 
       const userData = user.toSafeJSON();
       const token = generateJWT(user.userId);
+      const { refreshToken } = await issueRefreshToken(
+        user.userId,
+        getRequestContext(request)
+      );
 
       const requiresPasswordChange = user.newLogin === true;
 
       return {
         token,
+        refreshToken,
         user: userData,
         message: "Signin successful",
         requiresPasswordChange,
@@ -81,6 +117,10 @@ export class AuthRepository {
       await Verification.create({ userId: user.userId, otp, expiry });
 
       const token = generateJWT(user.userId);
+      const { refreshToken, refreshTokenExpiresAt } = await issueRefreshToken(
+        user.userId,
+        getRequestContext(request)
+      );
       await sendVerificationMail({ email, otp, firstName: user.firstName });
 
       const userData = user.toSafeJSON();
@@ -88,6 +128,8 @@ export class AuthRepository {
         message: "Signup successful. Please verify your email",
         user: userData,
         token,
+        refreshToken,
+        refreshTokenExpiresAt,
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -235,5 +277,68 @@ export class AuthRepository {
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Bulk user creation failed", 500);
     }
+  }
+
+  static async refreshToken(request) {
+    const raw = request.body?.refreshToken;
+    if (!raw) throw new ValidationError("refreshToken is required");
+
+    const parsed = parseRefreshToken(raw);
+    if (!parsed) throw new ApplicationError("Invalid refresh token", 401);
+
+    const record = await RefreshToken.findByPk(parsed.tokenId);
+    if (!record) throw new ApplicationError("Invalid refresh token", 401);
+
+    if (record.revokedAt) throw new ApplicationError("Refresh token revoked", 401);
+    if (record.expiresAt && record.expiresAt.getTime() < Date.now())
+      throw new ApplicationError("Refresh token expired", 401);
+
+    const matches = await compareRefreshSecret(parsed.secret, record.tokenHash);
+    if (!matches) {
+      // Possible token theft — revoke this record defensively
+      record.revokedAt = new Date();
+      await record.save();
+      throw new ApplicationError("Invalid refresh token", 401);
+    }
+
+    const user = await User.findByPk(record.userId, {
+      include: [
+        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+        { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+      ],
+    });
+    if (!user) throw new ApplicationError("User not found", 404);
+    if (user.status === "suspended") throw new ApplicationError("Account suspended.", 403);
+
+    const issued = await issueRefreshToken(user.userId, getRequestContext(request));
+    record.revokedAt = new Date();
+    record.replacedByTokenId = issued.refreshTokenId;
+    await record.save();
+
+    const token = generateJWT(user.userId);
+    return {
+      message: "Token refreshed",
+      token,
+      refreshToken: issued.refreshToken,
+      user: user.toSafeJSON(),
+    };
+  }
+
+  static async signout(request) {
+    const raw = request.body?.refreshToken;
+    if (!raw) return { message: "Signed out" };
+
+    const parsed = parseRefreshToken(raw);
+    if (!parsed) return { message: "Signed out" };
+
+    const record = await RefreshToken.findByPk(parsed.tokenId);
+    if (!record || record.revokedAt) return { message: "Signed out" };
+
+    const matches = await compareRefreshSecret(parsed.secret, record.tokenHash);
+    if (matches) {
+      record.revokedAt = new Date();
+      await record.save();
+    }
+    return { message: "Signed out" };
   }
 }
