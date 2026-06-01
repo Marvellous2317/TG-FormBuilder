@@ -231,7 +231,6 @@ export default function ViewApproverEntries() {
       navigate('/approver/');
     } catch (err) {
       console.log(err);
-      showError('Something went wrong');
     }
   };
 
@@ -255,7 +254,6 @@ export default function ViewApproverEntries() {
       navigate('/approver/');
     } catch (err) {
       console.log(err);
-      showError('Something went wrong');
     }
   };
 

@@ -311,8 +311,7 @@ export default function CreateEntries() {
         await deleteEntries(entryId);
         showSuccess('Entry deleted successfully');
       } catch (err) {
-        console.log(err);
-        showError('Something went wrong');
+        console.log(await err.response.data.message);
       }
     }
     setFields((currentFields) =>
@@ -345,15 +344,15 @@ export default function CreateEntries() {
         setIsShowAssignLogbookModal(true);
       }
     } catch (error) {
-      showError(
-        error?.response?.data?.message || error.message || 'An error occurred',
-      );
+      console.log(error);
     }
   };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragEnd = ({ active, over }) => {

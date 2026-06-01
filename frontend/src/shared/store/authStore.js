@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 const initialState = {
   accessToken: null,
+  refreshToken: null,
   user: null,
   requiresPasswordChange: false,
   isAuthenticated: false,
@@ -21,10 +22,12 @@ export const useAuthStore = create(
       setAuth: (payload) =>
         set(() => {
           const accessToken = payload?.data?.token ?? null;
+          const refreshToken = payload?.data?.refreshToken ?? null;
           const user = payload?.data?.user ?? null;
 
           return {
             accessToken,
+            refreshToken,
             user,
             requiresPasswordChange:
               payload?.data?.requiresPasswordChange ?? false,
@@ -34,9 +37,10 @@ export const useAuthStore = create(
       setAuthFromLogin: (response) => {
         useAuthStore.getState().setAuth(response);
       },
-      setAccessToken: (token) =>
+      setAccessToken: (token, refreshToken) =>
         set((state) => ({
           accessToken: token,
+          refreshToken: refreshToken,
           isAuthenticated: Boolean(token && state.user),
         })),
       setUser: (user) =>
@@ -58,6 +62,7 @@ export const useAuthStore = create(
       storage,
       partialize: (state) => ({
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         user: state.user,
         requiresPasswordChange: state.requiresPasswordChange,
         isAuthenticated: state.isAuthenticated,
