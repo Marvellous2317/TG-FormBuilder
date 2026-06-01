@@ -14,7 +14,7 @@ export default function DeleteAdminUserModal({
 }) {
   const { mutateAsync: deleteAdminUser, isPending: isLoading } =
     useDeleteAdminUser();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -26,7 +26,6 @@ export default function DeleteAdminUserModal({
       setAdminUserToDelete(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete department. Please try again.');
     }
   };
 

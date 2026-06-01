@@ -166,9 +166,6 @@ export default function CreateAdminUserModal({
       handleCloseModal();
     } catch (err) {
       console.log(err.response.data);
-      showError(
-        err.response.data.message ?? 'Unable to create user. Please try again.',
-      );
     }
   };
 

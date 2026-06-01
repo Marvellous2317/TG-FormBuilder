@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -14,7 +14,7 @@ export default function RestoreRoleModal({
   setRoleToRestore,
 }) {
   const { mutateAsync: restoreRole, isPending: isLoading } = useRestoreRole();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -24,7 +24,6 @@ export default function RestoreRoleModal({
       setRoleToRestore(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to restore role. Please try again.');
     }
   };
 

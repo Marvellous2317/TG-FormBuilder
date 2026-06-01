@@ -22,6 +22,11 @@ export const deleteChecklist = async (id) => {
   return data;
 };
 
+export const restoreChecklist = async (id) => {
+  const { data } = await axiosInstance.put(`/checklists/admin/${id}/restore`);
+  return data;
+};
+
 export const createChecklist = async (payload) => {
   const { data } = await axiosInstance.post(`/checklists/admin`, payload);
   return data;

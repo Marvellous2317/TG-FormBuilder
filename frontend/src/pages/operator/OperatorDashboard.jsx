@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminCard from '../admin/dashboard/components/AdminCard';
 import Icons from '../../assets/icons';
 import { FiSearch } from 'react-icons/fi';
@@ -7,7 +7,6 @@ import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorCh
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { OfflineBanner } from '../../shared/components/OfflineBanner';
 import { saveToCache, getFromCache } from '../../lib/offlineCache';
 
 export default function OperatorDashboard() {
@@ -18,6 +17,7 @@ export default function OperatorDashboard() {
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
     limit: 20,
+    search: '',
   });
 
   const [cachedChecklists, setCachedChecklists] = useState(null);
@@ -26,7 +26,15 @@ export default function OperatorDashboard() {
     getFromCache('operator-checklists').then(setCachedChecklists);
   }, []);
 
-  const { data, isPending: isLoading } = useOperatorChecklists(usersPagination, {
+  const handleSearch = useCallback((searchValue) => {
+    setUsersPagination((prev) => ({
+      ...prev,
+      search: searchValue,
+      page: 1,
+    }));
+  }, []);
+
+  const { data, isFetching } = useOperatorChecklists(usersPagination, {
     placeholderData: cachedChecklists,
   });
 
@@ -45,9 +53,15 @@ export default function OperatorDashboard() {
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
+
   const handleChange = (event) => {
-    const { value } = event.target;
-    setSearch(value);
+    setSearch(event.target.value);
   };
 
   const handlePageChange = ({ page, pageSize }) => {
@@ -141,87 +155,89 @@ export default function OperatorDashboard() {
           />
         </div>
 
-        {isLoading ? (
-          <Loader size="h-12 w-12 !border-primary-200 mt-20" />
-        ) : (
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full min-h-full shadow-sm">
-            <section className="flex-col flex w-full min-h-full">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
-                <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
-                  <FiSearch className="text-gray-400 shrink-0" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Enter search here"
-                    value={search}
-                    onChange={handleChange}
-                    className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
-                  />
-                </div>
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full min-h-full shadow-sm">
+          <section className="flex-col flex w-full min-h-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
+                <FiSearch className="text-gray-400 shrink-0" size={18} />
+                <input
+                  type="text"
+                  placeholder="Enter search here"
+                  value={search}
+                  onChange={handleChange}
+                  className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
+                />
               </div>
+            </div>
 
-              <div className="w-full overflow-x-auto overflow-y-auto max-h-[60vh] md:max-h-100 xl:max-h-140">
-                <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
-                  <thead className="sticky top-0 z-10 shadow-sm">
-                    <tr className="bg-tertiary-300">
-                      <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                        #
-                      </th>
-                      {/* <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-secondary-200 bg-tertiary-700 whitespace-nowrap">
-                        Checklist ID
-                      </th> */}
-                      <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                        Checklist title
-                      </th>
-                      <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm  border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                        Document number
-                      </th>
+            <div className="w-full overflow-x-auto overflow-y-auto max-h-[60vh] md:max-h-100 xl:max-h-140">
+              <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
+                <thead className="sticky top-0 z-10 shadow-sm">
+                  <tr className="bg-tertiary-300">
+                    <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                      #
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                      Checklist title
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                      Document number
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                      Frequency
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {isFetching ? (
+                    <tr>
+                      <td colSpan="3" className="p-12 text-center">
+                        <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                      </td>
                     </tr>
-                  </thead>
-
-                  <tbody>
-                    {checklistsData?.length > 0 ? (
-                      checklistsData?.map((row, index) => (
-                        <tr
-                          key={row.assignmentId}
-                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                          onClick={() => handleRowClick(row?.assignmentId)}
-                        >
-                          <td className="p-3 md:p-4 text-tertiary font-geist text-sm md:text-sm border-r border-gray-200 space-y-1">
-                            {index + 1}
-                          </td>
-                          {/* <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm border-gray-200">
-                            {row?.checklist?.checklistId}
-                          </td> */}
-                          <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm md:text-sm space-y-1 border-gray-200">
-                            {row?.checklist?.title}
-                          </td>
-                          <td className="p-3 md:p-4 text-tertiary font-geist text-sm md:text-sm wrap-break-words border-gray-200">
-                            {row?.checklist?.documentNumber}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan="7"
-                          className="p-8 text-center text-gray-500 font-geist text-sm"
-                        >
-                          No results found
+                  ) : checklistsData?.length > 0 ? (
+                    checklistsData.map((row, index) => (
+                      <tr
+                        key={row.assignmentId}
+                        className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => handleRowClick(row?.assignmentId)}
+                      >
+                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm border-r border-gray-200">
+                          {index + 1}
+                        </td>
+                        <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm border-gray-200">
+                          {row?.checklist?.title}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm border-r border-gray-200">
+                          {row?.checklist?.documentNumber}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm wrap-break-words border-gray-200">
+                          {row?.checklist?.frequency}
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-            <Pagination
-              currentPage={currentPage}
-              handlePageChange={handlePaginationChange}
-              itemsPerPage={pageSize}
-              totalPages={pagination?.totalPages}
-            />
-          </div>
-        )}
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="3"
+                        className="p-8 text-center text-gray-500 font-geist text-sm"
+                      >
+                        No results found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <Pagination
+            currentPage={currentPage}
+            handlePageChange={handlePaginationChange}
+            itemsPerPage={pageSize}
+            totalPages={pagination?.totalPages}
+          />
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ export default function DeleteCatalogModal({
 }) {
   const { mutateAsync: deleteCatalog, isPending: isLoading } =
     useDeleteChecklistCatalogs();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -24,7 +24,6 @@ export default function DeleteCatalogModal({
       setIsDeleteCatalogModalOpen(false);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete catalog. Please try again.');
     }
   };
 

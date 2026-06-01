@@ -52,7 +52,6 @@ export default function CreateEntityModal({
       handleCloseModal();
     } catch (err) {
       console.error('Error', err);
-      showError('Unable to create entity. Please try again.');
     }
   };
 

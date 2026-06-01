@@ -15,7 +15,7 @@ export default function SuspendEntityModal({
 
   const { mutateAsync, isPending: isLoading } = useSuspendCompany();
 
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSuspension = async () => {
     try {
@@ -24,7 +24,6 @@ export default function SuspendEntityModal({
       showSuccess('Entity suspended successfully');
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to suspend entity. Please try again.');
     }
   };
 

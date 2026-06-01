@@ -18,7 +18,7 @@ export default function EditRoleModal({
   );
 
   const { mutateAsync, isPending: isLoading } = useUpdateRole();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -32,7 +32,6 @@ export default function EditRoleModal({
       setRoleToEdit(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to update role. Please try again.');
     }
   };
 

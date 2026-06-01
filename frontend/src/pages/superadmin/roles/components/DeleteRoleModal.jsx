@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -14,7 +14,7 @@ export default function DeactivateUserModal({
   setRoleToDelete,
 }) {
   const { mutateAsync: deleteRole, isPending: isLoading } = useDeleteRole();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -24,7 +24,6 @@ export default function DeactivateUserModal({
       setRoleToDelete(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete role. Please try again.');
     }
   };
 

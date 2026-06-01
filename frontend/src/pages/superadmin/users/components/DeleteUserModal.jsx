@@ -13,7 +13,7 @@ export default function DeleteUserModal({
   setUserToDelete,
 }) {
   const { mutateAsync: deleteUser, isPending: isLoading } = useDeleteUser();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -25,7 +25,6 @@ export default function DeleteUserModal({
       setUserToDelete(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete user. Please try again.');
     }
   };
 

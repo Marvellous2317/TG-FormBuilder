@@ -38,7 +38,6 @@ export default function CreateRoleModal({
       setIsCreateRoleModal(false);
     } catch (err) {
       console.error('Error', err);
-      showError('Unable to create role. Please try again.');
     }
   };
 

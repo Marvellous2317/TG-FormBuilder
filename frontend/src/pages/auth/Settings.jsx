@@ -13,7 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export default function Settings() {
   const queryClient = useQueryClient();
   const { clearAuth, user, setUser } = useAuthStore();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -57,7 +57,6 @@ export default function Settings() {
       showSuccess('Profile updated successfully');
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to update profile. Please try again.');
     }
   };
 

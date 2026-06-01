@@ -125,10 +125,6 @@ export default function EditAdminUserModal({
       handleCloseModal();
     } catch (err) {
       console.log(err.response?.data);
-      showError(
-        err.response?.data?.message ??
-          'Unable to update user. Please try again.',
-      );
     }
   };
 

@@ -53,7 +53,6 @@ export default function ViewOperatorEntries() {
       navigate('/operator/');
     } catch (err) {
       console.log(err);
-      showError('Something went wrong');
     }
   };
 
