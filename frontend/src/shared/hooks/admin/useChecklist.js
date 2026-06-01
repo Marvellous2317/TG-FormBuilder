@@ -13,6 +13,7 @@ import {
   fetchChecklists,
   fetchChecklistsAnalytics,
   fetchChecklistsEntries,
+  restoreChecklist,
   unAssignChecklistOperator,
   updateChecklist,
   updateChecklistCatalog,
@@ -51,6 +52,35 @@ export function useDeleteChecklist(options = {}) {
 
   return useMutation({
     mutationFn: ({ checklistId }) => deleteChecklist(checklistId),
+    onSuccess: async (response, variables, context) => {
+      const { checklistId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists'],
+      });
+
+      // Also remove the individual checklist query if it exists
+      if (checklistId) {
+        queryClient.removeQueries({
+          queryKey: ['admin', 'checklists', checklistId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useRestoreChecklist(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ checklistId }) => restoreChecklist(checklistId),
     onSuccess: async (response, variables, context) => {
       const { checklistId } = variables;
 
