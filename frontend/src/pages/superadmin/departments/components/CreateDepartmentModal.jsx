@@ -32,7 +32,6 @@ export default function CreateDepartmentModal({
       setIsCreateDepartmentModal(false);
     } catch (err) {
       console.log(err);
-      showError('Unable to create department. Please try again.');
     }
   };
 

@@ -14,7 +14,7 @@ export default function RestoreChecklistModal({
 }) {
   const { mutateAsync: restoreChecklist, isPending: isLoading } =
     useRestoreChecklist();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -26,7 +26,6 @@ export default function RestoreChecklistModal({
       setChecklistToRestore(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete checklist. Please try again.');
     }
   };
 

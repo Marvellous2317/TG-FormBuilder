@@ -14,7 +14,7 @@ export default function RestoreDepartmentModal({
 }) {
   const { mutateAsync: restoreDepartment, isPending: isLoading } =
     useRestoreDepartment();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -26,7 +26,6 @@ export default function RestoreDepartmentModal({
       setDepartmentToRestore(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to restore department. Please try again.');
     }
   };
 

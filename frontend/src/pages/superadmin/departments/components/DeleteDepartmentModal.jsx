@@ -14,7 +14,7 @@ export default function DeleteDepartmentModal({
 }) {
   const { mutateAsync: deleteDepartment, isPending: isLoading } =
     useDeleteDepartment();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -26,7 +26,6 @@ export default function DeleteDepartmentModal({
       setDepartmentToDelete(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete department. Please try again.');
     }
   };
 

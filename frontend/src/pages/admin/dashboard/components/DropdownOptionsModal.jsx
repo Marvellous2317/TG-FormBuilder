@@ -127,7 +127,7 @@ export default function DropdownOptionsModal({
       showSuccess('Catalog created successfully');
       handleCancelEditList();
     } catch (error) {
-      showError(error.message || 'An error occurred');
+      console.error('Error', error);
     }
   };
 
@@ -151,7 +151,7 @@ export default function DropdownOptionsModal({
       });
       showSuccess('Catalog updated successfully');
     } catch (error) {
-      showError(error.message || 'An error occurred');
+      console.error('Error', error);
     }
 
     handleCancelEditList();
