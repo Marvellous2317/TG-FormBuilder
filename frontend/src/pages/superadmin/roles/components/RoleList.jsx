@@ -1,58 +1,68 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
-import { formatDate } from '../../../../shared/utils/constants';
+import {
+  deletedOptions,
+  formatDate,
+  statusOptions,
+} from '../../../../shared/utils/constants';
 import DeleteRoleModal from './DeleteRoleModal';
-
-const statusOptions = [
-  { title: 'All status', value: 'all' },
-  { title: 'Active', value: 'active' },
-  { title: 'Inactive', value: 'inactive' },
-];
+import Loader from '../../../../shared/components/Loader';
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function RoleList({
   setIsEditRoleModal,
   roles,
   pagination,
   setRoleToEdit,
+  setRoleToRestore,
   setIsDeleteRoleModalOpen,
+  handleSearch,
+  isFetching,
+  setIsCreateRoleModal,
+  setIsRestoreRoleModalOpen,
+  handleStatusChange,
+  handleDeletedChange,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('all');
+  const [deleted, setDeleted] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState('active');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuRow, setActiveMenuRow] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const itemsPerPage = 10;
+
+  const { showError } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleStatusChange(currentStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStatus]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleDeletedChange(deleted);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [deleted]);
 
   const handleChange = (event) => {
     const { value } = event.target;
     setSearch(value);
   };
-
-  // Filter data based on search and status
-  const filteredData = roles.filter((row) => {
-    const matchesSearch =
-      row.roleName.toLowerCase().includes(search.toLowerCase()) ||
-      row.description.toLowerCase().includes(search.toLowerCase());
-
-    let status = '';
-    if (row.status) {
-      status = 'Active';
-    } else {
-      status = 'Inactive';
-    }
-
-    const matchesStatus =
-      currentStatus === 'all' ||
-      status.toLowerCase() === currentStatus.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
 
   const handlePageChange = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -63,10 +73,14 @@ export default function RoleList({
       return undefined;
     }
 
-    const closeMenu = () => setActiveMenuId(null);
+    const closeMenu = () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+    };
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
       }
     };
 
@@ -94,8 +108,26 @@ export default function RoleList({
       title: 'Delete',
       value: 'delete',
       onClick: () => {
+        if (activeMenuRow?.deletedAt) {
+          showError('Role is already deleted');
+          return;
+        }
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsDeleteRoleModalOpen(true);
+      },
+    },
+    {
+      title: 'Restore',
+      value: 'restore',
+      onClick: () => {
+        if (!activeMenuRow?.deletedAt) {
+          showError('Role is not deleted');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsRestoreRoleModalOpen(true);
       },
     },
   ];
@@ -119,12 +151,17 @@ export default function RoleList({
 
     if (activeMenuId === rowId) {
       setActiveMenuId(null);
+      setActiveMenuRow(null);
       return;
     }
 
     setActiveMenuId(rowId);
 
+    setActiveMenuRow(row);
+
     setRoleToEdit(row);
+
+    setRoleToRestore(row);
   };
 
   return (
@@ -143,14 +180,30 @@ export default function RoleList({
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <DropdownSelect
-              value={currentStatus}
-              options={statusOptions}
-              onChange={(value) => setCurrentStatus(value)}
-              placeholder="All status"
-              buttonClassName="px-3! py-2! rounded-lg!"
-              menuClassName=""
-            />
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">Status: </h2>
+              <DropdownSelect
+                value={currentStatus}
+                options={statusOptions}
+                onChange={(value) => setCurrentStatus(value)}
+                placeholder="Active"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">
+                Show deleted:{' '}
+              </h2>
+              <DropdownSelect
+                value={deleted}
+                options={deletedOptions}
+                onChange={(value) => setDeleted(value)}
+                placeholder="False"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
           </div>
         </div>
 
@@ -176,8 +229,14 @@ export default function RoleList({
             </thead>
 
             <tbody>
-              {filteredData?.length > 0 ? (
-                filteredData.map((row, index) => (
+              {isFetching ? (
+                <tr>
+                  <td colSpan="5" className="p-12 text-center">
+                    <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                  </td>
+                </tr>
+              ) : roles?.length > 0 ? (
+                roles.map((row, index) => (
                   <tr
                     key={index}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
@@ -200,7 +259,7 @@ export default function RoleList({
                         onClick={(event) =>
                           toggleRowMenu(row.roleId, event, index, row)
                         }
-                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
+                        className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
                           size={16}
@@ -212,11 +271,19 @@ export default function RoleList({
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-8 text-center text-gray-500 font-geist text-sm"
-                  >
-                    No results found
+                  <td colSpan="5" className="p-12 text-center">
+                    <p className="text-gray-500 font-geist text-sm mb-3">
+                      No roles found
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => setIsCreateRoleModal(true)}
+                      className="bg-primary-200 gap-1 p-2.5 rounded-[10px] mx-auto"
+                    >
+                      <p className="text-white font-geist font-medium text-sm">
+                        Create a role
+                      </p>
+                    </Button>
                   </td>
                 </tr>
               )}
@@ -235,7 +302,10 @@ export default function RoleList({
         ? createPortal(
             <div
               className="fixed inset-0 z-50"
-              onClick={() => setActiveMenuId(null)}
+              onClick={() => {
+                setActiveMenuId(null);
+                setActiveMenuRow(null);
+              }}
               role="presentation"
             >
               <div

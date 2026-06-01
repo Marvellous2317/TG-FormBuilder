@@ -65,6 +65,17 @@ const getInitials = (value) => {
   return initials.join('');
 };
 
+const statusOptions = [
+  { title: 'Active', value: 'active' },
+  { title: 'Suspended', value: 'suspended' },
+];
+
+const deletedOptions = [
+  { title: 'All', value: 'all' },
+  { title: 'True', value: 'true' },
+  { title: 'False', value: 'false' },
+];
+
 export {
   createFieldId,
   createField,
@@ -72,4 +83,6 @@ export {
   fieldTypeOptions,
   sectionFieldTypeOptions,
   formatDate,
+  statusOptions,
+  deletedOptions,
 };

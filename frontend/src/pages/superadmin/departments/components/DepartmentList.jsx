@@ -1,18 +1,16 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
 import Button from '../../../../shared/components/Button';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
-import { formatDate } from '../../../../shared/utils/constants';
-
-const statusOptions = [
-  { title: 'All status', value: 'all' },
-  { title: 'Active', value: 'active' },
-  { title: 'Inactive', value: 'inactive' },
-];
+import {
+  deletedOptions,
+  formatDate,
+  statusOptions,
+} from '../../../../shared/utils/constants';
+import Loader from '../../../../shared/components/Loader';
+import useToast from '../../../../shared/hooks/useToast';
 
 export default function DepartmentList({
   setIsEditDepartmentModal,
@@ -20,16 +18,48 @@ export default function DepartmentList({
   setDepartmentToDelete,
   departments,
   pagination,
-  handlePageChange,
+  handleDepartmentPageChange,
   setDepartmentToEdit,
+  isFetching,
+  handleSearch,
+  handleStatusChange,
+  handleDeletedChange,
+  setIsCreateDepartmentModal,
+  setIsRestoreDepartmentModalOpen,
+  setDepertmentToRestore,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('all');
+  const [deleted, setDeleted] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState('active');
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuRow, setActiveMenuRow] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
+
+  const { showError } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleStatusChange(currentStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStatus, handleStatusChange]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleDeletedChange(deleted);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [deleted, handleDeletedChange]);
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -37,65 +67,37 @@ export default function DepartmentList({
   };
 
   const handlePaginationChange = (payload) => {
-    if (typeof handlePageChange !== 'function') {
-      return;
-    }
+    if (typeof handleDepartmentPageChange !== 'function') return;
 
     const normalizeEvent = (input) => {
-      if (input?.target) {
-        return input.target;
-      }
-
-      if (typeof input === 'object' && input !== null) {
-        return input;
-      }
-
+      if (input?.target) return input.target;
+      if (typeof input === 'object' && input !== null) return input;
       return { name: 'page', value: input };
     };
 
     const { name, value } = normalizeEvent(payload);
 
     if (name === 'page') {
-      const nextPage = Math.max(1, Number(value) || 1);
-      handlePageChange({ page: nextPage, pageSize });
+      handleDepartmentPageChange({ page: Math.max(1, Number(value) || 1), pageSize });
       return;
     }
 
     if (name === 'pageSize') {
-      const nextSize = Math.max(1, Number(value) || 1);
-      handlePageChange({ page: 1, pageSize: nextSize });
+      handleDepartmentPageChange({ page: 1, pageSize: Math.max(1, Number(value) || 1) });
     }
   };
 
-  // Filter data based on search and status
-  const filteredData = departments?.filter((row) => {
-    const matchesSearch =
-      row.departmentName.toLowerCase().includes(search.toLowerCase()) ||
-      row.description.toLowerCase().includes(search.toLowerCase());
-
-    let status = '';
-    if (row.status) {
-      status = 'active';
-    } else {
-      status = 'inactive';
-    }
-
-    const matchesStatus =
-      currentStatus === 'all' ||
-      status.toLowerCase() === currentStatus.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
-
   useEffect(() => {
-    if (activeMenuId === null) {
-      return undefined;
-    }
+    if (activeMenuId === null) return undefined;
 
-    const closeMenu = () => setActiveMenuId(null);
+    const closeMenu = () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+    };
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
       }
     };
 
@@ -116,6 +118,7 @@ export default function DepartmentList({
       value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsEditDepartmentModal(true);
       },
     },
@@ -123,8 +126,26 @@ export default function DepartmentList({
       title: 'Delete',
       value: 'delete',
       onClick: () => {
+        if (activeMenuRow?.deletedAt) {
+          showError('Department is already deleted');
+          return;
+        }
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsDeleteDepartmentModalOpen(true);
+      },
+    },
+    {
+      title: 'Restore',
+      value: 'restore',
+      onClick: () => {
+        if (!activeMenuRow?.deletedAt) {
+          showError('Department is not deleted');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsRestoreDepartmentModalOpen(true);
       },
     },
   ];
@@ -145,10 +166,18 @@ export default function DepartmentList({
       : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
 
     setMenuPosition({ top, left });
-    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
 
+    if (activeMenuId === rowId) {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      return;
+    }
+
+    setActiveMenuId(rowId);
+    setActiveMenuRow(row);
     setDepartmentToEdit(row);
     setDepartmentToDelete(row);
+    setDepertmentToRestore(row);
   };
 
   return (
@@ -167,14 +196,30 @@ export default function DepartmentList({
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <DropdownSelect
-              value={currentStatus}
-              options={statusOptions}
-              onChange={(value) => setCurrentStatus(value)}
-              placeholder="All status"
-              buttonClassName="px-3! py-2! rounded-lg!"
-              menuClassName=""
-            />
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">Status: </h2>
+              <DropdownSelect
+                value={currentStatus}
+                options={statusOptions}
+                onChange={(value) => setCurrentStatus(value)}
+                placeholder="Active"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm">
+                Show deleted:{' '}
+              </h2>
+              <DropdownSelect
+                value={deleted}
+                options={deletedOptions}
+                onChange={(value) => setDeleted(value)}
+                placeholder="False"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
           </div>
         </div>
 
@@ -186,9 +231,6 @@ export default function DepartmentList({
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
-                {/* <th className="p-3 w-[40%] lg:w-[50%] md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Description
-                </th> */}
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
                 </th>
@@ -200,8 +242,14 @@ export default function DepartmentList({
             </thead>
 
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((row) => (
+              {isFetching ? (
+                <tr>
+                  <td colSpan="4" className="p-12 text-center">
+                    <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                  </td>
+                </tr>
+              ) : departments?.length > 0 ? (
+                departments.map((row) => (
                   <tr
                     key={row.departmentId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
@@ -209,9 +257,6 @@ export default function DepartmentList({
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       {row.departmentName}
                     </td>
-                    {/* <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none line-clamp-3">
-                      {row.description}
-                    </td> */}
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row.status === 'active' ? 'Active' : 'Inactive'}
                     </td>
@@ -221,8 +266,10 @@ export default function DepartmentList({
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event, row)}
-                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
+                        onClick={(event) =>
+                          toggleRowMenu(row.departmentId, event, row)
+                        }
+                        className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
                           size={16}
@@ -234,11 +281,19 @@ export default function DepartmentList({
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-8 text-center text-gray-500 font-geist text-sm"
-                  >
-                    No results found
+                  <td colSpan="4" className="p-12 text-center">
+                    <p className="text-gray-500 font-geist text-sm mb-3">
+                      No departments found
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => setIsCreateDepartmentModal(true)}
+                      className="bg-primary-200 gap-1 p-2.5 rounded-[10px] mx-auto"
+                    >
+                      <p className="text-white font-geist font-medium text-sm">
+                        Add a department
+                      </p>
+                    </Button>
                   </td>
                 </tr>
               )}
@@ -256,7 +311,10 @@ export default function DepartmentList({
         ? createPortal(
             <div
               className="fixed inset-0 z-50"
-              onClick={() => setActiveMenuId(null)}
+              onClick={() => {
+                setActiveMenuId(null);
+                setActiveMenuRow(null);
+              }}
               role="presentation"
             >
               <div
