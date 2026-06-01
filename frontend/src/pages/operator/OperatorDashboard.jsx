@@ -180,8 +180,11 @@ export default function OperatorDashboard() {
                     <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                       Checklist title
                     </th>
-                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                       Document number
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium font-geist text-xs md:text-sm border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                      Frequency
                     </th>
                   </tr>
                 </thead>
@@ -206,8 +209,11 @@ export default function OperatorDashboard() {
                         <td className="p-3 md:p-4 border-r text-tertiary font-geist text-sm border-gray-200">
                           {row?.checklist?.title}
                         </td>
-                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm wrap-break-words border-gray-200">
+                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm border-r border-gray-200">
                           {row?.checklist?.documentNumber}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary font-geist text-sm wrap-break-words border-gray-200">
+                          {row?.checklist?.frequency}
                         </td>
                       </tr>
                     ))

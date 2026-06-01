@@ -13,7 +13,7 @@ export default function RestoreUserModal({
   setUserToRestore,
 }) {
   const { mutateAsync: restoreUser, isPending: isLoading } = useRestoreUser();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -25,7 +25,6 @@ export default function RestoreUserModal({
       setUserToRestore(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to delete user. Please try again.');
     }
   };
 

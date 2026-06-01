@@ -35,9 +35,6 @@ export default function UnassignApproverModal({
       handleCloseModal();
     } catch (err) {
       console.log(err?.response);
-      showError(
-        err?.response?.data?.message ?? 'Unable to unassign. Please try again.',
-      );
     }
   };
 

@@ -61,10 +61,7 @@ export default function AssignApproverModal({
       showSuccess('Approver assigned successfully');
       handleCloseModal();
     } catch (err) {
-      showError(
-        err?.response?.data?.message ??
-          'Unable to create user. Please try again.',
-      );
+      console.log(err);
     }
   };
 
