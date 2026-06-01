@@ -87,3 +87,22 @@ export const changePasswordMiddleware = (req, res, next) => {
     next(error);
   }
 };
+
+export const refreshTokenMiddleware = (req, res, next) => {
+  try {
+    const { refreshToken, ...extraFields } = req.body || {};
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`${extraKeys.join(", ")} not required`);
+    }
+
+    if (!refreshToken || typeof refreshToken !== "string") {
+      throw new ValidationError("refreshToken is required");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

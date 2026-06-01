@@ -70,6 +70,29 @@ export class OperatorRepository {
 
       if (!assignment) throw new ApplicationError("Assignment not found", 404);
 
+      if (assignment.checklist.frequency === "hourly") {
+        const lastSubmission = await SubmittedChecklist.findOne({
+          where: {
+            assignmentId,
+            submittedBy: userId,
+            status: { [Op.ne]: "draft" },
+            submittedAt: { [Op.ne]: null },
+          },
+          order: [["submittedAt", "DESC"]],
+        });
+
+        if (lastSubmission?.submittedAt) {
+          const minutesSince = (Date.now() - new Date(lastSubmission.submittedAt).getTime()) / 60000;
+          if (minutesSince < 60) {
+            const minutesLeft = Math.ceil(60 - minutesSince);
+            throw new ApplicationError(
+              `This checklist can only be submitted once per hour. Please try again in ${minutesLeft} minute(s).`,
+              400
+            );
+          }
+        }
+      }
+
       const requiredEntries = assignment.checklist.entries.filter((e) => e.required);
       const responseMap = new Map(data.map((r) => [r.entryId, r.value]));
 

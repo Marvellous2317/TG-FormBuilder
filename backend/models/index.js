@@ -2,6 +2,7 @@
 import { Company } from "./company.js";
 import { Department } from "./department.js";
 import { Verification } from "./verification.js";
+import { RefreshToken } from "./refreshToken.js";
 import { Role } from "./role.js";
 import { makePassword, checkPassword } from "../api/auth/helper.js";
 
@@ -30,6 +31,9 @@ User.hasMany(OperatorApprover, { foreignKey: "operatorId", as: "operatorApprover
 
 Verification.belongsTo(User, { foreignKey: "userId", as: "user" });
 User.hasMany(Verification, { foreignKey: "userId", as: "verifications" });
+
+RefreshToken.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(RefreshToken, { foreignKey: "userId", as: "refreshTokens" });
 
 User.prototype.setPassword = async function (password) {
   this.password = await makePassword(password);
@@ -101,6 +105,7 @@ export {
   Company,
   Department,
   Verification,
+  RefreshToken,
   Role,
   OperatorApprover,
   Checklist,

@@ -47,7 +47,7 @@ export const  sendApprovalEmail =async ({email,firstName})=> {
 
 export const  sendPasswordMail =async ({email,firstName, password})=> {
     try {
-        const baseUrl = config.BASE_URL || 'https://tgpackagingappprd.azurewebsites.net/login';
+        const baseUrl = config.BASE_URL || 'https://digiforms.tolaram.com/login';
         const emailHtml = await ejs.renderFile(
             path.join(__dirname, './passwordMail.ejs'),
             {

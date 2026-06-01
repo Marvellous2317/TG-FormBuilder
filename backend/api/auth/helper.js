@@ -59,6 +59,48 @@ export async function checkPassword(password, password_hash) {
   }
 }
 
+// Default 30 days if not configured
+const REFRESH_TOKEN_TTL_SECONDS = Number(config.REFRESH_TOKEN_EXPIRATION) || 60 * 60 * 24 * 30;
+
+export function getRefreshTokenTtlMs() {
+  return REFRESH_TOKEN_TTL_SECONDS * 1000;
+}
+
+export function generateRefreshSecret() {
+  // 48 random bytes -> 64 url-safe chars
+  return crypto.randomBytes(48).toString("base64url");
+}
+
+export async function hashRefreshSecret(secret) {
+  try {
+    return await bcrypt.hash(secret, 10);
+  } catch (error) {
+    throw new ApplicationError("Error hashing refresh token");
+  }
+}
+
+export async function compareRefreshSecret(secret, secretHash) {
+  try {
+    return await bcrypt.compare(secret, secretHash);
+  } catch (error) {
+    throw new ApplicationError("Error verifying refresh token");
+  }
+}
+
+// Compose the opaque token string the client receives: "<tokenId>.<secret>"
+export function composeRefreshToken(tokenId, secret) {
+  return `${tokenId}.${secret}`;
+}
+
+export function parseRefreshToken(raw) {
+  if (typeof raw !== "string") return null;
+  const idx = raw.indexOf(".");
+  if (idx <= 0 || idx === raw.length - 1) return null;
+  const tokenId = raw.slice(0, idx);
+  const secret = raw.slice(idx + 1);
+  return { tokenId, secret };
+}
+
 
 
 
