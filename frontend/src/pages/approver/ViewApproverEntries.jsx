@@ -112,7 +112,10 @@ export default function ViewApproverEntries() {
 
     sortedEntries.forEach((entry) => {
       const entryId = entry.entryId;
-      const entryValue = formData[entryId]?.value ?? entry.value ?? '';
+      const entryValue =
+        entry.type === 'formular'
+          ? computeFormulaValue(entry)
+          : (formData[entryId]?.value ?? entry.value ?? '');
 
       const isVisible =
         entry?.config?.visible !== undefined ? entry?.config?.visible : true;
@@ -152,9 +155,27 @@ export default function ViewApproverEntries() {
 
         if (sectionFields.length > 0 && sectionRows.length > 0) {
           const headers = sectionFields.map((f) => f.name);
+          const sectionItems = entry.config?.items || [];
           const tableRows = sectionRows.map((row) =>
             sectionFields.map((f) => {
               const fieldId = f.entryId || f.id;
+              if (f.type === 'formular') {
+                const expression = f.config?.expression;
+                if (!expression) return '';
+                const scope = {};
+                sectionItems.forEach((e) => {
+                  if (e.type === 'number' && e.config?.fieldRef) {
+                    const refId = e.entryId || e.id;
+                    const raw = row[refId]?.value ?? e?.config?.defaultValue;
+                    scope[e.config.fieldRef] =
+                      raw === '' || raw == null ? 0 : Number(raw);
+                  }
+                });
+                const { value, error } = evaluateFormula(expression, scope);
+                if (error || (typeof value === 'number' && !isFinite(value)))
+                  return 0;
+                return value ?? 0;
+              }
               return row[fieldId]?.value ?? '';
             }),
           );

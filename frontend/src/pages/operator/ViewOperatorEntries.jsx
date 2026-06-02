@@ -18,9 +18,12 @@ import SectionForm from '../../shared/components/entries/SectionForm';
 import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
 import { evaluateFormula } from '../../shared/utils/formula';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
+
+  const { user } = useAuthStore();
 
   const [searchParams] = useSearchParams();
   const title = searchParams.get('title');
@@ -30,9 +33,11 @@ export default function ViewOperatorEntries() {
 
   const navigate = useNavigate();
 
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({});
 
-  const { showError, showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
 
   const entriesData = data?.data?.submission?.entries;
 
@@ -45,6 +50,12 @@ export default function ViewOperatorEntries() {
 
   const handleUpdate = async () => {
     const formDataArray = Object.values(formData);
+
+    if (!user.signature) {
+      showError('Signature is required. Please add a signature.');
+      setIsSignatureModalOpen(true);
+      return;
+    }
 
     try {
       await updateEntries({ payload: { data: formDataArray } });
@@ -200,6 +211,11 @@ export default function ViewOperatorEntries() {
           </Button>
         </div>
       )}
+
+      <SignatureModal
+        isSignatureModalOpen={isSignatureModalOpen}
+        setIsSignatureModalOpen={setIsSignatureModalOpen}
+      />
     </div>
   );
 }

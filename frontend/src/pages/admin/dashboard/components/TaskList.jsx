@@ -8,6 +8,7 @@ import {
   deletedOptions,
   formatDate,
   statusOptions,
+  statusOptionss,
 } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
@@ -254,7 +255,7 @@ export default function TaskList({
               </h2>
               <DropdownSelect
                 value={currentStatus}
-                options={statusOptions}
+                options={statusOptionss}
                 onChange={(value) => setCurrentStatus(value)}
                 placeholder="All status"
                 buttonClassName="px-3! py-2! rounded-lg!"
