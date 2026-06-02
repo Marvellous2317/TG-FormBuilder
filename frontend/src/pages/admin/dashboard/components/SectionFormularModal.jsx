@@ -36,7 +36,6 @@ export default function SectionFormularModal({
   const { showError } = useToast();
 
   const handleSave = () => {
-    console.log(formData.section.length);
     if (
       formData.section.length < 1 ||
       formData.field.length < 1 ||
