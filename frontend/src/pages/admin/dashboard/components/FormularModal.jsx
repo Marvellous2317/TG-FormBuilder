@@ -13,14 +13,14 @@ export default function FormularModal({
   setIsFormularModal,
   onSave,
   initialValue,
-  numberFields,
+  formularFields,
 }) {
   const [expression, setExpression] = useState(initialValue?.expression ?? '');
   const [testResult, setTestResult] = useState(null);
 
   const handleSave = () => {
     const fieldRefs =
-      numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+      formularFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
     const { valid, error } = validateFormula(expression, fieldRefs);
     if (!valid) {
       setTestResult({ valid: false, error });
@@ -32,7 +32,7 @@ export default function FormularModal({
 
   const handleTest = () => {
     const fieldRefs =
-      numberFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
+      formularFields?.map((f) => f.config?.fieldRef).filter(Boolean) ?? [];
     setTestResult(validateFormula(expression, fieldRefs));
   };
 
@@ -41,6 +41,8 @@ export default function FormularModal({
     setTestResult(null);
     setExpression((prev) => prev + textToInsert.toUpperCase());
   };
+
+  console.log(formularFields);
 
   return (
     <Modal
@@ -187,18 +189,18 @@ export default function FormularModal({
             </div>
           </div>
 
-          {numberFields && numberFields.length > 0 && (
+          {formularFields && formularFields.length > 0 && (
             <div className="w-full mt-6">
               <h2 className="text-base font-semibold font-geist text-primary">
                 Available fields
               </h2>
               <div className="mt-2 flex flex-col items-start border border-secondary-200">
                 <ul className="flex flex-col items-center w-full bg-tertiary-700">
-                  {numberFields?.map((item, index) => {
-                    const isLastItem = index === numberFields.length - 1;
+                  {formularFields?.map((item, index) => {
+                    const isLastItem = index === formularFields.length - 1;
                     return (
                       <li
-                        key={item.entryId}
+                        key={item.entryId || item.id}
                         className={`border-b flex items-center justify-between border-secondary-200 cursor-pointer w-full p-3.5 ${
                           isLastItem && 'border-b-0'
                         }`}
@@ -212,7 +214,7 @@ export default function FormularModal({
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <p className="text-tertiary text-sm">Number</p>
+                          <p className="text-tertiary text-sm">{item.type}</p>
                           <Button
                             className="text-primary-200 text-sm"
                             onClick={(e) =>

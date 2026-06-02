@@ -309,7 +309,9 @@ export default function SectionOptionsModal({
     });
   };
 
-  const numberFields = fields.filter((field) => field.type === 'number');
+  const formularFields = fields.filter(
+    (field) => field.type === 'number' || field.type === 'text',
+  );
 
   return (
     <Modal
@@ -430,7 +432,7 @@ export default function SectionOptionsModal({
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
-        numberFields={numberFields}
+        formularFields={formularFields}
       />
 
       <SectionOptionsModal

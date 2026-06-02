@@ -235,12 +235,14 @@ export default function CreateEntries() {
         field.id === id ? { ...field, [key]: value } : field,
       );
 
-      if (key === 'type' && value === 'number') {
+      if ((key === 'type' && value === 'number') || value === 'text') {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
             .filter(
-              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+              (f) =>
+                f.type === 'number' ||
+                (f.type === 'text' && f.id !== id && f.config?.fieldRef),
             )
             .map((f) => f.config.fieldRef);
           let n = 1;
@@ -373,7 +375,9 @@ export default function CreateEntries() {
     else if (type === 'defaultValue') setIsShowDefaultValueModal(true);
   };
 
-  const numberFields = fields.filter((field) => field.type === 'number');
+  const formularFields = fields.filter(
+    (field) => field.type === 'number' || field.type === 'text',
+  );
 
   return (
     <div className="flex h-full w-full flex-col bg-white">
@@ -510,7 +514,7 @@ export default function CreateEntries() {
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
-        numberFields={numberFields}
+        formularFields={formularFields}
       />
 
       <AssignLogbookModal
