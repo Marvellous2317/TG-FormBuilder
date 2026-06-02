@@ -38,6 +38,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import SectionFormularModal from './components/SectionFormularModal';
 
 function SortableFieldRow({
   field,
@@ -144,6 +145,14 @@ function SortableFieldRow({
               {field.config.expression || 'Formular'}
             </p>
           )}
+          {field.type === 'section_formular' && field.config && (
+            <p
+              onClick={() => onOpenModal('sectionFormular', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.name || 'SF'}
+            </p>
+          )}
         </div>
         <div className="w-[15%] flex items-center justify-between">
           <Button
@@ -179,6 +188,7 @@ export default function CreateEntries() {
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
+  const [isSectionFormularModal, setIsSectionFormularModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
@@ -272,6 +282,10 @@ export default function CreateEntries() {
       case 'formular':
         setActiveFieldId(id);
         setIsFormularModal(true);
+        break;
+      case 'section_formular':
+        setActiveFieldId(id);
+        setIsSectionFormularModal(true);
         break;
       default:
         break;
@@ -373,11 +387,14 @@ export default function CreateEntries() {
     else if (type === 'section') setIsSectionOptionsModal(true);
     else if (type === 'formular') setIsFormularModal(true);
     else if (type === 'defaultValue') setIsShowDefaultValueModal(true);
+    else if (type === 'sectionFormular') setIsSectionFormularModal(true);
   };
 
   const formularFields = fields.filter(
     (field) => field.type === 'number' || field.type === 'text',
   );
+
+  const sectionFields = fields.filter((field) => field.type === 'section');
 
   return (
     <div className="flex h-full w-full flex-col bg-white">
@@ -515,6 +532,16 @@ export default function CreateEntries() {
         onSave={handleModalSave}
         initialValue={activeField?.config}
         formularFields={formularFields}
+      />
+
+      <SectionFormularModal
+        key={`section-formular-${activeFieldId}`}
+        isSectionFormularModal={isSectionFormularModal}
+        setIsSectionFormularModal={setIsSectionFormularModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
+        formularFields={formularFields}
+        sectionFields={sectionFields}
       />
 
       <AssignLogbookModal

@@ -42,8 +42,6 @@ export default function FormularModal({
     setExpression((prev) => prev + textToInsert.toUpperCase());
   };
 
-  console.log(formularFields);
-
   return (
     <Modal
       isOpen={isFormularModal}
