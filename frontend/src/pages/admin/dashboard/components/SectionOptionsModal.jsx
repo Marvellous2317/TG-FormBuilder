@@ -16,6 +16,154 @@ import FormularModal from './FormularModal';
 import useToast from '../../../../shared/hooks/useToast';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 import DefaultValueModal from './DefaultValueModal';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableFieldRow({
+  field,
+  index,
+  onFieldChange,
+  onRemoveField,
+  onFieldVisibility,
+  onOpenModal,
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="grid grid-cols-[63px_minmax(0,1fr)_300px] border-b border-secondary-200 last:border-b-0 group"
+    >
+      <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none text-secondary-300"
+          aria-label="Drag to reorder"
+        >
+          <LuGripVertical size={18} />
+        </button>
+        <span className="text-sm">{index + 1}</span>
+      </div>
+
+      <div className="border-r border-secondary-200 px-4 py-2.5">
+        <input
+          type="text"
+          value={field.name}
+          onChange={(e) => onFieldChange(field.id, 'name', e.target.value)}
+          placeholder="Enter text"
+          className="w-full rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary outline-none placeholder:text-tertiary"
+        />
+      </div>
+
+      <div className="border-r flex items-center justify-between w-full border-secondary-200 px-4 py-2.5">
+        <div className="w-[50%]">
+          <DropdownSelect
+            value={field.type}
+            options={sectionFieldTypeOptions}
+            onChange={(value) => onFieldChange(field.id, 'type', value)}
+            placeholder="Select input"
+            buttonClassName="w-full! rounded-none! border-0! bg-tertiary-700! p-4! text-base! text-primary! outline-none! placeholder:text-tertiary!"
+            menuClassName="left-0 right-auto"
+          />
+        </div>
+        <div className="w-[20%]">
+          {field.type === 'number' && field.config && !field.config.visible && (
+            <p
+              onClick={() => onOpenModal('defaultValue', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.defaultValue}
+            </p>
+          )}
+          {field.type === 'enum' && field.config && (
+            <p
+              onClick={() => onOpenModal('enum', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.option}
+            </p>
+          )}
+          {field.type === 'dropdown' && field.config && (
+            <p
+              onClick={() => onOpenModal('dropdown', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.title}
+            </p>
+          )}
+          {field.type === 'section' && field.config && (
+            <p
+              onClick={() => onOpenModal('section', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.name}
+            </p>
+          )}
+          {field.type === 'formular' && field.config && (
+            <p
+              onClick={() => onOpenModal('formular', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.expression || 'Formular'}
+            </p>
+          )}
+        </div>
+        <div className="w-[20%] flex items-center justify-between">
+          <Button
+            type="button"
+            onClick={() => onRemoveField(field.id)}
+            className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
+            aria-label={`Remove field ${index + 1}`}
+          >
+            <RiDeleteBinLine size={18} />
+          </Button>
+          <Button
+            type="button"
+            onClick={() => onFieldVisibility(field.id)}
+            className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+            aria-label={`Toggle visibility for field ${index + 1}`}
+          >
+            {field.config?.visible === false ? (
+              <IoEyeOff size={18} className="text-gray-400" />
+            ) : (
+              <IoEye size={18} />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SectionOptionsModal({
   isSectionOptionsModal,
@@ -90,7 +238,7 @@ export default function SectionOptionsModal({
         break;
       case 'section':
         setActiveFieldId(id);
-        setIsSectionOptionsModal(true);
+        setIsSectionsOptionsModal(true);
         break;
       case 'formular':
         setActiveFieldId(id);
@@ -136,6 +284,31 @@ export default function SectionOptionsModal({
     );
   };
 
+  const handleOpenModal = (type, fieldId) => {
+    setActiveFieldId(fieldId);
+    if (type === 'dropdown') setIsDropdownOptionsModal(true);
+    else if (type === 'enum') setIsEnumOptionsModal(true);
+    else if (type === 'section') setIsSectionsOptionsModal(true);
+    else if (type === 'formular') setIsFormularModal(true);
+    else if (type === 'defaultValue') setIsShowDefaultValueModal(true);
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    setFields((prev) => {
+      const oldIndex = prev.findIndex((f) => f.id === active.id);
+      const newIndex = prev.findIndex((f) => f.id === over.id);
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
   const numberFields = fields.filter((field) => field.type === 'number');
 
   return (
@@ -144,7 +317,6 @@ export default function SectionOptionsModal({
       onClose={() => setIsSectionOptionsModal(false)}
       position="right"
       width="max-w-[700px]"
-      // className="overflow-hidden"
     >
       <div className="flex h-full flex-col overflow-auto">
         <div className="space-y-0.5 p-5 border-b border-secondary-200">
@@ -169,7 +341,7 @@ export default function SectionOptionsModal({
 
           <div className="overflow-x-auto border border-secondary-200 bg-white mt-4 rounded-[10px]">
             <div className="min-w-full">
-              <div className="grid grid-cols-[60px_minmax(0,1fr)_300px] border-b border-secondary-200 bg-white">
+              <div className="grid grid-cols-[63px_minmax(0,1fr)_300px] border-b border-secondary-200 bg-white">
                 <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                   #
                 </div>
@@ -181,127 +353,28 @@ export default function SectionOptionsModal({
                 </div>
               </div>
 
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-[60px_minmax(0,1fr)_300px] border-b border-secondary-200 last:border-b-0 group"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={fields.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
-                    <LuGripVertical size={18} className="text-secondary-300" />
-                    <span className="text-sm">{index + 1}</span>
-                  </div>
-
-                  <div className="border-r border-secondary-200 px-4 py-2.5">
-                    <input
-                      type="text"
-                      value={field.name}
-                      onChange={(event) =>
-                        handleFieldChange(field.id, 'name', event.target.value)
-                      }
-                      placeholder="Enter text"
-                      className="w-full rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary outline-none placeholder:text-tertiary"
+                  {fields.map((field, index) => (
+                    <SortableFieldRow
+                      key={field.id}
+                      field={field}
+                      index={index}
+                      onFieldChange={handleFieldChange}
+                      onRemoveField={handleRemoveField}
+                      onFieldVisibility={handleFieldVisibility}
+                      onOpenModal={handleOpenModal}
                     />
-                  </div>
-
-                  <div className="border-r flex items-center justify-between w-full border-secondary-200 px-4 py-2.5">
-                    <div className="w-[50%]">
-                      <DropdownSelect
-                        value={field.type}
-                        options={sectionFieldTypeOptions}
-                        onChange={(value) =>
-                          handleFieldChange(field.id, 'type', value)
-                        }
-                        placeholder="Select input"
-                        buttonClassName="w-full! rounded-none! border-0! bg-tertiary-700! p-4! text-base! text-primary! outline-none! placeholder:text-tertiary!"
-                        menuClassName="left-0 right-auto"
-                      />
-                    </div>
-                    <div className="w-[20%]">
-                      {field.type === 'number' &&
-                        field.config &&
-                        !field.config.visible && (
-                          <p
-                            onClick={() => {
-                              setActiveFieldId(field.id);
-                              setIsShowDefaultValueModal(true);
-                            }}
-                            className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-                          >
-                            {field.config.defaultValue}
-                          </p>
-                        )}
-                      {field.type === 'enum' && field.config && (
-                        <p
-                          onClick={() => {
-                            setActiveFieldId(field.id);
-                            setIsEnumOptionsModal(true);
-                          }}
-                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-                        >
-                          {field.config.option}
-                        </p>
-                      )}
-                      {field.type === 'dropdown' && field.config && (
-                        <p
-                          onClick={() => {
-                            setActiveFieldId(field.id);
-                            setIsDropdownOptionsModal(true);
-                          }}
-                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-                        >
-                          {field.config.title}
-                        </p>
-                      )}
-                      {field.type === 'section' && field.config && (
-                        <p
-                          onClick={() => {
-                            setActiveFieldId(field.id);
-                            setIsSectionsOptionsModal(true);
-                          }}
-                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-                        >
-                          {field.config.name}
-                        </p>
-                      )}
-                      {field.type === 'formular' && field.config && (
-                        <p
-                          onClick={() => {
-                            setActiveFieldId(field.id);
-                            setIsFormularModal(true);
-                          }}
-                          className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-                        >
-                          {field.config.expression || 'Formular'}
-                        </p>
-                      )}
-                    </div>
-                    <div className="w-[20%] flex items-center justify-between">
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          handleRemoveField(field.id, field?.entryId)
-                        }
-                        className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
-                        aria-label={`Remove field ${index + 1}`}
-                      >
-                        <RiDeleteBinLine size={18} />
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleFieldVisibility(field.id)}
-                        className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
-                        aria-label={`Toggle visibility for field ${index + 1}`}
-                      >
-                        {field.config?.visible === false ? (
-                          <IoEyeOff size={18} className="text-gray-400" />
-                        ) : (
-                          <IoEye size={18} />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  ))}
+                </SortableContext>
+              </DndContext>
             </div>
 
             <div className="border-t border-secondary-200 px-5 py-6">

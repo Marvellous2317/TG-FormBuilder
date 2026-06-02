@@ -70,6 +70,11 @@ const statusOptions = [
   { title: 'Suspended', value: 'suspended' },
 ];
 
+const statusOptionss = [
+  { title: 'Active', value: 'active' },
+  { title: 'Inactive', value: 'inactive' },
+];
+
 const deletedOptions = [
   { title: 'All', value: 'all' },
   { title: 'True', value: 'true' },
@@ -84,5 +89,6 @@ export {
   sectionFieldTypeOptions,
   formatDate,
   statusOptions,
+  statusOptionss,
   deletedOptions,
 };

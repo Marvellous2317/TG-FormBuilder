@@ -29,7 +29,7 @@ export default function AdminDashboard() {
     page: 1,
     limit: 20,
     search: '',
-    status: '',
+    status: 'active',
     department: '',
     deleted: 'false',
   });
@@ -164,7 +164,6 @@ export default function AdminDashboard() {
         checklistToRestore={checklistToRestore}
         setChecklistToRestore={setChecklistToRestore}
       />
-
     </div>
   );
 }
