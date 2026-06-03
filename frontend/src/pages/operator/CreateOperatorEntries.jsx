@@ -46,7 +46,7 @@ export default function CreateOperatorEntry() {
   // Auto-save draft whenever formData changes (debounced 500ms)
   useEffect(() => {
     if (Object.keys(formData).length === 0) return;
-    const timer = setTimeout(() => saveDraft(checklistId, formData), 500);
+    const timer = setTimeout(() => saveDraft(checklistId, formData), 1000);
     return () => clearTimeout(timer);
   }, [formData, checklistId]);
 

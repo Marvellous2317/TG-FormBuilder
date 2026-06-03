@@ -39,6 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import SectionFormularModal from './components/SectionFormularModal';
+import { getFormDraft, saveFormDraft } from '../../../lib/offlineCache';
 
 function SortableFieldRow({
   field,
@@ -194,6 +195,20 @@ export default function CreateEntries() {
     useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
+  const [fields, setFields] = useState([createField()]);
+
+  useEffect(() => {
+    getFormDraft(checklistId).then((draft) => {
+      console.log('DRAFT', draft);
+      if (draft) setFields(draft);
+    });
+  }, [checklistId]);
+
+  useEffect(() => {
+    if (Object.keys(fields).length === 0) return;
+    const timer = setTimeout(() => saveFormDraft(checklistId, fields), 1000);
+    return () => clearTimeout(timer);
+  }, [fields, checklistId]);
 
   const { data, isPending: isLoadingChecklistEntries } =
     useChecklistEntries(checklistId);
@@ -210,8 +225,6 @@ export default function CreateEntries() {
     useDeleteChecklistEntries();
 
   const { showError, showSuccess } = useToast();
-
-  const [fields, setFields] = useState([createField()]);
 
   // Sync fields when entriesData is fetched from API
   useEffect(() => {
