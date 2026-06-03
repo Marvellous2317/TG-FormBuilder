@@ -245,7 +245,12 @@ export default function CreateEntries() {
         field.id === id ? { ...field, [key]: value } : field,
       );
 
-      if ((key === 'type' && value === 'number') || value === 'text') {
+      if (
+        (key === 'type' && value === 'number') ||
+        value === 'text' ||
+        value === 'section_formular' ||
+        value === 'formular'
+      ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
@@ -391,7 +396,11 @@ export default function CreateEntries() {
   };
 
   const formularFields = fields.filter(
-    (field) => field.type === 'number' || field.type === 'text',
+    (field) =>
+      field.type === 'number' ||
+      field.type === 'text' ||
+      field.type === 'formular' ||
+      field.type === 'section_formular',
   );
 
   const sectionFields = fields.filter((field) => field.type === 'section');

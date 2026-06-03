@@ -2,8 +2,10 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
 
+// const baseURL =
+//   import.meta.env.VITE_API_BASE_URL ?? 'https://digiforms.tolaram.com/api/v1/';
 const baseURL =
-  import.meta.env.VITE_API_BASE_URL ?? 'https://digiforms.tolaram.com/api/v1/';
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api/v1/';
 
 const axiosInstance = axios.create({
   baseURL,

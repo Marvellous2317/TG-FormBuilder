@@ -69,22 +69,50 @@ export default function ViewApproverEntries() {
     });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 14;
+    const usableWidth = pageWidth - 2 * margin;
+    const boxSpacing = 4;
+    const smallBoxH = 18;
+    const tallBoxH = smallBoxH * 2 + boxSpacing;
+    const leftW = 52;
+    const rightW = 52;
+    const midW = usableWidth - leftW - rightW - 2 * boxSpacing;
+    const boxY = margin;
 
-    doc.setFontSize(18);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(30, 30, 30);
-    doc.text(`${docTitle}`, margin, 20);
+    const drawInfoBox = (x, y, w, h, label, value) => {
+      doc.setDrawColor(180, 180, 180);
+      doc.setFillColor(248, 248, 248);
+      doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+      doc.setFontSize(7);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(130, 130, 130);
+      doc.text(label, x + 3, y + 5);
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(30, 30, 30);
+      doc.text(String(value), x + 3, y + 12, { maxWidth: w - 6 });
+    };
 
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Document No: ${docNumber}`, margin, 28);
-    // doc.text(`Entity name: ${docTitle}`, margin, 33);
+    // Left column — 2 stacked boxes
+    const leftX = margin;
+    drawInfoBox(leftX, boxY, leftW, smallBoxH, 'Document No', docNumber);
+    drawInfoBox(leftX, boxY + smallBoxH + boxSpacing, leftW, smallBoxH, 'Date', new Date().toLocaleDateString());
 
+    // Middle column — 1 tall box
+    const midX = margin + leftW + boxSpacing;
+    drawInfoBox(midX, boxY, midW, tallBoxH, 'Document Title', docTitle);
+
+    // Right column — 2 stacked boxes
+    const rightX = margin + leftW + boxSpacing + midW + boxSpacing;
+    drawInfoBox(rightX, boxY, rightW, smallBoxH, 'Operator', operatorName);
+    drawInfoBox(rightX, boxY + smallBoxH + boxSpacing, rightW, smallBoxH, 'Status', 'Pending');
+
+    // Divider below header
+    const headerBottom = boxY + tallBoxH + 6;
     doc.setDrawColor(200, 200, 200);
-    doc.line(margin, 37, pageWidth - margin, 37);
+    doc.line(margin, headerBottom, pageWidth - margin, headerBottom);
 
-    let yPos = 43;
+    let yPos = headerBottom + 6;
+
     const sortedEntries = entriesData
       .slice()
       .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));

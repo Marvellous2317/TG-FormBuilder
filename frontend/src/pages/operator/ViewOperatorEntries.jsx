@@ -19,6 +19,7 @@ import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
 import { evaluateFormula } from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
+import SignatureModal from '../approver/components/SignatureModal';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();

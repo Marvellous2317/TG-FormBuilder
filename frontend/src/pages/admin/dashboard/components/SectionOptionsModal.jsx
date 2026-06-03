@@ -208,7 +208,11 @@ export default function SectionOptionsModal({
         field.id === id ? { ...field, [key]: value } : field,
       );
 
-      if (key === 'type' && value === 'number') {
+      if (
+        (key === 'type' && value === 'number') ||
+        value === 'formular' ||
+        value === 'section_formular'
+      ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
@@ -310,7 +314,11 @@ export default function SectionOptionsModal({
   };
 
   const formularFields = fields.filter(
-    (field) => field.type === 'number' || field.type === 'text',
+    (field) =>
+      field.type === 'number' ||
+      field.type === 'text' ||
+      field.type === 'formular' ||
+      field.type === 'section_formular',
   );
 
   return (
