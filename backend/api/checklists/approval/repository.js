@@ -10,6 +10,22 @@ import {
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
+import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/azureService.js";
+
+async function hydrateSubmittedEntryImages(submission) {
+  if (!submission?.entries?.length) return submission;
+
+  await Promise.all(submission.entries.map(async (entry) => {
+    if (!entry.image) return;
+
+    const imageUrl = entry.image;
+    const image = await AzureImageDownloader(imageUrl);
+    entry.setDataValue("imageUrl", imageUrl);
+    entry.setDataValue("image", image);
+  }));
+
+  return submission;
+}
 
 export class ApprovalRepository {
   static async _getOperatorIds(approverId) {
@@ -122,6 +138,8 @@ export class ApprovalRepository {
                 "name",
                 "value",
                 "type",
+                "image",
+                "section_formular",
                 "order",
               ],
             },
@@ -130,6 +148,7 @@ export class ApprovalRepository {
       );
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
+  await hydrateSubmittedEntryImages(submission);
       return { submission };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -190,13 +209,26 @@ export class ApprovalRepository {
 
       for (const item of data) {
         const existing = existingMap.get(item.entryId);
+        const updates = { status: "approved" };
+
+        if (item.image !== undefined) {
+          updates.image = await uploadChecklistImageValue(item.image, existing?.name || "image");
+          if (item.value === undefined) updates.value = updates.image;
+        } else if (existing?.image && item.value !== undefined) {
+          updates.image = await uploadChecklistImageValue(item.value, existing.name || "image");
+          updates.value = updates.image;
+        } else if (item.value !== undefined) {
+          updates.value = item.value;
+        }
+
+        if (item.section_formular !== undefined) {
+          updates.section_formular = item.section_formular;
+        }
+
         if (existing && existing.value !== item.value) {
-          await existing.update(
-            { value: item.value, status: "approved" },
-            { transaction },
-          );
+          await existing.update(updates, { transaction });
         } else if (existing) {
-          await existing.update({ status: "approved" }, { transaction });
+          await existing.update(updates, { transaction });
         }
       }
 

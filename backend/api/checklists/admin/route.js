@@ -7,6 +7,7 @@ import {
   validateEntryId,
   validateCreateAssignment, validateUnassignment, validateAssignmentId, validateAssignmentQuery,
   validateCreateCatalog, validateUpdateCatalog, validateCatalogId, validateCatalogQuery,
+  validateSubmittedChecklistId, validateSubmittedChecklistQuery, validateSubmittedChecklistUpdate,
 } from "./middleware.js";
 
 const router = express.Router();
@@ -35,7 +36,11 @@ router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "super
 router.put("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateCatalog, AdminController.updateCatalog);
 router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogId, AdminController.deleteCatalog);
 
- 
+router.get("/submissions/:checklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistQuery, AdminController.getSubmittedChecklistsByChecklistId);
+router.get("/submissions/:checklistId/:submittedChecklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistId, AdminController.getSubmittedChecklistById);
+router.put("/submissions/:checklistId/:submittedChecklistId", isAuthenticated, requiresRole("admin" ), validateSubmittedChecklistUpdate, AdminController.updateSubmittedChecklistEntry);
+
+
 router.get("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.getChecklistById);
 router.put("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateChecklist, AdminController.updateChecklist);
 router.delete("/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateChecklistId, AdminController.deleteChecklist);

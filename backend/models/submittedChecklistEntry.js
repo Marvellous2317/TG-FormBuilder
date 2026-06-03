@@ -24,10 +24,22 @@ export const SubmittedChecklistEntry = sequelize.define(
     type: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      comment: "Snapshot of entry type",
+     
+    },
+
+
+    image: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      
+    },
+      section_formular: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      
     },
         status: {
-      type: DataTypes.ENUM("pending", "approved", "rejected"),
+      type: DataTypes.ENUM("pending","checked", "approved", "rejected"),
       allowNull: false,
       defaultValue: "pending",
     },

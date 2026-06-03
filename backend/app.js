@@ -207,7 +207,7 @@ app.use((req, res) => {
 });
 
 const startServer = async () => {
-  //await connectDB();
+  await connectDB();
   app.listen(PORT, () => {
     console.log(`Backend server is running on port ${PORT}`);
   });

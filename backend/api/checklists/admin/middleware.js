@@ -69,6 +69,29 @@ export const validateChecklistQuery = [
   validate,
 ];
 
+export const validateSubmittedChecklistId = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  param("submittedChecklistId").isUUID().withMessage("Invalid submission ID"),
+  validate,
+];
+
+export const validateSubmittedChecklistQuery = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  query("status").optional().isIn(["pending", "approved", "rejected"]).withMessage("Invalid status"),
+  query("search").optional().isString().withMessage("Search must be a string"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be positive"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateSubmittedChecklistUpdate = [
+  param("checklistId").isUUID().withMessage("Invalid checklist ID"),
+  param("submittedChecklistId").isUUID().withMessage("Invalid submission ID"),
+  body("data").isArray({ min: 1 }).withMessage("data must be a non-empty array"),
+  body("data.*.entryId").isUUID().withMessage("Invalid entry ID"),
+  validate,
+];
+
 // Entry validation
 export const validateCreateEntries = [
   param("checklistId").isUUID().withMessage("Invalid checklist ID"),
@@ -78,6 +101,8 @@ export const validateCreateEntries = [
   body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
+  body("entries.*.image").optional({ nullable: true }).isBoolean().withMessage("Image must be a boolean"),
+  body("entries.*.section_formular").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section formula must be a string (max 255 chars)"),
   body("entries.*.order").optional().isInt({ min: 0 }).withMessage("Order must be a positive integer"),
   body("entries.*.required").optional().isBoolean().withMessage("Required must be a boolean"),
   body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
@@ -103,6 +128,8 @@ export const validateCreateOrUpdateEntries = [
   body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
+  body("entries.*.image").optional({ nullable: true }).isBoolean().withMessage("Image must be a boolean"),
+  body("entries.*.section_formular").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section formula must be a string (max 255 chars)"),
   body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
   body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
   body("entries").custom((entries) => {
