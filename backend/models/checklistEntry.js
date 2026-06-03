@@ -27,6 +27,18 @@ export const ChecklistEntry = sequelize.define(
       allowNull: true,
       
     },
+      image: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: true,
+      
+    },
+    
+      section_formular: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      
+    },
        config: {
       type: DataTypes.JSONB,
       allowNull: true,

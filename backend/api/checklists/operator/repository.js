@@ -5,6 +5,47 @@ import {
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
+import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/azureService.js";
+
+const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
+const isImageSubmittedEntry = (entry, item) => entry?.image || entry?.type === "image" || item?.image !== undefined;
+
+async function buildSubmittedEntryData(submittedChecklistId, item, original, fallbackOrder = 0) {
+  const shouldUploadImage = isImageSubmittedEntry(original, item);
+  const imageInput = item.image !== undefined ? item.image : shouldUploadImage ? item.value : undefined;
+  const image = imageInput !== undefined ? await uploadChecklistImageValue(imageInput, original?.name || "image") : null;
+
+  return {
+    submittedChecklistId,
+    entryId: item.entryId,
+    name: original?.name || "",
+    type: original?.type || "text",
+    image,
+    section_formular: item.section_formular ?? original?.section_formular ?? null,
+    section: original?.section || null,
+    order: original?.order || fallbackOrder,
+    required: original?.required || false,
+    options: original?.options || null,
+    formulaExpression: original?.formulaExpression || null,
+    config: original?.config || null,
+    value: shouldUploadImage && item.image === undefined ? image : item.value,
+  };
+}
+
+async function hydrateSubmittedEntryImages(submission) {
+  if (!submission?.entries?.length) return submission;
+
+  await Promise.all(submission.entries.map(async (entry) => {
+    if (!entry.image) return;
+
+    const imageUrl = entry.image;
+    const image = await AzureImageDownloader(imageUrl);
+    entry.setDataValue("imageUrl", imageUrl);
+    entry.setDataValue("image", image);
+  }));
+
+  return submission;
+}
 
 export class OperatorRepository {
 
@@ -138,8 +179,8 @@ export class OperatorRepository {
         }
       }
 
-      const requiredEntries = assignment.checklist.entries.filter((e) => e.required);
-      const responseMap = new Map(data.map((r) => [r.entryId, r.value]));
+      const requiredEntries = assignment.checklist.entries.filter((e) => e.required && !isOptionalSubmittedEntry(e));
+      const responseMap = new Map(data.map((r) => [r.entryId, r.value ?? r.image]));
 
       for (const entry of requiredEntries) {
         const val = responseMap.get(entry.entryId);
@@ -157,22 +198,12 @@ export class OperatorRepository {
       }, { transaction });
 
       const entriesMap = new Map(assignment.checklist.entries.map((e) => [e.entryId, e]));
-      const entryData = data.map((r) => {
-        const original = entriesMap.get(r.entryId);
-        return {
-          submittedChecklistId: submittedChecklist.submittedChecklistId,
-          entryId: r.entryId,
-          name: original?.name || "",
-          type: original?.type || "text",
-          section: original?.section,
-          order: original?.order || 0,
-          required: original?.required || false,
-          options: original?.options || null,
-          formulaExpression: original?.formulaExpression || null,
-          config: original?.config || null,
-          value: r.value,
-        };
-      });
+      const entryData = await Promise.all(data.map((r, index) => buildSubmittedEntryData(
+        submittedChecklist.submittedChecklistId,
+        r,
+        entriesMap.get(r.entryId),
+        index,
+      )));
       await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
 
       await transaction.commit();
@@ -216,22 +247,12 @@ export class OperatorRepository {
 
       if (data?.length > 0) {
         const entriesMap = new Map(assignment.checklist.entries.map((e) => [e.entryId, e]));
-        const entryData = data.map((r) => {
-          const original = entriesMap.get(r.entryId);
-          return {
-            submittedChecklistId: submittedChecklist.submittedChecklistId,
-            entryId: r.entryId,
-            name: original?.name || "",
-            type: original?.type || "text",
-            section: original?.section || null,
-            order: original?.order || 0,
-            required: original?.required || false,
-            options: original?.options || null,
-            formulaExpression: original?.formulaExpression || null,
-            config: original?.config || null,
-            value: r.value,
-          };
-        });
+        const entryData = await Promise.all(data.map((r, index) => buildSubmittedEntryData(
+          submittedChecklist.submittedChecklistId,
+          r,
+          entriesMap.get(r.entryId),
+          index,
+        )));
         await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
       }
 
@@ -265,8 +286,8 @@ export class OperatorRepository {
 
       if (!assignment) throw new ApplicationError("Assignment not found", 404);
 
-      const requiredEntries = assignment.checklist.entries.filter((e) => e.required);
-      const responseMap = new Map(data.map((r) => [r.entryId, r.value]));
+      const requiredEntries = assignment.checklist.entries.filter((e) => e.required && !isOptionalSubmittedEntry(e));
+      const responseMap = new Map(data.map((r) => [r.entryId, r.value ?? r.image]));
 
       for (const entry of requiredEntries) {
         const val = responseMap.get(entry.entryId);
@@ -281,22 +302,12 @@ export class OperatorRepository {
       });
 
       const entriesMap = new Map(assignment.checklist.entries.map((e) => [e.entryId, e]));
-      const entryData = data.map((r) => {
-        const original = entriesMap.get(r.entryId);
-        return {
-          submittedChecklistId,
-          entryId: r.entryId,
-          name: original?.name || "",
-          type: original?.type || "text",
-          section: original?.section || null,
-          order: original?.order || 0,
-          required: original?.required || false,
-          options: original?.options || null,
-          formulaExpression: original?.formulaExpression || null,
-          config: original?.config || null,
-          value: r.value,
-        };
-      });
+      const entryData = await Promise.all(data.map((r, index) => buildSubmittedEntryData(
+        submittedChecklistId,
+        r,
+        entriesMap.get(r.entryId),
+        index,
+      )));
       await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
 
       submission.submittedAt = new Date();
@@ -351,6 +362,7 @@ export class OperatorRepository {
       });
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
+  await hydrateSubmittedEntryImages(submission);
       return { submission };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
