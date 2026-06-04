@@ -144,7 +144,6 @@ export const updateChecklistSubmission = async (
   submissionId,
   payload,
 ) => {
-  console.log(checklistId, submissionId, payload);
   const { data } = await axiosInstance.put(
     `/checklists/admin/submissions/${checklistId}/${submissionId}`,
     payload,

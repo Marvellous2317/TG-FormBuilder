@@ -56,7 +56,7 @@ export async function saveFormDraft(checklistId, formData) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(FORM_DRAFT_STORE, 'readwrite');
     tx.objectStore(FORM_DRAFT_STORE).put({
-      forms: checklistId,
+      checklistId,
       formData,
       savedAt: Date.now(),
     });

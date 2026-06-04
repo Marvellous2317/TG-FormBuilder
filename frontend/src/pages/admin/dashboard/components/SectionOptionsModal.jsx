@@ -178,13 +178,14 @@ export default function SectionOptionsModal({
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [isSectionsOptionsModal, setIsSectionsOptionsModal] = useState(false);
-  const [fields, setFields] = useState(
-    () => initialValue?.items ?? Array.from({ length: 1 }, () => createField()),
-  );
+  const [fields, setFields] = useState(() => {
+    const items = initialValue?.items;
+    return Array.isArray(items) && items.length > 0 ? items : [createField()];
+  });
 
   const { showError } = useToast();
 
-  const activeField = fields.find((f) => f.id === activeFieldId);
+  const activeField = fields && fields.find((f) => f.id === activeFieldId);
 
   const handleModalSave = (config) => {
     setFields((current) =>

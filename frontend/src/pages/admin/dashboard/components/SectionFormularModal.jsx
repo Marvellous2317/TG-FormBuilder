@@ -25,8 +25,9 @@ export default function SectionFormularModal({
   initialValue,
   sectionFields,
 }) {
+  console.log(initialValue);
   const [formData, setFormData] = useState(
-    initialValue?.formData ?? {
+    initialValue?.items ?? {
       section: '',
       field: '',
       operation: '',

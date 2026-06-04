@@ -199,7 +199,6 @@ export default function CreateEntries() {
 
   useEffect(() => {
     getFormDraft(checklistId).then((draft) => {
-      console.log('DRAFT', draft);
       if (draft) setFields(draft);
     });
   }, [checklistId]);
