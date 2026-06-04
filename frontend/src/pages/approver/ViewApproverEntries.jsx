@@ -70,48 +70,80 @@ export default function ViewApproverEntries() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 14;
     const usableWidth = pageWidth - 2 * margin;
-    const boxSpacing = 4;
-    const smallBoxH = 18;
-    const tallBoxH = smallBoxH * 2 + boxSpacing;
-    const leftW = 52;
-    const rightW = 52;
-    const midW = usableWidth - leftW - rightW - 2 * boxSpacing;
-    const boxY = margin;
 
-    const drawInfoBox = (x, y, w, h, label, value) => {
-      doc.setDrawColor(180, 180, 180);
-      doc.setFillColor(248, 248, 248);
-      doc.roundedRect(x, y, w, h, 2, 2, 'FD');
-      doc.setFontSize(7);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(130, 130, 130);
-      doc.text(label, x + 3, y + 5);
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(30, 30, 30);
-      doc.text(String(value), x + 3, y + 12, { maxWidth: w - 6 });
-    };
+    // Header grid: 3 columns, left+right split into 2 rows, middle full height
+    const headerH = 40;
+    const cellLeftW = 45;
+    const cellRightW = 52;
+    const cellMidW = usableWidth - cellLeftW - cellRightW;
+    const headerY = margin;
+    const divX1 = margin + cellLeftW;
+    const divX2 = margin + cellLeftW + cellMidW;
+    const halfY = headerY + headerH / 2;
 
-    // Left column — 2 stacked boxes
-    const leftX = margin;
-    drawInfoBox(leftX, boxY, leftW, smallBoxH, 'Document No', docNumber);
-    drawInfoBox(leftX, boxY + smallBoxH + boxSpacing, leftW, smallBoxH, 'Date', new Date().toLocaleDateString());
+    // Outer border + white fill
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(margin, headerY, usableWidth, headerH, 'FD');
 
-    // Middle column — 1 tall box
-    const midX = margin + leftW + boxSpacing;
-    drawInfoBox(midX, boxY, midW, tallBoxH, 'Document Title', docTitle);
+    // Vertical dividers
+    doc.line(divX1, headerY, divX1, headerY + headerH);
+    doc.line(divX2, headerY, divX2, headerY + headerH);
 
-    // Right column — 2 stacked boxes
-    const rightX = margin + leftW + boxSpacing + midW + boxSpacing;
-    drawInfoBox(rightX, boxY, rightW, smallBoxH, 'Operator', operatorName);
-    drawInfoBox(rightX, boxY + smallBoxH + boxSpacing, rightW, smallBoxH, 'Status', 'Pending');
+    // Horizontal dividers in left and right columns only
+    doc.line(margin, halfY, divX1, halfY);
+    doc.line(divX2, halfY, margin + usableWidth, halfY);
 
-    // Divider below header
-    const headerBottom = boxY + tallBoxH + 6;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, headerBottom, pageWidth - margin, headerBottom);
+    // Top-left: entity name
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(40, 40, 40);
+    doc.text(
+      submission?.assignment?.checklist?.entityName || 'Entity name',
+      margin + 3,
+      headerY + headerH / 4 + 1.5,
+      { maxWidth: cellLeftW - 6 },
+    );
 
-    let yPos = headerBottom + 6;
+    // Bottom-left: date
+    doc.text(
+      new Date().toLocaleDateString(),
+      margin + 3,
+      halfY + headerH / 4 + 1.5,
+      { maxWidth: cellLeftW - 6 },
+    );
+
+    // Middle: document title (large, vertically centered)
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(20, 20, 20);
+    doc.text(docTitle, divX1 + cellMidW / 2, headerY + headerH / 2 + 3, {
+      align: 'center',
+      maxWidth: cellMidW - 8,
+    });
+
+    // Top-right: doc no
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(40, 40, 40);
+    doc.text(
+      `Doc no - ${docNumber}`,
+      divX2 + 3,
+      headerY + headerH / 4 + 1.5,
+      { maxWidth: cellRightW - 6 },
+    );
+
+    // Bottom-right: proprietary & confidential
+    doc.text(
+      'Proprietary & Confidential',
+      divX2 + 3,
+      halfY + headerH / 4 + 1.5,
+      { maxWidth: cellRightW - 6 },
+    );
+
+    const headerBottom = headerY + headerH + 4;
+    let yPos = headerBottom;
 
     const sortedEntries = entriesData
       .slice()
@@ -328,6 +360,82 @@ export default function ViewApproverEntries() {
     return value ?? 0;
   };
 
+  const computeSectionFormulaValue = (entry) => {
+    const {
+      section: sectionName,
+      field: fieldName,
+      operation,
+    } = entry.config?.items || {};
+    if (!sectionName || !fieldName || !operation) return 0;
+
+    const sectionEntry = entriesData?.find(
+      (e) => e.type === 'section' && e.name === sectionName,
+    );
+    if (!sectionEntry) return 0;
+
+    const sectionEntryId =
+      sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
+    const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
+    const rowsData = JSON.parse(rawValue || '[]');
+    if (!rowsData.length) return 0;
+
+    const targetField = (sectionEntry.config?.items || []).find(
+      (f) => f.name === fieldName,
+    );
+    if (!targetField) return 0;
+
+    const targetFieldId = targetField.entryId || targetField.id;
+    const values = rowsData
+      .map((row) => {
+        const raw = row[targetFieldId]?.value;
+        const num = Number(raw);
+        return isNaN(num) ? null : num;
+      })
+      .filter((v) => v !== null);
+
+    if (!values.length) return 0;
+
+    switch (operation.toLowerCase()) {
+      case 'sum':
+        return values.reduce((a, b) => a + b, 0);
+      case 'subtract':
+        return values.reduce((a, b) => a - b);
+      case 'multiply':
+        return values.reduce((a, b) => a * b, 1);
+      case 'average':
+      case 'mean':
+        return values.reduce((a, b) => a + b, 0) / values.length;
+      case 'count':
+        return values.length;
+      case 'min':
+        return Math.min(...values);
+      case 'max':
+        return Math.max(...values);
+      case 'median': {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0
+          ? (sorted[mid - 1] + sorted[mid]) / 2
+          : sorted[mid];
+      }
+      case 'mode': {
+        const freq = {};
+        let maxFreq = 0;
+        let mode = values[0];
+        values.forEach((v) => {
+          freq[v] = (freq[v] || 0) + 1;
+          if (freq[v] > maxFreq) {
+            maxFreq = freq[v];
+            mode = v;
+          }
+        });
+        return mode;
+      }
+      default:
+        return 0;
+    }
+  };
+
   return (
     <div
       className={`flex ${entriesData?.length > 0 ? 'min-h-screen' : ''} w-full flex-col bg-white py-6`}
@@ -429,6 +537,18 @@ export default function ViewApproverEntries() {
                         ...entry,
                         type: 'number',
                         value: computeFormulaValue(entry),
+                      }}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly
+                    />
+                  )}
+                  {entry.type === 'section_formular' && (
+                    <BasicForm
+                      entry={{
+                        ...entry,
+                        type: 'number',
+                        value: computeSectionFormulaValue(entry),
                       }}
                       formData={formData}
                       setFormData={setFormData}
