@@ -86,6 +86,7 @@ export default function AssignLogbookModal({
     }
 
     try {
+      console.log(checklistId, operator);
       await mutateAsync({
         assignedTo: operator,
         checklistId,

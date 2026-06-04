@@ -12,6 +12,9 @@ const dbConfig = {
   host: isProduction ? config.PRODUCTION_HOST : config.UAT_HOST,
 };
 
+const productionSchema = process.env.DB_SCHEMA || config.DB_SCHEMA || config.PRODUCTION_SCHEMA || 'public';
+const uatSchema = process.env.DB_SCHEMA || config.DB_SCHEMA || config.UAT_SCHEMA || 'uat';
+
 export default {
   development: {
     username: config.UAT_USER,
@@ -19,6 +22,11 @@ export default {
     database: config.UAT_DB,     
     host: config.UAT_HOST,        
     dialect: 'postgres',                
+    schema: uatSchema,
+    searchPath: uatSchema,
+    define: {
+      schema: uatSchema,
+    },
     dialectOptions: {
       connectTimeout: 60000, 
       ssl: {
@@ -40,6 +48,11 @@ export default {
     database: config.PRODUCTION_DB,     
     host: config.PRODUCTION_HOST,        
     dialect: 'postgres',                
+    schema: productionSchema,
+    searchPath: productionSchema,
+    define: {
+      schema: productionSchema,
+    },
     dialectOptions: {
       connectTimeout: 60000, 
       ssl: {

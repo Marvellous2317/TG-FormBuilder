@@ -16,7 +16,9 @@ const fieldTypeOptions = [
   { label: 'Date', value: 'date' },
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
+  { label: 'Image', value: 'image' },
   { label: 'Formular', value: 'formular' },
+  { label: 'Section Formular', value: 'section_formular' },
 ];
 
 const sectionFieldTypeOptions = [
@@ -28,6 +30,7 @@ const sectionFieldTypeOptions = [
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
   { label: 'Formular', value: 'formular' },
+  { label: 'Image', value: 'image' },
 ];
 
 const monthNames = [

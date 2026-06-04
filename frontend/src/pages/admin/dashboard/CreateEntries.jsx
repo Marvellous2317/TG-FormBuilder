@@ -38,6 +38,8 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import SectionFormularModal from './components/SectionFormularModal';
+import { getFormDraft, saveFormDraft } from '../../../lib/offlineCache';
 
 function SortableFieldRow({
   field,
@@ -144,6 +146,14 @@ function SortableFieldRow({
               {field.config.expression || 'Formular'}
             </p>
           )}
+          {field.type === 'section_formular' && field.config && (
+            <p
+              onClick={() => onOpenModal('sectionFormular', field.id)}
+              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+            >
+              {field.config.name || 'SF'}
+            </p>
+          )}
         </div>
         <div className="w-[15%] flex items-center justify-between">
           <Button
@@ -179,11 +189,25 @@ export default function CreateEntries() {
   const [isDropdownOptionsModal, setIsDropdownOptionsModal] = useState(false);
   const [isEnumOptionsModal, setIsEnumOptionsModal] = useState(false);
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
+  const [isSectionFormularModal, setIsSectionFormularModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
+  const [fields, setFields] = useState([createField()]);
+
+  useEffect(() => {
+    getFormDraft(checklistId).then((draft) => {
+      if (draft) setFields(draft);
+    });
+  }, [checklistId]);
+
+  useEffect(() => {
+    if (Object.keys(fields).length === 0) return;
+    const timer = setTimeout(() => saveFormDraft(checklistId, fields), 1000);
+    return () => clearTimeout(timer);
+  }, [fields, checklistId]);
 
   const { data, isPending: isLoadingChecklistEntries } =
     useChecklistEntries(checklistId);
@@ -200,8 +224,6 @@ export default function CreateEntries() {
     useDeleteChecklistEntries();
 
   const { showError, showSuccess } = useToast();
-
-  const [fields, setFields] = useState([createField()]);
 
   // Sync fields when entriesData is fetched from API
   useEffect(() => {
@@ -235,12 +257,19 @@ export default function CreateEntries() {
         field.id === id ? { ...field, [key]: value } : field,
       );
 
-      if (key === 'type' && value === 'number') {
+      if (
+        (key === 'type' && value === 'number') ||
+        value === 'text' ||
+        value === 'section_formular' ||
+        value === 'formular'
+      ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
             .filter(
-              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+              (f) =>
+                f.type === 'number' ||
+                (f.type === 'text' && f.id !== id && f.config?.fieldRef),
             )
             .map((f) => f.config.fieldRef);
           let n = 1;
@@ -270,6 +299,10 @@ export default function CreateEntries() {
       case 'formular':
         setActiveFieldId(id);
         setIsFormularModal(true);
+        break;
+      case 'section_formular':
+        setActiveFieldId(id);
+        setIsSectionFormularModal(true);
         break;
       default:
         break;
@@ -371,9 +404,18 @@ export default function CreateEntries() {
     else if (type === 'section') setIsSectionOptionsModal(true);
     else if (type === 'formular') setIsFormularModal(true);
     else if (type === 'defaultValue') setIsShowDefaultValueModal(true);
+    else if (type === 'sectionFormular') setIsSectionFormularModal(true);
   };
 
-  const numberFields = fields.filter((field) => field.type === 'number');
+  const formularFields = fields.filter(
+    (field) =>
+      field.type === 'number' ||
+      field.type === 'text' ||
+      field.type === 'formular' ||
+      field.type === 'section_formular',
+  );
+
+  const sectionFields = fields.filter((field) => field.type === 'section');
 
   return (
     <div className="flex h-full w-full flex-col bg-white">
@@ -510,7 +552,17 @@ export default function CreateEntries() {
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
-        numberFields={numberFields}
+        formularFields={formularFields}
+      />
+
+      <SectionFormularModal
+        key={`section-formular-${activeFieldId}`}
+        isSectionFormularModal={isSectionFormularModal}
+        setIsSectionFormularModal={setIsSectionFormularModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
+        formularFields={formularFields}
+        sectionFields={sectionFields}
       />
 
       <AssignLogbookModal

@@ -50,10 +50,13 @@ export const validateFormula = (expression, fieldRefs = []) => {
 export const evaluateFormula = (expression, fieldValues = {}) => {
   try {
     const scope = Object.fromEntries(
-      Object.entries(fieldValues).map(([k, v]) => [
-        k.toLowerCase(),
-        Number(v) || 0,
-      ]),
+      Object.entries(fieldValues).map(([k, v]) => {
+        const num = Number(v);
+        return [
+          k.toLowerCase(),
+          v !== '' && !isNaN(num) ? num : String(v ?? ''),
+        ];
+      }),
     );
     const result = math.evaluate(expression.toLowerCase(), scope);
     return { value: result, error: null };

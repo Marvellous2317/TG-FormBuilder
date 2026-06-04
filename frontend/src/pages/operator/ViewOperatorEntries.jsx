@@ -19,6 +19,7 @@ import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
 import { evaluateFormula } from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
+import SignatureModal from '../approver/components/SignatureModal';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId, back: previousLocation } = useLoaderData();
@@ -64,6 +65,82 @@ export default function ViewOperatorEntries() {
       navigate('/operator/');
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const computeSectionFormulaValue = (entry) => {
+    const {
+      section: sectionName,
+      field: fieldName,
+      operation,
+    } = entry.config?.items || {};
+    if (!sectionName || !fieldName || !operation) return 0;
+
+    const sectionEntry = entriesData?.find(
+      (e) => e.type === 'section' && e.name === sectionName,
+    );
+    if (!sectionEntry) return 0;
+
+    const sectionEntryId =
+      sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
+    const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
+    const rowsData = JSON.parse(rawValue || '[]');
+    if (!rowsData.length) return 0;
+
+    const targetField = (sectionEntry.config?.items || []).find(
+      (f) => f.name === fieldName,
+    );
+    if (!targetField) return 0;
+
+    const targetFieldId = targetField.entryId || targetField.id;
+    const values = rowsData
+      .map((row) => {
+        const raw = row[targetFieldId]?.value;
+        const num = Number(raw);
+        return isNaN(num) ? null : num;
+      })
+      .filter((v) => v !== null);
+
+    if (!values.length) return 0;
+
+    switch (operation.toLowerCase()) {
+      case 'sum':
+        return values.reduce((a, b) => a + b, 0);
+      case 'subtract':
+        return values.reduce((a, b) => a - b);
+      case 'multiply':
+        return values.reduce((a, b) => a * b, 1);
+      case 'average':
+      case 'mean':
+        return values.reduce((a, b) => a + b, 0) / values.length;
+      case 'count':
+        return values.length;
+      case 'min':
+        return Math.min(...values);
+      case 'max':
+        return Math.max(...values);
+      case 'median': {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0
+          ? (sorted[mid - 1] + sorted[mid]) / 2
+          : sorted[mid];
+      }
+      case 'mode': {
+        const freq = {};
+        let maxFreq = 0;
+        let mode = values[0];
+        values.forEach((v) => {
+          freq[v] = (freq[v] || 0) + 1;
+          if (freq[v] > maxFreq) {
+            maxFreq = freq[v];
+            mode = v;
+          }
+        });
+        return mode;
+      }
+      default:
+        return 0;
     }
   };
 
@@ -173,6 +250,18 @@ export default function ViewOperatorEntries() {
                           ...entry,
                           type: 'number',
                           value: computeFormulaValue(entry),
+                        }}
+                        formData={formData}
+                        setFormData={setFormData}
+                        readOnly
+                      />
+                    )}
+                    {entry.type === 'section_formular' && (
+                      <BasicForm
+                        entry={{
+                          ...entry,
+                          type: 'number',
+                          value: computeSectionFormulaValue(entry),
                         }}
                         formData={formData}
                         setFormData={setFormData}

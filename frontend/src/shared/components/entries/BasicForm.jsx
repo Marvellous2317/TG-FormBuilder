@@ -2,7 +2,6 @@ import React from 'react';
 import InputField from '../InputField';
 
 export default function BasicForm({ entry, formData, setFormData, readOnly }) {
-
   const entryId = entry?.entryId;
 
   const handleChange = (event) => {
@@ -31,7 +30,7 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
 
   const isVisible =
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
-  if (!isVisible) return null; 
+  if (!isVisible) return null;
 
   return (
     <div className="mt-5 w-full">

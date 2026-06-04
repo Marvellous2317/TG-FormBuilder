@@ -38,6 +38,35 @@ export class AdminController {
     } catch (e) { next(e); }
   }
 
+  static async getSubmittedChecklistsByChecklistId(req, res, next) {
+    try {
+      const { checklistId } = req.params;
+      const companyId = req.user.company?.companyId || req.user.companyId || null;
+      const { status, page, limit, search } = req.query;
+      const result = await AdminRepository.getSubmittedChecklistsByChecklistId(checklistId, companyId, { status, page, limit, search });
+      return ResponseManager.success(res, result, 200, "Submissions fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async getSubmittedChecklistById(req, res, next) {
+    try {
+      const { checklistId, submittedChecklistId } = req.params;
+      const companyId = req.user.company?.companyId || req.user.companyId || null;
+      const result = await AdminRepository.getSubmittedChecklistById(checklistId, submittedChecklistId, companyId);
+      return ResponseManager.success(res, result, 200, "Submission fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async updateSubmittedChecklistEntry(req, res, next) {
+    try {
+      const { checklistId, submittedChecklistId } = req.params;
+      const companyId = req.user.company?.companyId || req.user.companyId || null;
+      const { data } = req.body;
+      const result = await AdminRepository.updateSubmittedChecklistEntry(checklistId, submittedChecklistId, companyId, { data });
+      return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
   static async updateChecklist(req, res, next) {
     try {
       const { checklistId } = req.params;

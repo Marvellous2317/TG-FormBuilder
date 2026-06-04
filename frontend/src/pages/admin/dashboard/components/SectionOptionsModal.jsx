@@ -178,13 +178,14 @@ export default function SectionOptionsModal({
   const [isFormularModal, setIsFormularModal] = useState(false);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [isSectionsOptionsModal, setIsSectionsOptionsModal] = useState(false);
-  const [fields, setFields] = useState(
-    () => initialValue?.items ?? Array.from({ length: 1 }, () => createField()),
-  );
+  const [fields, setFields] = useState(() => {
+    const items = initialValue?.items;
+    return Array.isArray(items) && items.length > 0 ? items : [createField()];
+  });
 
   const { showError } = useToast();
 
-  const activeField = fields.find((f) => f.id === activeFieldId);
+  const activeField = fields && fields.find((f) => f.id === activeFieldId);
 
   const handleModalSave = (config) => {
     setFields((current) =>
@@ -208,7 +209,11 @@ export default function SectionOptionsModal({
         field.id === id ? { ...field, [key]: value } : field,
       );
 
-      if (key === 'type' && value === 'number') {
+      if (
+        (key === 'type' && value === 'number') ||
+        value === 'formular' ||
+        value === 'section_formular'
+      ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
@@ -309,7 +314,13 @@ export default function SectionOptionsModal({
     });
   };
 
-  const numberFields = fields.filter((field) => field.type === 'number');
+  const formularFields = fields.filter(
+    (field) =>
+      field.type === 'number' ||
+      field.type === 'text' ||
+      field.type === 'formular' ||
+      field.type === 'section_formular',
+  );
 
   return (
     <Modal
@@ -430,7 +441,7 @@ export default function SectionOptionsModal({
         setIsFormularModal={setIsFormularModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
-        numberFields={numberFields}
+        formularFields={formularFields}
       />
 
       <SectionOptionsModal

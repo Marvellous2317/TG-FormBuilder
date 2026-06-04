@@ -4,6 +4,7 @@ import {
   ChecklistEntry,
   ChecklistAssignment,
   SubmittedChecklist,
+  SubmittedChecklistEntry,
   User,
   Role,
   Company,
@@ -14,6 +15,24 @@ import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
 import { config } from "dotenv";
 import { sendAssignmentEmail } from "../../../views/index.js";
+import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/azureService.js";
+
+const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
+
+async function hydrateSubmittedEntryImages(submission) {
+  if (!submission?.entries?.length) return submission;
+
+  await Promise.all(submission.entries.map(async (entry) => {
+    if (!entry.image) return;
+
+    const imageUrl = entry.image;
+    const image = await AzureImageDownloader(imageUrl);
+    entry.setDataValue("imageUrl", imageUrl);
+    entry.setDataValue("image", image);
+  }));
+
+  return submission;
+}
 
 export class AdminRepository {
 
@@ -157,6 +176,145 @@ export class AdminRepository {
     }
   }
 
+  static async getSubmittedChecklistsByChecklistId(checklistId, companyId, { status, search, page = 1, limit = 20 }) {
+    try {
+      const checklist = await Checklist.findOne({ where: { checklistId, companyId } });
+      if (!checklist) throw new ApplicationError("Checklist not found", 404);
+
+      const where = { companyId };
+      if (status) where.status = status;
+      if (search) where.documentNumber = { [Op.iLike]: `%${search}%` };
+
+      const offset = (page - 1) * limit;
+      const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
+        where,
+        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt", "updatedAt"],
+        include: [
+          {
+            model: ChecklistAssignment,
+            as: "assignment",
+            attributes: ["assignmentId", "checklistId"],
+            where: { checklistId, companyId },
+            include: [
+              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
+              { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
+            ],
+          },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName"] },
+        ],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset,
+      });
+
+      return {
+        submissions,
+        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch submissions", 500);
+    }
+  }
+
+  static async getSubmittedChecklistById(checklistId, submittedChecklistId, companyId) {
+    try {
+      const submission = await SubmittedChecklist.findOne({
+        where: { submittedChecklistId, companyId },
+        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt", "updatedAt"],
+        include: [
+          {
+            model: ChecklistAssignment,
+            as: "assignment",
+            attributes: ["assignmentId", "checklistId"],
+            where: { checklistId, companyId },
+            include: [
+              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
+              { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
+            ],
+          },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: SubmittedChecklistEntry,
+            as: "entries",
+            attributes: ["id", "entryId", "formulaExpression", "options", "required", "config", "name", "value", "type", "image", "section_formular", "status", "section", "order"],
+          },
+        ],
+        order: [[{ model: SubmittedChecklistEntry, as: "entries" }, "order", "ASC"]],
+      });
+
+      if (!submission) throw new ApplicationError("Submission not found", 404);
+      await hydrateSubmittedEntryImages(submission);
+      return { submission };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch submission", 500);
+    }
+  }
+
+  static async updateSubmittedChecklistEntry(checklistId, submittedChecklistId, companyId, { data }) {
+    const transaction = await sequelize.transaction();
+    try {
+      const submission = await SubmittedChecklist.findOne({
+        where: { submittedChecklistId, companyId },
+        include: [
+          {
+            model: ChecklistAssignment,
+            as: "assignment",
+            where: { checklistId, companyId },
+            include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
+          },
+        ],
+        transaction,
+      });
+
+      if (!submission) throw new ApplicationError("Submission not found", 404);
+
+      const requiredEntries = submission.assignment.checklist.entries.filter((e) => e.required && !isOptionalSubmittedEntry(e));
+      const responseMap = new Map(data.map((r) => [r.entryId, r.value ?? r.image]));
+
+      for (const entry of requiredEntries) {
+        const value = responseMap.get(entry.entryId);
+        if (value === undefined || value === null || value === "") {
+          throw new ApplicationError(`Field "${entry.name}" is required`, 400);
+        }
+      }
+
+      const existingEntries = await SubmittedChecklistEntry.findAll({
+        where: { submittedChecklistId },
+        transaction,
+      });
+      const existingMap = new Map(existingEntries.map((entry) => [entry.entryId, entry]));
+
+      for (const item of data) {
+        const existing = existingMap.get(item.entryId);
+        if (!existing) throw new ApplicationError(`Entry ${item.entryId} not found in submission`, 404);
+
+        const updates = {};
+        if (item.image !== undefined) {
+          updates.image = await uploadChecklistImageValue(item.image, existing.name || "image");
+          if (item.value === undefined) updates.value = updates.image;
+        } else if (existing.image && item.value !== undefined) {
+          updates.image = await uploadChecklistImageValue(item.value, existing.name || "image");
+          updates.value = updates.image;
+        } else if (item.value !== undefined) {
+          updates.value = item.value;
+        }
+
+        if (item.section_formular !== undefined) updates.section_formular = item.section_formular;
+
+        await existing.update(updates, { transaction });
+      }
+
+      await transaction.commit();
+      return { submittedChecklist: submission, message: "Submission entries updated successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to update submission entries", 500);
+    }
+  }
+
   static async updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, updatedBy }) {
     try {
       const checklist = await Checklist.findByPk(checklistId);
@@ -278,6 +436,8 @@ export class AdminRepository {
         name: e.name,
         type: e.type || "text",
         section: e.section || null,
+        image: e.image || false,
+        section_formular: e.section_formular || null,
         order: e.order ?? index,
         required: e.required || false,
         options: e.options || null,
@@ -314,6 +474,8 @@ export class AdminRepository {
           if (e.name !== undefined) entry.name = e.name;
           if (e.type !== undefined) entry.type = e.type;
           if (e.section !== undefined) entry.section = e.section || null;
+          if (e.image !== undefined) entry.image = e.image || false;
+          if (e.section_formular !== undefined) entry.section_formular = e.section_formular || null;
           if (e.order !== undefined) entry.order = e.order;
           if (e.required !== undefined) entry.required = e.required;
           if (e.options !== undefined) entry.options = e.options;
@@ -329,6 +491,8 @@ export class AdminRepository {
             name: e.name,
             type: e.type || "text",
             section: e.section || null,
+            image: e.image || false,
+            section_formular: e.section_formular || null,
             order: e.order ?? index,
             required: e.required || false,
             options: e.options || null,

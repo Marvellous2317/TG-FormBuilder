@@ -34,6 +34,8 @@ import ViewApproverEntries from '../../pages/approver/ViewApproverEntries';
 import ApproverApprovedTasks from '../../pages/approver/ApproverApprovedTasks';
 import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
 import ResetPassword from '../../pages/auth/ResetPassword';
+import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsManagement';
+import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
 
 export const router = createBrowserRouter([
   {
@@ -140,6 +142,16 @@ export const router = createBrowserRouter([
             path: 'entries/:id/:title',
             loader: ({ params }) => params,
             element: <CreateEntries />,
+          },
+          {
+            path: 'entries/:id/submissions',
+            loader: ({ params }) => params,
+            element: <SubmissionsManagement />,
+          },
+          {
+            path: 'entries/:id/view/:back/:submissionId',
+            loader: ({ params }) => params,
+            element: <ViewAdminEntries />,
           },
           {
             path: 'users',

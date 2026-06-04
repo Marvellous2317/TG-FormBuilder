@@ -14,7 +14,13 @@ const dbConfig = {
   host: isProduction ? config.PRODUCTION_HOST : config.UAT_HOST,
 };
 
-console.log(`Database connecting to ${isProduction ? 'PRODUCTION' : 'UAT'} environment`);
+const dbSchema = process.env.DB_SCHEMA || config.DB_SCHEMA || (isProduction ? config.PRODUCTION_SCHEMA || 'public' : config.UAT_SCHEMA || 'uat');
+
+if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(dbSchema)) {
+  throw new Error(`Invalid database schema name: ${dbSchema}`);
+}
+
+console.log(`Database connecting to ${isProduction ? 'PRODUCTION' : 'UAT'} environment using ${dbSchema} schema`);
 
 export const sequelize = new Sequelize({
   username: dbConfig.username,
@@ -30,6 +36,16 @@ export const sequelize = new Sequelize({
   },
   },
   logging: false,
+  schema: dbSchema,
+  searchPath: dbSchema,
+  define: {
+    schema: dbSchema,
+  },
+  hooks: {
+    afterConnect: async (connection) => {
+      await connection.query(`SET search_path TO "${dbSchema}", public`);
+    },
+  },
   pool: {
     max: 10,      
     min: 0,
@@ -45,24 +61,6 @@ export const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connected to postgres database');
-
-     if (config.NODE_ENV === 'uat') {
-
-        try {
-          await sequelize.sync({ alter: true, logging: console.log });
-          console.log('Database sync completed successfully');
-        } catch (syncError) {
-          console.error('Database sync failed:', {
-            message: syncError.message,
-            name: syncError.name,
-            sql: syncError.sql,
-            original: syncError.original,
-            parent: syncError.parent,
-            stack: syncError.stack
-          });
-          throw syncError;
-        }
-      }
     return sequelize;
   } catch (err) {
     console.error('Error connecting to postgres database:', err);
