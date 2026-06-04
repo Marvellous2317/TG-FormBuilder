@@ -19,7 +19,6 @@ module.exports = {
     await queryInterface.sequelize.query(
       `ALTER TYPE ${schema}.enum_checklist_entries_type ADD VALUE IF NOT EXISTS 'image'`
     );
-     const schema = row.schema;
     await queryInterface.sequelize.query(
       `ALTER TYPE ${schema}.enum_checklist_entries_type ADD VALUE IF NOT EXISTS 'section_formular'`
     );
