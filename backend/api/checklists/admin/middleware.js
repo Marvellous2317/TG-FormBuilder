@@ -98,7 +98,7 @@ export const validateCreateEntries = [
   body("entries").isArray({ min: 1 }).withMessage("entries must be a non-empty array"),
   body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
     .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
-  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section"])
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section", "section_formular"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
   body("entries.*.image").optional({ nullable: true }).isBoolean().withMessage("Image must be a boolean"),
@@ -125,7 +125,7 @@ export const validateCreateOrUpdateEntries = [
   body("entries.*.entryId").optional().isUUID().withMessage("Invalid entry ID"),
   body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
     .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
-  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section"])
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section", "section_formular"])
     .withMessage("Invalid field type"),
   body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
   body("entries.*.image").optional({ nullable: true }).isBoolean().withMessage("Image must be a boolean"),
