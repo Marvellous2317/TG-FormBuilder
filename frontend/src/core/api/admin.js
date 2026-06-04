@@ -121,3 +121,33 @@ export const unAssignChecklistOperator = async (payload) => {
   );
   return data;
 };
+
+export const fetchChecklistSubmissions = async (checklistId, params) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/submissions/${checklistId}`,
+    {
+      params,
+    },
+  );
+  return data;
+};
+
+export const fetchChecklistSubmission = async (checklistId, submissionId) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/submissions/${checklistId}/${submissionId}`,
+  );
+  return data;
+};
+
+export const updateChecklistSubmission = async (
+  checklistId,
+  submissionId,
+  payload,
+) => {
+  console.log(checklistId, submissionId, payload);
+  const { data } = await axiosInstance.put(
+    `/checklists/admin/submissions/${checklistId}/${submissionId}`,
+    payload,
+  );
+  return data;
+};

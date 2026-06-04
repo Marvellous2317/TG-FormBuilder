@@ -13,12 +13,75 @@ import {
   fetchChecklists,
   fetchChecklistsAnalytics,
   fetchChecklistsEntries,
+  fetchChecklistSubmission,
+  fetchChecklistSubmissions,
   restoreChecklist,
   unAssignChecklistOperator,
   updateChecklist,
   updateChecklistCatalog,
   updateChecklistEntries,
+  updateChecklistSubmission,
 } from '../../../core/api/admin';
+
+export function useChecklistsSubmissions(
+  checklistId,
+  queryParams = {},
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'submissions', queryParams],
+    queryFn: () => fetchChecklistSubmissions(checklistId, queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistsSubmission(
+  checklistId,
+  submissionId,
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'submissions', checklistId, submissionId],
+    queryFn: () => fetchChecklistSubmission(checklistId, submissionId),
+    enabled: Boolean(checklistId),
+    ...options,
+  });
+}
+
+export function useUpdateChecklistsSubmissions(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ checklistId, submissionId, payload }) =>
+      updateChecklistSubmission(checklistId, submissionId, payload),
+    onSuccess: async (response, variables, context) => {
+      const { checklistId, submissionId } = variables; // clean and direct
+
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'submissions'],
+      });
+
+      if (checklistId && submissionId) {
+        await queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'checklists',
+            'submissions',
+            checklistId,
+            submissionId,
+          ],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
 
 export function useChecklists(queryParams = {}, options = {}) {
   return useQuery({

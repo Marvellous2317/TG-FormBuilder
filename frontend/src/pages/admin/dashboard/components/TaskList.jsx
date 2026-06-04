@@ -151,7 +151,7 @@ export default function TaskList({
       value: 'unassign',
       onClick: () => {
         setActiveMenuId(null);
-        setActiveMenuRow(null);
+        // setActiveMenuRow(null);
         setActionToPerform('unassign');
         setIsShowAssignLogbookModal(true);
       },
@@ -161,7 +161,7 @@ export default function TaskList({
       value: 'assign',
       onClick: () => {
         setActiveMenuId(null);
-        setActiveMenuRow(null);
+        // setActiveMenuRow(null);
         setActionToPerform('assign');
         setIsShowAssignLogbookModal(true);
       },
@@ -199,6 +199,15 @@ export default function TaskList({
         setActiveMenuId(null);
         setActiveMenuRow(null);
         setIsRestoreChecklistModalOpen(true);
+      },
+    },
+    {
+      title: 'Submissions',
+      value: 'submissions',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
       },
     },
   ];
