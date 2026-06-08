@@ -1,7 +1,8 @@
 
 import config from '../appConfig.js'; 
 
-
+// Set NODE_ENV for Sequelize CLI to auto-detect environment from appConfig.json
+process.env.NODE_ENV = config.NODE_ENV === 'production' ? 'production' : 'development';
 
 const isProduction = config.NODE_ENV === 'production';
 
@@ -12,8 +13,8 @@ const dbConfig = {
   host: isProduction ? config.PRODUCTION_HOST : config.UAT_HOST,
 };
 
-const productionSchema = process.env.DB_SCHEMA || config.DB_SCHEMA || config.PRODUCTION_SCHEMA || 'public';
-const uatSchema = process.env.DB_SCHEMA || config.DB_SCHEMA || config.UAT_SCHEMA || 'uat';
+const productionSchema = config.DB_SCHEMA || config.PRODUCTION_SCHEMA || 'public';
+const uatSchema = config.DB_SCHEMA || config.UAT_SCHEMA || 'uat';
 
 export default {
   development: {
@@ -35,6 +36,7 @@ export default {
       },
     },
     logging: false,
+    migrationStorageTableSchema: uatSchema,
     pool: {
       max: 10,
       min: 1,
@@ -61,6 +63,7 @@ export default {
       },
     },
     logging: false,
+    migrationStorageTableSchema: productionSchema,
     pool: {
       max: 10,
       min: 1,

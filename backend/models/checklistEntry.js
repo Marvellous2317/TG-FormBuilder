@@ -18,7 +18,7 @@ export const ChecklistEntry = sequelize.define(
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM("text", "number", "dropdown", "date", "time", "enum", "formular", "section", "section_formular"),
+      type: DataTypes.ENUM("text", "number", "dropdown", "date", "time", "enum", "formular", "section", "section_formular", "image"),
       allowNull: false,
       defaultValue: "text",
     },
