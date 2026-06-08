@@ -61,6 +61,8 @@ export default function ViewApproverEntries() {
     const operatorName = operator
       ? `${operator.firstName} ${operator.lastName}`
       : 'N/A';
+    const operatorSignatureDataUrl = operator?.signature || 'N/A';
+    const entityName = operator?.company?.companyName || 'N/A';
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -100,7 +102,7 @@ export default function ViewApproverEntries() {
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
     doc.text(
-      submission?.assignment?.checklist?.entityName || 'Entity name',
+      entityName || 'Entity name',
       margin + 3,
       headerY + headerH / 4 + 1.5,
       { maxWidth: cellLeftW - 6 },
@@ -127,12 +129,9 @@ export default function ViewApproverEntries() {
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
-    doc.text(
-      `Doc no - ${docNumber}`,
-      divX2 + 3,
-      headerY + headerH / 4 + 1.5,
-      { maxWidth: cellRightW - 6 },
-    );
+    doc.text(`Doc no - ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
+      maxWidth: cellRightW - 6,
+    });
 
     // Bottom-right: proprietary & confidential
     doc.text(
@@ -273,9 +272,37 @@ export default function ViewApproverEntries() {
     doc.setTextColor(100, 100, 100);
     doc.text(`Submitted by: ${operatorName} (Operator)`, margin, yPos + 5);
 
+    if (operatorSignatureDataUrl) {
+      const signatureY = yPos + 12;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const signatureHeight = 30;
+      const signatureWidth = 60;
+      const formatMatch = signatureDataUrl.match(
+        /^data:image\/(png|jpeg|jpg);base64,/i,
+      );
+      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
+
+      if (signatureY + signatureHeight + margin > pageHeight) {
+        doc.addPage();
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+      }
+
+      doc.text('Operator signature:', margin, signatureY);
+      doc.addImage(
+        signatureDataUrl,
+        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
+        margin,
+        signatureY + 3,
+        signatureWidth,
+        signatureHeight,
+      );
+    }
+
     const signatureDataUrl = user?.signature;
     if (signatureDataUrl) {
-      const signatureY = yPos + 12;
+      const signatureY = yPos + 62;
       const pageHeight = doc.internal.pageSize.getHeight();
       const signatureHeight = 30;
       const signatureWidth = 60;
