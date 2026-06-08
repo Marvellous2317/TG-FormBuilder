@@ -7,6 +7,7 @@ import {
   SubmittedChecklistEntry,
   User,
   OperatorApprover,
+  Company,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -120,7 +121,14 @@ export class ApprovalRepository {
                 {
                   model: User,
                   as: "operator",
-                  attributes: ["userId", "firstName", "lastName", "email"],
+                  attributes: ["userId", "firstName", "lastName", "email", "signature"],
+                  include: [
+                    {
+                      model: Company,
+                      as: "company",
+                      attributes: ["companyName"],
+                    },
+                  ],
                 },
               ],
             },
