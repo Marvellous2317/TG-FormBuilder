@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import {
-  Checklist, ChecklistAssignment, ChecklistEntry,
-  SubmittedChecklist, SubmittedChecklistEntry, User,
+  Checklist, ChecklistAssignment, ChecklistEntry, ChecklistApprover,
+  SubmittedChecklist, SubmittedChecklistEntry, SubmittedChecklistApproval, User,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -189,6 +189,15 @@ export class OperatorRepository {
         }
       }
 
+      const approverConfigs = await ChecklistApprover.findAll({
+        where: { checklistId: assignment.checklistId },
+        order: [["step", "ASC"], ["createdAt", "ASC"]],
+        transaction,
+      });
+      if (approverConfigs.length === 0) {
+        throw new ApplicationError("No approvers are configured for this checklist", 400);
+      }
+
       const submittedChecklist = await SubmittedChecklist.create({
         assignmentId,
         submittedBy: userId,
@@ -205,6 +214,14 @@ export class OperatorRepository {
         index,
       )));
       await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
+
+      const approvalData = approverConfigs.map((cfg, index) => ({
+        submittedChecklistId: submittedChecklist.submittedChecklistId,
+        approverId: cfg.approverId,
+        step: cfg.step ?? index,
+        status: "pending",
+      }));
+      await SubmittedChecklistApproval.bulkCreate(approvalData, { transaction });
 
       await transaction.commit();
       return { submittedChecklist, message: "Checklist submitted successfully" };

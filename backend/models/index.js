@@ -11,8 +11,13 @@ import { ChecklistEntry } from "./checklistEntry.js";
 import { ChecklistAssignment } from "./checklistAssignment.js";
 import { SubmittedChecklist } from "./submittedChecklist.js";
 import { SubmittedChecklistEntry } from "./submittedChecklistEntry.js";
-import { OperatorApprover } from "./operatorApprover.js";
+// LEGACY: OperatorApprover (operator_approvers table) replaced by the per-checklist approver flow.
+// import { OperatorApprover } from "./operatorApprover.js";
+import { ChecklistApprover } from "./checklistApprover.js";
+import { SubmittedChecklistApproval } from "./submittedChecklistApproval.js";
 import { Catalog } from "./catalog.js";
+import { VersionChecklist } from "./versionChecklist.js";
+import { VersionChecklistEntry } from "./versionChecklistEntry.js";
 
 
 User.belongsTo(Company, { foreignKey: "companyId", as: "company" });
@@ -21,13 +26,14 @@ Company.hasMany(User, { foreignKey: "companyId", as: "users" });
 User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 Role.hasMany(User, { foreignKey: "roleId", as: "users" });
 
-User.belongsToMany(User, { through: OperatorApprover, foreignKey: "operatorId", otherKey: "approverId", as: "approvers" });
-User.belongsToMany(User, { through: OperatorApprover, foreignKey: "approverId", otherKey: "operatorId", as: "operators" });
+// LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
+// User.belongsToMany(User, { through: OperatorApprover, foreignKey: "operatorId", otherKey: "approverId", as: "approvers" });
+// User.belongsToMany(User, { through: OperatorApprover, foreignKey: "approverId", otherKey: "operatorId", as: "operators" });
 
-OperatorApprover.belongsTo(User, { foreignKey: "operatorId", as: "operator" });
-OperatorApprover.belongsTo(User, { foreignKey: "approverId", as: "approver" });
+// OperatorApprover.belongsTo(User, { foreignKey: "operatorId", as: "operator" });
+// OperatorApprover.belongsTo(User, { foreignKey: "approverId", as: "approver" });
 
-User.hasMany(OperatorApprover, { foreignKey: "operatorId", as: "operatorApprovers" });
+// User.hasMany(OperatorApprover, { foreignKey: "operatorId", as: "operatorApprovers" });
 
 Verification.belongsTo(User, { foreignKey: "userId", as: "user" });
 User.hasMany(Verification, { foreignKey: "userId", as: "verifications" });
@@ -63,6 +69,13 @@ Checklist.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
 Checklist.hasMany(ChecklistEntry, { foreignKey: "checklistId", as: "entries" });
 ChecklistEntry.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
 
+// ==================== CHECKLIST APPROVERS (per-checklist approver config) ====================
+
+Checklist.hasMany(ChecklistApprover, { foreignKey: "checklistId", as: "approverConfigs" });
+ChecklistApprover.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
+ChecklistApprover.belongsTo(User, { foreignKey: "approverId", as: "approver" });
+User.hasMany(ChecklistApprover, { foreignKey: "approverId", as: "checklistApprovals" });
+
 // ==================== ASSIGNMENT ====================
 
 ChecklistAssignment.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
@@ -92,6 +105,13 @@ User.hasMany(SubmittedChecklist, { foreignKey: "submittedBy", as: "submittedChec
 SubmittedChecklist.hasMany(SubmittedChecklistEntry, { foreignKey: "submittedChecklistId", as: "entries" });
 SubmittedChecklistEntry.belongsTo(SubmittedChecklist, { foreignKey: "submittedChecklistId", as: "submittedChecklist" });
 
+// ==================== SUBMITTED CHECKLIST APPROVALS (per-submission steps) ====================
+
+SubmittedChecklist.hasMany(SubmittedChecklistApproval, { foreignKey: "submittedChecklistId", as: "approvals" });
+SubmittedChecklistApproval.belongsTo(SubmittedChecklist, { foreignKey: "submittedChecklistId", as: "submittedChecklist" });
+SubmittedChecklistApproval.belongsTo(User, { foreignKey: "approverId", as: "approver" });
+User.hasMany(SubmittedChecklistApproval, { foreignKey: "approverId", as: "submittedChecklistApprovals" });
+
 // ==================== CATALOG ====================
 
 Catalog.belongsTo(Company, { foreignKey: "companyId", as: "company" });
@@ -100,6 +120,18 @@ Company.hasMany(Catalog, { foreignKey: "companyId", as: "catalogs" });
 Catalog.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
 Catalog.belongsTo(User, { foreignKey: "updatedBy", as: "updater" });
 
+// ==================== CHECKLIST VERSIONS (read-only snapshots) ====================
+
+Checklist.hasMany(VersionChecklist, { foreignKey: "checklistId", as: "versions" });
+VersionChecklist.belongsTo(Checklist, { foreignKey: "checklistId", as: "checklist" });
+
+VersionChecklist.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+VersionChecklist.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
+VersionChecklist.belongsTo(User, { foreignKey: "versionedBy", as: "versioner" });
+
+VersionChecklist.hasMany(VersionChecklistEntry, { foreignKey: "versionChecklistId", as: "entries" });
+VersionChecklistEntry.belongsTo(VersionChecklist, { foreignKey: "versionChecklistId", as: "versionChecklist" });
+
 export {
   User,
   Company,
@@ -107,11 +139,16 @@ export {
   Verification,
   RefreshToken,
   Role,
-  OperatorApprover,
+  // LEGACY: OperatorApprover replaced by the per-checklist approver flow.
+  // OperatorApprover,
+  ChecklistApprover,
   Checklist,
   ChecklistEntry,
   ChecklistAssignment,
   SubmittedChecklist,
   SubmittedChecklistEntry,
+  SubmittedChecklistApproval,
   Catalog,
+  VersionChecklist,
+  VersionChecklistEntry,
 };
