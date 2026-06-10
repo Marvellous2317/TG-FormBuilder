@@ -26,9 +26,10 @@ router.put("/users/:userId/restore", validateUUID("userId"), isAuthenticated, ad
 router.put("/users/:userId/password-reset", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.resetUserPassword);
 router.put("/users/:userId/suspend", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.suspendUserApi);
 router.put("/users/:userId/activate", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.activateUserApi);
-router.put("/users/:userId/assign-approver", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.assignApproverApi);
-router.put("/users/:userId/unassign-approver", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.unassignApproverApi);
-router.get("/users/:userId/approvers", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.getOperatorApproversApi);
+// LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
+// router.put("/users/:userId/assign-approver", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.assignApproverApi);
+// router.put("/users/:userId/unassign-approver", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.unassignApproverApi);
+// router.get("/users/:userId/approvers", validateUUID("userId"), isAuthenticated, adminRequired, AdminController.getOperatorApproversApi);
 
 // Company Management
 router.get("/companies", validateCompaniesQuery, isAuthenticated, adminRequired, AdminController.getCompaniesApi);

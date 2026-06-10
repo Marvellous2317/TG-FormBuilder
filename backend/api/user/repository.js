@@ -7,8 +7,7 @@ import {
   Company,
   Verification,
   SubmittedChecklist,
-  OperatorApprover,
-  ChecklistAssignment,
+  SubmittedChecklistApproval,
 } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
@@ -364,24 +363,18 @@ export class UserRepository {
           where: { approvedBy: userId },
         });
 
-        const links = await OperatorApprover.findAll({
-          where: { approverId: userId },
-          attributes: ["operatorId", "createdAt"],
+        const totalPending = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "pending" },
+          include: [
+            {
+              model: SubmittedChecklist,
+              as: "submittedChecklist",
+              attributes: [],
+              required: true,
+              where: { status: "pending" },
+            },
+          ],
         });
-        let totalPending = 0;
-        if (links.length > 0) {
-          const orConditions = links.map((link) => ({
-            submittedAt: { [Op.gte]: link.createdAt },
-            "$assignment.assignedTo$": link.operatorId,
-          }));
-          totalPending = await SubmittedChecklist.count({
-            where: { status: "pending", [Op.or]: orConditions },
-            include: [
-              { model: ChecklistAssignment, as: "assignment", attributes: [] },
-            ],
-            subQuery: false,
-          });
-        }
 
         return {
           scope: "personal",

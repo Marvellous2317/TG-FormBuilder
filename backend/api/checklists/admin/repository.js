@@ -3,6 +3,7 @@ import {
   Checklist,
   ChecklistEntry,
   ChecklistAssignment,
+  ChecklistApprover,
   SubmittedChecklist,
   SubmittedChecklistEntry,
   User,
@@ -10,10 +11,12 @@ import {
   Company,
   Department,
   Catalog,
+  VersionChecklist,
+  VersionChecklistEntry,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
-import { config } from "dotenv";
+
 import { sendAssignmentEmail } from "../../../views/index.js";
 import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/azureService.js";
 
@@ -36,8 +39,199 @@ async function hydrateSubmittedEntryImages(submission) {
 
 export class AdminRepository {
 
+  // Replace-set the approver chain for a checklist. approvers: [{ approverId, step }]
+  static async _setChecklistApprovers(checklistId, companyId, approvers, transaction) {
+    if (approvers === undefined) return;
 
-  static async createChecklist({ title, documentNumber, companyId, departmentId, frequency, frequencyInterval, createdBy }) {
+    await ChecklistApprover.destroy({ where: { checklistId }, transaction });
+    if (!Array.isArray(approvers) || approvers.length === 0) return;
+
+    const seen = new Set();
+    const rows = [];
+    for (const [index, item] of approvers.entries()) {
+      const approverId = typeof item === "string" ? item : item.approverId;
+      if (!approverId || seen.has(approverId)) continue;
+      seen.add(approverId);
+
+      const approver = await User.findByPk(approverId, {
+        include: [{ model: Role, as: "role" }],
+        transaction,
+      });
+      if (!approver) throw new ApplicationError(`Approver ${approverId} not found`, 404);
+      if (approver.role?.roleName !== "approval") {
+        throw new ApplicationError(`User ${approverId} does not have the approval role`, 400);
+      }
+
+      const step = typeof item === "object" && item.step !== undefined ? Number(item.step) : index;
+      rows.push({ checklistId, approverId, step, companyId: approver.companyId || companyId || null });
+    }
+
+    if (rows.length > 0) {
+      await ChecklistApprover.bulkCreate(rows, { transaction });
+    }
+  }
+
+  // Additively assign operators to a checklist (existing assignments are preserved).
+  // Returns the list of newly created assignments with operator info for email notifications.
+  static async _setChecklistOperators(checklistId, companyId, operators, assignedBy, transaction) {
+    if (operators === undefined || !Array.isArray(operators) || operators.length === 0) return [];
+
+    const created = [];
+    const seen = new Set();
+    for (const operatorId of operators) {
+      if (!operatorId || seen.has(operatorId)) continue;
+      seen.add(operatorId);
+
+      const operator = await User.findByPk(operatorId, {
+        include: [{ model: Role, as: "role" }],
+        transaction,
+      });
+      if (!operator) throw new ApplicationError(`Operator ${operatorId} not found`, 404);
+      if (operator.role?.roleName !== "operator") {
+        throw new ApplicationError(`User ${operatorId} is not an operator`, 400);
+      }
+
+      const existing = await ChecklistAssignment.findOne({
+        where: { checklistId, assignedTo: operatorId },
+        transaction,
+      });
+      if (existing) continue;
+
+      const assignment = await ChecklistAssignment.create({
+        checklistId,
+        assignedTo: operatorId,
+        assignedBy,
+        companyId: operator.companyId || companyId || null,
+      }, { transaction });
+
+      created.push({ assignment, operator });
+    }
+
+    return created;
+  }
+
+  // Snapshot the CURRENT state of a checklist (master + entries) into the
+  // read-only version tables BEFORE it gets updated. The version number
+  // auto-increments per checklistId.
+  static async _snapshotChecklistVersion(checklistId, versionedBy, transaction) {
+    const checklist = await Checklist.findByPk(checklistId, {
+      include: [{ model: ChecklistEntry, as: "entries" }],
+      transaction,
+    });
+    if (!checklist) return null;
+
+    const lastVersion = await VersionChecklist.max("version", {
+      where: { checklistId },
+      transaction,
+    });
+    const version = (Number.isFinite(lastVersion) ? lastVersion : 0) + 1;
+
+    const versionRow = await VersionChecklist.create(
+      {
+        checklistId: checklist.checklistId,
+        version,
+        title: checklist.title,
+        documentNumber: checklist.documentNumber,
+        companyId: checklist.companyId,
+        departmentId: checklist.departmentId,
+        frequency: checklist.frequency,
+        frequencyInterval: checklist.frequencyInterval,
+        approvalMode: checklist.approvalMode,
+        createdBy: checklist.createdBy,
+        updatedBy: checklist.updatedBy,
+        versionedBy: versionedBy || null,
+      },
+      { transaction }
+    );
+
+    const entries = checklist.entries || [];
+    if (entries.length > 0) {
+      const entryRows = entries.map((e) => ({
+        versionChecklistId: versionRow.versionChecklistId,
+        checklistId: checklist.checklistId,
+        version,
+        entryId: e.entryId,
+        name: e.name,
+        type: e.type,
+        section: e.section,
+        image: e.image,
+        section_formular: e.section_formular,
+        config: e.config,
+        order: e.order,
+        required: e.required,
+        options: e.options,
+        formulaExpression: e.formulaExpression,
+        metadata: e.metadata,
+      }));
+      await VersionChecklistEntry.bulkCreate(entryRows, { transaction });
+    }
+
+    return versionRow;
+  }
+
+  static async getChecklistVersions({ checklistId, version, departmentId, companyId, page = 1, limit = 20 }) {
+    try {
+      const where = {};
+      if (companyId) where.companyId = companyId;
+      if (checklistId) where.checklistId = checklistId;
+      if (version !== undefined && version !== null && version !== "") where.version = Number(version);
+      if (departmentId) where.departmentId = departmentId;
+
+      const offset = (page - 1) * limit;
+      const { rows: versions, count: total } = await VersionChecklist.findAndCountAll({
+        where,
+        include: [
+          { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "versioner", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: VersionChecklistEntry,
+            as: "entries",
+            separate: true,
+            order: [["order", "ASC"]],
+          },
+        ],
+        order: [["checklistId", "ASC"], ["version", "DESC"]],
+        limit,
+        offset,
+        distinct: true,
+      });
+
+      return {
+        versions,
+        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
+      };
+    } catch (error) {
+      console.error(error);
+      throw new ApplicationError("Failed to fetch checklist versions", 500);
+    }
+  }
+
+  static async getChecklistVersionById(versionChecklistId) {
+    try {
+      const version = await VersionChecklist.findByPk(versionChecklistId, {
+        include: [
+          { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "versioner", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: VersionChecklistEntry,
+            as: "entries",
+            separate: true,
+            order: [["order", "ASC"]],
+          },
+        ],
+      });
+
+      if (!version) throw new ApplicationError("Checklist version not found", 404);
+      return { version };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to fetch checklist version", 500);
+    }
+  }
+
+  static async createChecklist({ title, documentNumber, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy }) {
     const transaction = await sequelize.transaction();
 
 
@@ -79,12 +273,30 @@ export class AdminRepository {
           departmentId, 
           frequency: frequency || null,
           frequencyInterval: frequency === "hourly" ? frequencyInterval : null,
+          approvalMode: approvalMode || "sequential",
           createdBy 
         },
         { transaction }
       );
 
+      await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction);
+      const createdAssignments = await this._setChecklistOperators(checklist.checklistId, companyId, operators, createdBy, transaction);
+
       await transaction.commit();
+
+      for (const { operator } of createdAssignments) {
+        try {
+          await sendAssignmentEmail({
+            email: operator.email,
+            firstName: operator.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send assignment email:", emailError);
+        }
+      }
+
       return { checklist, message: "Checklist created successfully" };
     } catch (error) {
       await transaction.rollback();
@@ -119,6 +331,10 @@ export class AdminRepository {
           { documentNumber: { [Op.iLike]: `%${search}%` } },
         ];
       }
+
+      if(status) {
+        where.status = status;
+      } 
 
       const offset = (page - 1) * limit;
       const { rows: checklists, count: total } = await Checklist.findAndCountAll({
@@ -163,6 +379,13 @@ export class AdminRepository {
             model: ChecklistEntry,
             as: "entries",
             order: [["order", "ASC"]],
+          },
+          {
+            model: ChecklistApprover,
+            as: "approverConfigs",
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
+            ],
           },
         ],
         order: [[{ model: ChecklistEntry, as: "entries" }, "order", "ASC"]],
@@ -315,14 +538,19 @@ export class AdminRepository {
     }
   }
 
-  static async updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, updatedBy }) {
+  static async updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy }) {
+    const transaction = await sequelize.transaction();
     try {
-      const checklist = await Checklist.findByPk(checklistId);
+      const checklist = await Checklist.findByPk(checklistId, { transaction });
       if (!checklist) throw new ApplicationError("Checklist not found", 404);
+
+    
+      await this._snapshotChecklistVersion(checklistId, updatedBy, transaction);
 
       if (documentNumber && documentNumber !== checklist.documentNumber) {
         const existing = await Checklist.findOne({
           where: { documentNumber, companyId: checklist.companyId, checklistId: { [Op.ne]: checklistId } },
+          transaction,
         });
         if (existing) throw new ApplicationError("Document number already exists", 400);
       }
@@ -330,7 +558,7 @@ export class AdminRepository {
 
       if (departmentId !== undefined) {
         if (departmentId) {
-          const department = await Department.findByPk(departmentId);
+          const department = await Department.findByPk(departmentId, { transaction });
           if (!department) throw new ApplicationError("Department not found", 404);
           checklist.departmentId = departmentId;
         } else {
@@ -351,13 +579,34 @@ export class AdminRepository {
         checklist.frequencyInterval = frequencyInterval;
       }
 
+      if (approvalMode !== undefined) checklist.approvalMode = approvalMode;
       if (title) checklist.title = title;
       if (documentNumber) checklist.documentNumber = documentNumber;
       checklist.updatedBy = updatedBy;
 
-      await checklist.save();
+      await checklist.save({ transaction });
+
+      await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction);
+      const createdAssignments = await this._setChecklistOperators(checklistId, checklist.companyId, operators, updatedBy, transaction);
+
+      await transaction.commit();
+
+      for (const { operator } of createdAssignments) {
+        try {
+          await sendAssignmentEmail({
+            email: operator.email,
+            firstName: operator.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send assignment email:", emailError);
+        }
+      }
+
       return { checklist, message: "Checklist updated successfully" };
     } catch (error) {
+      await transaction.rollback();
       if (error instanceof ApplicationError) throw error;
       throw new ApplicationError("Failed to update checklist", 500);
     }
@@ -461,6 +710,9 @@ export class AdminRepository {
     try {
       const checklist = await Checklist.findByPk(checklistId);
       if (!checklist) throw new ApplicationError("Checklist not found", 404);
+
+      // Snapshot the current state into the version tables before applying changes.
+      await this._snapshotChecklistVersion(checklistId, userId, transaction);
 
       const results = [];
       for (const [index, e] of entries.entries()) {

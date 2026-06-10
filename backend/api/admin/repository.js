@@ -6,7 +6,8 @@ import {
   Role,
   Company,
   Department,
-  OperatorApprover,
+  // LEGACY: OperatorApprover (operator_approvers table) replaced by per-checklist approver flow.
+  // OperatorApprover,
   SubmittedChecklist,
 } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
@@ -439,18 +440,19 @@ export class AdminRepository {
             as: "company",
             attributes: ["companyId", "companyName"],
           },
-          {
-            model: OperatorApprover,
-            as: "operatorApprovers",
-            attributes: ["id"],
-            include: [
-              {
-                model: User,
-                as: "approver",
-                attributes: ["firstName", "lastName", "userId"],
-              },
-            ],
-          },
+          // LEGACY: operator-approver mapping. Replaced by the per-checklist approver flow.
+          // {
+          //   model: OperatorApprover,
+          //   as: "operatorApprovers",
+          //   attributes: ["id"],
+          //   include: [
+          //     {
+          //       model: User,
+          //       as: "approver",
+          //       attributes: ["firstName", "lastName", "userId"],
+          //     },
+          //   ],
+          // },
         ],
         limit,
         offset,
@@ -619,6 +621,7 @@ export class AdminRepository {
     }
   }
 
+  /* LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
   static async assignApprover(operatorId, approverId) {
     try {
       const operator = await User.findByPk(operatorId, {
@@ -702,6 +705,7 @@ export class AdminRepository {
       throw new ApplicationError("Failed to fetch approvers", 500);
     }
   }
+  */
 
   static async getAllCompanies({
     status,
