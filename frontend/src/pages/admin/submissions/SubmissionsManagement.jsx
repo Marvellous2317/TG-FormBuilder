@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLoaderData, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useChecklistsSubmissions } from '../../../shared/hooks/admin/useChecklist';
 import { formatDate } from '../../../shared/utils/constants';
 import { FiSearch } from 'react-icons/fi';
@@ -7,7 +7,7 @@ import Loader from '../../../shared/components/Loader';
 import Pagination from '../../../shared/components/Pagination';
 
 export default function SubmissionsManagement() {
-  let { id: checklistId } = useLoaderData();
+  const { id: checklistId } = useParams();
 
   const [search, setSearch] = useState('');
 
@@ -23,6 +23,7 @@ export default function SubmissionsManagement() {
   const { data: submissions, isFetching } = useChecklistsSubmissions(
     checklistId,
     usersPagination,
+    { enabled: Boolean(checklistId) },
   );
   const submissionsData = submissions?.data?.submissions;
   const pagination = submissions?.data?.pagination;
@@ -77,9 +78,7 @@ export default function SubmissionsManagement() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(
-      `/admin/entries/${checklistId}/view/submissions/${rowId}?title=${rowTitle}`,
-    );
+    navigate(`/admin/entries/${checklistId}/view/${rowId}?title=${rowTitle}`);
   };
 
   return (

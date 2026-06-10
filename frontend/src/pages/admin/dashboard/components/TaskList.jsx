@@ -210,6 +210,15 @@ export default function TaskList({
         navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
       },
     },
+    {
+      title: 'Version History',
+      value: 'history',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
+      },
+    },
   ];
 
   const toggleRowMenu = (rowId, event, row) => {

@@ -36,6 +36,8 @@ import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
 import ResetPassword from '../../pages/auth/ResetPassword';
 import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsManagement';
 import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
+import HistoryManagement from '../../pages/admin/history/HistoryManagement';
+import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntiesHistory';
 
 export const router = createBrowserRouter([
   {
@@ -149,9 +151,19 @@ export const router = createBrowserRouter([
             element: <SubmissionsManagement />,
           },
           {
-            path: 'entries/:id/view/:back/:submissionId',
+            path: 'entries/:id/view/:submissionId',
             loader: ({ params }) => params,
             element: <ViewAdminEntries />,
+          },
+          {
+            path: 'entries/:id/history',
+            loader: ({ params }) => params,
+            element: <HistoryManagement />,
+          },
+          {
+            path: 'entries/:id/view/:versionId/history',
+            loader: ({ params }) => params,
+            element: <ViewAdminEntriesHistory />,
           },
           {
             path: 'users',

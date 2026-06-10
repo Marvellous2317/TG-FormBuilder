@@ -279,7 +279,7 @@ export default function ViewApproverEntries() {
       const pageHeight = doc.internal.pageSize.getHeight();
       const signatureHeight = 30;
       const signatureWidth = 60;
-      const formatMatch = signatureDataUrl.match(
+      const formatMatch = operatorSignatureDataUrl.match(
         /^data:image\/(png|jpeg|jpg);base64,/i,
       );
       const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
@@ -293,7 +293,7 @@ export default function ViewApproverEntries() {
 
       doc.text('Operator signature:', margin, signatureY);
       doc.addImage(
-        signatureDataUrl,
+        operatorSignatureDataUrl,
         imageFormat === 'JPG' ? 'JPEG' : imageFormat,
         margin,
         signatureY + 3,
