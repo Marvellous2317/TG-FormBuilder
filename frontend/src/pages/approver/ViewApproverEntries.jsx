@@ -174,7 +174,9 @@ export default function ViewApproverEntries() {
       const entryValue =
         entry.type === 'formular'
           ? computeFormulaValue(entry)
-          : (formData[entryId]?.value ?? entry.value ?? '');
+          : entry.type === 'section_formular'
+            ? computeSectionFormulaValue(entry)
+            : (formData[entryId]?.value ?? entry.value ?? '');
 
       const isVisible =
         entry?.config?.visible !== undefined ? entry?.config?.visible : true;

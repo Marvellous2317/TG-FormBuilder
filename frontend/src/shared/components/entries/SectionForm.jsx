@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import BasicForm from './BasicForm';
 import EnumForm from './EnumForm';
 import DropdownForm from './DropdownForm';
@@ -6,22 +6,54 @@ import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Button from '../Button';
 import { evaluateFormula } from '../../utils/formula';
 
-export default function SectionForm({ entry, setFormData, readOnly }) {
+const parseSectionRows = (value) => {
+  if (!value) return [{}];
+
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [{}];
+  } catch (error) {
+    console.log(error);
+    return [{}];
+  }
+};
+
+export default function SectionForm({
+  entry,
+  formData,
+  setFormData,
+  readOnly,
+}) {
   const sectionEntryId = entry?.entryId || entry?.id || entry?.name;
-  const entriesData = entry?.config?.items;
+  const entriesData = entry?.config?.items || [];
+  const draftValue = formData?.[sectionEntryId]?.value;
+  const initialRowsData = parseSectionRows(draftValue ?? entry?.value);
 
-  const entriesRecords = JSON.parse(entry?.value ? entry?.value : '[]');
-
-  const [rows, setRows] = useState(
-    entriesRecords && entriesRecords.length > 0
-      ? entriesRecords.map((_, i) => i)
-      : [0],
-  );
+  const [rows, setRows] = useState(initialRowsData.map((_, i) => i));
   const [nextRowId, setNextRowId] = useState(
-    entriesRecords?.length > 0 ? entriesRecords.length : 1,
+    initialRowsData.length > 0 ? initialRowsData.length : 1,
   );
   // Local state owns the rows data so inputs update immediately without a parent round-trip
-  const [rowsData, setRowsData] = useState(entriesRecords || [{}]);
+  const [rowsData, setRowsData] = useState(initialRowsData);
+  const rowsDataRef = useRef(rowsData);
+
+  useEffect(() => {
+    rowsDataRef.current = rowsData;
+  }, [rowsData]);
+
+  useEffect(() => {
+    if (draftValue === undefined) return;
+
+    const draftRowsData = parseSectionRows(draftValue);
+
+    if (JSON.stringify(draftRowsData) === JSON.stringify(rowsDataRef.current)) {
+      return;
+    }
+
+    setRows(draftRowsData.map((_, i) => i));
+    setNextRowId(draftRowsData.length > 0 ? draftRowsData.length : 1);
+    setRowsData(draftRowsData);
+  }, [draftValue]);
 
   // Sync local rowsData up to parent formData after every change
   useEffect(() => {
@@ -63,10 +95,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     const fieldWithEntryId = { ...field, entryId: field.entryId || field.id };
     return rowIndex === 0
       ? fieldWithEntryId
-      : { ...fieldWithEntryId, value: '' };
+      : { ...fieldWithEntryId, value: field?.value };
   };
 
-  const sortedEntries = entriesData.sort(
+  const sortedEntries = [...entriesData].sort(
     (a, b) => (a.order ?? 999) - (b.order ?? 999),
   );
 
@@ -138,7 +170,8 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   .filter((e) => e.config?.visible !== false)
                   ?.map((field) => {
                     const rowEntry = getRowEntry(field, rowIndex);
-                    const rowFormData = rowsData[rowIndex] || {};
+                    const rowFormData =
+                      rowsData[rowIndex] || formData[rowIndex] || {};
                     const rowSetFormData = createRowSetFormData(rowIndex);
                     const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
                     return (

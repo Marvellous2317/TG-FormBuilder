@@ -62,7 +62,7 @@ const getChecklistOperatorIds = (checklist) => {
 const getChecklistApprovers = (checklist) => {
   if (!checklist) return [];
 
-  const approvers = checklist.approvers ?? checklist.approvalSteps ?? [];
+  const approvers = checklist.approverConfigs ?? checklist.approvers ?? [];
 
   if (!Array.isArray(approvers)) {
     return [];
