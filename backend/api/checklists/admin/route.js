@@ -37,8 +37,8 @@ router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "super
 router.put("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateCatalog, AdminController.updateCatalog);
 router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogId, AdminController.deleteCatalog);
 
-router.get("/versions", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionQuery, AdminController.getChecklistVersions);
-router.get("/versions/:versionChecklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionId, AdminController.getChecklistVersionById);
+router.get("/versions/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionQuery, AdminController.getChecklistVersions);
+router.get("/versions/:checklistId/:versionChecklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionId, AdminController.getChecklistVersionById);
 
 router.get("/submissions/:checklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistQuery, AdminController.getSubmittedChecklistsByChecklistId);
 router.get("/submissions/:checklistId/:submittedChecklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistId, AdminController.getSubmittedChecklistById);

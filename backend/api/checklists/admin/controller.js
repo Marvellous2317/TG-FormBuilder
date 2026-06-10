@@ -98,9 +98,10 @@ export class AdminController {
   static async getChecklistVersions(req, res, next) {
     try {
       const companyId = req.user.company?.companyId || null;
-      const { checklistId, version, departmentId, page, limit } = req.query;
+      const { checklistId } = req.params;
+      const { version,  page, limit } = req.query;
       const result = await AdminRepository.getChecklistVersions({
-        checklistId, version, departmentId, companyId, page, limit,
+        checklistId, version, page, limit,
       });
       return ResponseManager.success(res, result, 200, "Checklist versions fetched successfully");
     } catch (e) { next(e); }
@@ -108,8 +109,8 @@ export class AdminController {
 
   static async getChecklistVersionById(req, res, next) {
     try {
-      const { versionChecklistId } = req.params;
-      const result = await AdminRepository.getChecklistVersionById(versionChecklistId);
+      const { versionChecklistId, checklistId } = req.params;
+      const result = await AdminRepository.getChecklistVersionById(versionChecklistId, checklistId);
       return ResponseManager.success(res, result, 200, "Checklist version fetched successfully");
     } catch (e) { next(e); }
   }
