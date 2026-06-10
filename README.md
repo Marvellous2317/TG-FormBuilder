@@ -17,3 +17,6 @@ node seeders/roles.js all     # Seed and list
 
 
 npx sequelize-cli db:migrate
+
+commit message for tieing role to checklist
+git commit -m"fixing ug"

@@ -340,7 +340,7 @@ export class UserRepository {
         };
       }
 
-      if (role === "approval") {
+      if (role !== "admin"  && role !=="operator") {
         const myChecklistsToday = await SubmittedChecklist.count({
           where: {
             approvedBy: userId,
