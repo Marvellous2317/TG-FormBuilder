@@ -188,6 +188,7 @@ export default function Settings() {
       <SignatureModal
         isSignatureModalOpen={isSignatureModalOpen}
         setIsSignatureModalOpen={setIsSignatureModalOpen}
+        toUpdate={true}
       />
     </div>
   );

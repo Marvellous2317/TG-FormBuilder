@@ -7,18 +7,12 @@ import Button from '../../../../shared/components/Button';
 import {
   deletedOptions,
   formatDate,
-  statusOptions,
   statusOptionss,
 } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import AssignLogbookModal from './AssignLogbookModal';
 import Loader from '../../../../shared/components/Loader';
-
-const departmentOptions = [
-  { title: 'All departments', value: '' },
-  { title: 'Packaging', value: 'packaging' },
-];
 
 export default function TaskList({
   checklists,

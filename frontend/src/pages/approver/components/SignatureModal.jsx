@@ -10,6 +10,7 @@ import { useAuthStore } from '../../../shared/store/authStore';
 export default function SignatureModal({
   isSignatureModalOpen,
   setIsSignatureModalOpen,
+  toUpdate = false,
 }) {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -239,6 +240,13 @@ export default function SignatureModal({
         <p className="text-sm mt-1 font-geist text-tertiary">
           Your signature will be added to approved logs
         </p>
+
+        {toUpdate && (
+          <p className="text-sm mt-1 font-geist text-red-500">
+            **Updating your signature will overwrite the existing signature in
+            previous records
+          </p>
+        )}
 
         {/* Canvas drawing area */}
         <div className="mt-4 rounded-md bg-secondary-700 px-4 py-3.5">

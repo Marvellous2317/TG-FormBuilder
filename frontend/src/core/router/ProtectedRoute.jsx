@@ -15,9 +15,9 @@ export default function ProtectedRoute({ allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(user?.role?.roleName.toLowerCase())) {
-    return <Navigate to="/unauthorized" replace />;
-  }
+  // if (!allowedRoles.includes(user?.role?.roleName.toLowerCase())) {
+  //   return <Navigate to="/unauthorized" replace />;
+  // }
 
   return <Outlet />;
 }
