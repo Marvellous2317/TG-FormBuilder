@@ -1,6 +1,7 @@
 import { body, param, query } from "express-validator";
 import { validationResult } from "express-validator";
 import ResponseManager from "../../../utils/responseManager.js";
+import { SubmittedChecklistApproval } from "../../../models/index.js";
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -38,3 +39,19 @@ export const validateApproveWithData = [
   body("data.*.entryId").isUUID().withMessage("Invalid entry ID"),
   validate,
 ];
+
+export const isApproverForSubmission = async (req, res, next) => {
+  try {
+    const approverId = req.user.userId;
+    const { submittedChecklistId } = req.params;
+    const record = await SubmittedChecklistApproval.findOne({
+      where: { submittedChecklistId, approverId },
+    });
+    if (!record) {
+      return ResponseManager.error(res, "Forbidden", "Access denied: you are not an approver for this submission", 403);
+    }
+    next();
+  } catch (e) {
+    next(e);
+  }
+};

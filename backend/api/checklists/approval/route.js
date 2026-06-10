@@ -1,18 +1,18 @@
 import express from "express";
 import { isAuthenticated, requiresRole } from "../../middlewares/authorization.js";
 import { ApprovalController } from "./controller.js";
-import { validateSubmittedChecklistId, validatePaginationQuery, validateHistoryQuery, validateApproveWithData } from "./middleware.js";
+import { validateSubmittedChecklistId, validatePaginationQuery, validateHistoryQuery, validateApproveWithData, isApproverForSubmission } from "./middleware.js";
 
 const router = express.Router();
 
-router.get("/", isAuthenticated, requiresRole("approval"), validatePaginationQuery, ApprovalController.getPendingSubmissions);
+router.get("/", isAuthenticated,  validatePaginationQuery, ApprovalController.getPendingSubmissions);
 
-router.get("/history", isAuthenticated, requiresRole("approval"), validateHistoryQuery, ApprovalController.getHistory);
+router.get("/history", isAuthenticated, validateHistoryQuery, ApprovalController.getHistory);
 
-router.get("/:submittedChecklistId", isAuthenticated, requiresRole("approval"), validateSubmittedChecklistId, ApprovalController.getSubmissionById);
+router.get("/:submittedChecklistId", isAuthenticated, validateSubmittedChecklistId, isApproverForSubmission, ApprovalController.getSubmissionById);
 
-router.post("/:submittedChecklistId/approve", isAuthenticated, requiresRole("approval"), validateApproveWithData, ApprovalController.approveSubmission);
+router.post("/:submittedChecklistId/approve", isAuthenticated, validateApproveWithData, isApproverForSubmission, ApprovalController.approveSubmission);
 
-router.post("/:submittedChecklistId/reject", isAuthenticated, requiresRole("approval"), validateSubmittedChecklistId, ApprovalController.rejectSubmission);
+router.post("/:submittedChecklistId/reject", isAuthenticated, validateSubmittedChecklistId, isApproverForSubmission, ApprovalController.rejectSubmission);
 
 export default router;
