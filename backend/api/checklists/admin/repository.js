@@ -58,7 +58,7 @@ export class AdminRepository {
         transaction,
       });
       if (!approver) throw new ApplicationError(`Approver ${approverId} not found`, 404);
-      if (approver.role?.roleName !== "approval") {
+      if (approver.role?.roleName === "operator") {
         throw new ApplicationError(`User ${approverId} does not have the approval role`, 400);
       }
 
@@ -207,7 +207,7 @@ export class AdminRepository {
     }
   }
 
-  static async getChecklistVersionById(versionChecklistId) {
+  static async getChecklistVersionById(versionChecklistId, checklistId) {
     try {
       const version = await VersionChecklist.findByPk(versionChecklistId, {
         include: [
@@ -221,6 +221,7 @@ export class AdminRepository {
             order: [["order", "ASC"]],
           },
         ],
+        where: { checklistId },
       });
 
       if (!version) throw new ApplicationError("Checklist version not found", 404);
@@ -348,6 +349,12 @@ export class AdminRepository {
             attributes: ["assignmentId"],
             include: [
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
+            ],
+          },
+          {
+            model: ChecklistApprover, as: "approverConfigs",
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
           },
         ],
