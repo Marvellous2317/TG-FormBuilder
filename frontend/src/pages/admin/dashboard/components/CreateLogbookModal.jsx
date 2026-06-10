@@ -7,6 +7,8 @@ import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
 import { useCreateChecklists } from '../../../../shared/hooks/admin/useChecklist';
 import { useNavigate } from 'react-router-dom';
+import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
+import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
 const frequencyList = [
   {
@@ -27,6 +29,17 @@ const frequencyList = [
   },
 ];
 
+const approvalModeList = [
+  {
+    label: 'Sequential',
+    value: 'sequential',
+  },
+  {
+    label: 'Parallel',
+    value: 'parallel',
+  },
+];
+
 export default function CreateLogbookModal({
   isShowLogbookModal,
   setIsShowLogbookModal,
@@ -37,14 +50,25 @@ export default function CreateLogbookModal({
     department: {},
     frequency: '',
     frequencyInterval: '',
+    approvalMode: '',
+    operators: [],
+    approvers: [],
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
+  const [userSearchInput, setUserSearchInput] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+  const [userOtherSearch, setUserOtherSearch] = useState('');
 
   const navigate = useNavigate();
 
   const { showError, showSuccess } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setUserSearch(userSearchInput), 500);
+    return () => clearTimeout(timer);
+  }, [userSearchInput]);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -88,6 +112,53 @@ export default function CreateLogbookModal({
     value: department.departmentId,
   }));
 
+  const { data: roles } = useRoles();
+
+  const rolesData = roles?.data?.roles;
+
+  const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
+
+  const {
+    data: usersData,
+    isPending: isLoadingUsers,
+    fetchNextPage: fetchNextUsersPage,
+    hasNextPage: hasNextUsersPage,
+    isFetchingNextPage: isFetchingNextUsersPage,
+  } = useFetchUsersInfinite(
+    { search: userSearch, roleId: operatorRole?.roleId },
+    { enabled: isShowLogbookModal },
+  );
+
+  const allUsers = usersData?.pages.flatMap((p) => p.data.users) ?? [];
+
+  const usersList = allUsers.map((user) => ({
+    ...user,
+    label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
+    value: user.userId,
+  }));
+
+  const {
+    data: usersOtherData,
+    isPending: isLoadingOtherUsers,
+    fetchNextPage: fetchNextOtherUsersPage,
+    hasNextPage: hasNextOtherUsersPage,
+    isFetchingNextPage: isFetchingNextOtherUsersPage,
+  } = useFetchUsersInfinite(
+    { search: userOtherSearch },
+    { enabled: isShowLogbookModal },
+  );
+
+  const allOtherUsers =
+    usersOtherData?.pages.flatMap((p) => p.data.users) ?? [];
+
+  const usersOtherList = allOtherUsers
+    .filter((user) => user.roleId !== operatorRole?.roleId)
+    .map((user) => ({
+      ...user,
+      label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
+      value: user.userId,
+    }));
+
   const handleSetDepartment = (departmentId) => {
     setFormData((prev) => ({
       ...prev,
@@ -106,6 +177,66 @@ export default function CreateLogbookModal({
     }));
   };
 
+  const handleSetOperator = (operator) => {
+    if (Array.isArray(operator)) {
+      setFormData((prev) => ({
+        ...prev,
+        operators: operator,
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      operators: prev.operators.includes(operator)
+        ? prev.operators.filter((operatorId) => operatorId !== operator)
+        : [...prev.operators, operator],
+    }));
+  };
+
+  const handleSetApprover = (approver) => {
+    if (Array.isArray(approver)) {
+      setFormData((prev) => ({
+        ...prev,
+        approvers: approver.map((approverId, index) => ({
+          approverId,
+          step: index,
+        })),
+      }));
+      return;
+    }
+
+    setFormData((prev) => {
+      const isSelected = prev.approvers.some(
+        ({ approverId }) => approverId === approver,
+      );
+
+      const approvers = isSelected
+        ? prev.approvers
+            .filter(({ approverId }) => approverId !== approver)
+            .map((approverData, index) => ({
+              ...approverData,
+              step: index,
+            }))
+        : [
+            ...prev.approvers,
+            { approverId: approver, step: prev.approvers.length },
+          ];
+
+      return {
+        ...prev,
+        approvers,
+      };
+    });
+  };
+
+  const handleSetApprovalMode = (frequency) => {
+    setFormData((prev) => ({
+      ...prev,
+      approvalMode: frequency,
+    }));
+  };
+
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -121,6 +252,9 @@ export default function CreateLogbookModal({
       department,
       frequency,
       frequencyInterval,
+      approvalMode,
+      operators,
+      approvers,
     } = formData;
 
     if (
@@ -141,6 +275,9 @@ export default function CreateLogbookModal({
           departmentId: department.departmentId,
           frequency,
           frequencyInterval,
+          approvalMode,
+          approvers,
+          operators,
         });
       } else {
         await mutateAsync({
@@ -148,6 +285,9 @@ export default function CreateLogbookModal({
           documentNumber,
           departmentId: department.departmentId,
           frequency,
+          approvalMode,
+          approvers,
+          operators,
         });
       }
     } catch (err) {
@@ -164,9 +304,15 @@ export default function CreateLogbookModal({
       department: {},
       frequency: '',
       frequencyInterval: '',
+      approvalMode: '',
+      operators: [],
+      approvers: [],
     });
     setDepartmentSearchInput('');
     setDepartmentSearch('');
+    setUserSearchInput('');
+    setUserSearch('');
+    setUserOtherSearch('');
     setIsShowLogbookModal(false);
   };
 
@@ -177,9 +323,15 @@ export default function CreateLogbookModal({
       department: {},
       frequency: '',
       frequencyInterval: '',
+      approvalMode: '',
+      operators: [],
+      approvers: [],
     });
     setDepartmentSearchInput('');
     setDepartmentSearch('');
+    setUserSearchInput('');
+    setUserSearch('');
+    setUserOtherSearch('');
     setIsShowLogbookModal(false);
   };
 
@@ -187,9 +339,9 @@ export default function CreateLogbookModal({
     <Modal
       isOpen={isShowLogbookModal}
       onClose={() => setIsShowLogbookModal(false)}
-      position="center"
+      position="right"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      className=""
     >
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
@@ -202,7 +354,7 @@ export default function CreateLogbookModal({
         </div>
 
         <div className="flex-1 gap-3 flex flex-col mt-7">
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             <InputField
               label="Department"
               id="department"
@@ -212,6 +364,7 @@ export default function CreateLogbookModal({
               disabled={isLoadingDepartments}
               options={departmentsList}
               type="select"
+              placeholder="Select department"
               searchable
               onExternalSearchChange={setDepartmentSearchInput}
               onLoadMore={fetchNextDepartmentsPage}
@@ -229,6 +382,7 @@ export default function CreateLogbookModal({
             value={formData.frequency}
             required
             options={frequencyList}
+            placeholder="Select frequency"
             type="select"
             onChange={(e) => handleSetFrequency(e.target.value)}
           />
@@ -242,6 +396,62 @@ export default function CreateLogbookModal({
               onChange={handleInputChange}
             />
           )}
+
+          <InputField
+            label="Approval mode"
+            id="approvalMode"
+            className=""
+            value={formData.approvalMode}
+            required
+            placeholder="Select approval mode"
+            options={approvalModeList}
+            type="select"
+            onChange={(e) => handleSetApprovalMode(e.target.value)}
+          />
+
+          <div className="flex items-center gap-1">
+            <InputField
+              label="Operators"
+              id="operators"
+              className="mb-1"
+              placeholder="Select operators"
+              value={formData.operators}
+              multiple
+              required
+              disabled={isLoadingUsers}
+              options={usersList}
+              type="select"
+              searchable
+              onExternalSearchChange={setUserSearchInput}
+              onLoadMore={fetchNextUsersPage}
+              hasNextPage={hasNextUsersPage}
+              isFetchingNextPage={isFetchingNextUsersPage}
+              onChange={(e) => handleSetOperator(e.target.value)}
+            />
+            {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <InputField
+              label="Approvers"
+              id="approvers"
+              className="mb-1"
+              placeholder="Select approvers"
+              value={formData.approvers.map((o) => o.approverId)}
+              multiple
+              required
+              disabled={isLoadingOtherUsers}
+              options={usersOtherList}
+              type="select"
+              searchable
+              onExternalSearchChange={setUserOtherSearch}
+              onLoadMore={fetchNextOtherUsersPage}
+              hasNextPage={hasNextOtherUsersPage}
+              isFetchingNextPage={isFetchingNextOtherUsersPage}
+              onChange={(e) => handleSetApprover(e.target.value)}
+            />
+            {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
 
           <InputField
             label="Logbook title"
@@ -262,7 +472,7 @@ export default function CreateLogbookModal({
           />
         </div>
 
-        <div className="flex items-center mt-6 justify-end gap-3">
+        <div className="flex items-center mt-6 pb-4 justify-end gap-3">
           <Button
             type="button"
             onClick={() => handleCancel()}

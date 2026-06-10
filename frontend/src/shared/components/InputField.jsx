@@ -19,6 +19,7 @@ function InputField({
   options = [],
   rows = 4,
   searchable = false,
+  multiple = false,
   onExternalSearchChange,
   onLoadMore,
   hasNextPage,
@@ -102,6 +103,7 @@ function InputField({
               onChange({ target: { value: val, name } })
             }
             placeholder={placeholder}
+            multiple={multiple}
             disabled={isDisabled}
             readOnly={isReadOnly}
             searchable={searchable && !isDisabled && !isReadOnly}

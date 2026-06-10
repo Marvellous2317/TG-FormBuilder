@@ -565,12 +565,12 @@ export default function CreateEntries() {
         sectionFields={sectionFields}
       />
 
-      <AssignLogbookModal
+      {/* <AssignLogbookModal
         isShowAssignLogbookModal={isShowAssignLogbookModal}
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
         checklistId={checklistId}
         action="assign"
-      />
+      /> */}
 
       <DefaultValueModal
         key={`default-val-${activeFieldId}`}

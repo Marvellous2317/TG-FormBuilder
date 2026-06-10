@@ -146,26 +146,26 @@ export default function TaskList({
         );
       },
     },
-    {
-      title: 'Unassign log',
-      value: 'unassign',
-      onClick: () => {
-        setActiveMenuId(null);
-        // setActiveMenuRow(null);
-        setActionToPerform('unassign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
-    {
-      title: 'Assign log',
-      value: 'assign',
-      onClick: () => {
-        setActiveMenuId(null);
-        // setActiveMenuRow(null);
-        setActionToPerform('assign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
+    // {
+    //   title: 'Unassign log',
+    //   value: 'unassign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('unassign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
+    // {
+    //   title: 'Assign log',
+    //   value: 'assign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('assign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
     {
       title: 'Edit log',
       value: 'edit',

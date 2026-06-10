@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaCheck, FaChevronDown } from 'react-icons/fa';
 
 function DropdownMenuPortal({
   open,
@@ -9,6 +9,7 @@ function DropdownMenuPortal({
   options,
   value,
   onChange,
+  multiple,
   menuClassName,
   itemClassName,
   searchable,
@@ -156,17 +157,41 @@ function DropdownMenuPortal({
         ) : (
           filteredOptions.map((option) => {
             const optionLabel = option.label || option.title || option;
-            const isSelected = option.value === value;
+            const optionValue = option.value ?? option;
+            const selectedValues = Array.isArray(value) ? value : [];
+            const isSelected = multiple
+              ? selectedValues.includes(optionValue)
+              : optionValue === value;
+            const optionClasses =
+              `w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary hover:bg-gray-100 ${
+                isSelected ? 'bg-primary-50 text-primary-700' : ''
+              } ${itemClassName}`.trim();
+
+            if (multiple) {
+              return (
+                <button
+                  key={optionValue}
+                  type="button"
+                  className={`flex items-center justify-between gap-3 ${optionClasses}`}
+                  onClick={() => onChange(optionValue)}
+                >
+                  <span>{optionLabel}</span>
+                  {isSelected && (
+                    <FaCheck className="shrink-0 text-[10px] text-primary-700" />
+                  )}
+                </button>
+              );
+            }
 
             return (
-              <MenuItem key={option.value} as={Fragment}>
+              <MenuItem key={optionValue} as={Fragment}>
                 {({ active }) => (
                   <button
                     type="button"
-                    className={`w-full cursor-pointer rounded-md p-2 text-left font-geist text-sm text-tertiary ${
+                    className={`${optionClasses} ${
                       active ? 'bg-gray-100' : ''
-                    } ${isSelected ? 'bg-primary-50 text-primary-700' : ''} ${itemClassName}`.trim()}
-                    onClick={() => onChange(option.value || option)}
+                    }`.trim()}
+                    onClick={() => onChange(optionValue)}
                   >
                     {optionLabel}
                   </button>
@@ -197,6 +222,7 @@ export default function DropdownSelect({
   menuClassName = '',
   itemClassName = '',
   searchable = false,
+  multiple = false,
   onExternalSearchChange,
   onLoadMore,
   hasNextPage,
@@ -206,13 +232,33 @@ export default function DropdownSelect({
 }) {
   const buttonRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const selectedValues = Array.isArray(value) ? value : [];
   const selectedOption = options.find((option) => option.value === value);
-  const label = selectedOption?.label || selectedOption?.title || placeholder;
+  const selectedOptions = options.filter((option) =>
+    selectedValues.includes(option.value),
+  );
+  const hasSelection = multiple ? selectedValues.length > 0 : selectedOption;
+  const label = multiple
+    ? selectedValues.length === 0
+      ? placeholder
+      : selectedValues.length === 1
+        ? selectedOptions[0]?.label || selectedOptions[0]?.title || '1 selected'
+        : `${selectedValues.length} selected`
+    : selectedOption?.label || selectedOption?.title || placeholder;
 
   const handleChange = (val) => {
     if (disabled || readOnly) return; // prevent changes
-    setSearchQuery('');
-    onChange(val);
+    if (!multiple) {
+      setSearchQuery('');
+      onChange(val);
+      return;
+    }
+
+    const nextValue = selectedValues.includes(val)
+      ? selectedValues.filter((selectedValue) => selectedValue !== val)
+      : [...selectedValues, val];
+
+    onChange(nextValue);
   };
 
   // Determine if the dropdown should be interactive
@@ -232,7 +278,7 @@ export default function DropdownSelect({
             >
               <span
                 className={`font-geist text-sm ${
-                  selectedOption ? 'text-primary' : 'text-tertiary'
+                  hasSelection ? 'text-primary' : 'text-tertiary'
                 }`}
               >
                 {label}
@@ -251,6 +297,7 @@ export default function DropdownSelect({
                 options={options}
                 value={value}
                 onChange={handleChange}
+                multiple={multiple}
                 menuClassName={menuClassName}
                 itemClassName={itemClassName}
                 searchable={searchable}
