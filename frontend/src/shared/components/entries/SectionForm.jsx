@@ -107,23 +107,25 @@ export default function SectionForm({
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue =
-          rowsData[rowIndex]?.[e.id]?.value ??
-          e.value ??
-          e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+      if (!e.config?.fieldRef) return;
+      const rawValue =
+        rowsData[rowIndex]?.[e.id]?.value ?? e.value ?? e?.config?.defaultValue;
+      if (rawValue === '' || rawValue == null) {
+        scope[e.config.fieldRef] = 0;
+      } else {
+        const num = Number(rawValue);
+        scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
       }
     });
 
     const { value, error } = evaluateFormula(expression, scope);
-    if (error || (typeof value === 'number' && !isFinite(value))) {
-      console.log(error);
-      return 0;
-    }
-    return value ?? 0;
+
+    if (error || value == null) return 0;
+    if (typeof value === 'object') return value?.entries[0];
+    if (Array.isArray(value)) return value[0];
+    if (typeof value === 'number') return isFinite(value) ? value : 0;
+    if (typeof value === 'string') return value;
+    return 0;
   };
 
   const isVisible =
@@ -208,19 +210,7 @@ export default function SectionForm({
                             entry={{
                               ...rowEntry,
                               type: 'number',
-                              value: (() => {
-                                const anyNumberFieldEdited =
-                                  sortedEntries?.some(
-                                    (e) =>
-                                      e.type === 'number' &&
-                                      rowFormData[e.entryId] !== undefined,
-                                  );
-                                return anyNumberFieldEdited ||
-                                  rowEntry.value == null ||
-                                  rowEntry.value === ''
-                                  ? computeFormulaValue(rowEntry, rowIndex)
-                                  : rowEntry.value;
-                              })(),
+                              value: computeFormulaValue(rowEntry, rowIndex),
                             }}
                             formData={rowFormData}
                             setFormData={rowSetFormData}

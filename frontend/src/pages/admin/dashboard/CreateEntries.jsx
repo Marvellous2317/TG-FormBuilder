@@ -258,10 +258,8 @@ export default function CreateEntries() {
       );
 
       if (
-        (key === 'type' && value === 'number') ||
-        value === 'text' ||
-        value === 'section_formular' ||
-        value === 'formular'
+        key === 'type' &&
+        ['number', 'text', 'section_formular', 'formular'].includes(value)
       ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {

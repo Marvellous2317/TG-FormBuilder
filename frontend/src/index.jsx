@@ -64,6 +64,11 @@ if (import.meta.env.DEV) {
     }
   }, 5000);
 }
+if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

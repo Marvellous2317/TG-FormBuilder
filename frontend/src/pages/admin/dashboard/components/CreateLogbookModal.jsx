@@ -267,6 +267,22 @@ export default function CreateLogbookModal({
       return;
     }
 
+    if (frequency === 'hourly' && !frequencyInterval) {
+      showError('Please enter a frequency interval');
+      return;
+    }
+
+    if (frequency === 'hourly' && frequencyInterval) {
+      if (frequencyInterval < 1) {
+        showError('Frequency interval cannot be less than 1');
+        return;
+      }
+      if (frequencyInterval > 24) {
+        showError('Frequency interval cannot be greater than 24');
+        return;
+      }
+    }
+
     try {
       if (frequency === 'hourly') {
         await mutateAsync({
@@ -417,7 +433,6 @@ export default function CreateLogbookModal({
               placeholder="Select operators"
               value={formData.operators}
               multiple
-              required
               disabled={isLoadingUsers}
               options={usersList}
               type="select"
@@ -439,7 +454,6 @@ export default function CreateLogbookModal({
               placeholder="Select approvers"
               value={formData.approvers.map((o) => o.approverId)}
               multiple
-              required
               disabled={isLoadingOtherUsers}
               options={usersOtherList}
               type="select"

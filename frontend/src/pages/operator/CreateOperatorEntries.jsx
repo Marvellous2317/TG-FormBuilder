@@ -54,11 +54,15 @@ export default function CreateOperatorEntry() {
   const handleSubmit = async () => {
     const enrichedFormData = { ...formData };
     entriesData
-      ?.filter((e) => e.type === 'formular')
+      ?.filter((e) => e.type === 'formular' || e.type === 'section_formular')
       .forEach((entry) => {
         enrichedFormData[entry.entryId] = {
           entryId: entry.entryId,
-          value: String(computeFormulaValue(entry)),
+          value: String(
+            entry.type === 'section_formular'
+              ? computeSectionFormulaValue(entry)
+              : computeFormulaValue(entry),
+          ),
         };
       });
 
@@ -129,6 +133,7 @@ export default function CreateOperatorEntry() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
+    console.log(rowsData);
     const values = rowsData
       .map((row) => {
         const raw = row[targetFieldId]?.value;
@@ -145,6 +150,7 @@ export default function CreateOperatorEntry() {
       case 'subtract':
         return values.reduce((a, b) => a - b);
       case 'multiply':
+        console.log(values.reduce((a, b) => a * b, 1));
         return values.reduce((a, b) => a * b, 1);
       case 'average':
       case 'mean':
@@ -185,22 +191,24 @@ export default function CreateOperatorEntry() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue =
-          formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+      if (!e.config?.fieldRef) return;
+      const rawValue =
+        formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
+      if (rawValue === '' || rawValue == null) {
+        scope[e.config.fieldRef] = 0;
+      } else {
+        const num = Number(rawValue);
+        scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
       }
     });
 
     const { value, error } = evaluateFormula(expression, scope);
-    if (error || (typeof value === 'number' && !isFinite(value))) {
-      console.log(error);
-      return 0;
-    }
-
-    return value ?? 0;
+    if (error || value == null) return 0;
+    if (typeof value === 'object') return value?.entries[0];
+    if (Array.isArray(value)) return value[0];
+    if (typeof value === 'number') return isFinite(value) ? value : 0;
+    if (typeof value === 'string') return value;
+    return 0;
   };
 
   return (
@@ -273,18 +281,7 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: (() => {
-                          const anyNumberFieldEdited = entriesData?.some(
-                            (e) =>
-                              e.type === 'number' &&
-                              formData[e.entryId] !== undefined,
-                          );
-                          return anyNumberFieldEdited ||
-                            entry.value == null ||
-                            entry.value === ''
-                            ? computeFormulaValue(entry)
-                            : entry.value;
-                        })(),
+                        value: computeFormulaValue(entry),
                       }}
                       formData={formData}
                       setFormData={setFormData}

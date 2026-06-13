@@ -41,7 +41,7 @@ export default function RestoreChecklistModal({
         <div className="mt-9 flex justify-center items-center mb-4">
           <div className="flex items-center justify-center w-14 h-14 bg-tertiary-600 rounded-xl">
             <img
-              src={Icons.deactivateUser}
+              src={Icons.activeUsers}
               alt="delete checklist"
               className="w-4.5 object-contain"
             />
@@ -49,11 +49,10 @@ export default function RestoreChecklistModal({
         </div>
         <div className="space-y-0.5 w-full text-center flex items-center flex-col">
           <p className="text-base font-semibold font-geist text-primary">
-            Delete checklist
+            Restore checklist
           </p>
           <p className="text-sm font-geist w-3/4 text-tertiary">
-            Are you sure you want to delete this checklist? This action is
-            irreversible
+            Are you sure you want to restore this checklist?
           </p>
         </div>
 
@@ -67,10 +66,10 @@ export default function RestoreChecklistModal({
           </Button>
           <Button
             type="button"
-            className="rounded-[10px] flex items-center gap-2 bg-tertiary-500 px-4 py-2.5 text-sm font-medium font-geist text-white"
+            className="rounded-[10px] flex items-center gap-2 bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white"
             onClick={handleSubmit}
           >
-            Delete
+            Restore
             {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
