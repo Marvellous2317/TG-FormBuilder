@@ -169,8 +169,6 @@ export default function CreateOperatorEntry() {
 
     const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
 
-    console.log(values);
-
     if (!values.length) return 0;
 
     switch (operation.toLowerCase()) {
