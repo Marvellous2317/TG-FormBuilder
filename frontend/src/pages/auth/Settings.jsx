@@ -143,29 +143,29 @@ export default function Settings() {
                 // className="w-full cursor-not-allowed"
               />
 
-              {profileData?.signature && (
-                <div className="flex flex-col md:flex-row gap-2 items-end">
-                  <div>
-                    <h2 className=" mb-2 block font-geist text-sm font-regular text-secondary">
-                      Approver signature
-                    </h2>
+              <div className="flex flex-col md:flex-row gap-2 items-end">
+                <div>
+                  <h2 className=" mb-2 block font-geist text-sm font-regular text-secondary">
+                    Approver signature
+                  </h2>
+                  {profileData?.signature && (
                     <img
                       src={profileData?.signature}
                       alt="User Profile"
                       className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
                     />
-                  </div>
-                  <Button
-                    type="button"
-                    className="bg-primary-200 px-3 py-3 rounded-xl"
-                    onClick={() => setIsSignatureModalOpen(true)}
-                  >
-                    <p className="text-white font-geist font-medium text-sm">
-                      Update signature
-                    </p>
-                  </Button>
+                  )}
                 </div>
-              )}
+                <Button
+                  type="button"
+                  className="bg-primary-200 px-3 py-3 rounded-xl"
+                  onClick={() => setIsSignatureModalOpen(true)}
+                >
+                  <p className="text-white font-geist font-medium text-sm">
+                    Update signature
+                  </p>
+                </Button>
+              </div>
             </div>
 
             <div className="flex justify-end mt-10">

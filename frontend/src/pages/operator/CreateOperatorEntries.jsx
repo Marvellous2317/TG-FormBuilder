@@ -133,14 +133,43 @@ export default function CreateOperatorEntry() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
-    console.log(rowsData);
-    const values = rowsData
-      .map((row) => {
-        const raw = row[targetFieldId]?.value;
-        const num = Number(raw);
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const stored = row[targetFieldId]?.value;
+      if (stored !== undefined && stored !== null && stored !== '') {
+        const num = Number(stored);
         return isNaN(num) ? null : num;
-      })
-      .filter((v) => v !== null);
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawVal =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawVal === '' || rawVal == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const n = Number(rawVal);
+            scope[e.config.fieldRef] = isNaN(n) ? String(rawVal) : n;
+          }
+        });
+        const { value: fVal, error } = evaluateFormula(expression, scope);
+        if (error || fVal == null) return null;
+        const num = Number(fVal);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
+
+    console.log(values);
 
     if (!values.length) return 0;
 
@@ -150,7 +179,6 @@ export default function CreateOperatorEntry() {
       case 'subtract':
         return values.reduce((a, b) => a - b);
       case 'multiply':
-        console.log(values.reduce((a, b) => a * b, 1));
         return values.reduce((a, b) => a * b, 1);
       case 'average':
       case 'mean':
