@@ -373,9 +373,19 @@ export class OperatorRepository {
         where: { submittedChecklistId, submittedBy: userId },
         attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
         include: [
+          // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },
+          // The configured approver chain assigned to this submission.
+          {
+            model: SubmittedChecklistApproval, as: "approvals",
+            attributes: ["approverId", "step", "status", "decidedAt"],
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName"] },
+            ],
+          },
           { model: SubmittedChecklistEntry, as: "entries" },
         ],
+        order: [[{ model: SubmittedChecklistApproval, as: "approvals" }, "step", "ASC"]],
       });
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
@@ -402,7 +412,15 @@ export class OperatorRepository {
         where,
         attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
         include: [
+          // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },
+          {
+            model: SubmittedChecklistApproval, as: "approvals",
+            attributes: ["approverId", "step", "status", "decidedAt"],
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName" , "email"] },
+            ],
+          },
           {
             model: ChecklistAssignment, as: "assignment",
             attributes: ["assignmentId"],
@@ -411,7 +429,10 @@ export class OperatorRepository {
             ],
           },
         ],
-        order: [["createdAt", "DESC"]],
+        order: [
+          ["submittedAt", "DESC"],
+          [{ model: SubmittedChecklistApproval, as: "approvals" }, "step", "ASC"],
+        ],
         limit,
         offset,
       });
@@ -421,6 +442,7 @@ export class OperatorRepository {
         pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
       };
     } catch (error) {
+      console.error("Error fetching my submissions:", error);
       throw new ApplicationError("Failed to fetch submissions", 500);
     }
   }
