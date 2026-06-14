@@ -341,26 +341,31 @@ export class UserRepository {
       }
 
       if (role !== "admin"  && role !=="operator") {
-        const myChecklistsToday = await SubmittedChecklist.count({
+        // Count this approver's own decision rows, not SubmittedChecklist.approvedBy
+        // (approvedBy is only set on the submission for whoever casts the final
+        // decision in the chain, so it undercounts approvers in multi-step flows).
+        const myChecklistsToday = await SubmittedChecklistApproval.count({
           where: {
-            approvedBy: userId,
-            updatedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+            approverId: userId,
+            status: { [Op.in]: ["approved", "rejected"] },
+            decidedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
           },
         });
-        const myChecklistsThisWeek = await SubmittedChecklist.count({
+        const myChecklistsThisWeek = await SubmittedChecklistApproval.count({
           where: {
-            approvedBy: userId,
-            updatedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
+            approverId: userId,
+            status: { [Op.in]: ["approved", "rejected"] },
+            decidedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
           },
         });
-        const totalApproved = await SubmittedChecklist.count({
-          where: { approvedBy: userId, status: "approved" },
+        const totalApproved = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "approved" },
         });
-        const totalRejected = await SubmittedChecklist.count({
-          where: { approvedBy: userId, status: "rejected" },
+        const totalRejected = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "rejected" },
         });
-        const totalReviewed = await SubmittedChecklist.count({
-          where: { approvedBy: userId },
+        const totalReviewed = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: { [Op.in]: ["approved", "rejected"] } },
         });
 
         const totalPending = await SubmittedChecklistApproval.count({

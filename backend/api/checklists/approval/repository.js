@@ -154,7 +154,7 @@ export class ApprovalRepository {
               as: "approvals",
               attributes: ["approverId", "step", "status", "decidedAt"],
               include: [
-                { model: User, as: "approver", attributes: ["userId", "firstName", "lastName"] },
+                { model: User, as: "approver", attributes: ["userId", "firstName", "lastName" ,"signature"] },
               ],
             },
             {
