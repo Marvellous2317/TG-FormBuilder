@@ -295,7 +295,6 @@ export class AuthRepository {
 
     const matches = await compareRefreshSecret(parsed.secret, record.tokenHash);
     if (!matches) {
-      // Possible token theft — revoke this record defensively
       record.revokedAt = new Date();
       await record.save();
       throw new ApplicationError("Invalid refresh token", 401);

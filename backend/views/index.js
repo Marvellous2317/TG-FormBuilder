@@ -125,3 +125,28 @@ export const sendAssignmentEmail = async ({ email, firstName, checklistTitle, do
         throw error;
     }
 }
+
+export const sendApproverAssignmentEmail = async ({ email, firstName, checklistTitle, documentNumber }) => {
+    try {
+        const emailHtml = await ejs.renderFile(
+            path.join(__dirname, './assignment.ejs'),
+            {
+                firstName: firstName,
+                email: email,
+                logoUrl: logo,
+                checklistTitle: checklistTitle,
+                documentNumber: documentNumber,
+            }
+        );
+        const info = await EamilTransporter.sendMail({
+            from: `Packaging Check List <${config.Email_From}>`,
+            to: email,
+            subject: `You have been assigned as an approver: ${checklistTitle}`,
+            html: emailHtml,
+        });
+        return true;
+    } catch (error) {
+        console.error('Error sending approver assignment email:', error);
+        throw error;
+    }
+}

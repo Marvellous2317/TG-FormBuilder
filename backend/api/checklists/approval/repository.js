@@ -323,9 +323,26 @@ export class ApprovalRepository {
         throw new ApplicationError("Waiting for earlier approvers to act first", 400);
       }
 
+      const decidedAt = new Date();
       myApproval.status = "rejected";
-      myApproval.decidedAt = new Date();
+      myApproval.decidedAt = decidedAt;
       await myApproval.save({ transaction });
+
+      // The submission as a whole is now terminal. Mark every remaining pending
+      // approver row as rejected too (prior "approved" rows are kept for audit)
+      // so the rejected submission appears in every involved approver's history
+      // instead of vanishing for those who never got their turn.
+      await SubmittedChecklistApproval.update(
+        { status: "rejected", decidedAt },
+        {
+          where: {
+            submittedChecklistId,
+            status: "pending",
+            approverId: { [Op.ne]: approverId },
+          },
+          transaction,
+        },
+      );
 
       submission.status = "rejected";
       submission.approvedBy = approverId;
