@@ -6,6 +6,7 @@ import {
   ChecklistApprover,
   SubmittedChecklist,
   SubmittedChecklistEntry,
+  SubmittedChecklistApproval,
   User,
   Role,
   Company,
@@ -17,7 +18,7 @@ import {
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
 
-import { sendAssignmentEmail } from "../../../views/index.js";
+import { sendAssignmentEmail, sendApproverAssignmentEmail } from "../../../views/index.js";
 import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/azureService.js";
 
 const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
@@ -40,14 +41,23 @@ async function hydrateSubmittedEntryImages(submission) {
 export class AdminRepository {
 
   // Replace-set the approver chain for a checklist. approvers: [{ approverId, step }]
+  // Returns the list of created approvers with their user info for email notifications.
   static async _setChecklistApprovers(checklistId, companyId, approvers, transaction) {
-    if (approvers === undefined) return;
+    if (approvers === undefined) return [];
+
+    // Get existing approvers before destroying
+    const existingApproverIds = (await ChecklistApprover.findAll({
+      where: { checklistId },
+      attributes: ['approverId'],
+      transaction,
+    })).map(a => a.approverId);
 
     await ChecklistApprover.destroy({ where: { checklistId }, transaction });
-    if (!Array.isArray(approvers) || approvers.length === 0) return;
+    if (!Array.isArray(approvers) || approvers.length === 0) return [];
 
     const seen = new Set();
     const rows = [];
+    const createdApprovers = [];
     for (const [index, item] of approvers.entries()) {
       const approverId = typeof item === "string" ? item : item.approverId;
       if (!approverId || seen.has(approverId)) continue;
@@ -64,10 +74,81 @@ export class AdminRepository {
 
       const step = typeof item === "object" && item.step !== undefined ? Number(item.step) : index;
       rows.push({ checklistId, approverId, step, companyId: approver.companyId || companyId || null });
+      
+      // Track newly assigned approvers (not in existing list) for email notification
+      if (!existingApproverIds.includes(approverId)) {
+        createdApprovers.push({ approver, step });
+      }
     }
 
     if (rows.length > 0) {
       await ChecklistApprover.bulkCreate(rows, { transaction });
+
+      // Sync pending submission approvals with the new approver configuration
+      await this._syncPendingSubmissionApprovals(checklistId, rows, transaction);
+    }
+
+    return createdApprovers;
+  }
+
+  // Sync pending SubmittedChecklistApproval records when approvers change
+  static async _syncPendingSubmissionApprovals(checklistId, newApproverConfigs, transaction) {
+    // Find all pending submissions for this checklist
+    const pendingSubmissions = await SubmittedChecklist.findAll({
+      where: { status: "pending" },
+      include: [{
+        model: ChecklistAssignment,
+        as: "assignment",
+        where: { checklistId },
+        attributes: ["assignmentId"],
+      }],
+      attributes: ["submittedChecklistId"],
+      transaction,
+    });
+
+    if (pendingSubmissions.length === 0) return;
+
+    const submissionIds = pendingSubmissions.map(s => s.submittedChecklistId);
+
+    // Remove existing pending approvals (keep decided ones for audit)
+    await SubmittedChecklistApproval.destroy({
+      where: {
+        submittedChecklistId: { [Op.in]: submissionIds },
+        status: "pending",
+      },
+      transaction,
+    });
+
+    // Create new approval records based on new approver configuration
+    const newApprovalRecords = [];
+    for (const submissionId of submissionIds) {
+      for (const config of newApproverConfigs) {
+        // Check if this approver already has a non-pending decision for this submission
+        const existingDecision = await SubmittedChecklistApproval.findOne({
+          where: {
+            submittedChecklistId: submissionId,
+            approverId: config.approverId,
+            status: { [Op.ne]: "pending" },
+          },
+          transaction,
+        });
+        
+        if (!existingDecision) {
+          newApprovalRecords.push({
+            submittedChecklistId: submissionId,
+            approverId: config.approverId,
+            step: config.step,
+            status: "pending",
+          });
+        }
+      }
+    }
+
+    if (newApprovalRecords.length > 0) {
+      await SubmittedChecklistApproval.bulkCreate(newApprovalRecords, { 
+        transaction,
+        ignoreDuplicates: true,
+      });
     }
   }
 
@@ -110,9 +191,7 @@ export class AdminRepository {
     return created;
   }
 
-  // Snapshot the CURRENT state of a checklist (master + entries) into the
-  // read-only version tables BEFORE it gets updated. The version number
-  // auto-increments per checklistId.
+
   static async _snapshotChecklistVersion(checklistId, versionedBy, transaction) {
     const checklist = await Checklist.findByPk(checklistId, {
       include: [{ model: ChecklistEntry, as: "entries" }],
@@ -239,7 +318,6 @@ export class AdminRepository {
     try {
       const existing = await Checklist.findOne({
         where: {
-         // companyId,
           [Op.or]: [
             { documentNumber },
             { title }
@@ -280,11 +358,12 @@ export class AdminRepository {
         { transaction }
       );
 
-      await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction);
+      const createdApprovers = await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction);
       const createdAssignments = await this._setChecklistOperators(checklist.checklistId, companyId, operators, createdBy, transaction);
 
       await transaction.commit();
 
+   
       for (const { operator } of createdAssignments) {
         try {
           await sendAssignmentEmail({
@@ -295,6 +374,20 @@ export class AdminRepository {
           });
         } catch (emailError) {
           console.error("Failed to send assignment email:", emailError);
+        }
+      }
+
+
+      for (const { approver } of createdApprovers) {
+        try {
+          await sendApproverAssignmentEmail({
+            email: approver.email,
+            firstName: approver.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send approver assignment email:", emailError);
         }
       }
 
@@ -593,11 +686,12 @@ export class AdminRepository {
 
       await checklist.save({ transaction });
 
-      await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction);
+      const createdApprovers = await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction);
       const createdAssignments = await this._setChecklistOperators(checklistId, checklist.companyId, operators, updatedBy, transaction);
 
       await transaction.commit();
 
+      // Send emails to newly assigned operators
       for (const { operator } of createdAssignments) {
         try {
           await sendAssignmentEmail({
@@ -608,6 +702,20 @@ export class AdminRepository {
           });
         } catch (emailError) {
           console.error("Failed to send assignment email:", emailError);
+        }
+      }
+
+      // Send emails to newly assigned approvers
+      for (const { approver } of createdApprovers) {
+        try {
+          await sendApproverAssignmentEmail({
+            email: approver.email,
+            firstName: approver.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send approver assignment email:", emailError);
         }
       }
 
@@ -908,16 +1016,47 @@ export class AdminRepository {
   }
 
   static async unassignOperator({ checklistId, assignedTo }) {
+    const transaction = await sequelize.transaction();
     try {
       const assignment = await ChecklistAssignment.findOne({
         where: { checklistId, assignedTo },
+        transaction,
       });
-      if (!assignment) throw new ApplicationError("Assignment not found", 404);
+      
+      if (!assignment) {
+        await transaction.rollback();
+        throw new ApplicationError("Assignment not found", 404);
+      }
 
-      await assignment.destroy();
+      // Check if there are any pending submissions for this assignment
+      const pendingSubmissions = await SubmittedChecklist.count({
+        where: { 
+          assignmentId: assignment.assignmentId,
+          status: "pending",
+        },
+        transaction,
+      });
+
+      if (pendingSubmissions > 0) {
+        await transaction.rollback();
+        throw new ApplicationError(
+          `Cannot unassign operator with ${pendingSubmissions} pending submission(s). Please resolve pending submissions first.`,
+          400
+        );
+      }
+
+      // Use force: true to hard delete the assignment record
+      // This allows the operator to be reassigned later without conflicts
+      await assignment.destroy({ force: true, transaction });
+      
+      await transaction.commit();
       return { message: "Operator unassigned successfully" };
     } catch (error) {
+      if (transaction && !transaction.finished) {
+        await transaction.rollback();
+      }
       if (error instanceof ApplicationError) throw error;
+      console.error("Error unassigning operator:", error);
       throw new ApplicationError("Failed to unassign operator", 500);
     }
   }
