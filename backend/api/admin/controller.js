@@ -200,6 +200,7 @@ export class AdminController {
     }
   }
 
+  /* LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
   static async assignApproverApi(req, res, next) {
     try {
       const { userId } = req.params;
@@ -231,6 +232,7 @@ export class AdminController {
       next(e);
     }
   }
+  */
 
 
   static async getCompaniesApi(req, res, next) {

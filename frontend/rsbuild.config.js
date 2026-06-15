@@ -22,7 +22,7 @@ if (process.env.NODE_ENV === 'production') {
         mode: 'generateSw',
         workboxOptions: {
           navigateFallback: '/index.html',
-          skipWaiting: true,
+          skipWaiting: false,
           clientsClaim: true,
           runtimeCaching: [
             {

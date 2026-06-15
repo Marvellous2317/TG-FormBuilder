@@ -143,3 +143,5 @@ design.md
 docs
 
 commit.sh
+
+backend/dist/

@@ -7,18 +7,12 @@ import Button from '../../../../shared/components/Button';
 import {
   deletedOptions,
   formatDate,
-  statusOptions,
   statusOptionss,
 } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import AssignLogbookModal from './AssignLogbookModal';
 import Loader from '../../../../shared/components/Loader';
-
-const departmentOptions = [
-  { title: 'All departments', value: '' },
-  { title: 'Packaging', value: 'packaging' },
-];
 
 export default function TaskList({
   checklists,
@@ -146,26 +140,26 @@ export default function TaskList({
         );
       },
     },
-    {
-      title: 'Unassign log',
-      value: 'unassign',
-      onClick: () => {
-        setActiveMenuId(null);
-        // setActiveMenuRow(null);
-        setActionToPerform('unassign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
-    {
-      title: 'Assign log',
-      value: 'assign',
-      onClick: () => {
-        setActiveMenuId(null);
-        // setActiveMenuRow(null);
-        setActionToPerform('assign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
+    // {
+    //   title: 'Unassign log',
+    //   value: 'unassign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('unassign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
+    // {
+    //   title: 'Assign log',
+    //   value: 'assign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('assign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
     {
       title: 'Edit log',
       value: 'edit',
@@ -208,6 +202,15 @@ export default function TaskList({
         setActiveMenuId(null);
         setActiveMenuRow(null);
         navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
+      },
+    },
+    {
+      title: 'Version History',
+      value: 'history',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
       },
     },
   ];

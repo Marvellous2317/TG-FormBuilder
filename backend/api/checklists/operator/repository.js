@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import {
-  Checklist, ChecklistAssignment, ChecklistEntry,
-  SubmittedChecklist, SubmittedChecklistEntry, User,
+  Checklist, ChecklistAssignment, ChecklistEntry, ChecklistApprover,
+  SubmittedChecklist, SubmittedChecklistEntry, SubmittedChecklistApproval, User,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -189,6 +189,15 @@ export class OperatorRepository {
         }
       }
 
+      const approverConfigs = await ChecklistApprover.findAll({
+        where: { checklistId: assignment.checklistId },
+        order: [["step", "ASC"], ["createdAt", "ASC"]],
+        transaction,
+      });
+      if (approverConfigs.length === 0) {
+        throw new ApplicationError("No approvers are configured for this checklist", 400);
+      }
+
       const submittedChecklist = await SubmittedChecklist.create({
         assignmentId,
         submittedBy: userId,
@@ -205,6 +214,14 @@ export class OperatorRepository {
         index,
       )));
       await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
+
+      const approvalData = approverConfigs.map((cfg, index) => ({
+        submittedChecklistId: submittedChecklist.submittedChecklistId,
+        approverId: cfg.approverId,
+        step: cfg.step ?? index,
+        status: "pending",
+      }));
+      await SubmittedChecklistApproval.bulkCreate(approvalData, { transaction });
 
       await transaction.commit();
       return { submittedChecklist, message: "Checklist submitted successfully" };
@@ -356,9 +373,19 @@ export class OperatorRepository {
         where: { submittedChecklistId, submittedBy: userId },
         attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
         include: [
+          // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },
+          // The configured approver chain assigned to this submission.
+          {
+            model: SubmittedChecklistApproval, as: "approvals",
+            attributes: ["approverId", "step", "status", "decidedAt"],
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName"] },
+            ],
+          },
           { model: SubmittedChecklistEntry, as: "entries" },
         ],
+        order: [[{ model: SubmittedChecklistApproval, as: "approvals" }, "step", "ASC"]],
       });
 
       if (!submission) throw new ApplicationError("Submission not found", 404);
@@ -385,7 +412,15 @@ export class OperatorRepository {
         where,
         attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
         include: [
+          // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },
+          {
+            model: SubmittedChecklistApproval, as: "approvals",
+            attributes: ["approverId", "step", "status", "decidedAt"],
+            include: [
+              { model: User, as: "approver", attributes: ["userId", "firstName", "lastName" , "email"] },
+            ],
+          },
           {
             model: ChecklistAssignment, as: "assignment",
             attributes: ["assignmentId"],
@@ -394,7 +429,10 @@ export class OperatorRepository {
             ],
           },
         ],
-        order: [["createdAt", "DESC"]],
+        order: [
+          ["submittedAt", "DESC"],
+          [{ model: SubmittedChecklistApproval, as: "approvals" }, "step", "ASC"],
+        ],
         limit,
         offset,
       });
@@ -404,6 +442,7 @@ export class OperatorRepository {
         pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
       };
     } catch (error) {
+      console.error("Error fetching my submissions:", error);
       throw new ApplicationError("Failed to fetch submissions", 500);
     }
   }

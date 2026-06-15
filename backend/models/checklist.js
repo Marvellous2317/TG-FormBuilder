@@ -43,6 +43,11 @@ export const Checklist = sequelize.define(
       allowNull: true,
       defaultValue: null,
     },
+    approvalMode: {
+      type: DataTypes.ENUM("sequential", "parallel"),
+      allowNull: false,
+      defaultValue: "sequential",
+    },
   },
   {
     tableName: "checklists",

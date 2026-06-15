@@ -8,6 +8,7 @@ import {
   validateCreateAssignment, validateUnassignment, validateAssignmentId, validateAssignmentQuery,
   validateCreateCatalog, validateUpdateCatalog, validateCatalogId, validateCatalogQuery,
   validateSubmittedChecklistId, validateSubmittedChecklistQuery, validateSubmittedChecklistUpdate,
+  validateVersionQuery, validateVersionId,
 } from "./middleware.js";
 
 const router = express.Router();
@@ -35,6 +36,9 @@ router.get("/get-all-catalogs", isAuthenticated, requiresRole("admin", "superAdm
 router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin","operator", "approval"), validateCatalogId, AdminController.getCatalogById);
 router.put("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateUpdateCatalog, AdminController.updateCatalog);
 router.delete("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin"), validateCatalogId, AdminController.deleteCatalog);
+
+router.get("/versions/:checklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionQuery, AdminController.getChecklistVersions);
+router.get("/versions/:checklistId/:versionChecklistId", isAuthenticated, requiresRole("admin", "superAdmin"), validateVersionId, AdminController.getChecklistVersionById);
 
 router.get("/submissions/:checklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistQuery, AdminController.getSubmittedChecklistsByChecklistId);
 router.get("/submissions/:checklistId/:submittedChecklistId", isAuthenticated, requiresRole("admin"), validateSubmittedChecklistId, AdminController.getSubmittedChecklistById);

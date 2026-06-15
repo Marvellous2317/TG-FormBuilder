@@ -150,3 +150,20 @@ export const updateChecklistSubmission = async (
   );
   return data;
 };
+
+export const fetchChecklistVersions = async (checklistId, params) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/versions/${checklistId}`,
+    {
+      params,
+    },
+  );
+  return data;
+};
+
+export const fetchChecklistVersion = async (checklistId, versionId) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/versions/${checklistId}/${versionId}`,
+  );
+  return data;
+};

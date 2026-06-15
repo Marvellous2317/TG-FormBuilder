@@ -6,7 +6,7 @@ export class AdminController {
 
   static async createChecklist(req, res, next) {
     try {
-      const { title, documentNumber, departmentId, frequency, frequencyInterval } = req.body;
+      const { title, documentNumber, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators } = req.body;
       const companyId = req.user.company?.companyId || null;
       const createdBy = req.user.userId;
 
@@ -15,7 +15,7 @@ export class AdminController {
       }
 
       const result = await AdminRepository.createChecklist({
-        title, documentNumber, companyId, departmentId, frequency, frequencyInterval, createdBy,
+        title, documentNumber, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy,
       });
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) { next(e); }
@@ -70,9 +70,9 @@ export class AdminController {
   static async updateChecklist(req, res, next) {
     try {
       const { checklistId } = req.params;
-      const { title, documentNumber, departmentId, frequency, frequencyInterval } = req.body;
+      const { title, documentNumber, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators } = req.body;
       const updatedBy = req.user.userId;
-      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, updatedBy });
+      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy });
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) { next(e); }
   }
@@ -90,6 +90,28 @@ export class AdminController {
       const { checklistId } = req.params;
       const result = await AdminRepository.restoreChecklist(checklistId);
       return ResponseManager.success(res, result, 200, result.message);
+    } catch (e) { next(e); }
+  }
+
+  // ==================== VERSIONS (read-only) ====================
+
+  static async getChecklistVersions(req, res, next) {
+    try {
+      const companyId = req.user.company?.companyId || null;
+      const { checklistId } = req.params;
+      const { version,  page, limit } = req.query;
+      const result = await AdminRepository.getChecklistVersions({
+        checklistId, version, page, limit,
+      });
+      return ResponseManager.success(res, result, 200, "Checklist versions fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async getChecklistVersionById(req, res, next) {
+    try {
+      const { versionChecklistId, checklistId } = req.params;
+      const result = await AdminRepository.getChecklistVersionById(versionChecklistId, checklistId);
+      return ResponseManager.success(res, result, 200, "Checklist version fetched successfully");
     } catch (e) { next(e); }
   }
 

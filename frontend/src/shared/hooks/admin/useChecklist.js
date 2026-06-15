@@ -15,6 +15,8 @@ import {
   fetchChecklistsEntries,
   fetchChecklistSubmission,
   fetchChecklistSubmissions,
+  fetchChecklistVersion,
+  fetchChecklistVersions,
   restoreChecklist,
   unAssignChecklistOperator,
   updateChecklist,
@@ -23,14 +25,38 @@ import {
   updateChecklistSubmission,
 } from '../../../core/api/admin';
 
+export function useChecklistsVersions(
+  checklistId,
+  queryParams = {},
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'versions', checklistId, queryParams],
+    queryFn: () => fetchChecklistVersions(checklistId, queryParams),
+    enabled: Boolean(checklistId),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistsVersion(checklistId, versionId, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'versions', checklistId, versionId],
+    queryFn: () => fetchChecklistVersion(checklistId, versionId),
+    enabled: Boolean(checklistId),
+    ...options,
+  });
+}
+
 export function useChecklistsSubmissions(
   checklistId,
   queryParams = {},
   options = {},
 ) {
   return useQuery({
-    queryKey: ['admin', 'checklists', 'submissions', queryParams],
+    queryKey: ['admin', 'checklists', 'submissions', checklistId, queryParams],
     queryFn: () => fetchChecklistSubmissions(checklistId, queryParams),
+    enabled: Boolean(checklistId),
     keepPreviousData: true,
     ...options,
   });

@@ -258,10 +258,8 @@ export default function CreateEntries() {
       );
 
       if (
-        (key === 'type' && value === 'number') ||
-        value === 'text' ||
-        value === 'section_formular' ||
-        value === 'formular'
+        key === 'type' &&
+        ['number', 'text', 'section_formular', 'formular'].includes(value)
       ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
@@ -565,12 +563,12 @@ export default function CreateEntries() {
         sectionFields={sectionFields}
       />
 
-      <AssignLogbookModal
+      {/* <AssignLogbookModal
         isShowAssignLogbookModal={isShowAssignLogbookModal}
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
         checklistId={checklistId}
         action="assign"
-      />
+      /> */}
 
       <DefaultValueModal
         key={`default-val-${activeFieldId}`}

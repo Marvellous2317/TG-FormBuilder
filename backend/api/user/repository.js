@@ -7,8 +7,7 @@ import {
   Company,
   Verification,
   SubmittedChecklist,
-  OperatorApprover,
-  ChecklistAssignment,
+  SubmittedChecklistApproval,
 } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
 import { sendVerificationMail } from "../../views/index.js";
@@ -341,47 +340,46 @@ export class UserRepository {
         };
       }
 
-      if (role === "approval") {
-        const myChecklistsToday = await SubmittedChecklist.count({
+      if (role !== "admin"  && role !=="operator") {
+        // Count this approver's own decision rows, not SubmittedChecklist.approvedBy
+        // (approvedBy is only set on the submission for whoever casts the final
+        // decision in the chain, so it undercounts approvers in multi-step flows).
+        const myChecklistsToday = await SubmittedChecklistApproval.count({
           where: {
-            approvedBy: userId,
-            updatedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+            approverId: userId,
+            status: { [Op.in]: ["approved", "rejected"] },
+            decidedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
           },
         });
-        const myChecklistsThisWeek = await SubmittedChecklist.count({
+        const myChecklistsThisWeek = await SubmittedChecklistApproval.count({
           where: {
-            approvedBy: userId,
-            updatedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
+            approverId: userId,
+            status: { [Op.in]: ["approved", "rejected"] },
+            decidedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
           },
         });
-        const totalApproved = await SubmittedChecklist.count({
-          where: { approvedBy: userId, status: "approved" },
+        const totalApproved = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "approved" },
         });
-        const totalRejected = await SubmittedChecklist.count({
-          where: { approvedBy: userId, status: "rejected" },
+        const totalRejected = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "rejected" },
         });
-        const totalReviewed = await SubmittedChecklist.count({
-          where: { approvedBy: userId },
+        const totalReviewed = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: { [Op.in]: ["approved", "rejected"] } },
         });
 
-        const links = await OperatorApprover.findAll({
-          where: { approverId: userId },
-          attributes: ["operatorId", "createdAt"],
+        const totalPending = await SubmittedChecklistApproval.count({
+          where: { approverId: userId, status: "pending" },
+          include: [
+            {
+              model: SubmittedChecklist,
+              as: "submittedChecklist",
+              attributes: [],
+              required: true,
+              where: { status: "pending" },
+            },
+          ],
         });
-        let totalPending = 0;
-        if (links.length > 0) {
-          const orConditions = links.map((link) => ({
-            submittedAt: { [Op.gte]: link.createdAt },
-            "$assignment.assignedTo$": link.operatorId,
-          }));
-          totalPending = await SubmittedChecklist.count({
-            where: { status: "pending", [Op.or]: orConditions },
-            include: [
-              { model: ChecklistAssignment, as: "assignment", attributes: [] },
-            ],
-            subQuery: false,
-          });
-        }
 
         return {
           scope: "personal",

@@ -210,9 +210,8 @@ export default function SectionOptionsModal({
       );
 
       if (
-        (key === 'type' && value === 'number') ||
-        value === 'formular' ||
-        value === 'section_formular'
+        key === 'type' &&
+        ['number', 'formular', 'section_formular'].includes(value)
       ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {

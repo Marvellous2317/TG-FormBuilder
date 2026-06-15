@@ -22,6 +22,13 @@ export const validateCreateChecklist = [
     .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
+  body("approvalMode").optional().isIn(["sequential", "parallel"])
+    .withMessage("Approval mode must be sequential or parallel"),
+  body("approvers").optional().isArray().withMessage("Approvers must be an array"),
+  body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
+  body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
+  body("operators").optional().isArray().withMessage("Operators must be an array"),
+  body("operators.*").optional().isUUID().withMessage("Each operator must be a valid UUID"),
   body().custom((body) => {
     if (body.frequency === "hourly" && (!body.frequencyInterval || body.frequencyInterval < 1)) {
       throw new Error("Frequency interval is required when frequency is hourly");
@@ -42,6 +49,13 @@ export const validateUpdateChecklist = [
     .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
+  body("approvalMode").optional().isIn(["sequential", "parallel"])
+    .withMessage("Approval mode must be sequential or parallel"),
+  body("approvers").optional().isArray().withMessage("Approvers must be an array"),
+  body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
+  body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
+  body("operators").optional().isArray().withMessage("Operators must be an array"),
+  body("operators.*").optional().isUUID().withMessage("Each operator must be a valid UUID"),
   body().custom((body) => {
     if (body.frequency === "hourly" && body.frequencyInterval !== undefined && body.frequencyInterval < 1) {
       throw new Error("Frequency interval must be at least 1 when frequency is hourly");
@@ -66,6 +80,21 @@ export const validateChecklistQuery = [
   query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
   query("departmentId").optional().isUUID().withMessage("Department ID must be a valid UUID"),
   query("deleted").optional().isIn(["true", "false", "all"]).withMessage("Deleted must be true, false, or all"),
+  validate,
+];
+
+// Checklist version validation (read-only)
+export const validateVersionQuery = [
+  query("checklistId").optional().isUUID().withMessage("Checklist ID must be a valid UUID"),
+  query("version").optional().isInt({ min: 1 }).withMessage("Version must be a positive integer"),
+  query("departmentId").optional().isUUID().withMessage("Department ID must be a valid UUID"),
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be 1-100"),
+  validate,
+];
+
+export const validateVersionId = [
+  param("versionChecklistId").isUUID().withMessage("Invalid version ID"),
   validate,
 ];
 
