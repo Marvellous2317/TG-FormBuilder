@@ -189,7 +189,11 @@ export default function SectionOptionsModal({
 
   const handleModalSave = (config) => {
     setFields((current) =>
-      current.map((f) => (f.id === activeFieldId ? { ...f, config } : f)),
+      current.map((f) =>
+        f.id === activeFieldId
+          ? { ...f, config: { ...f.config, ...config } }
+          : f,
+      ),
     );
   };
 
@@ -211,19 +215,26 @@ export default function SectionOptionsModal({
 
       if (
         key === 'type' &&
-        ['number', 'formular', 'section_formular'].includes(value)
+        ['number', 'text', 'formular', 'section_formular'].includes(value)
       ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
             .filter(
-              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+              (f) =>
+                ['number', 'text', 'formular', 'section_formular'].includes(
+                  f.type,
+                ) &&
+                f.id !== id &&
+                f.config?.fieldRef,
             )
             .map((f) => f.config.fieldRef);
           let n = 1;
           while (existingRefs.includes(`field${n}`)) n++;
           return updated.map((f) =>
-            f.id === id ? { ...f, config: { fieldRef: `field${n}` } } : f,
+            f.id === id
+              ? { ...f, config: { ...f.config, fieldRef: `field${n}` } }
+              : f,
           );
         }
       }

@@ -61,8 +61,9 @@ export default function ViewApproverEntries() {
     const operatorName = operator
       ? `${operator.firstName} ${operator.lastName}`
       : 'N/A';
-    const operatorSignatureDataUrl = operator?.signature || 'N/A';
+    const operatorSignatureDataUrl = operator?.signature;
     const entityName = operator?.company?.companyName || 'N/A';
+    const approvals = submission?.approvals || [];
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -70,8 +71,25 @@ export default function ViewApproverEntries() {
       format: 'a4',
     });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
     const usableWidth = pageWidth - 2 * margin;
+
+    const getImageFormat = (dataUrl) => {
+      const formatMatch = dataUrl?.match(
+        /^data:image\/(png|jpeg|jpg);base64,/i,
+      );
+      if (!formatMatch) return null;
+      return formatMatch[1].toUpperCase() === 'JPG'
+        ? 'JPEG'
+        : formatMatch[1].toUpperCase();
+    };
+
+    const ensureSpace = (height) => {
+      if (yPos + height + margin <= pageHeight) return;
+      doc.addPage();
+      yPos = 20;
+    };
 
     // Header grid: 3 columns, left+right split into 2 rows, middle full height
     const headerH = 40;
@@ -265,70 +283,111 @@ export default function ViewApproverEntries() {
 
     flushPendingRows();
 
-    if (yPos > 265) {
-      doc.addPage();
-      yPos = 20;
-    }
+    ensureSpace(50);
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(100, 100, 100);
     doc.text(`Submitted by: ${operatorName} (Operator)`, margin, yPos + 5);
+    yPos += 12;
 
-    if (operatorSignatureDataUrl) {
-      const signatureY = yPos + 12;
-      const pageHeight = doc.internal.pageSize.getHeight();
+    const operatorImageFormat = getImageFormat(operatorSignatureDataUrl);
+    if (operatorImageFormat) {
       const signatureHeight = 30;
       const signatureWidth = 60;
-      const formatMatch = operatorSignatureDataUrl.match(
-        /^data:image\/(png|jpeg|jpg);base64,/i,
-      );
-      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
 
-      if (signatureY + signatureHeight + margin > pageHeight) {
-        doc.addPage();
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100, 100, 100);
-      }
-
-      doc.text('Operator signature:', margin, signatureY);
+      ensureSpace(signatureHeight + 10);
+      doc.text('Operator signature:', margin, yPos);
       doc.addImage(
         operatorSignatureDataUrl,
-        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
+        operatorImageFormat,
         margin,
-        signatureY + 3,
+        yPos + 3,
         signatureWidth,
         signatureHeight,
       );
+      yPos += signatureHeight + 12;
     }
 
-    const signatureDataUrl = user?.signature;
-    if (signatureDataUrl) {
-      const signatureY = yPos + 62;
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const signatureHeight = 30;
-      const signatureWidth = 60;
-      const formatMatch = signatureDataUrl.match(
-        /^data:image\/(png|jpeg|jpg);base64,/i,
-      );
-      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
+    const sortedApprovals = approvals
+      .slice()
+      .sort((a, b) => (a.step ?? 999) - (b.step ?? 999));
 
-      if (signatureY + signatureHeight + margin > pageHeight) {
-        doc.addPage();
-        doc.setFontSize(9);
+    if (sortedApprovals.length > 0) {
+      ensureSpace(55);
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(30, 30, 30);
+      doc.text('Approvals', margin, yPos);
+      yPos += 5;
+
+      const approvalsPerRow = 3;
+      const approvalGap = 4;
+      const approvalCardWidth =
+        (usableWidth - approvalGap * (approvalsPerRow - 1)) / approvalsPerRow;
+      const approvalCardHeight = 45;
+      const approvalSignatureWidth = Math.min(approvalCardWidth - 8, 42);
+      const approvalSignatureHeight = 17;
+
+      sortedApprovals.forEach((approval, index) => {
+        const col = index % approvalsPerRow;
+
+        if (col === 0) {
+          ensureSpace(approvalCardHeight + 6);
+        }
+
+        const x = margin + col * (approvalCardWidth + approvalGap);
+        const approver = approval.approver || {};
+        const approverName =
+          `${approver.firstName || ''} ${approver.lastName || ''}`.trim() ||
+          'N/A';
+        const decidedDate = approval.decidedAt
+          ? new Date(approval.decidedAt).toLocaleDateString()
+          : 'N/A';
+        const approvalImageFormat = getImageFormat(approver.signature);
+
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.1);
+        doc.rect(x, yPos, approvalCardWidth, approvalCardHeight);
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(40, 40, 40);
+        doc.text(approverName, x + 3, yPos + 5, {
+          maxWidth: approvalCardWidth - 6,
+        });
+
+        doc.setFontSize(7);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(100, 100, 100);
-      }
+        doc.setTextColor(90, 90, 90);
+        // doc.text(`Step ${approval.step ?? index + 1}`, x + 3, yPos + 10);
+        doc.text(
+          `${approval.status || 'N/A'} - ${decidedDate}`,
+          x + 3,
+          yPos + 10,
+          { maxWidth: approvalCardWidth - 6 },
+        );
 
-      doc.text('Approver signature:', margin, signatureY);
-      doc.addImage(
-        signatureDataUrl,
-        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
-        margin,
-        signatureY + 3,
-        signatureWidth,
-        signatureHeight,
-      );
+        if (approvalImageFormat) {
+          doc.addImage(
+            approver.signature,
+            approvalImageFormat,
+            x + 3,
+            yPos + 18,
+            approvalSignatureWidth,
+            approvalSignatureHeight,
+          );
+        } else {
+          doc.text('No signature', x + 3, yPos + 27);
+        }
+
+        if (
+          col === approvalsPerRow - 1 ||
+          index === sortedApprovals.length - 1
+        ) {
+          yPos += approvalCardHeight + 6;
+        }
+      });
     }
 
     doc.save(`checklist-${docNumber}.pdf`);

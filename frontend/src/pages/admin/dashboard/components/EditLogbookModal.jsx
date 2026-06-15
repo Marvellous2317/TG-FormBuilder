@@ -141,6 +141,7 @@ export default function EditLogbookModal({
   const rolesData = roles?.data?.roles;
 
   const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
+  const adminRole = rolesData?.find((role) => role.roleName === 'admin');
 
   const {
     data: departmentsData,
@@ -197,6 +198,7 @@ export default function EditLogbookModal({
 
   const usersOtherList = allOtherUsers
     .filter((user) => user.roleId !== operatorRole?.roleId)
+    .filter((user) => user.roleId !== adminRole?.roleId)
     .map((user) => ({
       ...user,
       label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,

@@ -23,7 +23,7 @@ export default function SectionFormularModal({
   setIsSectionFormularModal,
   onSave,
   initialValue,
-  sectionFields,
+  sectionFields = [],
 }) {
   const [formData, setFormData] = useState(
     initialValue?.items ?? {
@@ -55,12 +55,14 @@ export default function SectionFormularModal({
     }));
   };
 
-  const sections = sectionFields.map((f) => f.name);
+  const safeSectionFields = Array.isArray(sectionFields) ? sectionFields : [];
+
+  const sections = safeSectionFields.map((f) => f.name);
 
   const fieldsInSection =
-    sectionFields
-      .filter((f) => f.name === formData.section)?.[0]
-      ?.config?.items.map((f) => f.name) || [];
+    safeSectionFields
+      .find((f) => f.name === formData.section)
+      ?.config?.items?.map((f) => f.name) || [];
 
   return (
     <Modal
