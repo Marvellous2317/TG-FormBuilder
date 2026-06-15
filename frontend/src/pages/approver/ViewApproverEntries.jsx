@@ -70,6 +70,7 @@ export default function ViewApproverEntries() {
       unit: 'mm',
       format: 'a4',
     });
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
@@ -80,6 +81,7 @@ export default function ViewApproverEntries() {
         /^data:image\/(png|jpeg|jpg);base64,/i,
       );
       if (!formatMatch) return null;
+
       return formatMatch[1].toUpperCase() === 'JPG'
         ? 'JPEG'
         : formatMatch[1].toUpperCase();
@@ -87,11 +89,11 @@ export default function ViewApproverEntries() {
 
     const ensureSpace = (height) => {
       if (yPos + height + margin <= pageHeight) return;
+
       doc.addPage();
       yPos = 20;
     };
 
-    // Header grid: 3 columns, left+right split into 2 rows, middle full height
     const headerH = 40;
     const cellLeftW = 45;
     const cellRightW = 52;
@@ -101,40 +103,36 @@ export default function ViewApproverEntries() {
     const divX2 = margin + cellLeftW + cellMidW;
     const halfY = headerY + headerH / 2;
 
-    // Outer border + white fill
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.3);
     doc.setFillColor(255, 255, 255);
     doc.rect(margin, headerY, usableWidth, headerH, 'FD');
 
-    // Vertical dividers
     doc.line(divX1, headerY, divX1, headerY + headerH);
     doc.line(divX2, headerY, divX2, headerY + headerH);
 
-    // Horizontal dividers in left and right columns only
     doc.line(margin, halfY, divX1, halfY);
     doc.line(divX2, halfY, margin + usableWidth, halfY);
 
-    // Top-left: entity name
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
-    doc.text(
-      entityName || 'Entity name',
-      margin + 3,
-      headerY + headerH / 4 + 1.5,
-      { maxWidth: cellLeftW - 6 },
-    );
 
-    // Bottom-left: date
-    doc.text(
-      new Date().toLocaleDateString(),
-      margin + 3,
-      halfY + headerH / 4 + 1.5,
-      { maxWidth: cellLeftW - 6 },
-    );
+    const leftX = margin + 3;
+    const leftMaxW = cellLeftW - 6;
 
-    // Middle: document title (large, vertically centered)
+    doc.text(entityName || 'Entity name', leftX, headerY + 8, {
+      maxWidth: leftMaxW,
+    });
+
+    doc.text('Proprietary & Confidential', leftX, halfY + 7, {
+      maxWidth: leftMaxW,
+    });
+
+    doc.text('Doc type: form', leftX, halfY + 13, {
+      maxWidth: leftMaxW,
+    });
+
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(20, 20, 20);
@@ -143,20 +141,21 @@ export default function ViewApproverEntries() {
       maxWidth: cellMidW - 8,
     });
 
-    // Top-right: doc no
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
+
     doc.text(`Doc no - ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
       maxWidth: cellRightW - 6,
     });
 
-    // Bottom-right: proprietary & confidential
     doc.text(
-      'Proprietary & Confidential',
+      new Date().toLocaleDateString(),
       divX2 + 3,
       halfY + headerH / 4 + 1.5,
-      { maxWidth: cellRightW - 6 },
+      {
+        maxWidth: cellRightW - 6,
+      },
     );
 
     const headerBottom = headerY + headerH + 4;
@@ -170,6 +169,7 @@ export default function ViewApproverEntries() {
 
     const flushPendingRows = () => {
       if (pendingRows.length === 0) return;
+
       autoTable(doc, {
         startY: yPos,
         body: pendingRows,
@@ -183,6 +183,7 @@ export default function ViewApproverEntries() {
         tableLineColor: [220, 220, 220],
         tableLineWidth: 0.1,
       });
+
       yPos = doc.lastAutoTable.finalY + 6;
       pendingRows = [];
     };
@@ -198,6 +199,7 @@ export default function ViewApproverEntries() {
 
       const isVisible =
         entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+
       if (!isVisible) return;
 
       if (entry.type === 'section') {
@@ -216,9 +218,11 @@ export default function ViewApproverEntries() {
           margin,
           yPos,
         );
+
         yPos += 4;
 
         let sectionRows;
+
         try {
           sectionRows = JSON.parse(entry.value || '[]');
         } catch {
@@ -235,26 +239,41 @@ export default function ViewApproverEntries() {
         if (sectionFields.length > 0 && sectionRows.length > 0) {
           const headers = sectionFields.map((f) => f.name);
           const sectionItems = entry.config?.items || [];
+
           const tableRows = sectionRows.map((row) =>
             sectionFields.map((f) => {
               const fieldId = f.entryId || f.id;
+
               if (f.type === 'formular') {
                 const expression = f.config?.expression;
                 if (!expression) return '';
+
                 const scope = {};
+
                 sectionItems.forEach((e) => {
-                  if (e.type === 'number' && e.config?.fieldRef) {
+                  if (e.config?.fieldRef) {
                     const refId = e.entryId || e.id;
-                    const raw = row[refId]?.value ?? e?.config?.defaultValue;
-                    scope[e.config.fieldRef] =
-                      raw === '' || raw == null ? 0 : Number(raw);
+                    const raw =
+                      row[refId]?.value ?? e.value ?? e?.config?.defaultValue;
+
+                    if (raw === '' || raw == null) {
+                      scope[e.config.fieldRef] = 0;
+                    } else {
+                      const num = Number(raw);
+                      scope[e.config.fieldRef] = isNaN(num) ? String(raw) : num;
+                    }
                   }
                 });
+
                 const { value, error } = evaluateFormula(expression, scope);
-                if (error || (typeof value === 'number' && !isFinite(value)))
+
+                if (error || (typeof value === 'number' && !isFinite(value))) {
                   return 0;
+                }
+
                 return value ?? 0;
               }
+
               return row[fieldId]?.value ?? '';
             }),
           );
@@ -272,6 +291,7 @@ export default function ViewApproverEntries() {
             },
             theme: 'grid',
           });
+
           yPos = doc.lastAutoTable.finalY + 8;
         } else {
           yPos += 6;
@@ -291,6 +311,7 @@ export default function ViewApproverEntries() {
     yPos += 12;
 
     const operatorImageFormat = getImageFormat(operatorSignatureDataUrl);
+
     if (operatorImageFormat) {
       const signatureHeight = 30;
       const signatureWidth = 60;
@@ -305,6 +326,7 @@ export default function ViewApproverEntries() {
         signatureWidth,
         signatureHeight,
       );
+
       yPos += signatureHeight + 12;
     }
 
@@ -360,12 +382,13 @@ export default function ViewApproverEntries() {
         doc.setFontSize(7);
         doc.setFont(undefined, 'normal');
         doc.setTextColor(90, 90, 90);
-        // doc.text(`Step ${approval.step ?? index + 1}`, x + 3, yPos + 10);
         doc.text(
           `${approval.status || 'N/A'} - ${decidedDate}`,
           x + 3,
           yPos + 10,
-          { maxWidth: approvalCardWidth - 6 },
+          {
+            maxWidth: approvalCardWidth - 6,
+          },
         );
 
         if (approvalImageFormat) {
@@ -431,12 +454,15 @@ export default function ViewApproverEntries() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
+      if (e.config?.fieldRef) {
         const rawValue =
           formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
@@ -464,7 +490,12 @@ export default function ViewApproverEntries() {
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    let rowsData;
+    try {
+      rowsData = JSON.parse(rawValue || '[]');
+    } catch {
+      rowsData = [];
+    }
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -473,13 +504,41 @@ export default function ViewApproverEntries() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
-    const values = rowsData
-      .map((row) => {
-        const raw = row[targetFieldId]?.value;
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const raw = row[targetFieldId]?.value;
+      if (raw !== undefined && raw !== null && raw !== '') {
         const num = Number(raw);
         return isNaN(num) ? null : num;
-      })
-      .filter((v) => v !== null);
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawValue =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawValue === '' || rawValue == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const num = Number(rawValue);
+            scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+          }
+        });
+        const { value, error } = evaluateFormula(expression, scope);
+        if (error || value == null) return null;
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
 
     if (!values.length) return 0;
 
