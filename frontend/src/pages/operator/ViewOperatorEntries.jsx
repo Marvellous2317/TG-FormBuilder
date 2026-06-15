@@ -84,7 +84,12 @@ export default function ViewOperatorEntries() {
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    let rowsData;
+    try {
+      rowsData = JSON.parse(rawValue || '[]');
+    } catch {
+      rowsData = [];
+    }
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -93,13 +98,41 @@ export default function ViewOperatorEntries() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
-    const values = rowsData
-      .map((row) => {
-        const raw = row[targetFieldId]?.value;
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const raw = row[targetFieldId]?.value;
+      if (raw !== undefined && raw !== null && raw !== '') {
         const num = Number(raw);
         return isNaN(num) ? null : num;
-      })
-      .filter((v) => v !== null);
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawValue =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawValue === '' || rawValue == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const num = Number(rawValue);
+            scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+          }
+        });
+        const { value, error } = evaluateFormula(expression, scope);
+        if (error || value == null) return null;
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
 
     if (!values.length) return 0;
 
@@ -149,12 +182,16 @@ export default function ViewOperatorEntries() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
+      if (e.config?.fieldRef) {
         const rawValue =
           formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
 
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
