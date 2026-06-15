@@ -2,9 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
 
-// const baseURL = import.meta.env.PUBLIC_API_BASE_URL ?? '/api/v1';
-
-const baseURL = 'https://g32w0zp1-5000.eun1.devtunnels.ms/api/v1';
+const baseURL = import.meta.env.PUBLIC_API_BASE_URL ?? '/api/v1';
 
 const axiosInstance = axios.create({
   baseURL,
