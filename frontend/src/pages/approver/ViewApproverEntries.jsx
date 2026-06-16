@@ -145,12 +145,12 @@ export default function ViewApproverEntries() {
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
 
-    doc.text(`Doc no - ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
+    doc.text(`Doc no: ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
       maxWidth: cellRightW - 6,
     });
 
     doc.text(
-      new Date().toLocaleDateString(),
+      `Issue date: ${new Date().toLocaleDateString()}`,
       divX2 + 3,
       halfY + headerH / 4 + 1.5,
       {
@@ -210,16 +210,24 @@ export default function ViewApproverEntries() {
           yPos = 20;
         }
 
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(30, 30, 30);
-        doc.text(
-          `${entry.name}${entry.config?.name ? ` - ${entry.config.name}` : ''}`,
-          margin,
-          yPos,
-        );
+        const sectionTitle = `${entry.name}${entry.config?.name ? ` - ${entry.config.name}` : ''}`;
+        autoTable(doc, {
+          startY: yPos,
+          body: [[sectionTitle]],
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 10,
+            fontStyle: 'bold',
+            cellPadding: 3,
+            textColor: [30, 30, 30],
+            fillColor: [245, 245, 245],
+          },
+          theme: 'grid',
+          tableLineColor: [220, 220, 220],
+          tableLineWidth: 0.1,
+        });
 
-        yPos += 4;
+        yPos = doc.lastAutoTable.finalY;
 
         let sectionRows;
 
@@ -240,49 +248,71 @@ export default function ViewApproverEntries() {
           const headers = sectionFields.map((f) => f.name);
           const sectionItems = entry.config?.items || [];
 
-          const tableRows = sectionRows.map((row) =>
-            sectionFields.map((f) => {
-              const fieldId = f.entryId || f.id;
+          const getSectionCellValue = (row, field) => {
+            const fieldId = field.entryId || field.id;
 
-              if (f.type === 'formular') {
-                const expression = f.config?.expression;
-                if (!expression) return '';
+            if (field.type === 'formular') {
+              const expression = field.config?.expression;
+              if (!expression) return '';
 
-                const scope = {};
+              const scope = {};
 
-                sectionItems.forEach((e) => {
-                  if (e.config?.fieldRef) {
-                    const refId = e.entryId || e.id;
-                    const raw =
-                      row[refId]?.value ?? e.value ?? e?.config?.defaultValue;
+              sectionItems.forEach((e) => {
+                if (e.config?.fieldRef) {
+                  const refId = e.entryId || e.id;
+                  const raw =
+                    row[refId]?.value ?? e.value ?? e?.config?.defaultValue;
 
-                    if (raw === '' || raw == null) {
-                      scope[e.config.fieldRef] = 0;
-                    } else {
-                      const num = Number(raw);
-                      scope[e.config.fieldRef] = isNaN(num) ? String(raw) : num;
-                    }
+                  if (raw === '' || raw == null) {
+                    scope[e.config.fieldRef] = 0;
+                  } else {
+                    const num = Number(raw);
+                    scope[e.config.fieldRef] = isNaN(num) ? String(raw) : num;
                   }
-                });
-
-                const { value, error } = evaluateFormula(expression, scope);
-
-                if (error || (typeof value === 'number' && !isFinite(value))) {
-                  return 0;
                 }
+              });
 
-                return value ?? 0;
+              const { value, error } = evaluateFormula(expression, scope);
+
+              if (error || (typeof value === 'number' && !isFinite(value))) {
+                return 0;
               }
 
-              return row[fieldId]?.value ?? '';
-            }),
-          );
+              return value ?? 0;
+            }
+
+            return row[fieldId]?.value ?? '';
+          };
+
+          const shouldTransposeSection =
+            sectionFields.length > 6 && sectionRows.length === 1;
+
+          const tableRows = shouldTransposeSection
+            ? sectionRows.flatMap((row, rowIndex) =>
+                sectionFields.map((field) => [
+                  sectionRows.length > 1
+                    ? `Row ${rowIndex + 1} - ${field.name}`
+                    : field.name,
+                  getSectionCellValue(row, field),
+                ]),
+              )
+            : sectionRows.map((row) =>
+                sectionFields.map((field) => getSectionCellValue(row, field)),
+              );
 
           autoTable(doc, {
             startY: yPos,
-            head: [headers],
+            head: shouldTransposeSection
+              ? [['Check / Question', 'Answer']]
+              : [headers],
             body: tableRows,
             margin: { left: margin, right: margin },
+            columnStyles: shouldTransposeSection
+              ? {
+                  0: { cellWidth: usableWidth * 0.75, fontStyle: 'bold' },
+                  1: { cellWidth: usableWidth * 0.25 },
+                }
+              : undefined,
             styles: { fontSize: 8, cellPadding: 2.5 },
             headStyles: {
               fillColor: [0, 0, 0],
