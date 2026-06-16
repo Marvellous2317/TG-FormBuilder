@@ -100,14 +100,16 @@ function SortableFieldRow({
           />
         </div>
         <div className="w-[15%]">
-          {field.type === 'number' && field.config && !field.config.visible && (
-            <p
-              onClick={() => onOpenModal('defaultValue', field.id)}
-              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-            >
-              {field.config.defaultValue}
-            </p>
-          )}
+          {['number', 'text'].includes(field.type) &&
+            field.config &&
+            !field.config.visible && (
+              <p
+                onClick={() => onOpenModal('defaultValue', field.id)}
+                className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+              >
+                {field.config.defaultValue}
+              </p>
+            )}
           {field.type === 'enum' && field.config && (
             <p
               onClick={() => onOpenModal('enum', field.id)}
@@ -294,8 +296,6 @@ export default function SectionOptionsModal({
     setFields((currentFields) => [...currentFields, newField]);
   };
 
-  console.log(fields);
-
   const handleFieldVisibility = (id) => {
     setFields((currentFields) =>
       currentFields.map((field) => {
@@ -303,7 +303,10 @@ export default function SectionOptionsModal({
           const isCurrentlyVisible = field.config?.visible !== false;
           const willBeVisible = !isCurrentlyVisible;
 
-          if (field.type === 'number' && willBeVisible === false) {
+          if (
+            ['number', 'text'].includes(field.type) &&
+            willBeVisible === false
+          ) {
             setActiveFieldId(id);
             setIsShowDefaultValueModal(true);
           }
@@ -501,6 +504,7 @@ export default function SectionOptionsModal({
         setIsShowDefaultValueModal={setIsShowDefaultValueModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        activeField={activeField}
       />
     </Modal>
   );

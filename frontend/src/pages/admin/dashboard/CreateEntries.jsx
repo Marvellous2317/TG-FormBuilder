@@ -112,14 +112,16 @@ function SortableFieldRow({
           />
         </div>
         <div className="w-[20%]">
-          {field.type === 'number' && field.config && !field.config.visible && (
-            <p
-              onClick={() => onOpenModal('defaultValue', field.id)}
-              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-            >
-              {field.config.defaultValue}
-            </p>
-          )}
+          {['number', 'text'].includes(field.type) &&
+            field.config &&
+            !field.config.visible && (
+              <p
+                onClick={() => onOpenModal('defaultValue', field.id)}
+                className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+              >
+                {field.config.defaultValue}
+              </p>
+            )}
           {field.type === 'enum' && field.config && (
             <p
               onClick={() => onOpenModal('enum', field.id)}
@@ -332,7 +334,10 @@ export default function CreateEntries() {
           const isCurrentlyVisible = field.config?.visible !== false;
           const willBeVisible = !isCurrentlyVisible;
 
-          if (field.type === 'number' && willBeVisible === false) {
+          if (
+            ['number', 'text'].includes(field.type) &&
+            willBeVisible === false
+          ) {
             setActiveFieldId(id);
             setIsShowDefaultValueModal(true);
           }
@@ -611,6 +616,7 @@ export default function CreateEntries() {
         setIsShowDefaultValueModal={setIsShowDefaultValueModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        activeField={activeField}
       />
     </div>
   );

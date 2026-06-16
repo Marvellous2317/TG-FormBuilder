@@ -30,21 +30,25 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
 
   const isVisible =
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
-  if (!isVisible) return null;
+  if (!isVisible && ['number'].includes(entry.type)) return null;
 
   return (
     <div className="mt-5 w-full">
-      <InputField
-        id={entryId}
-        name={entryId}
-        label={entry.name}
-        type={entry.type}
-        required={entry?.required}
-        value={currentValue}
-        onChange={handleChange}
-        onBlur={handleChange}
-        readOnly={readOnly}
-      />
+      {!isVisible && currentValue ? (
+        <p className="text-sm font-geist font-medium">{currentValue}</p>
+      ) : (
+        <InputField
+          id={entryId}
+          name={entryId}
+          label={entry.name}
+          type={entry.type}
+          required={entry?.required}
+          value={currentValue}
+          onChange={handleChange}
+          onBlur={handleChange}
+          readOnly={readOnly}
+        />
+      )}
     </div>
   );
 }
