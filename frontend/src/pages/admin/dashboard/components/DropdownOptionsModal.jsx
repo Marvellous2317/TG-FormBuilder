@@ -13,6 +13,12 @@ import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
 import DeleteCatalogModal from './DeleteCatalogModal';
 
+const parseBulkItems = (value) =>
+  value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 export default function DropdownOptionsModal({
   isDropdownOptionsModal,
   setIsDropdownOptionsModal,
@@ -27,6 +33,8 @@ export default function DropdownOptionsModal({
   const [isDeleteCatalogModalOpen, setIsDeleteCatalogModalOpen] =
     useState(false);
   const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
+  const [showBulkItems, setShowBulkItems] = useState(false);
+  const [bulkItems, setBulkItems] = useState('');
 
   const { showError, showSuccess } = useToast();
 
@@ -157,6 +165,27 @@ export default function DropdownOptionsModal({
     handleCancelEditList();
   };
 
+  const handleAddBulkItems = () => {
+    const parsedItems = parseBulkItems(bulkItems);
+
+    if (parsedItems.length < 1) {
+      showError('Please enter at least one item');
+      return;
+    }
+
+    setItems((prev) => {
+      const existing = new Set(prev.map((item) => item.toLowerCase()));
+
+      const newItems = parsedItems.filter(
+        (item) => !existing.has(item.toLowerCase()),
+      );
+
+      return [...prev, ...newItems];
+    });
+
+    setBulkItems('');
+  };
+
   return (
     <Modal
       isOpen={isDropdownOptionsModal}
@@ -178,7 +207,7 @@ export default function DropdownOptionsModal({
         {isLoadingChecklistCatalogs ? (
           <Loader size="h-12 w-12 mt-20" />
         ) : (
-          <div className="flex-1 flex flex-col items-center">
+          <div className="flex-1 flex-col items-center overflow-auto">
             {catalogData?.length < 1 && !createList && (
               <div className="items-center flex flex-col justify-center w-full mt-38.5">
                 <RiLinkM size={24} className="text-tertiary-800" />
@@ -204,6 +233,19 @@ export default function DropdownOptionsModal({
 
             {catalogData?.length > 0 && !createList && !editList && (
               <div className="flex flex-col gap-4 w-full py-6 px-5">
+                <Button
+                  className="bg-white gap-1 p-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleEditList();
+                  }}
+                >
+                  <IoAddOutline className="text-primary-200" size={14} />
+                  <p className="text-primary-200 font-geist font-medium text-sm">
+                    Create new source
+                  </p>
+                </Button>
                 {catalogData?.map(({ catalogId, name, list }) => {
                   const isActive = catalogId === selectedId;
                   const count = list?.length;
@@ -240,20 +282,6 @@ export default function DropdownOptionsModal({
                     </div>
                   );
                 })}
-
-                <Button
-                  className="bg-white gap-1 p-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleEditList();
-                  }}
-                >
-                  <IoAddOutline className="text-primary-200" size={14} />
-                  <p className="text-primary-200 font-geist font-medium text-sm">
-                    Create new source
-                  </p>
-                </Button>
               </div>
             )}
 
@@ -267,6 +295,35 @@ export default function DropdownOptionsModal({
                   required
                   onChange={(e) => setSourceName(e.target.value)}
                 />
+
+                <Button
+                  onClick={() => setShowBulkItems(!showBulkItems)}
+                  className="underline text-xs my-1 text-primary-200 cursor-pointer"
+                >
+                  {showBulkItems ? 'Close bulk' : 'Paste bulk items'}
+                </Button>
+
+                {showBulkItems && (
+                  <div className="w-full mt-4 flex flex-col items-end">
+                    <InputField
+                      // label="Source name"
+                      id="bulkItems"
+                      className="mb-1"
+                      value={bulkItems}
+                      required
+                      type="textarea"
+                      onChange={(e) => setBulkItems(e.target.value)}
+                    />
+                    <Button
+                      className="flex gap-1 p-3 border-primary-300 border bg-tertiary-700 rounded-[10px] disabled:opacity-30"
+                      onClick={handleAddBulkItems}
+                      disabled={bulkItems?.length < 1}
+                    >
+                      <IoAddOutline className="text-primary" size={14} />
+                      Add
+                    </Button>
+                  </div>
+                )}
 
                 <div className="w-full mt-4">
                   <label
@@ -320,7 +377,7 @@ export default function DropdownOptionsModal({
             )}
           </div>
         )}
-        <div className="flex items-center mt-6 p-5 border-t border-secondary-200 justify-end gap-3">
+        <div className="sticky bottom-0 z-50 bg-white flex items-center w-full p-5 border-t border-secondary-200 justify-end gap-3">
           {createList || editList ? (
             <Button
               type="button"

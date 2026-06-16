@@ -195,12 +195,16 @@ export default function ViewApproverEntries() {
           ? computeFormulaValue(entry)
           : entry.type === 'section_formular'
             ? computeSectionFormulaValue(entry)
-            : (formData[entryId]?.value ?? entry.value ?? '');
+            : (formData[entryId]?.value ??
+              formData[entryId]?.config.defaultValue ??
+              entry.value ??
+              entry.config.defaultValue ??
+              '');
 
       const isVisible =
         entry?.config?.visible !== undefined ? entry?.config?.visible : true;
 
-      if (!isVisible) return;
+      if (!isVisible && ['number'].includes(entry.type)) return;
 
       if (entry.type === 'section') {
         flushPendingRows();
