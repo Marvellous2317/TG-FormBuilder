@@ -10,7 +10,11 @@ import DropdownSelect from '../../../shared/components/DropdownSelect';
 import DropdownOptionsModal from './components/DropdownOptionsModal';
 import EnumOptionsModal from './components/EnumOptionsModal';
 import SectionOptionsModal from './components/SectionOptionsModal';
-import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
+import {
+  createField,
+  createFieldId,
+  fieldTypeOptions,
+} from '../../../shared/utils/constants';
 import FormularModal from './components/FormularModal';
 import {
   useChecklistEntries,
@@ -362,11 +366,21 @@ export default function CreateEntries() {
 
   const handleCopyField = (id) => {
     const fieldToCopy = fields.find((f) => f.id === id);
+    if (!fieldToCopy) return;
+
+    const fieldCopy = { ...fieldToCopy };
+    delete fieldCopy.entryId;
+
     const newField = {
-      ...fieldToCopy,
-      id: Math.random().toString(36).substr(2, 9),
+      ...fieldCopy,
+      id: createFieldId(),
       name: `${fieldToCopy.name} (copy)`,
+      config:
+        typeof structuredClone === 'function'
+          ? structuredClone(fieldToCopy.config)
+          : JSON.parse(JSON.stringify(fieldToCopy.config ?? {})),
     };
+
     setFields((currentFields) => [...currentFields, newField]);
   };
 

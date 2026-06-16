@@ -41,7 +41,7 @@ export default function DropdownOptionsModal({
   const catalogData = data?.data?.catalogs;
 
   const handleAddItem = () => {
-    if (item.length < 3) {
+    if (item.length < 1) {
       return;
     }
     setItems([...items, item]);

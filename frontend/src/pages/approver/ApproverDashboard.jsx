@@ -173,6 +173,9 @@ export default function ApproverDashboard() {
                         Checklist ID
                       </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                        Document Title
+                      </th>
+                      <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         Document number
                       </th>
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
@@ -197,9 +200,9 @@ export default function ApproverDashboard() {
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                             {index + 1}
                           </td>
-                          {/* <td className="p-3 md:p-4 text-tertiary text-sm">
-                            {row.submittedChecklistId}
-                          </td> */}
+                          <td className="p-3 md:p-4 text-tertiary text-sm">
+                            {row?.assignment?.checklist?.title || 'N/A'}
+                          </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
                             {row.documentNumber}
                           </td>
