@@ -90,7 +90,7 @@ export default function CreateOperatorEntry() {
         });
         showSuccess('Saved offline — will sync when reconnected');
       } else {
-        showError('Something went wrong');
+        // showError('Something went wrong');
       }
     }
   };
