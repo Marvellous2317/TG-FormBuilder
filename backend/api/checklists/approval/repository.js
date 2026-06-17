@@ -52,7 +52,7 @@ export class ApprovalRepository {
                   {
                     model: Checklist,
                     as: "checklist",
-                    attributes: ["checklistId", "title", "documentNumber", "approvalMode"],
+                    attributes: ["checklistId", "title", "documentNumber", "issuedNumber", "entityDisplayName", "approvalMode"],
                   },
                   {
                     model: User,
@@ -123,7 +123,7 @@ export class ApprovalRepository {
       const submission = await SubmittedChecklist.findByPk(
         submittedChecklistId,
         {
-          attributes: ["submittedChecklistId", "status"],
+          attributes: ["submittedChecklistId", "title", "issuedNumber", "entityDisplayName", "status"],
           include: [
             {
               model: ChecklistAssignment,
@@ -133,7 +133,7 @@ export class ApprovalRepository {
                 {
                   model: Checklist,
                   as: "checklist",
-                  attributes: ["checklistId", "title", "documentNumber", "approvalMode"],
+                  attributes: ["checklistId", "title", "documentNumber", "issuedNumber", "entityDisplayName", "approvalMode"],
                 },
                 {
                   model: User,

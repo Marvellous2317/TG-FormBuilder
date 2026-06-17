@@ -354,7 +354,7 @@ export class AdminRepository {
     }
   }
 
-  static async createChecklist({ title, documentNumber, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy }) {
+  static async createChecklist({ title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy }) {
     const transaction = await sequelize.transaction();
 
 
@@ -390,7 +390,9 @@ export class AdminRepository {
       const checklist = await Checklist.create(
         { 
           title, 
-          documentNumber, 
+          documentNumber,
+          issuedNumber: issuedNumber || null,
+          entityDisplayName: entityDisplayName || null,
           companyId, 
           departmentId, 
           frequency: frequency || null,
@@ -554,7 +556,7 @@ export class AdminRepository {
       const offset = (page - 1) * limit;
       const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
         where,
-        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt", "updatedAt"],
+        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt", "updatedAt"],
         include: [
           {
             model: ChecklistAssignment,
@@ -562,7 +564,7 @@ export class AdminRepository {
             attributes: ["assignmentId", "checklistId"],
             where: { checklistId, companyId },
             include: [
-              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
+              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber", "issuedNumber", "entityDisplayName"] },
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
           },
@@ -587,7 +589,7 @@ export class AdminRepository {
     try {
       const submission = await SubmittedChecklist.findOne({
         where: { submittedChecklistId, companyId },
-        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt", "updatedAt"],
+        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt", "updatedAt"],
         include: [
           {
             model: ChecklistAssignment,
@@ -595,7 +597,7 @@ export class AdminRepository {
             attributes: ["assignmentId", "checklistId"],
             where: { checklistId, companyId },
             include: [
-              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"] },
+              { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber", "issuedNumber", "entityDisplayName"] },
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
           },
@@ -681,7 +683,7 @@ export class AdminRepository {
     }
   }
 
-  static async updateChecklist(checklistId, { title, documentNumber, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy }) {
+  static async updateChecklist(checklistId, { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy }) {
     const transaction = await sequelize.transaction();
     try {
       const checklist = await Checklist.findByPk(checklistId, { transaction });
@@ -723,6 +725,8 @@ export class AdminRepository {
       }
 
       if (approvalMode !== undefined) checklist.approvalMode = approvalMode;
+      if (issuedNumber !== undefined) checklist.issuedNumber = issuedNumber || null;
+      if (entityDisplayName !== undefined) checklist.entityDisplayName = entityDisplayName || null;
       if (title) checklist.title = title;
       if (documentNumber) checklist.documentNumber = documentNumber;
       checklist.updatedBy = updatedBy;
@@ -1034,7 +1038,7 @@ export class AdminRepository {
           { model: User, as: "assigner", attributes: ["userId", "firstName", "lastName"] },
           {
             model: SubmittedChecklist, as: "submissions",
-            attributes: ["submittedChecklistId", "status", "submittedAt", "createdAt"],
+            attributes: ["submittedChecklistId", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt"],
             separate: true,
             order: [["createdAt", "DESC"]],
           },
@@ -1085,7 +1089,7 @@ export class AdminRepository {
           { model: User, as: "assigner", attributes: ["userId", "firstName", "lastName"] },
           {
             model: SubmittedChecklist, as: "submissions",
-            attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt"],
+            attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt"],
             separate: true,
             order: [["createdAt", "DESC"]],
           },
