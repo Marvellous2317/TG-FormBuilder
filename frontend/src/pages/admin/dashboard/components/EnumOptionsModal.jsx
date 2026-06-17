@@ -15,6 +15,11 @@ const enumOptions = [
     option: 'Ok / Not ok',
     description: 'Status toggle for ok state',
   },
+  {
+    id: 5,
+    option: 'Intact / Not intact',
+    description: 'Status toggle for intact state',
+  },
 ];
 
 export default function EnumOptionsModal({
