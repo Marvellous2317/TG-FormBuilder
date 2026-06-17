@@ -203,6 +203,7 @@ export class OperatorRepository {
         submittedBy: userId,
         companyId: assignment.companyId,
         documentNumber: assignment.checklist.documentNumber,
+        title: assignment.checklist.title,
         submittedAt: new Date(),
       }, { transaction });
 
@@ -252,6 +253,7 @@ export class OperatorRepository {
           assignmentId,
           submittedBy: userId,
           documentNumber: assignment.checklist.documentNumber,
+          title: assignment.checklist.title,
           companyId: assignment.companyId,
           status: "draft",
         }, { transaction });
