@@ -24,7 +24,7 @@ import {
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
-import AssignLogbookModal from './components/AssignLogbookModal';
+import AssignLogbookModal from './components/ExportLogbookModal';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 import DefaultValueModal from './components/DefaultValueModal';
 import {

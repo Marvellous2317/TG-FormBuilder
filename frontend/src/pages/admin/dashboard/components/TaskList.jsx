@@ -11,8 +11,9 @@ import {
 } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
-import AssignLogbookModal from './AssignLogbookModal';
+import AssignLogbookModal from './ExportLogbookModal';
 import Loader from '../../../../shared/components/Loader';
+import ExportLogbookModal from './ExportLogbookModal';
 
 export default function TaskList({
   checklists,
@@ -43,6 +44,9 @@ export default function TaskList({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
+  const [isShowExportLogbookModal, setIsShowExportLogbookModal] =
+    useState(false);
+  const [checklistToExport, setChecklistToExport] = useState(false);
 
   const navigate = useNavigate();
 
@@ -130,6 +134,15 @@ export default function TaskList({
 
   const dropOptions = [
     {
+      title: 'Export',
+      value: 'export',
+      onClick: () => {
+        setIsShowExportLogbookModal(true);
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+      },
+    },
+    {
       title: 'Entries',
       value: 'entries',
       onClick: () => {
@@ -180,6 +193,14 @@ export default function TaskList({
         setActiveMenuId(null);
         setActiveMenuRow(null);
         setIsDeleteChecklistModalOpen(true);
+      },
+    },
+    {
+      title: 'Duplicate',
+      value: 'duplicate',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
       },
     },
     {
@@ -240,6 +261,7 @@ export default function TaskList({
 
     setActiveMenuId(rowId);
     setActiveMenuRow(row);
+    setChecklistToExport(row);
     setChecklistToEdit(row);
     setChecklistToDelete(row);
     setChecklistToRestore(row);
@@ -425,12 +447,20 @@ export default function TaskList({
             document.body,
           )
         : null}
-      <AssignLogbookModal
+      {/* <AssignLogbookModal
         isShowAssignLogbookModal={isShowAssignLogbookModal}
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
         checklistId={activeMenuRow?.checklistId}
         checklistAssignments={activeMenuRow?.assignments}
         action={actionToPerform}
+      /> */}
+      <ExportLogbookModal
+        key={activeMenuRow?.documentNumber}
+        isShowExportLogbookModal={isShowExportLogbookModal}
+        setIsShowExportLogbookModal={setIsShowExportLogbookModal}
+        checklistId={checklistToExport?.checklistId}
+        documentNumber={checklistToExport?.documentNumber}
+        setChecklistToExport={setChecklistToExport}
       />
     </div>
   );

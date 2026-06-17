@@ -7,6 +7,7 @@ import {
   deleteChecklist,
   deleteChecklistCatalog,
   deleteChecklistEntries,
+  exportChecklistEntries,
   fetchChecklist,
   fetchChecklistCatalog,
   fetchChecklistCatalogs,
@@ -453,5 +454,14 @@ export function useUnassignChecklistOperator(options = {}) {
       }
     },
     ...mutationOptions,
+  });
+}
+
+export function useChecklistExport(documentNumber, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'export'],
+    queryFn: () => exportChecklistEntries(documentNumber),
+    keepPreviousData: true,
+    ...options,
   });
 }

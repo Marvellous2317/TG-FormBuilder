@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -12,6 +12,7 @@ import {
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
 import DeleteCatalogModal from './DeleteCatalogModal';
+import { FiSearch } from 'react-icons/fi';
 
 const parseBulkItems = (value) =>
   value
@@ -35,8 +36,15 @@ export default function DropdownOptionsModal({
   const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
   const [showBulkItems, setShowBulkItems] = useState(false);
   const [bulkItems, setBulkItems] = useState('');
+  const [search, setSearch] = useState('');
 
   const { showError, showSuccess } = useToast();
+
+  const [catalogPagination, setCatalogPagination] = useState({
+    page: 1,
+    limit: 10,
+    search: '',
+  });
 
   const { mutateAsync: createCatalog, isPending: isCreatingCatalog } =
     useCreateChecklistCatalogs();
@@ -44,9 +52,31 @@ export default function DropdownOptionsModal({
     useUpdateChecklistCatalogs();
 
   const { data, isPending: isLoadingChecklistCatalogs } =
-    useChecklistCatalogs();
+    useChecklistCatalogs(catalogPagination);
 
   const catalogData = data?.data?.catalogs;
+  const pagination = data?.data?.pagination;
+  const currentPage = Number(pagination?.page ?? catalogPagination.page);
+  const totalPages = Number(pagination?.totalPages ?? 1);
+  const totalItems = Number(pagination?.total ?? catalogData?.length ?? 0);
+
+  const handleCatalogPageChange = (page) => {
+    setCatalogPagination((prev) => ({
+      ...prev,
+      page,
+    }));
+  };
+
+  const handleSearch = useCallback((searchValue) => {
+    setCatalogPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
 
   const handleAddItem = () => {
     if (item.length < 1) {
@@ -232,9 +262,21 @@ export default function DropdownOptionsModal({
             )}
 
             {catalogData?.length > 0 && !createList && !editList && (
-              <div className="flex flex-col gap-4 w-full py-6 px-5">
+              <div className="flex flex-col gap-4 w-full pb-6 px-5">
+                {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
+                  <div className="flex items-center gap-2 px-2 w-full sm:max-w-sm transition-all">
+                    <FiSearch className="text-gray-400 shrink-0" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Enter search here"
+                      value={search}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
+                    />
+                  </div>
+                </div> */}
                 <Button
-                  className="bg-white gap-1 p-1"
+                  className="bg-white gap-1 p-1 mt-2"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -282,6 +324,34 @@ export default function DropdownOptionsModal({
                     </div>
                   );
                 })}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
+                    <Button
+                      type="button"
+                      className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={currentPage <= 1}
+                      onClick={() => handleCatalogPageChange(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <div className="text-center font-geist">
+                      <p className="text-xs font-medium text-primary">
+                        Page {currentPage} of {totalPages}
+                      </p>
+                      <p className="text-[11px] text-tertiary">
+                        {totalItems} sources
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => handleCatalogPageChange(currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 

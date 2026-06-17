@@ -145,7 +145,7 @@ export default function ApproverApprovedTasks() {
                           {index + 1}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
-                          {row?.assignment?.checklist?.title || 'N/A'}
+                          {row?.title || 'N/A'}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row.documentNumber}

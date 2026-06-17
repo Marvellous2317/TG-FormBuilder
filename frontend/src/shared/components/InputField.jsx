@@ -24,6 +24,7 @@ function InputField({
   onLoadMore,
   hasNextPage,
   isFetchingNextPage,
+  ...props
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
@@ -142,6 +143,7 @@ function InputField({
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             buttonClassName={selectButtonClasses}
+            {...props}
           />
         ) : isTextAreaField ? (
           <textarea
@@ -157,6 +159,7 @@ function InputField({
             aria-required={required}
             rows={rows}
             className={baseInputClassName}
+            {...props}
           />
         ) : (
           <input
@@ -172,6 +175,7 @@ function InputField({
             autoComplete={autoComplete}
             aria-required={required}
             className={baseInputClassName}
+            {...props}
           />
         )}
 
