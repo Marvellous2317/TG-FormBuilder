@@ -22,6 +22,11 @@ export const deleteChecklist = async (id) => {
   return data;
 };
 
+export const restoreChecklist = async (id) => {
+  const { data } = await axiosInstance.put(`/checklists/admin/${id}/restore`);
+  return data;
+};
+
 export const createChecklist = async (payload) => {
   const { data } = await axiosInstance.post(`/checklists/admin`, payload);
   return data;
@@ -113,6 +118,52 @@ export const unAssignChecklistOperator = async (payload) => {
   const { data } = await axiosInstance.post(
     `/checklists/admin/unassignments`,
     payload,
+  );
+  return data;
+};
+
+export const fetchChecklistSubmissions = async (checklistId, params) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/submissions/${checklistId}`,
+    {
+      params,
+    },
+  );
+  return data;
+};
+
+export const fetchChecklistSubmission = async (checklistId, submissionId) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/submissions/${checklistId}/${submissionId}`,
+  );
+  return data;
+};
+
+export const updateChecklistSubmission = async (
+  checklistId,
+  submissionId,
+  payload,
+) => {
+  const { data } = await axiosInstance.put(
+    `/checklists/admin/submissions/${checklistId}/${submissionId}`,
+    payload,
+  );
+  return data;
+};
+
+export const fetchChecklistVersions = async (checklistId, params) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/versions/${checklistId}`,
+    {
+      params,
+    },
+  );
+  return data;
+};
+
+export const fetchChecklistVersion = async (checklistId, versionId) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/versions/${checklistId}/${versionId}`,
   );
   return data;
 };

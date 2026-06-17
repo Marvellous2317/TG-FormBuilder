@@ -33,7 +33,16 @@ import ApproverDashboard from '../../pages/approver/ApproverDashboard';
 import ViewApproverEntries from '../../pages/approver/ViewApproverEntries';
 import ApproverApprovedTasks from '../../pages/approver/ApproverApprovedTasks';
 import ApproverRejectedTasks from '../../pages/approver/ApproverRejectedTasks';
+import RandomWorkspaceLayout from '../../pages/random/RandomWorkspaceLayout';
+import RandomDashboard from '../../pages/random/RandomDashboard';
+import ViewRandomEntries from '../../pages/random/ViewRandomEntries';
+import RandomApprovedTasks from '../../pages/random/RandomApprovedTasks';
+import RandomRejectedTasks from '../../pages/random/RandomRejectedTasks';
 import ResetPassword from '../../pages/auth/ResetPassword';
+import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsManagement';
+import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
+import HistoryManagement from '../../pages/admin/history/HistoryManagement';
+import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntiesHistory';
 
 export const router = createBrowserRouter([
   {
@@ -142,6 +151,26 @@ export const router = createBrowserRouter([
             element: <CreateEntries />,
           },
           {
+            path: 'entries/:id/submissions',
+            loader: ({ params }) => params,
+            element: <SubmissionsManagement />,
+          },
+          {
+            path: 'entries/:id/view/:submissionId',
+            loader: ({ params }) => params,
+            element: <ViewAdminEntries />,
+          },
+          {
+            path: 'entries/:id/history',
+            loader: ({ params }) => params,
+            element: <HistoryManagement />,
+          },
+          {
+            path: 'entries/:id/view/:versionId/history',
+            loader: ({ params }) => params,
+            element: <ViewAdminEntriesHistory />,
+          },
+          {
             path: 'users',
             element: <AdminUserManagement />,
           },
@@ -223,6 +252,40 @@ export const router = createBrowserRouter([
             path: 'entries/:id/view/:back',
             loader: ({ params }) => params,
             element: <ViewApproverEntries />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    element: <ProtectedRoute allowedRoles={['random']} />,
+    errorElement: <ErrorElement />,
+    children: [
+      {
+        path: '/custom',
+        element: <RandomWorkspaceLayout />,
+        children: [
+          {
+            path: '',
+            element: <RandomDashboard />,
+          },
+          {
+            path: 'approved',
+            element: <RandomApprovedTasks />,
+          },
+          {
+            path: 'rejected',
+            element: <RandomRejectedTasks />,
+          },
+          {
+            path: 'entries/:id/view/:back',
+            loader: ({ params }) => params,
+            element: <ViewRandomEntries />,
           },
           {
             path: 'settings',

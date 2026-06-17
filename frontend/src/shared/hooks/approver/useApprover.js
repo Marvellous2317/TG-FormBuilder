@@ -43,6 +43,9 @@ export function useApproverApproveChecklistEntries(checklistId, options = {}) {
     mutationFn: (payload) => approveChecklistEntry(checklistId, payload),
     onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
+        queryKey: ['approver', 'checklists'],
+      });
+      await queryClient.invalidateQueries({
         queryKey: ['approver', 'checklists', checklistId],
       });
       await queryClient.invalidateQueries({

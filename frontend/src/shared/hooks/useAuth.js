@@ -29,34 +29,34 @@ const getRoleHomePath = (user) => {
   }
 };
 
-const getErrorMessage = (error, message) => {
-  if (typeof error === 'object' && error !== null) {
-    const responseMessage =
-      'response' in error &&
-      typeof error.response === 'object' &&
-      error.response !== null &&
-      'data' in error.response &&
-      typeof error.response.data === 'object' &&
-      error.response.data !== null &&
-      'message' in error.response.data
-        ? error.response.data.message
-        : null;
+// const getErrorMessage = (error, message) => {
+//   if (typeof error === 'object' && error !== null) {
+//     const responseMessage =
+//       'response' in error &&
+//       typeof error.response === 'object' &&
+//       error.response !== null &&
+//       'data' in error.response &&
+//       typeof error.response.data === 'object' &&
+//       error.response.data !== null &&
+//       'message' in error.response.data
+//         ? error.response.data.message
+//         : null;
 
-    if (typeof responseMessage === 'string' && responseMessage.trim()) {
-      return responseMessage;
-    }
+//     if (typeof responseMessage === 'string' && responseMessage.trim()) {
+//       return responseMessage;
+//     }
 
-    if ('message' in error && typeof error.message === 'string') {
-      return error.message;
-    }
-  }
+//     if ('message' in error && typeof error.message === 'string') {
+//       return error.message;
+//     }
+//   }
 
-  return message;
-};
+//   return message;
+// };
 
 export default function useAuth() {
   const navigate = useNavigate();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -77,9 +77,7 @@ export default function useAuth() {
 
       navigate(getRoleHomePath(user), { replace: true });
     },
-    onError: (error) => {
-      showError(getErrorMessage(error, 'Unable to login. Please try again.'));
-    },
+    onError: () => {},
   });
 
   const changePasswordMutation = useMutation({
@@ -91,11 +89,7 @@ export default function useAuth() {
       useAuthStore.getState().clearAuth();
       navigate('/login', { replace: true });
     },
-    onError: (error) => {
-      showError(
-        getErrorMessage(error, 'Unable to change password. Please try again.'),
-      );
-    },
+    onError: () => {},
   });
 
   const resetPasswordMutation = useMutation({
@@ -106,11 +100,7 @@ export default function useAuth() {
       showSuccess(successMessage);
       navigate('/reset-password', { replace: true });
     },
-    onError: (error) => {
-      showError(
-        getErrorMessage(error, 'Unable to reset password. Please try again.'),
-      );
-    },
+    onError: () => {},
   });
 
   const forgotPasswordMutation = useMutation({
@@ -121,11 +111,7 @@ export default function useAuth() {
       showSuccess(successMessage);
       navigate('/login', { replace: true });
     },
-    onError: (error) => {
-      showError(
-        getErrorMessage(error, 'Unable to reset password. Please try again.'),
-      );
-    },
+    onError: () => {},
   });
 
   return {

@@ -20,7 +20,7 @@ export default function EditDepartmentModal({
   );
 
   const { mutateAsync, isPending: isLoading } = useUpdateDepartment();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
 
   const handleSubmit = async () => {
     try {
@@ -34,7 +34,6 @@ export default function EditDepartmentModal({
       setDepartmentToEdit(null);
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to update department. Please try again.');
     }
   };
 

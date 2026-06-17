@@ -21,6 +21,6 @@ export default function RoleRedirect() {
     case 'approval':
       return <Navigate to="/approver/" replace />;
     default:
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/custom" replace />;
   }
 }

@@ -59,7 +59,7 @@ export default function Entity() {
 
   const companyAnalyticsData = companyAnalytics?.data;
 
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
 
   const EntityProfileData = [
     {
@@ -97,7 +97,6 @@ export default function Entity() {
       showSuccess('Entity activated successfully');
     } catch (error) {
       console.error('Error', error);
-      showError('Unable to activate entity. Please try again.');
     }
   };
 

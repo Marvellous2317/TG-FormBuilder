@@ -5,10 +5,9 @@ import Button from '../../../../shared/components/Button';
 import { useDepartmentsInfinite } from '../../../../shared/hooks/superadmin/useDepartments';
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
-import {
-  useCreateChecklists,
-  useUpdateChecklist,
-} from '../../../../shared/hooks/admin/useChecklist';
+import { useUpdateChecklist } from '../../../../shared/hooks/admin/useChecklist';
+import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
+import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
 const frequencyList = [
   {
@@ -29,6 +28,55 @@ const frequencyList = [
   },
 ];
 
+const approvalModeList = [
+  {
+    label: 'Sequential',
+    value: 'sequential',
+  },
+  {
+    label: 'Parallel',
+    value: 'parallel',
+  },
+];
+
+const getChecklistOperatorIds = (checklist) => {
+  if (!checklist) return [];
+
+  if (Array.isArray(checklist.operators)) {
+    return checklist.operators.map((operator) => operator.userId ?? operator);
+  }
+
+  if (Array.isArray(checklist.operatorIds)) {
+    return checklist.operatorIds;
+  }
+
+  if (Array.isArray(checklist.assignments)) {
+    return checklist.assignments
+      .map((assignment) => assignment.operator?.userId ?? assignment.assignedTo)
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const getChecklistApprovers = (checklist) => {
+  if (!checklist) return [];
+
+  const approvers = checklist.approverConfigs ?? checklist.approvers ?? [];
+
+  if (!Array.isArray(approvers)) {
+    return [];
+  }
+
+  return approvers
+    .map((approver, index) => ({
+      approverId:
+        approver.approverId ?? approver.userId ?? approver.approver?.userId,
+      step: approver.step ?? index,
+    }))
+    .filter(({ approverId }) => Boolean(approverId));
+};
+
 export default function EditLogbookModal({
   isEditChecklistModalOpen,
   setIsEditChecklistModalOpen,
@@ -46,10 +94,16 @@ export default function EditLogbookModal({
       : {},
     frequency: checklistToEdit?.frequency || '',
     frequencyInterval: checklistToEdit?.frequencyInterval || '',
+    approvalMode: checklistToEdit?.approvalMode || '',
+    operators: getChecklistOperatorIds(checklistToEdit),
+    approvers: getChecklistApprovers(checklistToEdit),
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
+  const [userSearchInput, setUserSearchInput] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+  const [userOtherSearch, setUserOtherSearch] = useState('');
 
   const { showError, showSuccess } = useToast();
 
@@ -61,9 +115,17 @@ export default function EditLogbookModal({
         department: checklistToEdit.department || {},
         frequency: checklistToEdit.frequency || '',
         frequencyInterval: checklistToEdit.frequencyInterval || '',
+        approvalMode: checklistToEdit.approvalMode || '',
+        operators: getChecklistOperatorIds(checklistToEdit),
+        approvers: getChecklistApprovers(checklistToEdit),
       });
     }
   }, [isEditChecklistModalOpen, checklistToEdit]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setUserSearch(userSearchInput), 500);
+    return () => clearTimeout(timer);
+  }, [userSearchInput]);
 
   useEffect(() => {
     const timer = setTimeout(
@@ -74,6 +136,11 @@ export default function EditLogbookModal({
   }, [departmentSearchInput]);
 
   const { mutateAsync, isPending: isLoading } = useUpdateChecklist();
+  const { data: roles } = useRoles();
+
+  const rolesData = roles?.data?.roles;
+
+  const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
 
   const {
     data: departmentsData,
@@ -95,6 +162,47 @@ export default function EditLogbookModal({
     value: department.departmentId,
   }));
 
+  const {
+    data: usersData,
+    isPending: isLoadingUsers,
+    fetchNextPage: fetchNextUsersPage,
+    hasNextPage: hasNextUsersPage,
+    isFetchingNextPage: isFetchingNextUsersPage,
+  } = useFetchUsersInfinite(
+    { search: userSearch, roleId: operatorRole?.roleId },
+    { enabled: isEditChecklistModalOpen },
+  );
+
+  const allUsers = usersData?.pages.flatMap((p) => p.data.users) ?? [];
+
+  const usersList = allUsers.map((user) => ({
+    ...user,
+    label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
+    value: user.userId,
+  }));
+
+  const {
+    data: usersOtherData,
+    isPending: isLoadingOtherUsers,
+    fetchNextPage: fetchNextOtherUsersPage,
+    hasNextPage: hasNextOtherUsersPage,
+    isFetchingNextPage: isFetchingNextOtherUsersPage,
+  } = useFetchUsersInfinite(
+    { search: userOtherSearch },
+    { enabled: isEditChecklistModalOpen },
+  );
+
+  const allOtherUsers =
+    usersOtherData?.pages.flatMap((p) => p.data.users) ?? [];
+
+  const usersOtherList = allOtherUsers
+    .filter((user) => user.roleId !== operatorRole?.roleId)
+    .map((user) => ({
+      ...user,
+      label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
+      value: user.userId,
+    }));
+
   const handleSetDepartment = (departmentId) => {
     setFormData((prev) => ({
       ...prev,
@@ -113,6 +221,66 @@ export default function EditLogbookModal({
     }));
   };
 
+  const handleSetOperator = (operator) => {
+    if (Array.isArray(operator)) {
+      setFormData((prev) => ({
+        ...prev,
+        operators: operator,
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      operators: prev.operators.includes(operator)
+        ? prev.operators.filter((operatorId) => operatorId !== operator)
+        : [...prev.operators, operator],
+    }));
+  };
+
+  const handleSetApprover = (approver) => {
+    if (Array.isArray(approver)) {
+      setFormData((prev) => ({
+        ...prev,
+        approvers: approver.map((approverId, index) => ({
+          approverId,
+          step: index,
+        })),
+      }));
+      return;
+    }
+
+    setFormData((prev) => {
+      const isSelected = prev.approvers.some(
+        ({ approverId }) => approverId === approver,
+      );
+
+      const approvers = isSelected
+        ? prev.approvers
+            .filter(({ approverId }) => approverId !== approver)
+            .map((approverData, index) => ({
+              ...approverData,
+              step: index,
+            }))
+        : [
+            ...prev.approvers,
+            { approverId: approver, step: prev.approvers.length },
+          ];
+
+      return {
+        ...prev,
+        approvers,
+      };
+    });
+  };
+
+  const handleSetApprovalMode = (approvalMode) => {
+    setFormData((prev) => ({
+      ...prev,
+      approvalMode,
+    }));
+  };
+
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -128,6 +296,9 @@ export default function EditLogbookModal({
       department,
       frequency,
       frequencyInterval,
+      approvalMode,
+      operators,
+      approvers,
     } = formData;
 
     if (
@@ -150,6 +321,9 @@ export default function EditLogbookModal({
             departmentId: department.departmentId,
             frequency,
             frequencyInterval,
+            approvalMode,
+            operators,
+            approvers,
           },
         });
       } else {
@@ -160,6 +334,9 @@ export default function EditLogbookModal({
             documentNumber,
             departmentId: department.departmentId,
             frequency,
+            approvalMode,
+            operators,
+            approvers,
           },
         });
       }
@@ -182,20 +359,26 @@ export default function EditLogbookModal({
       department: {},
       frequency: '',
       frequencyInterval: '',
+      approvalMode: '',
+      operators: [],
+      approvers: [],
     });
     setIsEditChecklistModalOpen(false);
     setChecklistToEdit(null);
     setDepartmentSearchInput('');
     setDepartmentSearch('');
+    setUserSearchInput('');
+    setUserSearch('');
+    setUserOtherSearch('');
   };
 
   return (
     <Modal
       isOpen={isEditChecklistModalOpen}
       onClose={() => setIsEditChecklistModalOpen(false)}
-      position="center"
+      position="right"
       width="max-w-[460px]"
-      className="overflow-hidden"
+      className=""
     >
       <div className="flex h-full flex-col p-5">
         <div className="space-y-0.5">
@@ -266,6 +449,62 @@ export default function EditLogbookModal({
               onChange={handleInputChange}
             />
           )}
+
+          <InputField
+            label="Approval mode"
+            id="approvalMode"
+            className=""
+            value={formData.approvalMode}
+            required
+            placeholder="Select approval mode"
+            options={approvalModeList}
+            type="select"
+            onChange={(e) => handleSetApprovalMode(e.target.value)}
+          />
+
+          <div className="flex items-center gap-1">
+            <InputField
+              label="Operators"
+              id="operators"
+              className="mb-1"
+              placeholder="Select operators"
+              value={formData.operators}
+              multiple
+              required
+              disabled={isLoadingUsers}
+              options={usersList}
+              type="select"
+              searchable
+              onExternalSearchChange={setUserSearchInput}
+              onLoadMore={fetchNextUsersPage}
+              hasNextPage={hasNextUsersPage}
+              isFetchingNextPage={isFetchingNextUsersPage}
+              onChange={(e) => handleSetOperator(e.target.value)}
+            />
+            {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <InputField
+              label="Approvers"
+              id="approvers"
+              className="mb-1"
+              placeholder="Select approvers"
+              value={formData.approvers.map((o) => o.approverId)}
+              multiple
+              required
+              disabled={isLoadingOtherUsers}
+              options={usersOtherList}
+              type="select"
+              searchable
+              onExternalSearchChange={setUserOtherSearch}
+              onLoadMore={fetchNextOtherUsersPage}
+              hasNextPage={hasNextOtherUsersPage}
+              isFetchingNextPage={isFetchingNextOtherUsersPage}
+              onChange={(e) => handleSetApprover(e.target.value)}
+            />
+            {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
         </div>
 
         <div className="flex items-center mt-6 justify-end gap-3">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import BasicForm from './BasicForm';
 import EnumForm from './EnumForm';
 import DropdownForm from './DropdownForm';
@@ -6,22 +6,88 @@ import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Button from '../Button';
 import { evaluateFormula } from '../../utils/formula';
 
-export default function SectionForm({ entry, setFormData, readOnly }) {
+const parseSectionRows = (value) => {
+  if (!value) return [{}];
+
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [{}];
+  } catch (error) {
+    console.log(error);
+    return [{}];
+  }
+};
+
+export default function SectionForm({
+  entry,
+  formData,
+  setFormData,
+  readOnly,
+}) {
   const sectionEntryId = entry?.entryId || entry?.id || entry?.name;
-  const entriesData = entry?.config?.items;
-
-  const entriesRecords = JSON.parse(entry?.value ? entry?.value : '[]');
-
-  const [rows, setRows] = useState(
-    entriesRecords && entriesRecords.length > 0
-      ? entriesRecords.map((_, i) => i)
-      : [0],
+  const entriesData = useMemo(
+    () => entry?.config?.items || [],
+    [entry?.config?.items],
   );
-  const [nextRowId, setNextRowId] = useState(
-    entriesRecords?.length > 0 ? entriesRecords.length : 1,
+  const draftValue = formData?.[sectionEntryId]?.value;
+  const initialRowsData = parseSectionRows(draftValue ?? entry?.value);
+
+  const sortedEntries = useMemo(
+    () => [...entriesData].sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
+    [entriesData],
   );
+
+  const computeFormulaValue = useCallback(
+    (entry, row) => {
+      const expression = entry.config?.expression;
+      if (!expression) return '';
+      const scope = {};
+      entriesData?.forEach((e) => {
+        if (!e.config?.fieldRef) return;
+        const fieldId = e.entryId || e.id;
+        const rawValue =
+          row?.[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
+      });
+
+      const { value, error } = evaluateFormula(expression, scope);
+
+      if (error || value == null) return 0;
+      if (typeof value === 'object') return value?.entries[0];
+      if (Array.isArray(value)) return value[0];
+      if (typeof value === 'number') return isFinite(value) ? value : 0;
+      if (typeof value === 'string') return value;
+      return 0;
+    },
+    [entriesData],
+  );
+
+  const attachFormulaValuesToRow = useCallback(
+    (row) => {
+      const newRow = { ...row };
+      sortedEntries
+        .filter((field) => field.type === 'formular')
+        .forEach((field) => {
+          const fieldEntryId = field.entryId || field.id;
+          newRow[fieldEntryId] = {
+            entryId: fieldEntryId,
+            value: String(computeFormulaValue(field, newRow)),
+          };
+        });
+      return newRow;
+    },
+    [sortedEntries, computeFormulaValue],
+  );
+
   // Local state owns the rows data so inputs update immediately without a parent round-trip
-  const [rowsData, setRowsData] = useState(entriesRecords || [{}]);
+  const [rowsData, setRowsData] = useState(
+    initialRowsData.map((row) => attachFormulaValuesToRow(row)),
+  );
 
   // Sync local rowsData up to parent formData after every change
   useEffect(() => {
@@ -35,14 +101,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   }, [rowsData, sectionEntryId, setFormData]);
 
   const addRow = () => {
-    setRows((prev) => [...prev, nextRowId]);
-    setNextRowId((prev) => prev + 1);
-    setRowsData((prev) => [...prev, {}]);
+    setRowsData((prev) => [...prev, attachFormulaValuesToRow({})]);
   };
 
-  const removeRow = (rowId) => {
-    const rowIndex = rows.indexOf(rowId);
-    setRows((prev) => prev.filter((r) => r !== rowId));
+  const removeRow = (rowIndex) => {
     setRowsData((prev) => prev.filter((_, i) => i !== rowIndex));
   };
 
@@ -50,10 +112,11 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
   const createRowSetFormData = (rowIndex) => (updater) => {
     setRowsData((prev) => {
       const newRows = [...prev];
-      newRows[rowIndex] =
+      const updatedRow =
         typeof updater === 'function'
           ? updater(newRows[rowIndex] || {})
           : updater;
+      newRows[rowIndex] = attachFormulaValuesToRow(updatedRow);
       return newRows;
     });
   };
@@ -63,35 +126,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
     const fieldWithEntryId = { ...field, entryId: field.entryId || field.id };
     return rowIndex === 0
       ? fieldWithEntryId
-      : { ...fieldWithEntryId, value: '' };
-  };
-
-  const sortedEntries = entriesData.sort(
-    (a, b) => (a.order ?? 999) - (b.order ?? 999),
-  );
-
-  const computeFormulaValue = (entry, rowIndex) => {
-    const expression = entry.config?.expression;
-    if (!expression) return '';
-    const scope = {};
-    entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue =
-          rowsData[rowIndex]?.[e.id]?.value ??
-          e.value ??
-          e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
-      }
-    });
-
-    const { value, error } = evaluateFormula(expression, scope);
-    if (error || (typeof value === 'number' && !isFinite(value))) {
-      console.log(error);
-      return 0;
-    }
-    return value ?? 0;
+      : { ...fieldWithEntryId, value: field?.value };
   };
 
   const isVisible =
@@ -111,12 +146,12 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
         </div>
       ) : (
         <>
-          {rows.map((rowId, rowIndex) => (
+          {rowsData.map((_, rowIndex) => (
             <div
-              key={rowId}
+              key={rowIndex}
               className={`w-full flex flex-col px-4 pb-5 ${rowIndex > 0 ? 'border-t border-secondary-200 pt-3' : 'pt-2'}`}
             >
-              {rows.length > 1 && (
+              {rowsData.length > 1 && (
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-tertiary font-geist">
                     Row {rowIndex + 1}
@@ -124,7 +159,7 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   {!readOnly && (
                     <Button
                       type="button"
-                      onClick={() => removeRow(rowId)}
+                      onClick={() => removeRow(rowIndex)}
                       className="flex items-center gap-1 text-xs text-red-500 transition-colors"
                     >
                       <FiTrash2 size={13} />
@@ -138,9 +173,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                   .filter((e) => e.config?.visible !== false)
                   ?.map((field) => {
                     const rowEntry = getRowEntry(field, rowIndex);
-                    const rowFormData = rowsData[rowIndex] || {};
+                    const rowFormData =
+                      rowsData[rowIndex] || formData[rowIndex] || {};
                     const rowSetFormData = createRowSetFormData(rowIndex);
-                    const entryKey = `${field.id || field.entryId || field.name}__row_${rowId}`;
+                    const entryKey = `${field.id || field.entryId || field.name}__row_${rowIndex}`;
                     return (
                       <div key={entryKey} className="flex-1 min-w-40">
                         {(field.type === 'text' ||
@@ -175,19 +211,10 @@ export default function SectionForm({ entry, setFormData, readOnly }) {
                             entry={{
                               ...rowEntry,
                               type: 'number',
-                              value: (() => {
-                                const anyNumberFieldEdited =
-                                  sortedEntries?.some(
-                                    (e) =>
-                                      e.type === 'number' &&
-                                      rowFormData[e.entryId] !== undefined,
-                                  );
-                                return anyNumberFieldEdited ||
-                                  rowEntry.value == null ||
-                                  rowEntry.value === ''
-                                  ? computeFormulaValue(rowEntry, rowIndex)
-                                  : rowEntry.value;
-                              })(),
+                              value: computeFormulaValue(
+                                rowEntry,
+                                rowsData[rowIndex] || {},
+                              ),
                             }}
                             formData={rowFormData}
                             setFormData={rowSetFormData}

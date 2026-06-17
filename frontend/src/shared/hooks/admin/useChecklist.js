@@ -13,11 +13,101 @@ import {
   fetchChecklists,
   fetchChecklistsAnalytics,
   fetchChecklistsEntries,
+  fetchChecklistSubmission,
+  fetchChecklistSubmissions,
+  fetchChecklistVersion,
+  fetchChecklistVersions,
+  restoreChecklist,
   unAssignChecklistOperator,
   updateChecklist,
   updateChecklistCatalog,
   updateChecklistEntries,
+  updateChecklistSubmission,
 } from '../../../core/api/admin';
+
+export function useChecklistsVersions(
+  checklistId,
+  queryParams = {},
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'versions', checklistId, queryParams],
+    queryFn: () => fetchChecklistVersions(checklistId, queryParams),
+    enabled: Boolean(checklistId),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistsVersion(checklistId, versionId, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'versions', checklistId, versionId],
+    queryFn: () => fetchChecklistVersion(checklistId, versionId),
+    enabled: Boolean(checklistId),
+    ...options,
+  });
+}
+
+export function useChecklistsSubmissions(
+  checklistId,
+  queryParams = {},
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'submissions', checklistId, queryParams],
+    queryFn: () => fetchChecklistSubmissions(checklistId, queryParams),
+    enabled: Boolean(checklistId),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useChecklistsSubmission(
+  checklistId,
+  submissionId,
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'submissions', checklistId, submissionId],
+    queryFn: () => fetchChecklistSubmission(checklistId, submissionId),
+    enabled: Boolean(checklistId),
+    ...options,
+  });
+}
+
+export function useUpdateChecklistsSubmissions(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ checklistId, submissionId, payload }) =>
+      updateChecklistSubmission(checklistId, submissionId, payload),
+    onSuccess: async (response, variables, context) => {
+      const { checklistId, submissionId } = variables; // clean and direct
+
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists', 'submissions'],
+      });
+
+      if (checklistId && submissionId) {
+        await queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'checklists',
+            'submissions',
+            checklistId,
+            submissionId,
+          ],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
 
 export function useChecklists(queryParams = {}, options = {}) {
   return useQuery({
@@ -51,6 +141,35 @@ export function useDeleteChecklist(options = {}) {
 
   return useMutation({
     mutationFn: ({ checklistId }) => deleteChecklist(checklistId),
+    onSuccess: async (response, variables, context) => {
+      const { checklistId } = variables;
+
+      // Invalidate the list query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'checklists'],
+      });
+
+      // Also remove the individual checklist query if it exists
+      if (checklistId) {
+        queryClient.removeQueries({
+          queryKey: ['admin', 'checklists', checklistId],
+        });
+      }
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useRestoreChecklist(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: ({ checklistId }) => restoreChecklist(checklistId),
     onSuccess: async (response, variables, context) => {
       const { checklistId } = variables;
 

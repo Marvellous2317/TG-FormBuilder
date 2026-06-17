@@ -1,51 +1,81 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { FaChevronDown } from 'react-icons/fa';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { createPortal } from 'react-dom';
-import useToast from '../../../../shared/hooks/useToast';
 import Button from '../../../../shared/components/Button';
-import { formatDate } from '../../../../shared/utils/constants';
+import {
+  deletedOptions,
+  formatDate,
+  statusOptionss,
+} from '../../../../shared/utils/constants';
+import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import AssignLogbookModal from './AssignLogbookModal';
-
-const statusOptions = [
-  { title: 'All status', value: 'all' },
-  { title: 'Completed', value: 'completed' },
-  { title: 'Pending', value: 'pending' },
-];
-
-const departmentOptions = [
-  { title: 'All departments', value: 'all' },
-  { title: 'Packaging', value: 'packaging' },
-];
+import Loader from '../../../../shared/components/Loader';
 
 export default function TaskList({
   checklists,
   setIsEditChecklistModalOpen,
   setChecklistToEdit,
   setChecklistToDelete,
+  setChecklistToRestore,
   pagination,
   handlePageChange,
   setIsDeleteChecklistModalOpen,
-  checklistToEdit,
+  setIsRestoreChecklistModalOpen,
+  isFetching,
+  handleSearch,
+  handleStatusChange,
+  handleDepartmentChange,
+  handleDeletedChange,
+  setIsShowLogbookModal,
 }) {
   const [search, setSearch] = useState('');
-  const [currentStatus, setCurrentStatus] = useState('all');
-  const [currentDepartment, setCurrentDepartment] = useState('all');
+  const [currentStatus, setCurrentStatus] = useState('active');
+  const [currentDepartment, setCurrentDepartment] = useState('');
+  const [deleted, setDeleted] = useState(false);
+
+  const { showError } = useToast();
   const [actionToPerform, setActionToPerform] = useState('assign');
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuRow, setActiveMenuRow] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
 
-  const { showError } = useToast();
   const navigate = useNavigate();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleStatusChange(currentStatus);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStatus, handleStatusChange]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleDepartmentChange(currentDepartment);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentDepartment, handleDepartmentChange]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleDeletedChange(deleted);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [deleted, handleDeletedChange]);
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -53,45 +83,37 @@ export default function TaskList({
   };
 
   const handlePaginationChange = (payload) => {
-    if (typeof handlePageChange !== 'function') {
-      return;
-    }
+    if (typeof handlePageChange !== 'function') return;
 
     const normalizeEvent = (input) => {
-      if (input?.target) {
-        return input.target;
-      }
-
-      if (typeof input === 'object' && input !== null) {
-        return input;
-      }
-
+      if (input?.target) return input.target;
+      if (typeof input === 'object' && input !== null) return input;
       return { name: 'page', value: input };
     };
 
     const { name, value } = normalizeEvent(payload);
 
     if (name === 'page') {
-      const nextPage = Math.max(1, Number(value) || 1);
-      handlePageChange({ page: nextPage, pageSize });
+      handlePageChange({ page: Math.max(1, Number(value) || 1), pageSize });
       return;
     }
 
     if (name === 'pageSize') {
-      const nextSize = Math.max(1, Number(value) || 1);
-      handlePageChange({ page: 1, pageSize: nextSize });
+      handlePageChange({ page: 1, pageSize: Math.max(1, Number(value) || 1) });
     }
   };
 
   useEffect(() => {
-    if (activeMenuId === null) {
-      return undefined;
-    }
+    if (activeMenuId === null) return undefined;
 
-    const closeMenu = () => setActiveMenuId(null);
+    const closeMenu = () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+    };
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
       }
     };
 
@@ -112,34 +134,38 @@ export default function TaskList({
       value: 'entries',
       onClick: () => {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         navigate(
-          `/admin/entries/${checklistToEdit?.checklistId}/${encodeURIComponent(checklistToEdit?.title)}`,
+          `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
         );
       },
     },
-    {
-      title: 'Unassign log',
-      value: 'unassign',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActionToPerform('unassign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
-    {
-      title: 'Assign log',
-      value: 'assign',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActionToPerform('assign');
-        setIsShowAssignLogbookModal(true);
-      },
-    },
+    // {
+    //   title: 'Unassign log',
+    //   value: 'unassign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('unassign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
+    // {
+    //   title: 'Assign log',
+    //   value: 'assign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('assign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
     {
       title: 'Edit log',
       value: 'edit',
       onClick: () => {
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsEditChecklistModalOpen(true);
       },
     },
@@ -147,8 +173,44 @@ export default function TaskList({
       title: 'Delete log',
       value: 'delete',
       onClick: () => {
+        if (activeMenuRow?.deletedAt) {
+          showError('Checklist is already deleted.');
+          return;
+        }
         setActiveMenuId(null);
+        setActiveMenuRow(null);
         setIsDeleteChecklistModalOpen(true);
+      },
+    },
+    {
+      title: 'Restore log',
+      value: 'restore',
+      onClick: () => {
+        if (!activeMenuRow?.deletedAt) {
+          showError('Checklist is not deleted.');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsRestoreChecklistModalOpen(true);
+      },
+    },
+    {
+      title: 'Submissions',
+      value: 'submissions',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
+      },
+    },
+    {
+      title: 'Version History',
+      value: 'history',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
       },
     },
   ];
@@ -169,10 +231,18 @@ export default function TaskList({
       : Math.min(buttonRect.bottom + 8, window.innerHeight - menuHeight - 12);
 
     setMenuPosition({ top, left });
-    setActiveMenuId((prevId) => (prevId === rowId ? null : rowId));
 
+    if (activeMenuId === rowId) {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      return;
+    }
+
+    setActiveMenuId(rowId);
+    setActiveMenuRow(row);
     setChecklistToEdit(row);
     setChecklistToDelete(row);
+    setChecklistToRestore(row);
   };
 
   return (
@@ -191,35 +261,40 @@ export default function TaskList({
           </div>
 
           <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <DropdownSelect
-              value={currentDepartment}
-              options={departmentOptions}
-              onChange={(value) => setCurrentDepartment(value)}
-              placeholder="All departments"
-              buttonClassName="px-3! py-2! rounded-lg!"
-              menuClassName=""
-            />
-            <DropdownSelect
-              value={currentStatus}
-              options={statusOptions}
-              onChange={(value) => setCurrentStatus(value)}
-              placeholder="All status"
-              buttonClassName="px-3! py-2! rounded-lg!"
-              menuClassName=""
-            />
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
+                Status:
+              </h2>
+              <DropdownSelect
+                value={currentStatus}
+                options={statusOptionss}
+                onChange={(value) => setCurrentStatus(value)}
+                placeholder="All status"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
+                Show deleted:
+              </h2>
+              <DropdownSelect
+                value={deleted}
+                options={deletedOptions}
+                onChange={(value) => setDeleted(value)}
+                placeholder="False"
+                buttonClassName="px-3! py-2! rounded-lg!"
+                menuClassName=""
+              />
+            </div>
           </div>
         </div>
+
         {/* Table Container - Horizontal scroll on mobile */}
         <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-100 xl:max-h-140">
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
-                {/* <th className="p-3 md:p-4 w-10 md:w-12 border-r border-b border-gray-200 bg-tertiary-300">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th> */}
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
                 </th>
@@ -243,18 +318,18 @@ export default function TaskList({
             </thead>
 
             <tbody>
-              {checklists.length > 0 ? (
+              {isFetching ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center">
+                    <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
+                  </td>
+                </tr>
+              ) : checklists?.length > 0 ? (
                 checklists.map((row) => (
                   <tr
                     key={row.checklistId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    {/* <td className="p-3 md:p-4 border-r border-gray-200">
-                      <input
-                        type="checkbox"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td> */}
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row?.title}
                     </td>
@@ -270,15 +345,16 @@ export default function TaskList({
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row?.assignments?.length}
                     </td>
-
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row?.frequency || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-gray-400 hover:text-secondary text-center">
                       <Button
                         type="button"
-                        onClick={(event) => toggleRowMenu(row.id, event, row)}
-                        className=" flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
+                        onClick={(event) =>
+                          toggleRowMenu(row.checklistId, event, row)
+                        }
+                        className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
                         <FiMoreVertical
                           size={16}
@@ -290,11 +366,19 @@ export default function TaskList({
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-8 text-center text-gray-500 font-geist text-sm"
-                  >
-                    No results found
+                  <td colSpan="7" className="p-12 text-center">
+                    <p className="text-gray-500 font-geist text-sm mb-3">
+                      No task lists found
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => setIsShowLogbookModal(true)}
+                      className="bg-primary-200 gap-1 p-2.5 rounded-[10px] mx-auto"
+                    >
+                      <p className="text-white font-geist font-medium text-sm">
+                        Add a task list
+                      </p>
+                    </Button>
                   </td>
                 </tr>
               )}
@@ -312,7 +396,10 @@ export default function TaskList({
         ? createPortal(
             <div
               className="fixed inset-0 z-50"
-              onClick={() => setActiveMenuId(null)}
+              onClick={() => {
+                setActiveMenuId(null);
+                setActiveMenuRow(null);
+              }}
               role="presentation"
             >
               <div
@@ -341,8 +428,8 @@ export default function TaskList({
       <AssignLogbookModal
         isShowAssignLogbookModal={isShowAssignLogbookModal}
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
-        checklistId={checklistToEdit?.checklistId}
-        checklistAssignments={checklistToEdit?.assignments}
+        checklistId={activeMenuRow?.checklistId}
+        checklistAssignments={activeMenuRow?.assignments}
         action={actionToPerform}
       />
     </div>

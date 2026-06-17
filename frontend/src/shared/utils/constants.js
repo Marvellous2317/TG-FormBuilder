@@ -16,7 +16,9 @@ const fieldTypeOptions = [
   { label: 'Date', value: 'date' },
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
+  { label: 'Image', value: 'image' },
   { label: 'Formular', value: 'formular' },
+  { label: 'Section Formular', value: 'section_formular' },
 ];
 
 const sectionFieldTypeOptions = [
@@ -28,6 +30,7 @@ const sectionFieldTypeOptions = [
   { label: 'Time', value: 'time' },
   { label: 'Enum', value: 'enum' },
   { label: 'Formular', value: 'formular' },
+  { label: 'Image', value: 'image' },
 ];
 
 const monthNames = [
@@ -70,6 +73,11 @@ const statusOptions = [
   { title: 'Suspended', value: 'suspended' },
 ];
 
+const statusOptionss = [
+  { title: 'Active', value: 'active' },
+  { title: 'Inactive', value: 'inactive' },
+];
+
 const deletedOptions = [
   { title: 'All', value: 'all' },
   { title: 'True', value: 'true' },
@@ -84,5 +92,6 @@ export {
   sectionFieldTypeOptions,
   formatDate,
   statusOptions,
+  statusOptionss,
   deletedOptions,
 };

@@ -46,7 +46,7 @@ export default function CreateOperatorEntry() {
   // Auto-save draft whenever formData changes (debounced 500ms)
   useEffect(() => {
     if (Object.keys(formData).length === 0) return;
-    const timer = setTimeout(() => saveDraft(checklistId, formData), 500);
+    const timer = setTimeout(() => saveDraft(checklistId, formData), 1000);
     return () => clearTimeout(timer);
   }, [formData, checklistId]);
 
@@ -54,11 +54,15 @@ export default function CreateOperatorEntry() {
   const handleSubmit = async () => {
     const enrichedFormData = { ...formData };
     entriesData
-      ?.filter((e) => e.type === 'formular')
+      ?.filter((e) => e.type === 'formular' || e.type === 'section_formular')
       .forEach((entry) => {
         enrichedFormData[entry.entryId] = {
           entryId: entry.entryId,
-          value: String(computeFormulaValue(entry)),
+          value: String(
+            entry.type === 'section_formular'
+              ? computeSectionFormulaValue(entry)
+              : computeFormulaValue(entry),
+          ),
         };
       });
 
@@ -104,27 +108,133 @@ export default function CreateOperatorEntry() {
 
   const entriesData = data?.data?.assignment?.checklist?.entries;
 
+  const computeSectionFormulaValue = (entry) => {
+    const {
+      section: sectionName,
+      field: fieldName,
+      operation,
+    } = entry.config?.items || {};
+    if (!sectionName || !fieldName || !operation) return 0;
+
+    const sectionEntry = entriesData?.find(
+      (e) => e.type === 'section' && e.name === sectionName,
+    );
+    if (!sectionEntry) return 0;
+
+    const sectionEntryId =
+      sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
+    const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
+    const rowsData = JSON.parse(rawValue || '[]');
+    if (!rowsData.length) return 0;
+
+    const targetField = (sectionEntry.config?.items || []).find(
+      (f) => f.name === fieldName,
+    );
+    if (!targetField) return 0;
+
+    const targetFieldId = targetField.entryId || targetField.id;
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const stored = row[targetFieldId]?.value;
+      if (stored !== undefined && stored !== null && stored !== '') {
+        const num = Number(stored);
+        return isNaN(num) ? null : num;
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawVal =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawVal === '' || rawVal == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const n = Number(rawVal);
+            scope[e.config.fieldRef] = isNaN(n) ? String(rawVal) : n;
+          }
+        });
+        const { value: fVal, error } = evaluateFormula(expression, scope);
+        if (error || fVal == null) return null;
+        const num = Number(fVal);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
+
+    if (!values.length) return 0;
+
+    switch (operation.toLowerCase()) {
+      case 'sum':
+        return values.reduce((a, b) => a + b, 0);
+      case 'subtract':
+        return values.reduce((a, b) => a - b);
+      case 'multiply':
+        return values.reduce((a, b) => a * b, 1);
+      case 'average':
+      case 'mean':
+        return values.reduce((a, b) => a + b, 0) / values.length;
+      case 'count':
+        return values.length;
+      case 'min':
+        return Math.min(...values);
+      case 'max':
+        return Math.max(...values);
+      case 'median': {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0
+          ? (sorted[mid - 1] + sorted[mid]) / 2
+          : sorted[mid];
+      }
+      case 'mode': {
+        const freq = {};
+        let maxFreq = 0;
+        let mode = values[0];
+        values.forEach((v) => {
+          freq[v] = (freq[v] || 0) + 1;
+          if (freq[v] > maxFreq) {
+            maxFreq = freq[v];
+            mode = v;
+          }
+        });
+        return mode;
+      }
+      default:
+        return 0;
+    }
+  };
+
   const computeFormulaValue = (entry) => {
     const expression = entry.config?.expression;
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
-        const rawValue =
-          formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+      if (!e.config?.fieldRef) return;
+      const rawValue =
+        formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
+      if (rawValue === '' || rawValue == null) {
+        scope[e.config.fieldRef] = 0;
+      } else {
+        const num = Number(rawValue);
+        scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
       }
     });
 
     const { value, error } = evaluateFormula(expression, scope);
-    if (error || (typeof value === 'number' && !isFinite(value))) {
-      console.log(error);
-      return 0;
-    }
-
-    return value ?? 0;
+    if (error || value == null) return 0;
+    if (typeof value === 'object') return value?.entries[0];
+    if (Array.isArray(value)) return value[0];
+    if (typeof value === 'number') return isFinite(value) ? value : 0;
+    if (typeof value === 'string') return value;
+    return 0;
   };
 
   return (
@@ -197,18 +307,19 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: (() => {
-                          const anyNumberFieldEdited = entriesData?.some(
-                            (e) =>
-                              e.type === 'number' &&
-                              formData[e.entryId] !== undefined,
-                          );
-                          return anyNumberFieldEdited ||
-                            entry.value == null ||
-                            entry.value === ''
-                            ? computeFormulaValue(entry)
-                            : entry.value;
-                        })(),
+                        value: computeFormulaValue(entry),
+                      }}
+                      formData={formData}
+                      setFormData={setFormData}
+                      readOnly
+                    />
+                  )}
+                  {entry.type === 'section_formular' && (
+                    <BasicForm
+                      entry={{
+                        ...entry,
+                        type: 'number',
+                        value: computeSectionFormulaValue(entry),
                       }}
                       formData={formData}
                       setFormData={setFormData}

@@ -19,6 +19,7 @@ function InputField({
   options = [],
   rows = 4,
   searchable = false,
+  multiple = false,
   onExternalSearchChange,
   onLoadMore,
   hasNextPage,
@@ -30,6 +31,36 @@ function InputField({
   const isTextAreaField = type === 'textarea';
   const inputType = isPasswordField && showPassword ? 'text' : type;
   const inputId = id || name;
+
+  const normalizedValue = (() => {
+    if (inputType === 'number') {
+      if (value === '' || value == null) return '';
+      if (Array.isArray(value)) {
+        if (value.length === 1) return value[0];
+        return '';
+      }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') return '';
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed) && parsed.length === 1) {
+              return typeof parsed[0] === 'number'
+                ? parsed[0]
+                : String(parsed[0]);
+            }
+          } catch {
+            // fall through to numeric parsing below
+          }
+        }
+        return Number(trimmed) || Number(trimmed) === 0 ? trimmed : '';
+      }
+      if (typeof value === 'number') return value;
+      return '';
+    }
+    return value ?? '';
+  })();
 
   // Disabled overrides readOnly – if disabled, the field is completely inert
   const isDisabled = disabled;
@@ -102,6 +133,7 @@ function InputField({
               onChange({ target: { value: val, name } })
             }
             placeholder={placeholder}
+            multiple={multiple}
             disabled={isDisabled}
             readOnly={isReadOnly}
             searchable={searchable && !isDisabled && !isReadOnly}
@@ -115,7 +147,7 @@ function InputField({
           <textarea
             id={inputId}
             name={name}
-            value={value}
+            value={normalizedValue}
             onChange={!isDisabled && !isReadOnly ? onChange : undefined}
             placeholder={placeholder}
             required={required}
@@ -131,7 +163,7 @@ function InputField({
             id={inputId}
             name={name}
             type={inputType}
-            value={value}
+            value={normalizedValue}
             onChange={!isDisabled && !isReadOnly ? onChange : undefined}
             placeholder={placeholder}
             readOnly={isReadOnly}

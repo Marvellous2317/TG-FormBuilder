@@ -68,7 +68,6 @@ export default function EditEntityModal({
       handleCloseModal();
     } catch (err) {
       console.error('Error', err);
-      showError('Unable to update entity. Please try again.');
     }
   };
 

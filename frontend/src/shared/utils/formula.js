@@ -47,15 +47,36 @@ export const validateFormula = (expression, fieldRefs = []) => {
  * Evaluate an expression with real field values.
  * fieldValues: { field1: 10, field2: 5, ... }
  */
+// Normalize user-written `=` to `==` for equality comparisons.
+// mathjs uses `=` for assignment, so IF(X=5,...) always resolves to truthy.
+// We replace lone `=` (not already `==`, `!=`, `<=`, `>=`) with `==`.
+const normalizeEquality = (expr) =>
+  expr.replace(/(?<![=!<>])=(?!=)/g, '==');
+
 export const evaluateFormula = (expression, fieldValues = {}) => {
   try {
     const scope = Object.fromEntries(
-      Object.entries(fieldValues).map(([k, v]) => [
-        k.toLowerCase(),
-        Number(v) || 0,
-      ]),
+      Object.entries(fieldValues).map(([k, v]) => {
+        const num = Number(v);
+        return [
+          k.toLowerCase(),
+          v !== '' && !isNaN(num) ? num : String(v ?? ''),
+        ];
+      }),
     );
-    const result = math.evaluate(expression.toLowerCase(), scope);
+    let result = math.evaluate(normalizeEquality(expression).toLowerCase(), scope);
+
+    // mathjs can return a DenseMatrix (e.g. [21.6]) for certain expressions.
+    // Unwrap to a scalar so callers always receive a plain number or string.
+    if (result != null && typeof result === 'object') {
+      if (typeof result.toArray === 'function') {
+        const flat = result.toArray().flat(Infinity);
+        result = flat.length === 1 ? flat[0] : flat;
+      } else if (Array.isArray(result)) {
+        result = result.length === 1 ? result[0] : result;
+      }
+    }
+
     return { value: result, error: null };
   } catch (e) {
     return { value: null, error: e.message };
