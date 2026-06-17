@@ -23,6 +23,16 @@ import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/
 
 const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
 
+// An assignment has no status column of its own — it is derived from its latest submission.
+// submissions are expected to be ordered newest-first (createdAt DESC).
+function deriveAssignmentStatus(submissions = []) {
+  if (!submissions || submissions.length === 0) return "pending";
+  const latest = submissions[0];
+  if (latest.status === "approved") return "approved";
+  if (latest.status === "rejected") return "rejected";
+  return "submitted"; // a submission exists and is awaiting approval
+}
+
 async function hydrateSubmittedEntryImages(submission) {
   if (!submission?.entries?.length) return submission;
 
@@ -152,32 +162,65 @@ export class AdminRepository {
     }
   }
 
-  // Additively assign operators to a checklist (existing assignments are preserved).
-  // Returns the list of newly created assignments with operator info for email notifications.
+  // Replace-set the operator assignments for a checklist: only the provided operator ids
+  // remain active. Operators dropped from the list are unassigned (hard-deleted so they can
+  // be reassigned later). `operators === undefined` leaves assignments untouched; an empty
+  // array removes them all. Returns newly created assignments for email notifications.
   static async _setChecklistOperators(checklistId, companyId, operators, assignedBy, transaction) {
-    if (operators === undefined || !Array.isArray(operators) || operators.length === 0) return [];
+    if (operators === undefined) return [];
 
-    const created = [];
+    // Normalize and validate the desired operator set.
+    const desired = [];
     const seen = new Set();
-    for (const operatorId of operators) {
-      if (!operatorId || seen.has(operatorId)) continue;
-      seen.add(operatorId);
+    const operatorMap = new Map();
+    if (Array.isArray(operators)) {
+      for (const operatorId of operators) {
+        if (!operatorId || seen.has(operatorId)) continue;
+        seen.add(operatorId);
 
-      const operator = await User.findByPk(operatorId, {
-        include: [{ model: Role, as: "role" }],
-        transaction,
-      });
-      if (!operator) throw new ApplicationError(`Operator ${operatorId} not found`, 404);
-      if (operator.role?.roleName !== "operator") {
-        throw new ApplicationError(`User ${operatorId} is not an operator`, 400);
+        const operator = await User.findByPk(operatorId, {
+          include: [{ model: Role, as: "role" }],
+          transaction,
+        });
+        if (!operator) throw new ApplicationError(`Operator ${operatorId} not found`, 404);
+        if (operator.role?.roleName !== "operator") {
+          throw new ApplicationError(`User ${operatorId} is not an operator`, 400);
+        }
+        desired.push(operatorId);
+        operatorMap.set(operatorId, operator);
       }
+    }
 
-      const existing = await ChecklistAssignment.findOne({
-        where: { checklistId, assignedTo: operatorId },
+    const existingAssignments = await ChecklistAssignment.findAll({
+      where: { checklistId },
+      transaction,
+    });
+    const existingIds = new Set(existingAssignments.map((a) => a.assignedTo));
+
+    // Remove assignments that are no longer in the desired set, mirroring the
+    // unassignOperator guard: block removal when pending submissions exist.
+    for (const assignment of existingAssignments) {
+      if (desired.includes(assignment.assignedTo)) continue;
+
+      const pendingSubmissions = await SubmittedChecklist.count({
+        where: { assignmentId: assignment.assignmentId, status: "pending" },
         transaction,
       });
-      if (existing) continue;
+      if (pendingSubmissions > 0) {
+        throw new ApplicationError(
+          `Cannot unassign operator with ${pendingSubmissions} pending submission(s). Please resolve pending submissions first.`,
+          400
+        );
+      }
+      await assignment.destroy({ force: true, transaction });
+    }
 
+    // Add assignments for newly desired operators (keep the ones that already exist).
+    const created = [];
+    for (const operatorId of desired) {
+      if (existingIds.has(operatorId)) continue;
+
+      const operator = operatorMap.get(operatorId);
       const assignment = await ChecklistAssignment.create({
         checklistId,
         assignedTo: operatorId,
@@ -956,7 +999,6 @@ export class AdminRepository {
       if (companyId) where.companyId = companyId;
       if (checklistId) where.checklistId = checklistId;
       if (assignedTo) where.assignedTo = assignedTo;
-      if (status) where.status = status;
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt[Op.gte] = new Date(startDate);
@@ -971,24 +1013,53 @@ export class AdminRepository {
         ];
       }
 
-      const offset = (page - 1) * limit;
-      const { rows: assignments, count: total } = await ChecklistAssignment.findAndCountAll({
+      // Status lives on the submission, not the assignment, and the requested status maps
+      // to the latest submission — so derive/filter in memory rather than in the SQL where.
+      const rows = await ChecklistAssignment.findAll({
         where,
         include: [
-          { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber"], where: Object.keys(checklistWhere).length ? checklistWhere : undefined },
+          {
+            model: Checklist, as: "checklist",
+            attributes: ["checklistId", "title", "documentNumber"],
+            where: Object.keys(checklistWhere).length ? checklistWhere : undefined,
+            include: [
+              {
+                model: ChecklistApprover, as: "approverConfigs",
+                attributes: ["id", "approverId", "step"],
+                include: [{ model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] }],
+              },
+            ],
+          },
           { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
           { model: User, as: "assigner", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: SubmittedChecklist, as: "submissions",
+            attributes: ["submittedChecklistId", "status", "submittedAt", "createdAt"],
+            separate: true,
+            order: [["createdAt", "DESC"]],
+          },
         ],
         order: [["createdAt", "DESC"]],
-        limit,
-        offset,
       });
+
+      const withStatus = rows.map((assignment) => {
+        assignment.setDataValue("status", deriveAssignmentStatus(assignment.submissions));
+        assignment.setDataValue("latestSubmission", assignment.submissions?.[0] || null);
+        return assignment;
+      });
+
+      const filtered = status ? withStatus.filter((a) => a.getDataValue("status") === status) : withStatus;
+
+      const total = filtered.length;
+      const offset = (page - 1) * limit;
+      const assignments = filtered.slice(offset, offset + limit);
 
       return {
         assignments,
         pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / limit) },
       };
     } catch (error) {
+      console.error(error);
       throw new ApplicationError("Failed to fetch assignments", 500);
     }
   }
@@ -999,15 +1070,31 @@ export class AdminRepository {
         include: [
           {
             model: Checklist, as: "checklist",
-            include: [{
-              model: ChecklistEntry, as: "entries",
-            }],
+            include: [
+              { model: ChecklistEntry, as: "entries", separate: true, order: [["order", "ASC"]] },
+              {
+                model: ChecklistApprover, as: "approverConfigs",
+                attributes: ["id", "approverId", "step"],
+                separate: true,
+                order: [["step", "ASC"]],
+                include: [{ model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] }],
+              },
+            ],
           },
-       
+          { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
+          { model: User, as: "assigner", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: SubmittedChecklist, as: "submissions",
+            attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt", "createdAt"],
+            separate: true,
+            order: [["createdAt", "DESC"]],
+          },
         ],
       });
 
       if (!assignment) throw new ApplicationError("Assignment not found", 404);
+      assignment.setDataValue("status", deriveAssignmentStatus(assignment.submissions));
+      assignment.setDataValue("latestSubmission", assignment.submissions?.[0] || null);
       return { assignment };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
