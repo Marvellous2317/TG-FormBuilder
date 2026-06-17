@@ -103,7 +103,7 @@ export class ExportRepository {
 
       const submissions = await SubmittedChecklist.findAll({
         where: submissionWhere,
-        attributes: ["submittedChecklistId", "documentNumber", "title", "status", "submittedAt", "createdAt"],
+        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt"],
         order: [["createdAt", "DESC"]],
       });
 
