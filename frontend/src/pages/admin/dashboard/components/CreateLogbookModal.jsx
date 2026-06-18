@@ -9,6 +9,14 @@ import { useCreateChecklists } from '../../../../shared/hooks/admin/useChecklist
 import { useNavigate } from 'react-router-dom';
 import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
+import {
+  getChecklistApprovers,
+  getChecklistOperatorIds,
+} from '../../../../shared/utils/constants';
+import {
+  createChecklistEntries,
+  fetchChecklistsEntries,
+} from '../../../../core/api/admin';
 
 const frequencyList = [
   {
@@ -40,26 +48,90 @@ const approvalModeList = [
   },
 ];
 
+const cloneConfig = (config = {}) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(config)
+    : JSON.parse(JSON.stringify(config));
+
+const removeServerOwnedFields = (value = {}) => {
+  const cleaned = { ...value };
+
+  delete cleaned.entryId;
+  delete cleaned.checklistEntryId;
+  delete cleaned.checklistId;
+  delete cleaned.createdAt;
+  delete cleaned.updatedAt;
+  delete cleaned.deletedAt;
+
+  return cleaned;
+};
+
+const cleanCopiedEntry = (entry, index) => {
+  const rest = removeServerOwnedFields(entry);
+  const config = cloneConfig(entry.config);
+
+  if (Array.isArray(config.items)) {
+    config.items = config.items.map(removeServerOwnedFields);
+  }
+
+  return {
+    ...rest,
+    order: index,
+    config,
+  };
+};
+
 export default function CreateLogbookModal({
   isShowLogbookModal,
   setIsShowLogbookModal,
+  checklistToDuplicate,
+  setChecklistToDuplicate,
 }) {
   const [formData, setFormData] = useState({
-    logbookTitle: '',
-    documentNumber: '',
-    department: {},
-    frequency: '',
-    frequencyInterval: '',
-    approvalMode: '',
-    operators: [],
-    approvers: [],
+    logbookTitle: checklistToDuplicate
+      ? `${checklistToDuplicate?.title} (copy)`
+      : '',
+    documentNumber: checklistToDuplicate?.documentNumber ?? '',
+    department: checklistToDuplicate?.department
+      ? {
+          departmentId: checklistToDuplicate?.department?.departmentId,
+          departmentName: checklistToDuplicate?.department?.departmentName,
+        }
+      : {},
+    frequency: checklistToDuplicate?.frequency || '',
+    frequencyInterval: checklistToDuplicate?.frequencyInterval || '',
+    approvalMode: checklistToDuplicate?.approvalMode || '',
+    operators: getChecklistOperatorIds(checklistToDuplicate),
+    approvers: getChecklistApprovers(checklistToDuplicate),
+    issuedNumber: checklistToDuplicate?.issuedNumber || '',
+    entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
   });
+
+  useEffect(() => {
+    if (isShowLogbookModal && checklistToDuplicate) {
+      setFormData({
+        logbookTitle: checklistToDuplicate
+          ? `${checklistToDuplicate?.title} (copy)`
+          : '',
+        documentNumber: checklistToDuplicate?.documentNumber || '',
+        department: checklistToDuplicate?.department || {},
+        frequency: checklistToDuplicate?.frequency || '',
+        frequencyInterval: checklistToDuplicate?.frequencyInterval || '',
+        approvalMode: checklistToDuplicate?.approvalMode || '',
+        operators: getChecklistOperatorIds(checklistToDuplicate),
+        approvers: getChecklistApprovers(checklistToDuplicate),
+        issuedNumber: checklistToDuplicate?.issuedNumber || '',
+        entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
+      });
+    }
+  }, [isShowLogbookModal, checklistToDuplicate]);
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
   const [userSearchInput, setUserSearchInput] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userOtherSearch, setUserOtherSearch] = useState('');
+  const [isDuplicatingChecklist, setIsDuplicatingChecklist] = useState(false);
 
   const navigate = useNavigate();
 
@@ -78,19 +150,7 @@ export default function CreateLogbookModal({
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
 
-  const { mutateAsync, isPending: isLoading } = useCreateChecklists({
-    onSuccess: (response) => {
-      const checkListToNavigateTo = response?.data?.checklist?.checklistId;
-      const checkListTitleToNavigateTo = response?.data?.checklist?.title;
-
-      showSuccess('Checklist created successfully');
-      handleCancel();
-
-      navigate(
-        `/admin/entries/${checkListToNavigateTo}/${checkListTitleToNavigateTo || 'Entries'}`,
-      );
-    },
-  });
+  const { mutateAsync, isPending: isLoading } = useCreateChecklists();
 
   const {
     data: departmentsData,
@@ -247,6 +307,15 @@ export default function CreateLogbookModal({
     }));
   };
 
+  const navigateToEntries = (checklist) => {
+    const checklistId = checklist?.checklistId;
+    const checklistTitle = checklist?.title || 'Entries';
+
+    navigate(
+      `/admin/entries/${checklistId}/${encodeURIComponent(checklistTitle)}`,
+    );
+  };
+
   const handleSubmit = async () => {
     const {
       logbookTitle,
@@ -257,6 +326,8 @@ export default function CreateLogbookModal({
       approvalMode,
       operators,
       approvers,
+      issuedNumber,
+      entityDisplayName,
     } = formData;
 
     if (
@@ -285,53 +356,57 @@ export default function CreateLogbookModal({
       }
     }
 
-    try {
-      if (frequency === 'hourly') {
-        await mutateAsync({
-          title: logbookTitle,
-          documentNumber,
-          departmentId: department.departmentId,
-          frequency,
-          frequencyInterval,
-          approvalMode,
-          approvers,
-          operators,
-        });
-      } else {
-        await mutateAsync({
-          title: logbookTitle,
-          documentNumber,
-          departmentId: department.departmentId,
-          frequency,
-          approvalMode,
-          approvers,
-          operators,
-        });
-      }
-    } catch (err) {
-      console.log(err.response.data);
-      showError(
-        err.response.data.message ??
-          'Unable to create logbook. Please try again.',
-      );
-    }
+    const payload = {
+      title: logbookTitle,
+      documentNumber,
+      departmentId: department.departmentId,
+      frequency,
+      ...(frequency === 'hourly' ? { frequencyInterval } : {}),
+      approvalMode,
+      approvers,
+      operators,
+      issuedNumber,
+      entityDisplayName,
+    };
 
-    setFormData({
-      logbookTitle: '',
-      documentNumber: '',
-      department: {},
-      frequency: '',
-      frequencyInterval: '',
-      approvalMode: '',
-      operators: [],
-      approvers: [],
-    });
-    setDepartmentSearchInput('');
-    setDepartmentSearch('');
-    setUserSearchInput('');
-    setUserSearch('');
-    setUserOtherSearch('');
-    setIsShowLogbookModal(false);
+    try {
+      if (checklistToDuplicate) {
+        setIsDuplicatingChecklist(true);
+
+        const response = await fetchChecklistsEntries(
+          checklistToDuplicate.checklistId,
+        );
+        const entries = response?.data?.entries ?? [];
+        const duplicatedEntries = entries.map(cleanCopiedEntry);
+
+        const createdChecklist = await mutateAsync(payload);
+        const newChecklist = createdChecklist?.data?.checklist;
+
+        await createChecklistEntries(newChecklist?.checklistId, {
+          entries: duplicatedEntries,
+        });
+
+        showSuccess('Checklist duplicated successfully');
+        handleCancel();
+        navigateToEntries(newChecklist);
+        return;
+      }
+
+      const createdChecklist = await mutateAsync(payload);
+      const newChecklist = createdChecklist?.data?.checklist;
+
+      showSuccess('Checklist created successfully');
+      handleCancel();
+      navigateToEntries(newChecklist);
+    } catch (err) {
+      console.log(err?.response?.data || err);
+      showError(
+        err?.response?.data?.message ||
+          `Unable to ${checklistToDuplicate ? 'duplicate' : 'create'} logbook. Please try again.`,
+      );
+    } finally {
+      setIsDuplicatingChecklist(false);
+    }
   };
 
   const handleCancel = () => {
@@ -344,19 +419,22 @@ export default function CreateLogbookModal({
       approvalMode: '',
       operators: [],
       approvers: [],
+      issuedNumber: '',
+      entityDisplayName: '',
     });
     setDepartmentSearchInput('');
     setDepartmentSearch('');
     setUserSearchInput('');
     setUserSearch('');
     setUserOtherSearch('');
+    setChecklistToDuplicate(null);
     setIsShowLogbookModal(false);
   };
 
   return (
     <Modal
       isOpen={isShowLogbookModal}
-      onClose={() => setIsShowLogbookModal(false)}
+      onClose={() => handleCancel()}
       position="right"
       width="max-w-[460px]"
       className=""
@@ -486,6 +564,24 @@ export default function CreateLogbookModal({
             value={formData.documentNumber}
             onChange={handleInputChange}
           />
+
+          <InputField
+            label="Issued number"
+            id="issuedNumber"
+            required
+            className="mb-1"
+            value={formData.issuedNumber}
+            onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Entity display name"
+            id="entityDisplayName"
+            required
+            className="mb-1"
+            value={formData.entityDisplayName}
+            onChange={handleInputChange}
+          />
         </div>
 
         <div className="flex items-center mt-6 pb-4 justify-end gap-3">
@@ -500,10 +596,12 @@ export default function CreateLogbookModal({
             type="button"
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white flex gap-2"
             onClick={() => handleSubmit()}
-            disabled={isLoading}
+            disabled={isLoading || isDuplicatingChecklist}
           >
             Continue
-            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
+            {(isLoading || isDuplicatingChecklist) && (
+              <Loader size="border-white! h-4.5 w-4.5" />
+            )}
           </Button>
         </div>
       </div>

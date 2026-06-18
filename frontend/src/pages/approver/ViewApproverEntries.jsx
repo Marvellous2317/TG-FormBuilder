@@ -64,6 +64,10 @@ export default function ViewApproverEntries() {
     const operatorSignatureDataUrl = operator?.signature;
     const entityName = operator?.company?.companyName || 'N/A';
     const approvals = submission?.approvals || [];
+    const issuedNumber =
+      submission?.issuedNumber || new Date().toLocaleDateString() || 'N/A';
+    const entityDisplayName =
+      submission?.entityDisplayName || entityName || 'N/A';
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -121,7 +125,7 @@ export default function ViewApproverEntries() {
     const leftX = margin + 3;
     const leftMaxW = cellLeftW - 6;
 
-    doc.text(entityName || 'Entity name', leftX, headerY + 8, {
+    doc.text(entityDisplayName || 'Entity name', leftX, headerY + 8, {
       maxWidth: leftMaxW,
     });
 
@@ -150,7 +154,7 @@ export default function ViewApproverEntries() {
     });
 
     doc.text(
-      `Issue date: ${new Date().toLocaleDateString()}`,
+      `Issue No.: ${issuedNumber}`,
       divX2 + 3,
       halfY + headerH / 4 + 1.5,
       {

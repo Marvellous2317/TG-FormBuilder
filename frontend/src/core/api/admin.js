@@ -167,3 +167,15 @@ export const fetchChecklistVersion = async (checklistId, versionId) => {
   );
   return data;
 };
+
+export const exportChecklistEntries = async (
+  documentNumber,
+  startDate,
+  endDate,
+) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/export/submissions?documentNumber=${documentNumber}&startDate=${startDate}&endDate=${endDate}`,
+    { responseType: 'blob' },
+  );
+  return data;
+};

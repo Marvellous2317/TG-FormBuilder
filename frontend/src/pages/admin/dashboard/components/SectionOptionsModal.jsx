@@ -283,14 +283,18 @@ export default function SectionOptionsModal({
 
     const fieldCopy = { ...fieldToCopy };
 
+    const clonedConfig =
+      typeof structuredClone === 'function'
+        ? structuredClone(fieldToCopy.config)
+        : JSON.parse(JSON.stringify(fieldToCopy.config ?? {}));
+
+    clonedConfig.fieldRef = '';
+
     const newField = {
       ...fieldCopy,
       id: createFieldId(),
       name: `${fieldToCopy.name} (copy)`,
-      config:
-        typeof structuredClone === 'function'
-          ? structuredClone(fieldToCopy.config)
-          : JSON.parse(JSON.stringify(fieldToCopy.config ?? {})),
+      config: clonedConfig,
     };
 
     setFields((currentFields) => [...currentFields, newField]);
