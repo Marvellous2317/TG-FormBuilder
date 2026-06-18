@@ -46,6 +46,49 @@ import { CSS } from '@dnd-kit/utilities';
 import SectionFormularModal from './components/SectionFormularModal';
 import { getFormDraft, saveFormDraft } from '../../../lib/offlineCache';
 
+const FORMULA_CAPABLE_TYPES = [
+  'number',
+  'text',
+  'formular',
+  'section_formular',
+];
+
+const cloneConfig = (config = {}) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(config)
+    : JSON.parse(JSON.stringify(config));
+
+const removeServerOwnedFields = (field = {}) => {
+  const cleanField = { ...field };
+  delete cleanField.entryId;
+  delete cleanField.checklistEntryId;
+  delete cleanField.checklistId;
+  delete cleanField.createdAt;
+  delete cleanField.updatedAt;
+  delete cleanField.deletedAt;
+  return cleanField;
+};
+
+const getNextFieldRef = (fields) => {
+  const existingRefs = fields
+    .filter(
+      (field) =>
+        FORMULA_CAPABLE_TYPES.includes(field.type) && field.config?.fieldRef,
+    )
+    .map((field) => field.config.fieldRef);
+
+  let index = 1;
+  while (existingRefs.includes(`field${index}`)) index++;
+  return `field${index}`;
+};
+
+const copySectionItems = (items = []) =>
+  items.map((item) => ({
+    ...removeServerOwnedFields(item),
+    id: createFieldId(),
+    config: cloneConfig(item.config),
+  }));
+
 function SortableFieldRow({
   field,
   index,
@@ -207,8 +250,7 @@ export default function CreateEntries() {
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
   const [isSectionFormularModal, setIsSectionFormularModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
-  const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
-    useState(false);
+  const [, setIsShowAssignLogbookModal] = useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [fields, setFields] = useState([createField()]);
@@ -370,23 +412,29 @@ export default function CreateEntries() {
   };
 
   const handleCopyField = (id) => {
-    const fieldToCopy = fields.find((f) => f.id === id);
-    if (!fieldToCopy) return;
+    setFields((currentFields) => {
+      const fieldToCopy = currentFields.find((f) => f.id === id);
+      if (!fieldToCopy) return currentFields;
 
-    const fieldCopy = { ...fieldToCopy };
-    delete fieldCopy.entryId;
+      const clonedConfig = cloneConfig(fieldToCopy.config);
 
-    const newField = {
-      ...fieldCopy,
-      id: createFieldId(),
-      name: `${fieldToCopy.name} (copy)`,
-      config:
-        typeof structuredClone === 'function'
-          ? structuredClone(fieldToCopy.config)
-          : JSON.parse(JSON.stringify(fieldToCopy.config ?? {})),
-    };
+      if (FORMULA_CAPABLE_TYPES.includes(fieldToCopy.type)) {
+        clonedConfig.fieldRef = getNextFieldRef(currentFields);
+      }
 
-    setFields((currentFields) => [...currentFields, newField]);
+      if (fieldToCopy.type === 'section' && Array.isArray(clonedConfig.items)) {
+        clonedConfig.items = copySectionItems(clonedConfig.items);
+      }
+
+      const newField = {
+        ...removeServerOwnedFields(fieldToCopy),
+        id: createFieldId(),
+        name: `${fieldToCopy.name} (copy)`,
+        config: clonedConfig,
+      };
+
+      return [...currentFields, newField];
+    });
   };
 
   const handleSaveEntries = async () => {
