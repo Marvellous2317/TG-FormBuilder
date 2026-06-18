@@ -409,7 +409,9 @@ export default function CreateEntries() {
         await updateEntries({ entries: orderedFields });
         showSuccess('Entries updated successfully');
       } else {
-        await createEntries({ entries: orderedFields });
+        await createEntries({
+          payload: { entries: orderedFields },
+        });
         showSuccess('Entries saved successfully');
         setIsShowAssignLogbookModal(true);
       }

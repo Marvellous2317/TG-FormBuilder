@@ -31,6 +31,7 @@ export default function TaskList({
   handleDepartmentChange,
   handleDeletedChange,
   setIsShowLogbookModal,
+  setChecklistToDuplicate,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('active');
@@ -201,6 +202,7 @@ export default function TaskList({
       onClick: () => {
         setActiveMenuId(null);
         setActiveMenuRow(null);
+        setIsShowLogbookModal(true);
       },
     },
     {
@@ -264,6 +266,7 @@ export default function TaskList({
     setChecklistToExport(row);
     setChecklistToEdit(row);
     setChecklistToDelete(row);
+    setChecklistToDuplicate(row);
     setChecklistToRestore(row);
   };
 

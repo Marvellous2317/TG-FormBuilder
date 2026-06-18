@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [isRestoreChecklistModalOpen, setIsRestoreChecklistModalOpen] =
     useState(false);
   const [checklistToRestore, setChecklistToRestore] = useState(null);
+  const [checklistToDuplicate, setChecklistToDuplicate] = useState(null);
 
   const [checklistPagination, setChecklistPagination] = useState({
     page: 1,
@@ -121,6 +122,7 @@ export default function AdminDashboard() {
           setIsEditChecklistModalOpen={setIsEditChecklistModalOpen}
           setChecklistToDelete={setChecklistToDelete}
           setChecklistToRestore={setChecklistToRestore}
+          setChecklistToDuplicate={setChecklistToDuplicate}
           checklists={checklistsData}
           pagination={pagination}
           handlePageChange={handlePagination}
@@ -139,6 +141,8 @@ export default function AdminDashboard() {
       <CreateLogbookModal
         isShowLogbookModal={isShowLogbookModal}
         setIsShowLogbookModal={setIsShowLogbookModal}
+        checklistToDuplicate={checklistToDuplicate}
+        setChecklistToDuplicate={setChecklistToDuplicate}
       />
 
       <EditLogbookModal

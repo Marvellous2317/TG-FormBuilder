@@ -279,13 +279,16 @@ export function useChecklistEntries(checklistId, options = {}) {
   });
 }
 
-export function useCreateChecklistEntries(checklistId, options = {}) {
+export function useCreateChecklistEntries(defaultChecklistId, options = {}) {
   const queryClient = useQueryClient();
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: (payload) => createChecklistEntries(checklistId, payload),
+    mutationFn: ({ checklistId, payload }) =>
+      createChecklistEntries(checklistId || defaultChecklistId, payload),
     onSuccess: async (response, variables, context) => {
+      const checklistId = variables?.checklistId || defaultChecklistId;
+
       await queryClient.invalidateQueries({
         queryKey: ['admin', 'checklists', 'entries', checklistId],
       });

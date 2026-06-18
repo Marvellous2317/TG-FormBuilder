@@ -84,6 +84,44 @@ const deletedOptions = [
   { title: 'False', value: 'false' },
 ];
 
+const getChecklistOperatorIds = (checklist) => {
+  if (!checklist) return [];
+
+  if (Array.isArray(checklist.operators)) {
+    return checklist.operators.map((operator) => operator.userId ?? operator);
+  }
+
+  if (Array.isArray(checklist.operatorIds)) {
+    return checklist.operatorIds;
+  }
+
+  if (Array.isArray(checklist.assignments)) {
+    return checklist.assignments
+      .map((assignment) => assignment.operator?.userId ?? assignment.assignedTo)
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const getChecklistApprovers = (checklist) => {
+  if (!checklist) return [];
+
+  const approvers = checklist.approverConfigs ?? checklist.approvers ?? [];
+
+  if (!Array.isArray(approvers)) {
+    return [];
+  }
+
+  return approvers
+    .map((approver, index) => ({
+      approverId:
+        approver.approverId ?? approver.userId ?? approver.approver?.userId,
+      step: approver.step ?? index,
+    }))
+    .filter(({ approverId }) => Boolean(approverId));
+};
+
 export {
   createFieldId,
   createField,
@@ -94,4 +132,6 @@ export {
   statusOptions,
   statusOptionss,
   deletedOptions,
+  getChecklistApprovers,
+  getChecklistOperatorIds,
 };
