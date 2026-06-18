@@ -58,7 +58,7 @@ export class OperatorRepository {
         where,
         attributes: ["assignmentId"],
         include: [
-          { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber", "frequency"] },
+          { model: Checklist, as: "checklist", attributes: ["checklistId", "title", "documentNumber", "issuedNumber", "entityDisplayName", "frequency"] },
         ],
         order: [["createdAt", "DESC"]],
         limit,
@@ -203,6 +203,9 @@ export class OperatorRepository {
         submittedBy: userId,
         companyId: assignment.companyId,
         documentNumber: assignment.checklist.documentNumber,
+        title: assignment.checklist.title,
+        issuedNumber: assignment.checklist.issuedNumber,
+        entityDisplayName: assignment.checklist.entityDisplayName,
         submittedAt: new Date(),
       }, { transaction });
 
@@ -252,6 +255,9 @@ export class OperatorRepository {
           assignmentId,
           submittedBy: userId,
           documentNumber: assignment.checklist.documentNumber,
+          title: assignment.checklist.title,
+          issuedNumber: assignment.checklist.issuedNumber,
+          entityDisplayName: assignment.checklist.entityDisplayName,
           companyId: assignment.companyId,
           status: "draft",
         }, { transaction });
@@ -371,7 +377,7 @@ export class OperatorRepository {
     try {
       const submission = await SubmittedChecklist.findOne({
         where: { submittedChecklistId, submittedBy: userId },
-        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
+        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt"],
         include: [
           // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },
@@ -410,7 +416,7 @@ export class OperatorRepository {
       const offset = (page - 1) * limit;
       const { rows: submissions, count: total } = await SubmittedChecklist.findAndCountAll({
         where,
-        attributes: ["submittedChecklistId", "documentNumber", "status", "submittedAt"],
+        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt"],
         include: [
           // The user who finalized the decision (null while pending).
           { model: User, as: "approver", attributes: ["firstName", "lastName"] },

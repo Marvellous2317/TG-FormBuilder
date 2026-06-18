@@ -21,6 +21,18 @@ export const SubmittedChecklist = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    issuedNumber: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    entityDisplayName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+       title: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
     companyId: {
       type: DataTypes.UUID,
       allowNull: true,
