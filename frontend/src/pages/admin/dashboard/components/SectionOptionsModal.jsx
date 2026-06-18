@@ -35,6 +35,49 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { FaCopy } from 'react-icons/fa';
 
+const FORMULA_CAPABLE_TYPES = [
+  'number',
+  'text',
+  'formular',
+  'section_formular',
+];
+
+const cloneConfig = (config = {}) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(config)
+    : JSON.parse(JSON.stringify(config));
+
+const removeServerOwnedFields = (field = {}) => {
+  const cleanField = { ...field };
+  delete cleanField.entryId;
+  delete cleanField.checklistEntryId;
+  delete cleanField.checklistId;
+  delete cleanField.createdAt;
+  delete cleanField.updatedAt;
+  delete cleanField.deletedAt;
+  return cleanField;
+};
+
+const getNextFieldRef = (fields) => {
+  const existingRefs = fields
+    .filter(
+      (field) =>
+        FORMULA_CAPABLE_TYPES.includes(field.type) && field.config?.fieldRef,
+    )
+    .map((field) => field.config.fieldRef);
+
+  let index = 1;
+  while (existingRefs.includes(`field${index}`)) index++;
+  return `field${index}`;
+};
+
+const copySectionItems = (items = []) =>
+  items.map((item) => ({
+    ...removeServerOwnedFields(item),
+    id: createFieldId(),
+    config: cloneConfig(item.config),
+  }));
+
 function SortableFieldRow({
   field,
   index,
@@ -278,26 +321,29 @@ export default function SectionOptionsModal({
   };
 
   const handleCopyField = (id) => {
-    const fieldToCopy = fields.find((f) => f.id === id);
-    if (!fieldToCopy) return;
+    setFields((currentFields) => {
+      const fieldToCopy = currentFields.find((f) => f.id === id);
+      if (!fieldToCopy) return currentFields;
 
-    const fieldCopy = { ...fieldToCopy };
+      const clonedConfig = cloneConfig(fieldToCopy.config);
 
-    const clonedConfig =
-      typeof structuredClone === 'function'
-        ? structuredClone(fieldToCopy.config)
-        : JSON.parse(JSON.stringify(fieldToCopy.config ?? {}));
+      if (FORMULA_CAPABLE_TYPES.includes(fieldToCopy.type)) {
+        clonedConfig.fieldRef = getNextFieldRef(currentFields);
+      }
 
-    clonedConfig.fieldRef = '';
+      if (fieldToCopy.type === 'section' && Array.isArray(clonedConfig.items)) {
+        clonedConfig.items = copySectionItems(clonedConfig.items);
+      }
 
-    const newField = {
-      ...fieldCopy,
-      id: createFieldId(),
-      name: `${fieldToCopy.name} (copy)`,
-      config: clonedConfig,
-    };
+      const newField = {
+        ...removeServerOwnedFields(fieldToCopy),
+        id: createFieldId(),
+        name: `${fieldToCopy.name} (copy)`,
+        config: clonedConfig,
+      };
 
-    setFields((currentFields) => [...currentFields, newField]);
+      return [...currentFields, newField];
+    });
   };
 
   const handleFieldVisibility = (id) => {
