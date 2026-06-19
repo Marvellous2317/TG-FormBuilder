@@ -2,8 +2,16 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginPWA } from 'rsbuild-plugin-pwa';
+import { fileURLToPath } from 'node:url';
+
+const srcPath = fileURLToPath(new URL('./src', import.meta.url));
 
 const config = {
+  resolve: {
+    alias: {
+      '@': srcPath,
+    },
+  },
   plugins: [pluginReact()],
   dev: {
     lazyCompilation: true,
