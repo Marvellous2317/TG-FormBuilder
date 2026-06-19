@@ -145,3 +145,5 @@ docs
 commit.sh
 
 backend/dist/
+
+commit.bat
