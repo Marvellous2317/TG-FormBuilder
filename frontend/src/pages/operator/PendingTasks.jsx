@@ -186,6 +186,7 @@ export default function PendingTasks() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>

@@ -239,6 +239,7 @@ export default function ApproverDashboard() {
               handlePageChange={handlePaginationChange}
               itemsPerPage={pageSize}
               totalPages={pagination?.totalPages}
+              totalItems={pagination?.total}
             />
           </div>
         )}

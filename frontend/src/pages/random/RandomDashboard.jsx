@@ -13,7 +13,8 @@ import { useAuthStore } from '../../shared/store/authStore';
 
 export default function RandomDashboard() {
   const [search, setSearch] = useState('');
-  const [isRandomSignatureModalOpen, setIsRandomSignatureModalOpen] = useState(false);
+  const [isRandomSignatureModalOpen, setIsRandomSignatureModalOpen] =
+    useState(false);
   const { user } = useAuthStore();
 
   const navigate = useNavigate();
@@ -236,6 +237,7 @@ export default function RandomDashboard() {
               handlePageChange={handlePaginationChange}
               itemsPerPage={pageSize}
               totalPages={pagination?.totalPages}
+              totalItems={pagination?.total}
             />
           </div>
         )}

@@ -78,12 +78,18 @@ export default function DepartmentList({
     const { name, value } = normalizeEvent(payload);
 
     if (name === 'page') {
-      handleDepartmentPageChange({ page: Math.max(1, Number(value) || 1), pageSize });
+      handleDepartmentPageChange({
+        page: Math.max(1, Number(value) || 1),
+        pageSize,
+      });
       return;
     }
 
     if (name === 'pageSize') {
-      handleDepartmentPageChange({ page: 1, pageSize: Math.max(1, Number(value) || 1) });
+      handleDepartmentPageChange({
+        page: 1,
+        pageSize: Math.max(1, Number(value) || 1),
+      });
     }
   };
 
@@ -306,6 +312,7 @@ export default function DepartmentList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(

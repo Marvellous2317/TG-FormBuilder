@@ -134,7 +134,9 @@ export default function ApproverRejectedTasks() {
                       <tr
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => handleRowClick(row?.submittedChecklistId)}
+                        onClick={() =>
+                          handleRowClick(row?.submittedChecklistId)
+                        }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                           {index + 1}
@@ -175,6 +177,7 @@ export default function ApproverRejectedTasks() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>

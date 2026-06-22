@@ -350,7 +350,7 @@ export default function TaskList({
                   </td>
                 </tr>
               ) : checklists?.length > 0 ? (
-                checklists.map((row) => (
+                checklists?.map((row) => (
                   <tr
                     key={row.checklistId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
@@ -416,6 +416,7 @@ export default function TaskList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(
