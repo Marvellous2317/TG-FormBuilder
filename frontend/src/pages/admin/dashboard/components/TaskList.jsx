@@ -320,6 +320,9 @@ export default function TaskList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  #
+                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
                 </th>
@@ -350,11 +353,14 @@ export default function TaskList({
                   </td>
                 </tr>
               ) : checklists?.length > 0 ? (
-                checklists?.map((row) => (
+                checklists?.map((row, index) => (
                   <tr
                     key={row.checklistId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
+                      {index + 1}
+                    </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row?.title}
                     </td>
