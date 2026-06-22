@@ -111,3 +111,13 @@ export const evaluateFormula = (expression, fieldValues = {}) => {
     return { value: null, error: e.message };
   }
 };
+
+export const formatComputedValue = (value) => {
+  const numericValue = Number(value);
+
+  if (value !== '' && value != null && Number.isFinite(numericValue)) {
+    return numericValue.toFixed(2);
+  }
+
+  return value;
+};

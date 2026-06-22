@@ -260,6 +260,9 @@ export default function AdminUserList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  #
+                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
@@ -287,11 +290,14 @@ export default function AdminUserList({
                   </td>
                 </tr>
               ) : users?.length > 0 ? (
-                users.map((row) => (
+                users.map((row, index) => (
                   <tr
                     key={row?.userId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
+                      {index + 1}
+                    </td>
                     <td className="p-3 gap-1 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       <p className="text-sm text-secondary">
                         {row?.firstName} {row?.lastName}
@@ -353,6 +359,7 @@ export default function AdminUserList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(

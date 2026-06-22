@@ -73,8 +73,10 @@ export default function ApproverApprovedTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/approver/entries/${rowId}/view/approved`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/approver/entries/${rowId}/view`, {
+      state: { previousLocation: 'approved', title: rowTitle },
+    });
   };
 
   return (
@@ -138,7 +140,7 @@ export default function ApproverApprovedTasks() {
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() =>
-                          handleRowClick(row?.submittedChecklistId)
+                          handleRowClick(row?.submittedChecklistId, row?.title)
                         }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
@@ -183,6 +185,7 @@ export default function ApproverApprovedTasks() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>

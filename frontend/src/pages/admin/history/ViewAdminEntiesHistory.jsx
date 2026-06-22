@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useLoaderData, Link, useSearchParams } from 'react-router-dom';
-import { evaluateFormula } from '../../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../../shared/utils/formula';
 import { useChecklistsVersion } from '../../../shared/hooks/admin/useChecklist';
 import { FaArrowLeft } from 'react-icons/fa';
 import BasicForm from '../../../shared/components/entries/BasicForm';
@@ -201,7 +204,7 @@ export default function ViewAdminEntriesHistory() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -213,7 +216,9 @@ export default function ViewAdminEntriesHistory() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

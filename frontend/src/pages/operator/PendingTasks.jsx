@@ -74,7 +74,9 @@ export default function PendingTasks() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(`/operator/entries/${rowId}/view/pending?title=${rowTitle}`);
+    navigate(`/operator/entries/${rowId}/view`, {
+      state: { title: rowTitle, previousLocation: 'pending' },
+    });
   };
 
   return (
@@ -186,6 +188,7 @@ export default function PendingTasks() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import BasicForm from '../../shared/components/entries/BasicForm';
 import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../shared/components/Loader';
@@ -13,7 +18,10 @@ import {
 } from '../../shared/hooks/approver/useApprover';
 import Button from '../../shared/components/Button';
 import ApproverConfirmationModal from './components/ApproverConfirmationModal';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import useToast from '../../shared/hooks/useToast';
 import Icons from '../../assets/icons';
 import jsPDF from 'jspdf';
@@ -22,7 +30,10 @@ import SignatureModal from './components/SignatureModal';
 import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ViewApproverEntries() {
-  let { id: checklistId, back: previousLocation } = useLoaderData();
+  let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const { title: checklistTitle, previousLocation } = state;
 
   const { user } = useAuthStore();
 
@@ -196,9 +207,9 @@ export default function ViewApproverEntries() {
       const entryId = entry.entryId;
       const entryValue =
         entry.type === 'formular'
-          ? computeFormulaValue(entry)
+          ? formatComputedValue(computeFormulaValue(entry))
           : entry.type === 'section_formular'
-            ? computeSectionFormulaValue(entry)
+            ? formatComputedValue(computeSectionFormulaValue(entry))
             : (formData[entryId]?.value ??
               formData[entryId]?.config.defaultValue ??
               entry.value ??
@@ -283,10 +294,10 @@ export default function ViewApproverEntries() {
               const { value, error } = evaluateFormula(expression, scope);
 
               if (error || (typeof value === 'number' && !isFinite(value))) {
-                return 0;
+                return formatComputedValue(0);
               }
 
-              return value ?? 0;
+              return formatComputedValue(value ?? 0);
             }
 
             return row[fieldId]?.value ?? '';
@@ -664,6 +675,10 @@ export default function ViewApproverEntries() {
         )}
       </div>
 
+      <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+        <h2>{checklistTitle}</h2>
+      </div>
+
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />
       ) : entriesData?.length < 1 ? (
@@ -721,7 +736,7 @@ export default function ViewApproverEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -733,7 +748,9 @@ export default function ViewApproverEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

@@ -73,8 +73,10 @@ export default function RandomApprovedTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/custom/entries/${rowId}/view/approved`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/custom/entries/${rowId}/view`, {
+      state: { previousLocation: 'approved', title: rowTitle },
+    });
   };
 
   return (
@@ -111,6 +113,9 @@ export default function RandomApprovedTasks() {
                       #
                     </th>
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                      Document title
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                       Document number
                     </th>
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
@@ -134,10 +139,15 @@ export default function RandomApprovedTasks() {
                       <tr
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => handleRowClick(row?.submittedChecklistId)}
+                        onClick={() =>
+                          handleRowClick(row?.submittedChecklistId, row?.title)
+                        }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                           {index + 1}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
+                          {row?.title || 'N/A'}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row.documentNumber}
@@ -175,6 +185,7 @@ export default function RandomApprovedTasks() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>
