@@ -74,8 +74,8 @@ export default function ApprovedTasks() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(`/operator/entries/${rowId}/view/approved`, {
-      state: { title: rowTitle },
+    navigate(`/operator/entries/${rowId}/view`, {
+      state: { title: rowTitle, previousLocation: 'approved' },
     });
   };
 

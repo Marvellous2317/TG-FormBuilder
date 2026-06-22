@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import BasicForm from '../../shared/components/entries/BasicForm';
 import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../shared/components/Loader';
@@ -25,7 +30,10 @@ import RandomSignatureModal from './components/RandomSignatureModal';
 import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ViewRandomEntries() {
-  let { id: checklistId, back: previousLocation } = useLoaderData();
+  let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const { title: checklistTitle, previousLocation } = state;
 
   const { user } = useAuthStore();
 
@@ -493,6 +501,10 @@ export default function ViewRandomEntries() {
               : 'Back to dashboard'}
           </p>
         </Link>
+
+        <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+          <h2>{checklistTitle}</h2>
+        </div>
 
         {/* {previousLocation === 'approved' && (
           <Button

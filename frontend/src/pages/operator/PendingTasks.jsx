@@ -74,8 +74,8 @@ export default function PendingTasks() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(`/operator/entries/${rowId}/view/pending`, {
-      state: { title: rowTitle },
+    navigate(`/operator/entries/${rowId}/view`, {
+      state: { title: rowTitle, previousLocation: 'pending' },
     });
   };
 

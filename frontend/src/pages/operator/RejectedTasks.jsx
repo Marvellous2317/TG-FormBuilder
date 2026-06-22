@@ -74,8 +74,8 @@ export default function RejectedTasks() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(`/operator/entries/${rowId}/view/rejected`, {
-      state: { title: rowTitle },
+    navigate(`/operator/entries/${rowId}/view`, {
+      state: { title: rowTitle, previousLocation: 'rejected' },
     });
   };
 

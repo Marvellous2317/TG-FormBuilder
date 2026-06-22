@@ -4,7 +4,6 @@ import {
   useLoaderData,
   useLocation,
   useNavigate,
-  useSearchParams,
 } from 'react-router-dom';
 import {
   useOperatorSubmittedChecklist,
@@ -26,15 +25,12 @@ import { useAuthStore } from '../../shared/store/authStore';
 import SignatureModal from '../approver/components/SignatureModal';
 
 export default function ViewOperatorEntries() {
-  let { id: checklistId, back: previousLocation } = useLoaderData();
+  let { id: checklistId } = useLoaderData();
 
   const { state } = useLocation();
-  const checklistTitle = state?.title || '';
+  const { title: checklistTitle, previousLocation } = state;
 
   const { user } = useAuthStore();
-
-  const [searchParams] = useSearchParams();
-  const title = searchParams.get('title');
 
   const { data, isPending: isLoadingChecklistEntries } =
     useOperatorSubmittedChecklist(checklistId);

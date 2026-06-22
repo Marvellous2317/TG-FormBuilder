@@ -73,10 +73,11 @@ export default function RandomRejectedTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/custom/entries/${rowId}/view/rejected`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/approver/entries/${rowId}/view`, {
+      state: { previousLocation: 'rejected', title: rowTitle },
+    });
   };
-
   return (
     <div className="flex w-full flex-col max-h-screen">
       {/* HEADER */}
@@ -111,6 +112,9 @@ export default function RandomRejectedTasks() {
                       #
                     </th>
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                      Document title
+                    </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                       Document number
                     </th>
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
@@ -135,11 +139,14 @@ export default function RandomRejectedTasks() {
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() =>
-                          handleRowClick(row?.submittedChecklistId)
+                          handleRowClick(row?.submittedChecklistId, row?.title)
                         }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                           {index + 1}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
+                          {row?.title || 'N/A'}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row.documentNumber}

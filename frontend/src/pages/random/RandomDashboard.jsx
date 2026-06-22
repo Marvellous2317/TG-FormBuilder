@@ -92,8 +92,10 @@ export default function RandomDashboard() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/custom/entries/${rowId}/view/pending`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/custom/entries/${rowId}/view`, {
+      state: { title: rowTitle, previousLocation: 'pending' },
+    });
   };
 
   return (
@@ -174,6 +176,9 @@ export default function RandomDashboard() {
                         Checklist ID
                       </th> */}
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                        Document Title
+                      </th>
+                      <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
                         Document number
                       </th>
                       <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
@@ -192,15 +197,18 @@ export default function RandomDashboard() {
                           key={row.submittedChecklistId}
                           className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                           onClick={() =>
-                            handleRowClick(row?.submittedChecklistId)
+                            handleRowClick(
+                              row?.submittedChecklistId,
+                              row?.assignment?.checklist?.title,
+                            )
                           }
                         >
                           <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                             {index + 1}
                           </td>
-                          {/* <td className="p-3 md:p-4 text-tertiary text-sm">
-                            {row.submittedChecklistId}
-                          </td> */}
+                          <td className="p-3 md:p-4 text-tertiary text-sm">
+                            {row?.assignment?.checklist?.title || 'N/A'}
+                          </td>
                           <td className="p-3 md:p-4 text-tertiary text-sm break-words max-w-[200px] md:max-w-none">
                             {row.documentNumber}
                           </td>
