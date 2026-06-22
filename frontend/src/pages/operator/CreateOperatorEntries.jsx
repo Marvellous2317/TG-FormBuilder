@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import {
   useCreateOperatorChecklistEntries,
   useOperatorChecklist,
@@ -27,6 +32,9 @@ import {
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const checklistTitle = state?.title || '';
 
   const { mutateAsync: submitEntries, isPending: isSubmittingEntries } =
     useCreateOperatorChecklistEntries(checklistId);
@@ -259,6 +267,10 @@ export default function CreateOperatorEntry() {
           Back to dashboard
         </p>
       </Link>
+
+      <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+        <h2>{checklistTitle}</h2>
+      </div>
 
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />

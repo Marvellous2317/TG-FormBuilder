@@ -73,8 +73,10 @@ export default function RejectedTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/operator/entries/${rowId}/view/rejected`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/operator/entries/${rowId}/view/rejected`, {
+      state: { title: rowTitle },
+    });
   };
 
   return (
@@ -138,14 +140,17 @@ export default function RejectedTasks() {
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() =>
-                          handleRowClick(row?.submittedChecklistId)
+                          handleRowClick(
+                            row?.submittedChecklistId,
+                            row?.assignment?.checklist?.title,
+                          )
                         }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
                           {index + 1}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
-                          {row.assignment?.checklist.title || 'N/A'}
+                          {row.assignment?.checklist?.title || 'N/A'}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row.documentNumber}

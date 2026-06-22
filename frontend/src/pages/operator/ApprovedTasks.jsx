@@ -73,8 +73,10 @@ export default function ApprovedTasks() {
     }
   };
 
-  const handleRowClick = (rowId) => {
-    navigate(`/operator/entries/${rowId}/view/approved`);
+  const handleRowClick = (rowId, rowTitle) => {
+    navigate(`/operator/entries/${rowId}/view/approved`, {
+      state: { title: rowTitle },
+    });
   };
 
   return (
@@ -138,7 +140,10 @@ export default function ApprovedTasks() {
                         key={row.submittedChecklistId}
                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() =>
-                          handleRowClick(row?.submittedChecklistId)
+                          handleRowClick(
+                            row?.submittedChecklistId,
+                            row?.assignment?.checklist.title,
+                          )
                         }
                       >
                         <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">

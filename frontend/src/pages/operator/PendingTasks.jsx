@@ -74,7 +74,9 @@ export default function PendingTasks() {
   };
 
   const handleRowClick = (rowId, rowTitle) => {
-    navigate(`/operator/entries/${rowId}/view/pending?title=${rowTitle}`);
+    navigate(`/operator/entries/${rowId}/view/pending`, {
+      state: { title: rowTitle },
+    });
   };
 
   return (
