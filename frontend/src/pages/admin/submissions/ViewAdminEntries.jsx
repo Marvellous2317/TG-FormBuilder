@@ -5,7 +5,10 @@ import {
   Link,
   useSearchParams,
 } from 'react-router-dom';
-import { evaluateFormula } from '../../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../../shared/utils/formula';
 import {
   useChecklistsSubmission,
   useUpdateChecklistsSubmissions,
@@ -245,7 +248,7 @@ export default function ViewAdminEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -257,7 +260,9 @@ export default function ViewAdminEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

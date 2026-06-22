@@ -17,7 +17,10 @@ import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
 import SignatureModal from '../approver/components/SignatureModal';
 
@@ -286,7 +289,9 @@ export default function ViewOperatorEntries() {
                         entry={{
                           ...entry,
                           type: 'number',
-                          value: computeFormulaValue(entry),
+                          value: formatComputedValue(
+                            computeFormulaValue(entry),
+                          ),
                         }}
                         formData={formData}
                         setFormData={setFormData}
@@ -298,7 +303,9 @@ export default function ViewOperatorEntries() {
                         entry={{
                           ...entry,
                           type: 'number',
-                          value: computeSectionFormulaValue(entry),
+                          value: formatComputedValue(
+                            computeSectionFormulaValue(entry),
+                          ),
                         }}
                         formData={formData}
                         setFormData={setFormData}

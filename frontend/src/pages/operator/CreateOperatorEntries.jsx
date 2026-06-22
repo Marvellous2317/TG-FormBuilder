@@ -13,7 +13,10 @@ import Loader from '../../shared/components/Loader';
 import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import { queueSubmission } from '../../lib/offlineQueue';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import {
   saveToCache,
   getFromCache,
@@ -59,9 +62,11 @@ export default function CreateOperatorEntry() {
         enrichedFormData[entry.entryId] = {
           entryId: entry.entryId,
           value: String(
-            entry.type === 'section_formular'
-              ? computeSectionFormulaValue(entry)
-              : computeFormulaValue(entry),
+            formatComputedValue(
+              entry.type === 'section_formular'
+                ? computeSectionFormulaValue(entry)
+                : computeFormulaValue(entry),
+            ),
           ),
         };
       });
@@ -307,7 +312,7 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -319,7 +324,9 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

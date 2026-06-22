@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiMoreVertical } from 'react-icons/fi';
+import { FiSearch, FiMoreVertical, FiX } from 'react-icons/fi';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { createPortal } from 'react-dom';
@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import AssignLogbookModal from './ExportLogbookModal';
 import Loader from '../../../../shared/components/Loader';
 import ExportLogbookModal from './ExportLogbookModal';
+import { useDepartmentsInfinite } from '@/shared/hooks/superadmin/useDepartments';
+import InputField from '@/shared/components/InputField';
 
 export default function TaskList({
   checklists,
@@ -48,11 +50,35 @@ export default function TaskList({
   const [isShowExportLogbookModal, setIsShowExportLogbookModal] =
     useState(false);
   const [checklistToExport, setChecklistToExport] = useState(false);
+  const [departmentSearchInput, setDepartmentSearchInput] = useState('');
 
   const navigate = useNavigate();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
+
+  const {
+    data: departmentsData,
+    isPending: isLoadingDepartments,
+    fetchNextPage: fetchNextDepartmentsPage,
+    hasNextPage: hasNextDepartmentsPage,
+    isFetchingNextPage: isFetchingNextDepartmentsPage,
+  } = useDepartmentsInfinite(
+    { search: departmentSearchInput },
+    { enabled: checklists?.length > 0 },
+  );
+
+  const allDepartments =
+    departmentsData?.pages.flatMap((p) => p.data.departments) ?? [];
+
+  const departmentsList = [
+    { label: 'All departments', value: '' },
+    ...allDepartments.map((department) => ({
+      ...department,
+      label: department.departmentName,
+      value: department.departmentId,
+    })),
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -270,6 +296,15 @@ export default function TaskList({
     setChecklistToRestore(row);
   };
 
+  const handleSetDepartment = (departmentId) => {
+    setCurrentDepartment(departmentId);
+  };
+
+  const clearDepartmentFilter = () => {
+    setCurrentDepartment('');
+    setDepartmentSearchInput('');
+  };
+
   return (
     <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden bg-white w-full">
       <section className="flex-col flex w-full">
@@ -285,8 +320,40 @@ export default function TaskList({
             />
           </div>
 
-          <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <div className="flex items-center gap-2">
+          <div className="relative flex w-full flex-col items-stretch gap-3 lg:w-auto lg:flex-row lg:items-center lg:gap-4">
+            <div className="flex w-full items-center gap-2 lg:w-auto">
+              <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
+                Department:
+              </h2>
+              <InputField
+                id="department"
+                className="min-w-0 flex-1 lg:w-80"
+                value={currentDepartment}
+                disabled={isLoadingDepartments}
+                options={departmentsList}
+                type="select"
+                searchable
+                placeholder="All departments"
+                onExternalSearchChange={setDepartmentSearchInput}
+                onLoadMore={fetchNextDepartmentsPage}
+                hasNextPage={hasNextDepartmentsPage}
+                isFetchingNextPage={isFetchingNextDepartmentsPage}
+                onChange={(e) => handleSetDepartment(e.target.value)}
+                inputClassName="py-2! rounded-lg!"
+              />
+              {currentDepartment && (
+                <Button
+                  type="button"
+                  onClick={clearDepartmentFilter}
+                  className="rounded-lg border border-secondary-200 p-2 text-secondary transition-colors hover:bg-gray-50"
+                  aria-label="Clear department filter"
+                >
+                  <FiX size={14} />
+                </Button>
+              )}
+              {isLoadingDepartments && <Loader size="w-4.5 h-4.5 mt-4" />}
+            </div>
+            {/* <div className="flex w-full items-center gap-2 lg:w-auto">
               <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
                 Status:
               </h2>
@@ -295,11 +362,12 @@ export default function TaskList({
                 options={statusOptionss}
                 onChange={(value) => setCurrentStatus(value)}
                 placeholder="All status"
+                className="min-w-0 flex-1 lg:w-36"
                 buttonClassName="px-3! py-2! rounded-lg!"
                 menuClassName=""
               />
-            </div>
-            <div className="flex items-center gap-2">
+            </div> */}
+            <div className="flex w-full items-center gap-2 lg:w-auto">
               <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
                 Show deleted:
               </h2>
@@ -308,6 +376,7 @@ export default function TaskList({
                 options={deletedOptions}
                 onChange={(value) => setDeleted(value)}
                 placeholder="False"
+                className="min-w-0 flex-1 lg:w-32"
                 buttonClassName="px-3! py-2! rounded-lg!"
                 menuClassName=""
               />

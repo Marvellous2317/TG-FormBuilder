@@ -4,7 +4,7 @@ import EnumForm from './EnumForm';
 import DropdownForm from './DropdownForm';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Button from '../Button';
-import { evaluateFormula } from '../../utils/formula';
+import { evaluateFormula, formatComputedValue } from '../../utils/formula';
 
 const parseSectionRows = (value) => {
   if (!value) return [{}];
@@ -76,7 +76,9 @@ export default function SectionForm({
           const fieldEntryId = field.entryId || field.id;
           newRow[fieldEntryId] = {
             entryId: fieldEntryId,
-            value: String(computeFormulaValue(field, newRow)),
+            value: String(
+              formatComputedValue(computeFormulaValue(field, newRow)),
+            ),
           };
         });
       return newRow;
@@ -211,9 +213,11 @@ export default function SectionForm({
                             entry={{
                               ...rowEntry,
                               type: 'number',
-                              value: computeFormulaValue(
-                                rowEntry,
-                                rowsData[rowIndex] || {},
+                              value: formatComputedValue(
+                                computeFormulaValue(
+                                  rowEntry,
+                                  rowsData[rowIndex] || {},
+                                ),
                               ),
                             }}
                             formData={rowFormData}
