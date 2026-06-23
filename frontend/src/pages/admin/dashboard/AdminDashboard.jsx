@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     limit: 20,
     search: '',
     status: 'active',
-    departmentId: '',
+    // departmentId: '',
     deleted: 'false',
   });
 
@@ -57,11 +57,11 @@ export default function AdminDashboard() {
   }, []);
 
   const handleDepartmentChange = useCallback((departmentId) => {
-    setChecklistPagination((prev) => ({
-      ...prev,
-      departmentId,
-      page: 1,
-    }));
+    // setChecklistPagination((prev) => ({
+    //   ...prev,
+    //   departmentId,
+    //   page: 1,
+    // }));
   }, []);
 
   const handleDeletedChange = useCallback((deleted) => {
