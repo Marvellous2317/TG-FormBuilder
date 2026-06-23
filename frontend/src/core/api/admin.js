@@ -1,8 +1,10 @@
 import axiosInstance from '../../shared/utils/axios';
 
 export const fetchChecklists = async (params = {}) => {
+  const { departmentId, ...rest } = params;
+  if (departmentId && departmentId.length > 0) rest.departmentId = departmentId;
   const { data } = await axiosInstance.get('/checklists/admin', {
-    params,
+    params: rest,
   });
   return data;
 };
