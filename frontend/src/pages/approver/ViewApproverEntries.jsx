@@ -81,7 +81,7 @@ export default function ViewApproverEntries() {
       submission?.entityDisplayName || entityName || 'N/A';
 
     const doc = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
