@@ -341,15 +341,20 @@ export class UserRepository {
       }
 
       if (role !== "admin"  && role !=="operator") {
-        // Count this approver's own decision rows, not SubmittedChecklist.approvedBy
-        // (approvedBy is only set on the submission for whoever casts the final
-        // decision in the chain, so it undercounts approvers in multi-step flows).
+             const existingSubmission = () => ({
+          model: SubmittedChecklist,
+          as: "submittedChecklist",
+          attributes: [],
+          required: true,
+        });
+
         const myChecklistsToday = await SubmittedChecklistApproval.count({
           where: {
             approverId: userId,
             status: { [Op.in]: ["approved", "rejected"] },
             decidedAt: { [Op.gte]: today, [Op.lt]: tomorrow },
           },
+          include: [existingSubmission()],
         });
         const myChecklistsThisWeek = await SubmittedChecklistApproval.count({
           where: {
@@ -357,15 +362,19 @@ export class UserRepository {
             status: { [Op.in]: ["approved", "rejected"] },
             decidedAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow },
           },
+          include: [existingSubmission()],
         });
         const totalApproved = await SubmittedChecklistApproval.count({
           where: { approverId: userId, status: "approved" },
+          include: [existingSubmission()],
         });
         const totalRejected = await SubmittedChecklistApproval.count({
           where: { approverId: userId, status: "rejected" },
+          include: [existingSubmission()],
         });
         const totalReviewed = await SubmittedChecklistApproval.count({
           where: { approverId: userId, status: { [Op.in]: ["approved", "rejected"] } },
+          include: [existingSubmission()],
         });
 
         const totalPending = await SubmittedChecklistApproval.count({

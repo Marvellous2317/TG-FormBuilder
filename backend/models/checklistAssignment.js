@@ -25,7 +25,11 @@ export const ChecklistAssignment = sequelize.define(
       type: DataTypes.UUID,
       allowNull: true,
     },
-    
+        active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
   },
   {
     tableName: "checklist_assignments",

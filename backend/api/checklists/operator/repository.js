@@ -52,7 +52,8 @@ export class OperatorRepository {
   static async getOperatorCheckList(userId, companyId, {page = 1, limit = 20 }) {
     try {
 
-      const where = { assignedTo: userId, companyId };
+      // active: true — unassigned (deactivated) assignments drop out of the fillable list.
+      const where = { assignedTo: userId, companyId, active: true };
       const offset = (page - 1) * limit;
       const { rows: assignments, count: total } = await ChecklistAssignment.findAndCountAll({
         where,
@@ -78,7 +79,7 @@ export class OperatorRepository {
   static async getOperatorCheckEntryList(assignmentId, userId) {
     try {
       const assignment = await ChecklistAssignment.findOne({
-        where: { assignmentId, assignedTo: userId },
+        where: { assignmentId, assignedTo: userId, active: true },
         attributes: ["assignmentId"],
         include: [
           {
@@ -105,7 +106,7 @@ export class OperatorRepository {
     const transaction = await sequelize.transaction();
     try {
       const assignment = await ChecklistAssignment.findOne({
-        where: { assignmentId, assignedTo: userId },
+        where: { assignmentId, assignedTo: userId, active: true },
         include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
       });
 
@@ -240,7 +241,7 @@ export class OperatorRepository {
     const transaction = await sequelize.transaction();
     try {
       const assignment = await ChecklistAssignment.findOne({
-        where: { assignmentId, assignedTo: userId },
+        where: { assignmentId, assignedTo: userId, active: true },
         include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
       });
       if (!assignment) throw new ApplicationError("Assignment not found", 404);
@@ -302,7 +303,7 @@ export class OperatorRepository {
       }
 
       const assignment = await ChecklistAssignment.findOne({
-        where: { assignmentId: submission.assignmentId, assignedTo: userId },
+        where: { assignmentId: submission.assignmentId, assignedTo: userId, active: true },
         include: [{ model: Checklist, as: "checklist", include: [{ model: ChecklistEntry, as: "entries" }] }],
         transaction,
       });
