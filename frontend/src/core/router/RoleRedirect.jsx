@@ -9,7 +9,7 @@ export default function RoleRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  switch (user.role.roleName.toLowerCase()) {
+  switch (user?.role?.roleName?.toLowerCase()) {
     case 'superadmin':
       return <Navigate to="/superadmin/" replace />;
     case 'admin':
