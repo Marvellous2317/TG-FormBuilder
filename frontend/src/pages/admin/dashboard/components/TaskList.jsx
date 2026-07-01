@@ -4,11 +4,7 @@ import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { createPortal } from 'react-dom';
 import Button from '../../../../shared/components/Button';
-import {
-  deletedOptions,
-  formatDate,
-  statusOptionss,
-} from '../../../../shared/utils/constants';
+import { deletedOptions, formatDate } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import AssignLogbookModal from './ExportLogbookModal';
@@ -443,7 +439,7 @@ export default function TaskList({
                       {row?.documentNumber || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
-                      {`${row?.creator?.firstName} ${row?.creator?.lastName}`}
+                      {`${row?.creator?.firstName || ''} ${row?.creator?.lastName || ''}`}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {formatDate(row?.createdAt) || 'N/A'}
