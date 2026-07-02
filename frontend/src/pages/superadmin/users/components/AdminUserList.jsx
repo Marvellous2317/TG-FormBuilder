@@ -115,72 +115,65 @@ export default function AdminUserList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditUserModalOpen(true);
-      },
+  {
+    title: 'Edit',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditUserModalOpen(true);
     },
-    {
-      title: 'Assign approver',
-      value: 'assign',
-      onClick: () => {
-        if (activeMenuRow?.role?.roleName !== 'operator') {
-          showError('Only operators can be assigned an approver.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsAssignApproverModalOpen(true);
-      },
+  },
+  {
+    title: 'Assign approver',
+    value: 'assign',
+    onClick: () => {
+      if (activeMenuRow?.role?.roleName !== 'operator') {
+        showError('Only operators can be assigned an approver.');
+        return;
+      }
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsAssignApproverModalOpen(true);
     },
-    {
-      title: 'Unassign approver',
-      value: 'unassign',
-      onClick: () => {
-        if (activeMenuRow?.role?.roleName !== 'operator') {
-          showError('Only operators can be unassigned from an approver.');
-          return;
-        }
-        if (activeMenuRow?.operatorApprovers?.length < 1) {
-          showError('This operator does not have an approver.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsUnassignApproverModalOpen(true);
-      },
+  },
+  {
+    title: 'Unassign approver',
+    value: 'unassign',
+    onClick: () => {
+      if (activeMenuRow?.role?.roleName !== 'operator') {
+        showError('Only operators can be unassigned from an approver.');
+        return;
+      }
+      if (activeMenuRow?.operatorApprovers?.length < 1) {
+        showError('This operator does not have an approver.');
+        return;
+      }
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsUnassignApproverModalOpen(true);
     },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('User is already deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteUserModalOpen(true);
-      },
-    },
-    {
-      title: 'Restore',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('User is not deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+    value: 'delete-restore',
+    onClick: () => {
+      const rowData = activeMenuRow; // Store reference before clearing
+      
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (rowData?.deletedAt) {
+        // User is deleted - show restore modal
         setIsRestoreUserModalOpen(true);
-      },
+      } else {
+        // User is active - show delete modal
+        setIsDeleteUserModalOpen(true);
+      }
     },
-  ];
+  },
+];
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
