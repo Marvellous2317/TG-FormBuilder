@@ -101,9 +101,7 @@ export class AdminRepository {
     return createdApprovers;
   }
 
-  // Sync pending SubmittedChecklistApproval records when approvers change
   static async _syncPendingSubmissionApprovals(checklistId, newApproverConfigs, transaction) {
-    // Find all pending submissions for this checklist
     const pendingSubmissions = await SubmittedChecklist.findAll({
       where: { status: "pending" },
       include: [{
@@ -119,8 +117,6 @@ export class AdminRepository {
     if (pendingSubmissions.length === 0) return;
 
     const submissionIds = pendingSubmissions.map(s => s.submittedChecklistId);
-
-    // Remove existing pending approvals (keep decided ones for audit)
     await SubmittedChecklistApproval.destroy({
       where: {
         submittedChecklistId: { [Op.in]: submissionIds },
@@ -128,12 +124,9 @@ export class AdminRepository {
       },
       transaction,
     });
-
-    // Create new approval records based on new approver configuration
     const newApprovalRecords = [];
     for (const submissionId of submissionIds) {
       for (const config of newApproverConfigs) {
-        // Check if this approver already has a non-pending decision for this submission
         const existingDecision = await SubmittedChecklistApproval.findOne({
           where: {
             submittedChecklistId: submissionId,
@@ -162,14 +155,8 @@ export class AdminRepository {
     }
   }
 
-  // Replace-set the operator assignments for a checklist: only the provided operator ids
-  // remain active. Operators dropped from the list are unassigned (hard-deleted so they can
-  // be reassigned later). `operators === undefined` leaves assignments untouched; an empty
-  // array removes them all. Returns newly created assignments for email notifications.
-  static async _setChecklistOperators(checklistId, companyId, operators, assignedBy, transaction) {
+    static async _setChecklistOperators(checklistId, companyId, operators, assignedBy, transaction) {
     if (operators === undefined) return [];
-
-    // Normalize and validate the desired operator set.
     const desired = [];
     const seen = new Set();
     const operatorMap = new Map();
@@ -195,12 +182,15 @@ export class AdminRepository {
       where: { checklistId },
       transaction,
     });
-    const existingIds = new Set(existingAssignments.map((a) => a.assignedTo));
+    const existingByOperator = new Map(existingAssignments.map((a) => [a.assignedTo, a]));
 
-    // Remove assignments that are no longer in the desired set, mirroring the
-    // unassignOperator guard: block removal when pending submissions exist.
+    // Deactivate operators dropped from the list. Never delete: a hard delete cascades
+    // and wipes their submitted_checklists, and a soft delete hides the assignment so the
+    // linked checklist context vanishes from history. Flipping active=false keeps the row
+    // (and every submission under it) fully visible while stopping new submissions.
     for (const assignment of existingAssignments) {
       if (desired.includes(assignment.assignedTo)) continue;
+      if (!assignment.active) continue;
 
       const pendingSubmissions = await SubmittedChecklist.count({
         where: { assignmentId: assignment.assignmentId, status: "pending" },
@@ -212,22 +202,33 @@ export class AdminRepository {
           400
         );
       }
-      await assignment.destroy({ force: true, transaction });
+      await assignment.update({ active: false }, { transaction });
     }
 
-    // Add assignments for newly desired operators (keep the ones that already exist).
+    // Add newly desired operators. If one was previously unassigned, reactivate the same
+    // row so they reconnect to their historical submissions instead of getting a duplicate.
     const created = [];
     for (const operatorId of desired) {
-      if (existingIds.has(operatorId)) continue;
-
       const operator = operatorMap.get(operatorId);
+      const existing = existingByOperator.get(operatorId);
+
+      if (existing) {
+        if (!existing.active) {
+          const assignment = await existing.update(
+            { active: true, assignedBy, companyId: operator.companyId || companyId || null },
+            { transaction },
+          );
+          created.push({ assignment, operator });
+        }
+        continue;
+      }
+
       const assignment = await ChecklistAssignment.create({
         checklistId,
         assignedTo: operatorId,
         assignedBy,
         companyId: operator.companyId || companyId || null,
       }, { transaction });
-
       created.push({ assignment, operator });
     }
 
@@ -485,6 +486,11 @@ export class AdminRepository {
           {
             model: ChecklistAssignment, as: "assignments",
             attributes: ["assignmentId"],
+            // Only currently-assigned (active) operators. Deactivated assignments stay in
+            // the DB for history but must not show up as assigned here. required:false so
+            // checklists with no active operators still appear.
+            where: { active: true },
+            required: false,
             include: [
               { model: User, as: "operator", attributes: ["userId", "firstName", "lastName", "email"] },
             ],
@@ -965,16 +971,27 @@ export class AdminRepository {
         where: { checklistId, assignedTo },
       });
 
-      if (checkAssignment) {
+      if (checkAssignment && checkAssignment.active) {
         throw new ApplicationError("This checklist is already assigned to the operator", 400);
       }
 
-      const assignment = await ChecklistAssignment.create({
-        checklistId,
-        assignedTo,
-        assignedBy,
-        companyId : operator.companyId,
-      });
+      let assignment;
+      if (checkAssignment) {
+        // Operator was previously unassigned: reactivate the same row so their historical
+        // submissions reconnect instead of being orphaned under a stale row.
+        assignment = await checkAssignment.update({
+          active: true,
+          assignedBy,
+          companyId: operator.companyId,
+        });
+      } else {
+        assignment = await ChecklistAssignment.create({
+          checklistId,
+          assignedTo,
+          assignedBy,
+          companyId : operator.companyId,
+        });
+      }
 
 
       try {
@@ -1136,9 +1153,11 @@ export class AdminRepository {
         );
       }
 
-      // Use force: true to hard delete the assignment record
-      // This allows the operator to be reassigned later without conflicts
-      await assignment.destroy({ force: true, transaction });
+      // Deactivate (never delete). A hard delete cascades and wipes this operator's
+      // submitted_checklists; a soft delete hides the assignment from history joins.
+      // active=false stops new submissions while every past submission stays visible.
+      // Reassigning the operator flips this back (see assignOperator / _setChecklistOperators).
+      await assignment.update({ active: false }, { transaction });
       
       await transaction.commit();
       return { message: "Operator unassigned successfully" };

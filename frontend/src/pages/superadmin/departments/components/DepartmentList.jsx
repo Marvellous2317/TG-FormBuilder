@@ -118,43 +118,34 @@ export default function DepartmentList({
     };
   }, [activeMenuId]);
 
-  const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditDepartmentModal(true);
-      },
+ const dropOptions = [
+  {
+    title: 'Edit',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditDepartmentModal(true);
     },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('Department is already deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteDepartmentModalOpen(true);
-      },
-    },
-    {
-      title: 'Restore',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('Department is not deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+    value: 'delete-restore',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (activeMenuRow?.deletedAt) {
+        // Department is deleted - show restore modal
         setIsRestoreDepartmentModalOpen(true);
-      },
+      } else {
+        // Department is active - show delete modal
+        setIsDeleteDepartmentModalOpen(true);
+      }
     },
-  ];
+  },
+];
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();

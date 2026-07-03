@@ -96,41 +96,29 @@ export default function RoleList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setIsEditRoleModal(true);
-      },
+  {
+    title: 'Edit',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setIsEditRoleModal(true);
     },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('Role is already deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteRoleModalOpen(true);
-      },
-    },
-    {
-      title: 'Restore',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('Role is not deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+    value: 'delete-restore',
+    onClick: () => {
+      setActiveMenuId(null);
+      if (activeMenuRow?.deletedAt) {
         setIsRestoreRoleModalOpen(true);
-      },
+      } else {
+        setIsDeleteRoleModalOpen(true);
+      }
+      setActiveMenuRow(null);
     },
-  ];
+  },
+];
+
 
   const toggleRowMenu = (rowId, event, index, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
