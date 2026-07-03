@@ -51,14 +51,18 @@ export default function DropdownOptionsModal({
   const { mutateAsync: updateCatalog, isPending: isUpdatingCatalog } =
     useUpdateChecklistCatalogs();
 
-  const { data, isPending: isLoadingChecklistCatalogs } =
-    useChecklistCatalogs(catalogPagination);
+  const {
+    data,
+    isPending: isLoadingChecklistCatalogs,
+    isFetching: isSearching,
+  } = useChecklistCatalogs(catalogPagination);
 
   const catalogData = data?.data?.catalogs;
   const pagination = data?.data?.pagination;
   const currentPage = Number(pagination?.page ?? catalogPagination.page);
   const totalPages = Number(pagination?.totalPages ?? 1);
   const totalItems = Number(pagination?.total ?? catalogData?.length ?? 0);
+  const isSearchActive = Boolean(search.trim() || catalogPagination.search);
 
   const handleCatalogPageChange = (page) => {
     setCatalogPagination((prev) => ({
@@ -238,7 +242,7 @@ export default function DropdownOptionsModal({
           <Loader size="h-12 w-12 mt-20" />
         ) : (
           <div className="flex-1 flex-col items-center overflow-auto">
-            {catalogData?.length < 1 && !createList && (
+            {catalogData?.length < 1 && !isSearchActive && !createList && (
               <div className="items-center flex flex-col justify-center w-full mt-38.5">
                 <RiLinkM size={24} className="text-tertiary-800" />
                 <h1 className="font-medium mt-1 font-geist text-primary text-sm">
@@ -261,99 +265,115 @@ export default function DropdownOptionsModal({
               </div>
             )}
 
-            {catalogData?.length > 0 && !createList && !editList && (
-              <div className="flex flex-col gap-4 w-full pb-6 px-5">
-                {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
-                  <div className="flex items-center gap-2 px-2 w-full sm:max-w-sm transition-all">
-                    <FiSearch className="text-gray-400 shrink-0" size={18} />
+            {(catalogData?.length > 0 || isSearchActive) &&
+              !createList &&
+              !editList && (
+                <div className="flex flex-col gap-4 w-full pb-6 px-5">
+                  <div className="flex items-center gap-2 w-full rounded-[10px] border border-secondary-200 bg-white px-3 py-2.5 transition focus-within:border-primary-200/75 focus-within:ring-2 focus-within:ring-primary/10 mt-2">
+                    <FiSearch className="text-gray-400 shrink-0" size={16} />
                     <input
                       type="text"
-                      placeholder="Enter search here"
+                      placeholder="Search sources"
                       value={search}
-                      onChange={(e) => handleSearch(e.target.value)}
+                      onChange={(e) => setSearch(e.target.value)}
                       className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
                     />
+                    {isSearching ? (
+                      <Loader size="h-3.5 w-3.5 shrink-0" />
+                    ) : (
+                      search.length > 0 && (
+                        <IoClose
+                          size={14}
+                          className="text-tertiary-500 cursor-pointer shrink-0"
+                          onClick={() => setSearch('')}
+                        />
+                      )
+                    )}
                   </div>
-                </div> */}
-                <Button
-                  className="bg-white gap-1 p-1 mt-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleEditList();
-                  }}
-                >
-                  <IoAddOutline className="text-primary-200" size={14} />
-                  <p className="text-primary-200 font-geist font-medium text-sm">
-                    Create new source
-                  </p>
-                </Button>
-                {catalogData?.map(({ catalogId, name, list }) => {
-                  const isActive = catalogId === selectedId;
-                  const count = list?.length;
-                  return (
-                    <div
-                      className={`flex w-full cursor-pointer items-center justify-between border  rounded-[10px] py-3 px-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
-                      key={catalogId}
-                      onClick={() => handleSelectId(catalogId)}
-                    >
-                      <div className="flex flex-col gap-2">
-                        <p className="text-sm text-primary font-medium">
-                          {name}
+                  <Button
+                    className="bg-white gap-1 p-1"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEditList();
+                    }}
+                  >
+                    <IoAddOutline className="text-primary-200" size={14} />
+                    <p className="text-primary-200 font-geist font-medium text-sm">
+                      Create new source
+                    </p>
+                  </Button>
+                  {catalogData?.length < 1 && (
+                    <p className="text-tertiary font-geist text-xs text-center py-6">
+                      No sources found for &quot;{search}&quot;
+                    </p>
+                  )}
+                  {catalogData?.map(({ catalogId, name, list }) => {
+                    const isActive = catalogId === selectedId;
+                    const count = list?.length;
+                    return (
+                      <div
+                        className={`flex w-full cursor-pointer items-center justify-between border  rounded-[10px] py-3 px-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
+                        key={catalogId}
+                        onClick={() => handleSelectId(catalogId)}
+                      >
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm text-primary font-medium">
+                            {name}
+                          </p>
+                          <p className="text-tertiary text-xs">{count} items</p>
+                        </div>
+                        <div className="flex gap-2 text-xs z-50">
+                          <Button
+                            className="text-primary-200"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleEditList({ catalogId, name, count, list });
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            className="text-tertiary"
+                            onClick={() => handleDelete(catalogId)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
+                      <Button
+                        type="button"
+                        className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={currentPage <= 1}
+                        onClick={() => handleCatalogPageChange(currentPage - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <div className="text-center font-geist">
+                        <p className="text-xs font-medium text-primary">
+                          Page {currentPage} of {totalPages}
                         </p>
-                        <p className="text-tertiary text-xs">{count} items</p>
+                        <p className="text-[11px] text-tertiary">
+                          {totalItems} sources
+                        </p>
                       </div>
-                      <div className="flex gap-2 text-xs z-50">
-                        <Button
-                          className="text-primary-200"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleEditList({ catalogId, name, count, list });
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          className="text-tertiary"
-                          onClick={() => handleDelete(catalogId)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => handleCatalogPageChange(currentPage + 1)}
+                      >
+                        Next
+                      </Button>
                     </div>
-                  );
-                })}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
-                    <Button
-                      type="button"
-                      className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                      disabled={currentPage <= 1}
-                      onClick={() => handleCatalogPageChange(currentPage - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <div className="text-center font-geist">
-                      <p className="text-xs font-medium text-primary">
-                        Page {currentPage} of {totalPages}
-                      </p>
-                      <p className="text-[11px] text-tertiary">
-                        {totalItems} sources
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => handleCatalogPageChange(currentPage + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
             {(createList || editList) && (
               <div className="flex flex-col w-full py-6 px-5">

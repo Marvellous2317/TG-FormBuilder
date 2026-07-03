@@ -33,7 +33,7 @@ function DropdownMenuPortal({
   const filteredOptions =
     searchable && !onExternalSearchChange
       ? options.filter((o) =>
-          (o.label || o.title || '')
+          String(o?.label ?? o?.title ?? o ?? '')
             .toLowerCase()
             .includes(searchQuery.toLowerCase()),
         )

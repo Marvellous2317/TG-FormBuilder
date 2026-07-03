@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   assignChecklistOperator,
   createChecklist,
@@ -324,7 +329,7 @@ export function useChecklistCatalogs(queryParams = {}, options = {}) {
   return useQuery({
     queryKey: ['admin', 'checklists', 'catalogs', queryParams],
     queryFn: () => fetchChecklistCatalogs(queryParams),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
