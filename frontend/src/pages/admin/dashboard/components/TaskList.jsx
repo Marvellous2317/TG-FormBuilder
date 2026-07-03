@@ -156,109 +156,103 @@ export default function TaskList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    {
-      title: 'Export',
-      value: 'export',
-      onClick: () => {
-        setIsShowExportLogbookModal(true);
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-      },
+  {
+    title: 'Export',
+    value: 'export',
+    onClick: () => {
+      setIsShowExportLogbookModal(true);
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
     },
-    {
-      title: 'Entries',
-      value: 'entries',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(
-          `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
-        );
-      },
+  },
+  {
+    title: 'Entries',
+    value: 'entries',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(
+        `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
+      );
     },
-    // {
-    //   title: 'Unassign log',
-    //   value: 'unassign',
-    //   onClick: () => {
-    //     setActiveMenuId(null);
-    //     // setActiveMenuRow(null);
-    //     setActionToPerform('unassign');
-    //     setIsShowAssignLogbookModal(true);
-    //   },
-    // },
-    // {
-    //   title: 'Assign log',
-    //   value: 'assign',
-    //   onClick: () => {
-    //     setActiveMenuId(null);
-    //     // setActiveMenuRow(null);
-    //     setActionToPerform('assign');
-    //     setIsShowAssignLogbookModal(true);
-    //   },
-    // },
-    {
-      title: 'Edit log',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditChecklistModalOpen(true);
-      },
+  },
+  // {
+  //   title: 'Unassign log',
+  //   value: 'unassign',
+  //   onClick: () => {
+  //     setActiveMenuId(null);
+  //     // setActiveMenuRow(null);
+  //     setActionToPerform('unassign');
+  //     setIsShowAssignLogbookModal(true);
+  //   },
+  // },
+  // {
+  //   title: 'Assign log',
+  //   value: 'assign',
+  //   onClick: () => {
+  //     setActiveMenuId(null);
+  //     // setActiveMenuRow(null);
+  //     setActionToPerform('assign');
+  //     setIsShowAssignLogbookModal(true);
+  //   },
+  // },
+  {
+    title: 'Edit log',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditChecklistModalOpen(true);
     },
-    {
-      title: 'Delete log',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('Checklist is already deleted.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteChecklistModalOpen(true);
-      },
-    },
-    {
-      title: 'Duplicate',
-      value: 'duplicate',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsShowLogbookModal(true);
-      },
-    },
-    {
-      title: 'Restore log',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('Checklist is not deleted.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore log' : 'Delete log',
+    value: 'delete-restore',
+    onClick: () => {
+      const rowData = activeMenuRow; // Store reference before clearing
+      
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (rowData?.deletedAt) {
+        // Checklist is deleted - show restore modal
         setIsRestoreChecklistModalOpen(true);
-      },
+      } else {
+        // Checklist is active - show delete modal
+        setIsDeleteChecklistModalOpen(true);
+      }
     },
-    {
-      title: 'Submissions',
-      value: 'submissions',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
-      },
+  },
+  {
+    title: 'Duplicate',
+    value: 'duplicate',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsShowLogbookModal(true);
     },
-    {
-      title: 'Version History',
-      value: 'history',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
-      },
+  },
+  {
+    title: 'Submissions',
+    value: 'submissions',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
     },
-  ];
+  },
+  {
+    title: 'Version History',
+    value: 'history',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
+    },
+  },
+];
+
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
