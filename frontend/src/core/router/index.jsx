@@ -214,7 +214,7 @@ export const router = createBrowserRouter([
             element: <CreateOperatorEntry />,
           },
           {
-            path: 'entries/:id/view/:back',
+            path: 'entries/:id/view',
             loader: ({ params }) => params,
             element: <ViewOperatorEntries />,
           },
@@ -249,7 +249,7 @@ export const router = createBrowserRouter([
             element: <ApproverRejectedTasks />,
           },
           {
-            path: 'entries/:id/view/:back',
+            path: 'entries/:id/view',
             loader: ({ params }) => params,
             element: <ViewApproverEntries />,
           },
@@ -283,7 +283,7 @@ export const router = createBrowserRouter([
             element: <RandomRejectedTasks />,
           },
           {
-            path: 'entries/:id/view/:back',
+            path: 'entries/:id/view',
             loader: ({ params }) => params,
             element: <ViewRandomEntries />,
           },

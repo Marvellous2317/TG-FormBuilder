@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useLoaderData, Link, useSearchParams } from 'react-router-dom';
-import { evaluateFormula } from '../../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../../shared/utils/formula';
 import { useChecklistsVersion } from '../../../shared/hooks/admin/useChecklist';
 import { FaArrowLeft } from 'react-icons/fa';
 import BasicForm from '../../../shared/components/entries/BasicForm';
@@ -27,12 +30,16 @@ export default function ViewAdminEntriesHistory() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
+      if (e.config?.fieldRef) {
         const rawValue =
           formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
 
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
@@ -197,7 +204,7 @@ export default function ViewAdminEntriesHistory() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -209,7 +216,9 @@ export default function ViewAdminEntriesHistory() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

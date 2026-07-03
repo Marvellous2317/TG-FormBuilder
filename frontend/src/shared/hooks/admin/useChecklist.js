@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   assignChecklistOperator,
   createChecklist,
@@ -7,6 +12,7 @@ import {
   deleteChecklist,
   deleteChecklistCatalog,
   deleteChecklistEntries,
+  exportChecklistEntries,
   fetchChecklist,
   fetchChecklistCatalog,
   fetchChecklistCatalogs,
@@ -278,13 +284,16 @@ export function useChecklistEntries(checklistId, options = {}) {
   });
 }
 
-export function useCreateChecklistEntries(checklistId, options = {}) {
+export function useCreateChecklistEntries(defaultChecklistId, options = {}) {
   const queryClient = useQueryClient();
   const { onSuccess, ...mutationOptions } = options;
 
   return useMutation({
-    mutationFn: (payload) => createChecklistEntries(checklistId, payload),
+    mutationFn: ({ checklistId, payload }) =>
+      createChecklistEntries(checklistId || defaultChecklistId, payload),
     onSuccess: async (response, variables, context) => {
+      const checklistId = variables?.checklistId || defaultChecklistId;
+
       await queryClient.invalidateQueries({
         queryKey: ['admin', 'checklists', 'entries', checklistId],
       });
@@ -320,7 +329,7 @@ export function useChecklistCatalogs(queryParams = {}, options = {}) {
   return useQuery({
     queryKey: ['admin', 'checklists', 'catalogs', queryParams],
     queryFn: () => fetchChecklistCatalogs(queryParams),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
@@ -453,5 +462,14 @@ export function useUnassignChecklistOperator(options = {}) {
       }
     },
     ...mutationOptions,
+  });
+}
+
+export function useChecklistExport(documentNumber, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'checklists', 'export'],
+    queryFn: () => exportChecklistEntries(documentNumber),
+    keepPreviousData: true,
+    ...options,
   });
 }

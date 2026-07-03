@@ -21,6 +21,7 @@ math.import(
     },
     // string concat
     concat: (...args) => args.map(String).join(''),
+    strEqual: (a, b) => String(a).toLowerCase() === String(b).toLowerCase(),
   },
   { override: true },
 );
@@ -36,7 +37,10 @@ export const validateFormula = (expression, fieldRefs = []) => {
     const scope = Object.fromEntries(
       fieldRefs.map((ref) => [ref.toLowerCase(), 1]),
     );
-    math.evaluate(expression.toLowerCase(), scope);
+    const normalizedExpression = normalizeStringEquality(
+      normalizeEquality(expression).toLowerCase(),
+    );
+    math.evaluate(normalizedExpression, scope);
     return { valid: true };
   } catch (e) {
     return { valid: false, error: e.message };
@@ -50,8 +54,30 @@ export const validateFormula = (expression, fieldRefs = []) => {
 // Normalize user-written `=` to `==` for equality comparisons.
 // mathjs uses `=` for assignment, so IF(X=5,...) always resolves to truthy.
 // We replace lone `=` (not already `==`, `!=`, `<=`, `>=`) with `==`.
-const normalizeEquality = (expr) =>
-  expr.replace(/(?<![=!<>])=(?!=)/g, '==');
+const normalizeEquality = (expr) => expr.replace(/(?<![=!<>])=(?!=)/g, '==');
+
+const stringValuePattern = String.raw`(?:"[^"]*"|'[^']*'|\d+(?:\.\d+)?[a-z_][a-z0-9_]*)`;
+const fieldPattern = String.raw`[a-z_][a-z0-9_]*`;
+const comparablePattern = String.raw`(?:${fieldPattern}|${stringValuePattern})`;
+const stringEqualityPattern = new RegExp(
+  String.raw`(${comparablePattern})\s*==\s*(${comparablePattern})`,
+  'gi',
+);
+
+const quoteUnitLikeValue = (value) =>
+  /^\d+(?:\.\d+)?[a-z_][a-z0-9_]*$/i.test(value) ? `"${value}"` : value;
+
+const normalizeStringEquality = (expr) =>
+  expr.replace(stringEqualityPattern, (match, left, right) => {
+    const comparesString =
+      /^["']/.test(left) ||
+      /^["']/.test(right) ||
+      /^\d+(?:\.\d+)?[a-z_]/i.test(left) ||
+      /^\d+(?:\.\d+)?[a-z_]/i.test(right);
+
+    if (!comparesString) return match;
+    return `strEqual(${quoteUnitLikeValue(left)}, ${quoteUnitLikeValue(right)})`;
+  });
 
 export const evaluateFormula = (expression, fieldValues = {}) => {
   try {
@@ -64,7 +90,10 @@ export const evaluateFormula = (expression, fieldValues = {}) => {
         ];
       }),
     );
-    let result = math.evaluate(normalizeEquality(expression).toLowerCase(), scope);
+    const normalizedExpression = normalizeStringEquality(
+      normalizeEquality(expression).toLowerCase(),
+    );
+    let result = math.evaluate(normalizedExpression, scope);
 
     // mathjs can return a DenseMatrix (e.g. [21.6]) for certain expressions.
     // Unwrap to a scalar so callers always receive a plain number or string.
@@ -81,4 +110,14 @@ export const evaluateFormula = (expression, fieldValues = {}) => {
   } catch (e) {
     return { value: null, error: e.message };
   }
+};
+
+export const formatComputedValue = (value) => {
+  const numericValue = Number(value);
+
+  if (value !== '' && value != null && Number.isFinite(numericValue)) {
+    return numericValue.toFixed(2);
+  }
+
+  return value;
 };

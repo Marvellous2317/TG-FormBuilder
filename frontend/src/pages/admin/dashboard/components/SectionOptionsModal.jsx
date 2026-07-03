@@ -6,6 +6,7 @@ import { FiPlus } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import {
   createField,
+  createFieldId,
   sectionFieldTypeOptions,
 } from '../../../../shared/utils/constants';
 import { LuGripVertical } from 'react-icons/lu';
@@ -32,12 +33,57 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { FaCopy } from 'react-icons/fa';
+
+const FORMULA_CAPABLE_TYPES = [
+  'number',
+  'text',
+  'formular',
+  'section_formular',
+];
+
+const cloneConfig = (config = {}) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(config)
+    : JSON.parse(JSON.stringify(config));
+
+const removeServerOwnedFields = (field = {}) => {
+  const cleanField = { ...field };
+  delete cleanField.entryId;
+  delete cleanField.checklistEntryId;
+  delete cleanField.checklistId;
+  delete cleanField.createdAt;
+  delete cleanField.updatedAt;
+  delete cleanField.deletedAt;
+  return cleanField;
+};
+
+const getNextFieldRef = (fields) => {
+  const existingRefs = fields
+    .filter(
+      (field) =>
+        FORMULA_CAPABLE_TYPES.includes(field.type) && field.config?.fieldRef,
+    )
+    .map((field) => field.config.fieldRef);
+
+  let index = 1;
+  while (existingRefs.includes(`field${index}`)) index++;
+  return `field${index}`;
+};
+
+const copySectionItems = (items = []) =>
+  items.map((item) => ({
+    ...removeServerOwnedFields(item),
+    id: createFieldId(),
+    config: cloneConfig(item.config),
+  }));
 
 function SortableFieldRow({
   field,
   index,
   onFieldChange,
   onRemoveField,
+  onCopyField,
   onFieldVisibility,
   onOpenModal,
 }) {
@@ -60,7 +106,7 @@ function SortableFieldRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="grid grid-cols-[63px_minmax(0,1fr)_300px] border-b border-secondary-200 last:border-b-0 group"
+      className="grid grid-cols-[63px_minmax(0,1fr)_400px] border-b border-secondary-200 last:border-b-0 group"
     >
       <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
         <button
@@ -86,7 +132,7 @@ function SortableFieldRow({
       </div>
 
       <div className="border-r flex items-center justify-between w-full border-secondary-200 px-4 py-2.5">
-        <div className="w-[50%]">
+        <div className="w-[45%]">
           <DropdownSelect
             value={field.type}
             options={sectionFieldTypeOptions}
@@ -96,15 +142,17 @@ function SortableFieldRow({
             menuClassName="left-0 right-auto"
           />
         </div>
-        <div className="w-[20%]">
-          {field.type === 'number' && field.config && !field.config.visible && (
-            <p
-              onClick={() => onOpenModal('defaultValue', field.id)}
-              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-            >
-              {field.config.defaultValue}
-            </p>
-          )}
+        <div className="w-[15%]">
+          {['number', 'text'].includes(field.type) &&
+            field.config &&
+            !field.config.visible && (
+              <p
+                onClick={() => onOpenModal('defaultValue', field.id)}
+                className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+              >
+                {field.config.defaultValue}
+              </p>
+            )}
           {field.type === 'enum' && field.config && (
             <p
               onClick={() => onOpenModal('enum', field.id)}
@@ -138,14 +186,22 @@ function SortableFieldRow({
             </p>
           )}
         </div>
-        <div className="w-[20%] flex items-center justify-between">
+        <div className="w-[25%] flex items-center justify-between">
+          <Button
+            type="button"
+            onClick={() => onCopyField(field.id)}
+            className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+            aria-label={`copy field ${index + 1}`}
+          >
+            <FaCopy size={16} />
+          </Button>
           <Button
             type="button"
             onClick={() => onRemoveField(field.id)}
             className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
             aria-label={`Remove field ${index + 1}`}
           >
-            <RiDeleteBinLine size={18} />
+            <RiDeleteBinLine size={16} />
           </Button>
           <Button
             type="button"
@@ -154,9 +210,9 @@ function SortableFieldRow({
             aria-label={`Toggle visibility for field ${index + 1}`}
           >
             {field.config?.visible === false ? (
-              <IoEyeOff size={18} className="text-gray-400" />
+              <IoEyeOff size={16} className="text-gray-400" />
             ) : (
-              <IoEye size={18} />
+              <IoEye size={16} />
             )}
           </Button>
         </div>
@@ -189,12 +245,16 @@ export default function SectionOptionsModal({
 
   const handleModalSave = (config) => {
     setFields((current) =>
-      current.map((f) => (f.id === activeFieldId ? { ...f, config } : f)),
+      current.map((f) =>
+        f.id === activeFieldId
+          ? { ...f, config: { ...f.config, ...config } }
+          : f,
+      ),
     );
   };
 
   const handleDone = () => {
-    if (sectionName.length < 3) {
+    if (sectionName.length < 1) {
       showError('Please enter a section name');
       return;
     }
@@ -211,19 +271,26 @@ export default function SectionOptionsModal({
 
       if (
         key === 'type' &&
-        ['number', 'formular', 'section_formular'].includes(value)
+        ['number', 'text', 'formular', 'section_formular'].includes(value)
       ) {
         const field = currentFields.find((f) => f.id === id);
         if (!field?.config?.fieldRef) {
           const existingRefs = currentFields
             .filter(
-              (f) => f.type === 'number' && f.id !== id && f.config?.fieldRef,
+              (f) =>
+                ['number', 'text', 'formular', 'section_formular'].includes(
+                  f.type,
+                ) &&
+                f.id !== id &&
+                f.config?.fieldRef,
             )
             .map((f) => f.config.fieldRef);
           let n = 1;
           while (existingRefs.includes(`field${n}`)) n++;
           return updated.map((f) =>
-            f.id === id ? { ...f, config: { fieldRef: `field${n}` } } : f,
+            f.id === id
+              ? { ...f, config: { ...f.config, fieldRef: `field${n}` } }
+              : f,
           );
         }
       }
@@ -253,6 +320,32 @@ export default function SectionOptionsModal({
     }
   };
 
+  const handleCopyField = (id) => {
+    setFields((currentFields) => {
+      const fieldToCopy = currentFields.find((f) => f.id === id);
+      if (!fieldToCopy) return currentFields;
+
+      const clonedConfig = cloneConfig(fieldToCopy.config);
+
+      if (FORMULA_CAPABLE_TYPES.includes(fieldToCopy.type)) {
+        clonedConfig.fieldRef = getNextFieldRef(currentFields);
+      }
+
+      if (fieldToCopy.type === 'section' && Array.isArray(clonedConfig.items)) {
+        clonedConfig.items = copySectionItems(clonedConfig.items);
+      }
+
+      const newField = {
+        ...removeServerOwnedFields(fieldToCopy),
+        id: createFieldId(),
+        name: `${fieldToCopy.name} (copy)`,
+        config: clonedConfig,
+      };
+
+      return [...currentFields, newField];
+    });
+  };
+
   const handleFieldVisibility = (id) => {
     setFields((currentFields) =>
       currentFields.map((field) => {
@@ -260,7 +353,10 @@ export default function SectionOptionsModal({
           const isCurrentlyVisible = field.config?.visible !== false;
           const willBeVisible = !isCurrentlyVisible;
 
-          if (field.type === 'number' && willBeVisible === false) {
+          if (
+            ['number', 'text'].includes(field.type) &&
+            willBeVisible === false
+          ) {
             setActiveFieldId(id);
             setIsShowDefaultValueModal(true);
           }
@@ -326,7 +422,7 @@ export default function SectionOptionsModal({
       isOpen={isSectionOptionsModal}
       onClose={() => setIsSectionOptionsModal(false)}
       position="right"
-      width="max-w-[700px]"
+      width="max-w-[800px]"
     >
       <div className="flex h-full flex-col overflow-auto">
         <div className="space-y-0.5 p-5 border-b border-secondary-200">
@@ -349,9 +445,9 @@ export default function SectionOptionsModal({
             onChange={(e) => setSectionName(e.target.value)}
           />
 
-          <div className="overflow-x-auto border border-secondary-200 bg-white mt-4 rounded-[10px]">
+          <div className="overflow-x-auto border w-full border-secondary-200 bg-white mt-4 rounded-[10px]">
             <div className="min-w-full">
-              <div className="grid grid-cols-[63px_minmax(0,1fr)_300px] border-b border-secondary-200 bg-white">
+              <div className="grid grid-cols-[63px_minmax(0,1fr)_400px] border-b border-secondary-200 bg-white">
                 <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                   #
                 </div>
@@ -381,6 +477,7 @@ export default function SectionOptionsModal({
                       onRemoveField={handleRemoveField}
                       onFieldVisibility={handleFieldVisibility}
                       onOpenModal={handleOpenModal}
+                      onCopyField={handleCopyField}
                     />
                   ))}
                 </SortableContext>
@@ -457,6 +554,7 @@ export default function SectionOptionsModal({
         setIsShowDefaultValueModal={setIsShowDefaultValueModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        activeField={activeField}
       />
     </Modal>
   );

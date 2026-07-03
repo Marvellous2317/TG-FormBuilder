@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
@@ -12,6 +12,13 @@ import {
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
 import DeleteCatalogModal from './DeleteCatalogModal';
+import { FiSearch } from 'react-icons/fi';
+
+const parseBulkItems = (value) =>
+  value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 export default function DropdownOptionsModal({
   isDropdownOptionsModal,
@@ -27,21 +34,56 @@ export default function DropdownOptionsModal({
   const [isDeleteCatalogModalOpen, setIsDeleteCatalogModalOpen] =
     useState(false);
   const [selectedId, setSelectedId] = useState(initialValue?.id ?? null);
+  const [showBulkItems, setShowBulkItems] = useState(false);
+  const [bulkItems, setBulkItems] = useState('');
+  const [search, setSearch] = useState('');
 
   const { showError, showSuccess } = useToast();
+
+  const [catalogPagination, setCatalogPagination] = useState({
+    page: 1,
+    limit: 10,
+    search: '',
+  });
 
   const { mutateAsync: createCatalog, isPending: isCreatingCatalog } =
     useCreateChecklistCatalogs();
   const { mutateAsync: updateCatalog, isPending: isUpdatingCatalog } =
     useUpdateChecklistCatalogs();
 
-  const { data, isPending: isLoadingChecklistCatalogs } =
-    useChecklistCatalogs();
+  const {
+    data,
+    isPending: isLoadingChecklistCatalogs,
+    isFetching: isSearching,
+  } = useChecklistCatalogs(catalogPagination);
 
   const catalogData = data?.data?.catalogs;
+  const pagination = data?.data?.pagination;
+  const currentPage = Number(pagination?.page ?? catalogPagination.page);
+  const totalPages = Number(pagination?.totalPages ?? 1);
+  const totalItems = Number(pagination?.total ?? catalogData?.length ?? 0);
+  const isSearchActive = Boolean(search.trim() || catalogPagination.search);
+
+  const handleCatalogPageChange = (page) => {
+    setCatalogPagination((prev) => ({
+      ...prev,
+      page,
+    }));
+  };
+
+  const handleSearch = useCallback((searchValue) => {
+    setCatalogPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
 
   const handleAddItem = () => {
-    if (item.length < 3) {
+    if (item.length < 1) {
       return;
     }
     setItems([...items, item]);
@@ -157,6 +199,27 @@ export default function DropdownOptionsModal({
     handleCancelEditList();
   };
 
+  const handleAddBulkItems = () => {
+    const parsedItems = parseBulkItems(bulkItems);
+
+    if (parsedItems.length < 1) {
+      showError('Please enter at least one item');
+      return;
+    }
+
+    setItems((prev) => {
+      const existing = new Set(prev.map((item) => item.toLowerCase()));
+
+      const newItems = parsedItems.filter(
+        (item) => !existing.has(item.toLowerCase()),
+      );
+
+      return [...prev, ...newItems];
+    });
+
+    setBulkItems('');
+  };
+
   return (
     <Modal
       isOpen={isDropdownOptionsModal}
@@ -178,8 +241,8 @@ export default function DropdownOptionsModal({
         {isLoadingChecklistCatalogs ? (
           <Loader size="h-12 w-12 mt-20" />
         ) : (
-          <div className="flex-1 flex flex-col items-center">
-            {catalogData?.length < 1 && !createList && (
+          <div className="flex-1 flex-col items-center overflow-auto">
+            {catalogData?.length < 1 && !isSearchActive && !createList && (
               <div className="items-center flex flex-col justify-center w-full mt-38.5">
                 <RiLinkM size={24} className="text-tertiary-800" />
                 <h1 className="font-medium mt-1 font-geist text-primary text-sm">
@@ -202,60 +265,115 @@ export default function DropdownOptionsModal({
               </div>
             )}
 
-            {catalogData?.length > 0 && !createList && !editList && (
-              <div className="flex flex-col gap-4 w-full py-6 px-5">
-                {catalogData?.map(({ catalogId, name, list }) => {
-                  const isActive = catalogId === selectedId;
-                  const count = list?.length;
-                  return (
-                    <div
-                      className={`flex w-full cursor-pointer items-center justify-between border  rounded-[10px] py-3 px-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
-                      key={catalogId}
-                      onClick={() => handleSelectId(catalogId)}
-                    >
-                      <div className="flex flex-col gap-2">
-                        <p className="text-sm text-primary font-medium">
-                          {name}
+            {(catalogData?.length > 0 || isSearchActive) &&
+              !createList &&
+              !editList && (
+                <div className="flex flex-col gap-4 w-full pb-6 px-5">
+                  <div className="flex items-center gap-2 w-full rounded-[10px] border border-secondary-200 bg-white px-3 py-2.5 transition focus-within:border-primary-200/75 focus-within:ring-2 focus-within:ring-primary/10 mt-2">
+                    <FiSearch className="text-gray-400 shrink-0" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search sources"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
+                    />
+                    {isSearching ? (
+                      <Loader size="h-3.5 w-3.5 shrink-0" />
+                    ) : (
+                      search.length > 0 && (
+                        <IoClose
+                          size={14}
+                          className="text-tertiary-500 cursor-pointer shrink-0"
+                          onClick={() => setSearch('')}
+                        />
+                      )
+                    )}
+                  </div>
+                  <Button
+                    className="bg-white gap-1 p-1"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEditList();
+                    }}
+                  >
+                    <IoAddOutline className="text-primary-200" size={14} />
+                    <p className="text-primary-200 font-geist font-medium text-sm">
+                      Create new source
+                    </p>
+                  </Button>
+                  {catalogData?.length < 1 && (
+                    <p className="text-tertiary font-geist text-xs text-center py-6">
+                      No sources found for &quot;{search}&quot;
+                    </p>
+                  )}
+                  {catalogData?.map(({ catalogId, name, list }) => {
+                    const isActive = catalogId === selectedId;
+                    const count = list?.length;
+                    return (
+                      <div
+                        className={`flex w-full cursor-pointer items-center justify-between border  rounded-[10px] py-3 px-3.5 hover:bg-gray-50 ${isActive ? 'border-primary-200' : 'border-secondary-200'}`}
+                        key={catalogId}
+                        onClick={() => handleSelectId(catalogId)}
+                      >
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm text-primary font-medium">
+                            {name}
+                          </p>
+                          <p className="text-tertiary text-xs">{count} items</p>
+                        </div>
+                        <div className="flex gap-2 text-xs z-50">
+                          <Button
+                            className="text-primary-200"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleEditList({ catalogId, name, count, list });
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            className="text-tertiary"
+                            onClick={() => handleDelete(catalogId)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
+                      <Button
+                        type="button"
+                        className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={currentPage <= 1}
+                        onClick={() => handleCatalogPageChange(currentPage - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <div className="text-center font-geist">
+                        <p className="text-xs font-medium text-primary">
+                          Page {currentPage} of {totalPages}
                         </p>
-                        <p className="text-tertiary text-xs">{count} items</p>
+                        <p className="text-[11px] text-tertiary">
+                          {totalItems} sources
+                        </p>
                       </div>
-                      <div className="flex gap-2 text-xs z-50">
-                        <Button
-                          className="text-primary-200"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleEditList({ catalogId, name, count, list });
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          className="text-tertiary"
-                          onClick={() => handleDelete(catalogId)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        className="rounded-[10px] border border-secondary-200 bg-white px-3 py-2 text-xs font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => handleCatalogPageChange(currentPage + 1)}
+                      >
+                        Next
+                      </Button>
                     </div>
-                  );
-                })}
-
-                <Button
-                  className="bg-white gap-1 p-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleEditList();
-                  }}
-                >
-                  <IoAddOutline className="text-primary-200" size={14} />
-                  <p className="text-primary-200 font-geist font-medium text-sm">
-                    Create new source
-                  </p>
-                </Button>
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
             {(createList || editList) && (
               <div className="flex flex-col w-full py-6 px-5">
@@ -267,6 +385,35 @@ export default function DropdownOptionsModal({
                   required
                   onChange={(e) => setSourceName(e.target.value)}
                 />
+
+                <Button
+                  onClick={() => setShowBulkItems(!showBulkItems)}
+                  className="underline text-xs my-1 text-primary-200 cursor-pointer"
+                >
+                  {showBulkItems ? 'Close bulk' : 'Paste bulk items'}
+                </Button>
+
+                {showBulkItems && (
+                  <div className="w-full mt-4 flex flex-col items-end">
+                    <InputField
+                      // label="Source name"
+                      id="bulkItems"
+                      className="mb-1"
+                      value={bulkItems}
+                      required
+                      type="textarea"
+                      onChange={(e) => setBulkItems(e.target.value)}
+                    />
+                    <Button
+                      className="flex gap-1 p-3 border-primary-300 border bg-tertiary-700 rounded-[10px] disabled:opacity-30"
+                      onClick={handleAddBulkItems}
+                      disabled={bulkItems?.length < 1}
+                    >
+                      <IoAddOutline className="text-primary" size={14} />
+                      Add
+                    </Button>
+                  </div>
+                )}
 
                 <div className="w-full mt-4">
                   <label
@@ -320,7 +467,7 @@ export default function DropdownOptionsModal({
             )}
           </div>
         )}
-        <div className="flex items-center mt-6 p-5 border-t border-secondary-200 justify-end gap-3">
+        <div className="sticky bottom-0 z-50 bg-white flex items-center w-full p-5 border-t border-secondary-200 justify-end gap-3">
           {createList || editList ? (
             <Button
               type="button"

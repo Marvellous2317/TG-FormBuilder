@@ -8,6 +8,10 @@ import useToast from '../../../../shared/hooks/useToast';
 import { useUpdateChecklist } from '../../../../shared/hooks/admin/useChecklist';
 import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useFetchUsersInfinite } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
+import {
+  getChecklistApprovers,
+  getChecklistOperatorIds,
+} from '../../../../shared/utils/constants';
 
 const frequencyList = [
   {
@@ -39,44 +43,6 @@ const approvalModeList = [
   },
 ];
 
-const getChecklistOperatorIds = (checklist) => {
-  if (!checklist) return [];
-
-  if (Array.isArray(checklist.operators)) {
-    return checklist.operators.map((operator) => operator.userId ?? operator);
-  }
-
-  if (Array.isArray(checklist.operatorIds)) {
-    return checklist.operatorIds;
-  }
-
-  if (Array.isArray(checklist.assignments)) {
-    return checklist.assignments
-      .map((assignment) => assignment.operator?.userId ?? assignment.assignedTo)
-      .filter(Boolean);
-  }
-
-  return [];
-};
-
-const getChecklistApprovers = (checklist) => {
-  if (!checklist) return [];
-
-  const approvers = checklist.approverConfigs ?? checklist.approvers ?? [];
-
-  if (!Array.isArray(approvers)) {
-    return [];
-  }
-
-  return approvers
-    .map((approver, index) => ({
-      approverId:
-        approver.approverId ?? approver.userId ?? approver.approver?.userId,
-      step: approver.step ?? index,
-    }))
-    .filter(({ approverId }) => Boolean(approverId));
-};
-
 export default function EditLogbookModal({
   isEditChecklistModalOpen,
   setIsEditChecklistModalOpen,
@@ -97,6 +63,8 @@ export default function EditLogbookModal({
     approvalMode: checklistToEdit?.approvalMode || '',
     operators: getChecklistOperatorIds(checklistToEdit),
     approvers: getChecklistApprovers(checklistToEdit),
+    issuedNumber: checklistToEdit?.issuedNumber || '',
+    entityDisplayName: checklistToEdit?.entityDisplayName || '',
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
@@ -118,6 +86,8 @@ export default function EditLogbookModal({
         approvalMode: checklistToEdit.approvalMode || '',
         operators: getChecklistOperatorIds(checklistToEdit),
         approvers: getChecklistApprovers(checklistToEdit),
+        issuedNumber: checklistToEdit?.issuedNumber || '',
+        entityDisplayName: checklistToEdit?.entityDisplayName || '',
       });
     }
   }, [isEditChecklistModalOpen, checklistToEdit]);
@@ -141,6 +111,7 @@ export default function EditLogbookModal({
   const rolesData = roles?.data?.roles;
 
   const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
+  const adminRole = rolesData?.find((role) => role.roleName === 'admin');
 
   const {
     data: departmentsData,
@@ -197,6 +168,7 @@ export default function EditLogbookModal({
 
   const usersOtherList = allOtherUsers
     .filter((user) => user.roleId !== operatorRole?.roleId)
+    .filter((user) => user.roleId !== adminRole?.roleId)
     .map((user) => ({
       ...user,
       label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
@@ -299,6 +271,8 @@ export default function EditLogbookModal({
       approvalMode,
       operators,
       approvers,
+      issuedNumber,
+      entityDisplayName,
     } = formData;
 
     if (
@@ -324,6 +298,8 @@ export default function EditLogbookModal({
             approvalMode,
             operators,
             approvers,
+            issuedNumber,
+            entityDisplayName,
           },
         });
       } else {
@@ -337,6 +313,8 @@ export default function EditLogbookModal({
             approvalMode,
             operators,
             approvers,
+            issuedNumber,
+            entityDisplayName,
           },
         });
       }
@@ -362,6 +340,8 @@ export default function EditLogbookModal({
       approvalMode: '',
       operators: [],
       approvers: [],
+      issuedNumber: '',
+      entityDisplayName: '',
     });
     setIsEditChecklistModalOpen(false);
     setChecklistToEdit(null);
@@ -505,9 +485,27 @@ export default function EditLogbookModal({
             />
             {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
+
+          <InputField
+            label="Issued number"
+            id="issuedNumber"
+            required
+            className="mb-1"
+            value={formData.issuedNumber}
+            onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Entity display name"
+            id="entityDisplayName"
+            required
+            className="mb-1"
+            value={formData.entityDisplayName}
+            onChange={handleInputChange}
+          />
         </div>
 
-        <div className="flex items-center mt-6 justify-end gap-3">
+        <div className="flex items-center mt-6 pb-4 justify-end gap-3">
           <Button
             type="button"
             onClick={() => handleCancel()}

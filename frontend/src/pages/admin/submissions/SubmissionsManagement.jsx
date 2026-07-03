@@ -195,6 +195,7 @@ export default function SubmissionsManagement() {
             handlePageChange={handlePaginationChange}
             itemsPerPage={pageSize}
             totalPages={pagination?.totalPages}
+            totalItems={pagination?.total}
           />
         </div>
       </div>

@@ -1,16 +1,23 @@
 const DB_NAME = 'digiforms-cache';
+const DB_VERSION = 2;
 const CHECKLIST_STORE = 'checklists';
 const DRAFT_STORE = 'drafts';
 const FORM_DRAFT_STORE = 'form-drafts';
 
+function ensureObjectStore(db, storeName, options) {
+  if (!db.objectStoreNames.contains(storeName)) {
+    db.createObjectStore(storeName, options);
+  }
+}
+
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      db.createObjectStore(CHECKLIST_STORE, { keyPath: 'key' });
-      db.createObjectStore(DRAFT_STORE, { keyPath: 'checklistId' });
-      db.createObjectStore(FORM_DRAFT_STORE, { keyPath: 'checklistId' });
+      ensureObjectStore(db, CHECKLIST_STORE, { keyPath: 'key' });
+      ensureObjectStore(db, DRAFT_STORE, { keyPath: 'checklistId' });
+      ensureObjectStore(db, FORM_DRAFT_STORE, { keyPath: 'checklistId' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

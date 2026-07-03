@@ -78,12 +78,18 @@ export default function DepartmentList({
     const { name, value } = normalizeEvent(payload);
 
     if (name === 'page') {
-      handleDepartmentPageChange({ page: Math.max(1, Number(value) || 1), pageSize });
+      handleDepartmentPageChange({
+        page: Math.max(1, Number(value) || 1),
+        pageSize,
+      });
       return;
     }
 
     if (name === 'pageSize') {
-      handleDepartmentPageChange({ page: 1, pageSize: Math.max(1, Number(value) || 1) });
+      handleDepartmentPageChange({
+        page: 1,
+        pageSize: Math.max(1, Number(value) || 1),
+      });
     }
   };
 
@@ -112,43 +118,34 @@ export default function DepartmentList({
     };
   }, [activeMenuId]);
 
-  const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditDepartmentModal(true);
-      },
+ const dropOptions = [
+  {
+    title: 'Edit',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditDepartmentModal(true);
     },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('Department is already deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteDepartmentModalOpen(true);
-      },
-    },
-    {
-      title: 'Restore',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('Department is not deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+    value: 'delete-restore',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (activeMenuRow?.deletedAt) {
+        // Department is deleted - show restore modal
         setIsRestoreDepartmentModalOpen(true);
-      },
+      } else {
+        // Department is active - show delete modal
+        setIsDeleteDepartmentModalOpen(true);
+      }
     },
-  ];
+  },
+];
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -228,6 +225,9 @@ export default function DepartmentList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  #
+                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
@@ -249,11 +249,14 @@ export default function DepartmentList({
                   </td>
                 </tr>
               ) : departments?.length > 0 ? (
-                departments.map((row) => (
+                departments.map((row, index) => (
                   <tr
                     key={row.departmentId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
+                      {index + 1}
+                    </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 space-y-1">
                       {row.departmentName}
                     </td>
@@ -306,6 +309,7 @@ export default function DepartmentList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(

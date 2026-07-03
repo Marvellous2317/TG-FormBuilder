@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import {
   useCreateOperatorChecklistEntries,
   useOperatorChecklist,
@@ -13,7 +18,10 @@ import Loader from '../../shared/components/Loader';
 import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import { queueSubmission } from '../../lib/offlineQueue';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import {
   saveToCache,
   getFromCache,
@@ -24,6 +32,9 @@ import {
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const checklistTitle = state?.title || '';
 
   const { mutateAsync: submitEntries, isPending: isSubmittingEntries } =
     useCreateOperatorChecklistEntries(checklistId);
@@ -59,9 +70,11 @@ export default function CreateOperatorEntry() {
         enrichedFormData[entry.entryId] = {
           entryId: entry.entryId,
           value: String(
-            entry.type === 'section_formular'
-              ? computeSectionFormulaValue(entry)
-              : computeFormulaValue(entry),
+            formatComputedValue(
+              entry.type === 'section_formular'
+                ? computeSectionFormulaValue(entry)
+                : computeFormulaValue(entry),
+            ),
           ),
         };
       });
@@ -90,7 +103,7 @@ export default function CreateOperatorEntry() {
         });
         showSuccess('Saved offline — will sync when reconnected');
       } else {
-        showError('Something went wrong');
+        // showError('Something went wrong');
       }
     }
   };
@@ -255,6 +268,10 @@ export default function CreateOperatorEntry() {
         </p>
       </Link>
 
+      <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+        <h2>{checklistTitle}</h2>
+      </div>
+
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />
       ) : entriesData?.length < 1 ? (
@@ -307,7 +324,7 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -319,7 +336,9 @@ export default function CreateOperatorEntry() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

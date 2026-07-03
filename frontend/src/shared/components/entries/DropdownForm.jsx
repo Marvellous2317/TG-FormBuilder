@@ -57,6 +57,7 @@ export default function DropdownForm({
           buttonClassName="w-full! bg-tertiary-700! p-4! text-base! text-primary! outline-none! rounded-xl! placeholder:text-tertiary!"
           menuClassName="left-0 right-auto"
           disabled={readOnly}
+          searchable
           readOnly={readOnly}
         />
         {isFetchingCatalog && <Loader size="h-4.5 w-4.5" />}
