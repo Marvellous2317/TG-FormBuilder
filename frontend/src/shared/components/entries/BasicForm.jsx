@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import InputField from '../InputField';
 
 export default function BasicForm({ entry, formData, setFormData, readOnly }) {
@@ -30,11 +30,26 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
 
   const isVisible =
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
-  if (!isVisible && ['number'].includes(entry.type)) return null;
 
   if (isVisible) {
     currentValue = formData[entryId]?.value || entry?.value || '';
   }
+
+  useEffect(() => {
+    if (!entryId) return;
+    if (formData[entryId] !== undefined) return;
+    if (!currentValue) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [entryId]: {
+        entryId,
+        value: currentValue,
+      },
+    }));
+  }, [entryId, currentValue, formData[entryId]]);
+
+  if (!isVisible && ['number'].includes(entry.type)) return null;
 
   return (
     <div className="mt-5 w-full">

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import DropdownSelect from '../DropdownSelect';
 import { useChecklistCatalog } from '../../hooks/admin/useChecklist';
 import Loader from '../Loader';
@@ -40,6 +40,24 @@ export default function DropdownForm({
   const currentValue = formData[entryId]?.value || entry?.value || '';
 
   const isVisible = entry?.config?.visible ? entry?.config?.visible : true;
+
+  // Ensure a prefilled/default value is included in formData even if the
+  // user never edits the field, so it still gets submitted.
+  useEffect(() => {
+    if (!entryId) return;
+    if (formData[entryId] !== undefined) return;
+    if (!currentValue) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [entryId]: {
+        entryId,
+        value: currentValue,
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryId, currentValue, formData[entryId]]);
+
   if (!isVisible) return null;
 
   return (
