@@ -24,6 +24,7 @@ export const validateCreateChecklist = [
     .withMessage("Frequency interval must be between 1 and 24 hours"),
   body("approvalMode").optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
+  body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
   body("approvers").optional().isArray().withMessage("Approvers must be an array"),
   body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
   body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
@@ -51,6 +52,7 @@ export const validateUpdateChecklist = [
     .withMessage("Frequency interval must be between 1 and 24 hours"),
   body("approvalMode").optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
+  body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
   body("approvers").optional().isArray().withMessage("Approvers must be an array"),
   body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
   body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),

@@ -32,7 +32,7 @@ export class AdminRepository {
       const userRaw = await User.findOne({
         where: { email: email.toLowerCase() },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
           {
             model: Company,
             as: "company",
@@ -51,9 +51,8 @@ export class AdminRepository {
       }
 
       const user = userRaw.toSafeJSON();
-      const allowedRoles = ["admin", "superAdmin"];
 
-      if (!user.role || !allowedRoles.includes(user.role.roleName)) {
+      if (!user.role || (user.role.isAdmin !== true && user.role.roleName !== "superAdmin")) {
         throw new ApplicationError("Unauthorized access", 401);
       }
 
@@ -133,7 +132,7 @@ export class AdminRepository {
     }
   }
 
-  static async createRole({ roleName, description }) {
+  static async createRole({ roleName, description, isAdmin }) {
     try {
       const existing = await Role.findOne({
         where: {
@@ -155,6 +154,7 @@ export class AdminRepository {
       const role = await Role.create({
         roleName: roleName.toLowerCase(),
         description,
+        isAdmin: isAdmin === undefined ? false : isAdmin,
       });
 
       return { message: "Role created successfully", role };
@@ -181,6 +181,7 @@ export class AdminRepository {
       if (data.roleName) role.roleName = data.roleName.toLowerCase();
       if (data.description !== undefined) role.description = data.description;
       if (data.isActive !== undefined) role.isActive = data.isActive;
+      if (data.isAdmin !== undefined) role.isAdmin = data.isAdmin;
 
       await role.save();
       return { message: "Role updated successfully", role };
@@ -237,7 +238,7 @@ export class AdminRepository {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["password", "updatedAt"] },
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         {
           model: Company,
           as: "company",
@@ -277,7 +278,7 @@ export class AdminRepository {
 
   static async addUser(
     admin,
-    { email, firstName, lastName, roleId, companyId, department },
+    { email, firstName, lastName, roleId, companyId, department, accessLevel },
   ) {
     try {
       const existingUser = await User.findOne({
@@ -325,6 +326,7 @@ export class AdminRepository {
         roleId,
         companyId: companyId || null,
         department: department || null,
+        accessLevel: accessLevel || "read_write",
         newLogin: true,
       });
 
@@ -434,7 +436,7 @@ export class AdminRepository {
         where,
         attributes: { exclude: ["password"] },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
           {
             model: Company,
             as: "company",
@@ -509,6 +511,7 @@ export class AdminRepository {
       const companyId = data.companyId;
       const department = data.department;
       const status = data.status;
+      const accessLevel = data.accessLevel;
 
       const user = await User.findOne({ where: { userId } });
       if (!user) throw new ApplicationError("User not found", 404);
@@ -544,6 +547,10 @@ export class AdminRepository {
 
       if (status && ["pending", "active", "suspended"].includes(status)) {
         user.status = status;
+      }
+
+      if (accessLevel !== undefined && ["read_write", "read"].includes(accessLevel)) {
+        user.accessLevel = accessLevel;
       }
 
       await user.save();
