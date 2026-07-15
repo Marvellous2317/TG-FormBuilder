@@ -374,24 +374,27 @@ export class AdminRepository {
       if (frequency === "hourly" && (!frequencyInterval || frequencyInterval < 1)) {
         throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);
       }
+      const requiresApproval = approvalRequired === undefined ? true : approvalRequired;
       const checklist = await Checklist.create(
-        { 
-          title, 
+        {
+          title,
           documentNumber,
           issuedNumber: issuedNumber || null,
           entityDisplayName: entityDisplayName || null,
-          companyId, 
-          departmentId, 
+          companyId,
+          departmentId,
           frequency: frequency || null,
           frequencyInterval: frequency === "hourly" ? frequencyInterval : null,
           approvalMode: approvalMode || "sequential",
-          approvalRequired: approvalRequired === undefined ? true : approvalRequired,
+          approvalRequired: requiresApproval,
           createdBy
         },
         { transaction }
       );
 
-      const createdApprovers = await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction);
+      const createdApprovers = requiresApproval
+        ? await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction)
+        : [];
       const createdAssignments = await this._setChecklistOperators(checklist.checklistId, companyId, operators, createdBy, transaction);
 
       await transaction.commit();
@@ -724,7 +727,10 @@ export class AdminRepository {
 
       await checklist.save({ transaction });
 
-      const createdApprovers = await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction);
+      const effectiveApprovalRequired = approvalRequired !== undefined ? approvalRequired : checklist.approvalRequired;
+      const createdApprovers = effectiveApprovalRequired
+        ? await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction)
+        : [];
       const createdAssignments = await this._setChecklistOperators(checklistId, checklist.companyId, operators, updatedBy, transaction);
 
       await transaction.commit();
