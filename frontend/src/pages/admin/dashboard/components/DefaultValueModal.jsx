@@ -8,6 +8,7 @@ export default function DefaultValueModal({
   setIsShowDefaultValueModal,
   onSave,
   initialValue,
+  activeField,
 }) {
   const [defaultValue, setDefaultValue] = useState('');
 
@@ -58,7 +59,7 @@ export default function DefaultValueModal({
             id="defaultValue"
             required
             className="mb-1"
-            type="number"
+            type={activeField?.type === 'text' ? 'textarea' : 'number'}
             value={defaultValue}
             onChange={handleInputChange}
           />

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import BasicForm from '../../shared/components/entries/BasicForm';
 import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../shared/components/Loader';
@@ -13,7 +18,10 @@ import {
 } from '../../shared/hooks/approver/useApprover';
 import Button from '../../shared/components/Button';
 import ApproverConfirmationModal from './components/ApproverConfirmationModal';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import useToast from '../../shared/hooks/useToast';
 import Icons from '../../assets/icons';
 import jsPDF from 'jspdf';
@@ -22,7 +30,10 @@ import SignatureModal from './components/SignatureModal';
 import { useAuthStore } from '../../shared/store/authStore';
 
 export default function ViewApproverEntries() {
-  let { id: checklistId, back: previousLocation } = useLoaderData();
+  let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const { title: checklistTitle, previousLocation } = state;
 
   const { user } = useAuthStore();
 
@@ -61,19 +72,43 @@ export default function ViewApproverEntries() {
     const operatorName = operator
       ? `${operator.firstName} ${operator.lastName}`
       : 'N/A';
-    const operatorSignatureDataUrl = operator?.signature || 'N/A';
+    const operatorSignatureDataUrl = operator?.signature;
     const entityName = operator?.company?.companyName || 'N/A';
+    const approvals = submission?.approvals || [];
+    const issuedNumber =
+      submission?.issuedNumber || new Date().toLocaleDateString() || 'N/A';
+    const entityDisplayName =
+      submission?.entityDisplayName || entityName || 'N/A';
 
     const doc = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
+
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
     const usableWidth = pageWidth - 2 * margin;
 
-    // Header grid: 3 columns, left+right split into 2 rows, middle full height
+    const getImageFormat = (dataUrl) => {
+      const formatMatch = dataUrl?.match(
+        /^data:image\/(png|jpeg|jpg);base64,/i,
+      );
+      if (!formatMatch) return null;
+
+      return formatMatch[1].toUpperCase() === 'JPG'
+        ? 'JPEG'
+        : formatMatch[1].toUpperCase();
+    };
+
+    const ensureSpace = (height) => {
+      if (yPos + height + margin <= pageHeight) return;
+
+      doc.addPage();
+      yPos = 20;
+    };
+
     const headerH = 40;
     const cellLeftW = 45;
     const cellRightW = 52;
@@ -83,40 +118,36 @@ export default function ViewApproverEntries() {
     const divX2 = margin + cellLeftW + cellMidW;
     const halfY = headerY + headerH / 2;
 
-    // Outer border + white fill
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.3);
     doc.setFillColor(255, 255, 255);
     doc.rect(margin, headerY, usableWidth, headerH, 'FD');
 
-    // Vertical dividers
     doc.line(divX1, headerY, divX1, headerY + headerH);
     doc.line(divX2, headerY, divX2, headerY + headerH);
 
-    // Horizontal dividers in left and right columns only
     doc.line(margin, halfY, divX1, halfY);
     doc.line(divX2, halfY, margin + usableWidth, halfY);
 
-    // Top-left: entity name
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
-    doc.text(
-      entityName || 'Entity name',
-      margin + 3,
-      headerY + headerH / 4 + 1.5,
-      { maxWidth: cellLeftW - 6 },
-    );
 
-    // Bottom-left: date
-    doc.text(
-      new Date().toLocaleDateString(),
-      margin + 3,
-      halfY + headerH / 4 + 1.5,
-      { maxWidth: cellLeftW - 6 },
-    );
+    const leftX = margin + 3;
+    const leftMaxW = cellLeftW - 6;
 
-    // Middle: document title (large, vertically centered)
+    doc.text(entityDisplayName || 'Entity name', leftX, headerY + 8, {
+      maxWidth: leftMaxW,
+    });
+
+    doc.text('Proprietary & Confidential', leftX, halfY + 7, {
+      maxWidth: leftMaxW,
+    });
+
+    doc.text('Doc type: form', leftX, halfY + 13, {
+      maxWidth: leftMaxW,
+    });
+
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(20, 20, 20);
@@ -125,20 +156,21 @@ export default function ViewApproverEntries() {
       maxWidth: cellMidW - 8,
     });
 
-    // Top-right: doc no
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(40, 40, 40);
-    doc.text(`Doc no - ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
+
+    doc.text(`Doc no: ${docNumber}`, divX2 + 3, headerY + headerH / 4 + 1.5, {
       maxWidth: cellRightW - 6,
     });
 
-    // Bottom-right: proprietary & confidential
     doc.text(
-      'Proprietary & Confidential',
+      `Issue No.: ${issuedNumber}`,
       divX2 + 3,
       halfY + headerH / 4 + 1.5,
-      { maxWidth: cellRightW - 6 },
+      {
+        maxWidth: cellRightW - 6,
+      },
     );
 
     const headerBottom = headerY + headerH + 4;
@@ -152,6 +184,7 @@ export default function ViewApproverEntries() {
 
     const flushPendingRows = () => {
       if (pendingRows.length === 0) return;
+
       autoTable(doc, {
         startY: yPos,
         body: pendingRows,
@@ -165,6 +198,7 @@ export default function ViewApproverEntries() {
         tableLineColor: [220, 220, 220],
         tableLineWidth: 0.1,
       });
+
       yPos = doc.lastAutoTable.finalY + 6;
       pendingRows = [];
     };
@@ -173,14 +207,19 @@ export default function ViewApproverEntries() {
       const entryId = entry.entryId;
       const entryValue =
         entry.type === 'formular'
-          ? computeFormulaValue(entry)
+          ? formatComputedValue(computeFormulaValue(entry))
           : entry.type === 'section_formular'
-            ? computeSectionFormulaValue(entry)
-            : (formData[entryId]?.value ?? entry.value ?? '');
+            ? formatComputedValue(computeSectionFormulaValue(entry))
+            : (formData[entryId]?.value ??
+              formData[entryId]?.config.defaultValue ??
+              entry.value ??
+              entry.config.defaultValue ??
+              '');
 
       const isVisible =
         entry?.config?.visible !== undefined ? entry?.config?.visible : true;
-      if (!isVisible) return;
+
+      if (!isVisible && ['number'].includes(entry.type)) return;
 
       if (entry.type === 'section') {
         flushPendingRows();
@@ -190,17 +229,27 @@ export default function ViewApproverEntries() {
           yPos = 20;
         }
 
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(30, 30, 30);
-        doc.text(
-          `${entry.name}${entry.config?.name ? ` - ${entry.config.name}` : ''}`,
-          margin,
-          yPos,
-        );
-        yPos += 4;
+        const sectionTitle = `${entry.name}${entry.config?.name ? ` - ${entry.config.name}` : ''}`;
+        autoTable(doc, {
+          startY: yPos,
+          body: [[sectionTitle]],
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 10,
+            fontStyle: 'bold',
+            cellPadding: 3,
+            textColor: [30, 30, 30],
+            fillColor: [245, 245, 245],
+          },
+          theme: 'grid',
+          tableLineColor: [220, 220, 220],
+          tableLineWidth: 0.1,
+        });
+
+        yPos = doc.lastAutoTable.finalY;
 
         let sectionRows;
+
         try {
           sectionRows = JSON.parse(entry.value || '[]');
         } catch {
@@ -217,35 +266,72 @@ export default function ViewApproverEntries() {
         if (sectionFields.length > 0 && sectionRows.length > 0) {
           const headers = sectionFields.map((f) => f.name);
           const sectionItems = entry.config?.items || [];
-          const tableRows = sectionRows.map((row) =>
-            sectionFields.map((f) => {
-              const fieldId = f.entryId || f.id;
-              if (f.type === 'formular') {
-                const expression = f.config?.expression;
-                if (!expression) return '';
-                const scope = {};
-                sectionItems.forEach((e) => {
-                  if (e.type === 'number' && e.config?.fieldRef) {
-                    const refId = e.entryId || e.id;
-                    const raw = row[refId]?.value ?? e?.config?.defaultValue;
-                    scope[e.config.fieldRef] =
-                      raw === '' || raw == null ? 0 : Number(raw);
+
+          const getSectionCellValue = (row, field) => {
+            const fieldId = field.entryId || field.id;
+
+            if (field.type === 'formular') {
+              const expression = field.config?.expression;
+              if (!expression) return '';
+
+              const scope = {};
+
+              sectionItems.forEach((e) => {
+                if (e.config?.fieldRef) {
+                  const refId = e.entryId || e.id;
+                  const raw =
+                    row[refId]?.value ?? e.value ?? e?.config?.defaultValue;
+
+                  if (raw === '' || raw == null) {
+                    scope[e.config.fieldRef] = 0;
+                  } else {
+                    const num = Number(raw);
+                    scope[e.config.fieldRef] = isNaN(num) ? String(raw) : num;
                   }
-                });
-                const { value, error } = evaluateFormula(expression, scope);
-                if (error || (typeof value === 'number' && !isFinite(value)))
-                  return 0;
-                return value ?? 0;
+                }
+              });
+
+              const { value, error } = evaluateFormula(expression, scope);
+
+              if (error || (typeof value === 'number' && !isFinite(value))) {
+                return formatComputedValue(0);
               }
-              return row[fieldId]?.value ?? '';
-            }),
-          );
+
+              return formatComputedValue(value ?? 0);
+            }
+
+            return row[fieldId]?.value ?? '';
+          };
+
+          const shouldTransposeSection =
+            sectionFields.length > 6 && sectionRows.length === 1;
+
+          const tableRows = shouldTransposeSection
+            ? sectionRows.flatMap((row, rowIndex) =>
+                sectionFields.map((field) => [
+                  sectionRows.length > 1
+                    ? `Row ${rowIndex + 1} - ${field.name}`
+                    : field.name,
+                  getSectionCellValue(row, field),
+                ]),
+              )
+            : sectionRows.map((row) =>
+                sectionFields.map((field) => getSectionCellValue(row, field)),
+              );
 
           autoTable(doc, {
             startY: yPos,
-            head: [headers],
+            head: shouldTransposeSection
+              ? [['Check / Question', 'Answer']]
+              : [headers],
             body: tableRows,
             margin: { left: margin, right: margin },
+            columnStyles: shouldTransposeSection
+              ? {
+                  0: { cellWidth: usableWidth * 0.75, fontStyle: 'bold' },
+                  1: { cellWidth: usableWidth * 0.25 },
+                }
+              : undefined,
             styles: { fontSize: 8, cellPadding: 2.5 },
             headStyles: {
               fillColor: [0, 0, 0],
@@ -254,6 +340,7 @@ export default function ViewApproverEntries() {
             },
             theme: 'grid',
           });
+
           yPos = doc.lastAutoTable.finalY + 8;
         } else {
           yPos += 6;
@@ -265,70 +352,114 @@ export default function ViewApproverEntries() {
 
     flushPendingRows();
 
-    if (yPos > 265) {
-      doc.addPage();
-      yPos = 20;
-    }
+    ensureSpace(50);
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(100, 100, 100);
     doc.text(`Submitted by: ${operatorName} (Operator)`, margin, yPos + 5);
+    yPos += 12;
 
-    if (operatorSignatureDataUrl) {
-      const signatureY = yPos + 12;
-      const pageHeight = doc.internal.pageSize.getHeight();
+    const operatorImageFormat = getImageFormat(operatorSignatureDataUrl);
+
+    if (operatorImageFormat) {
       const signatureHeight = 30;
       const signatureWidth = 60;
-      const formatMatch = operatorSignatureDataUrl.match(
-        /^data:image\/(png|jpeg|jpg);base64,/i,
-      );
-      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
 
-      if (signatureY + signatureHeight + margin > pageHeight) {
-        doc.addPage();
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100, 100, 100);
-      }
-
-      doc.text('Operator signature:', margin, signatureY);
+      ensureSpace(signatureHeight + 10);
+      doc.text('Operator signature:', margin, yPos);
       doc.addImage(
         operatorSignatureDataUrl,
-        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
+        operatorImageFormat,
         margin,
-        signatureY + 3,
+        yPos + 3,
         signatureWidth,
         signatureHeight,
       );
+
+      yPos += signatureHeight + 12;
     }
 
-    const signatureDataUrl = user?.signature;
-    if (signatureDataUrl) {
-      const signatureY = yPos + 62;
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const signatureHeight = 30;
-      const signatureWidth = 60;
-      const formatMatch = signatureDataUrl.match(
-        /^data:image\/(png|jpeg|jpg);base64,/i,
-      );
-      const imageFormat = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
+    const sortedApprovals = approvals
+      .slice()
+      .sort((a, b) => (a.step ?? 999) - (b.step ?? 999));
 
-      if (signatureY + signatureHeight + margin > pageHeight) {
-        doc.addPage();
-        doc.setFontSize(9);
+    if (sortedApprovals.length > 0) {
+      ensureSpace(55);
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(30, 30, 30);
+      doc.text('Approvals', margin, yPos);
+      yPos += 5;
+
+      const approvalsPerRow = 3;
+      const approvalGap = 4;
+      const approvalCardWidth =
+        (usableWidth - approvalGap * (approvalsPerRow - 1)) / approvalsPerRow;
+      const approvalCardHeight = 45;
+      const approvalSignatureWidth = Math.min(approvalCardWidth - 8, 42);
+      const approvalSignatureHeight = 17;
+
+      sortedApprovals.forEach((approval, index) => {
+        const col = index % approvalsPerRow;
+
+        if (col === 0) {
+          ensureSpace(approvalCardHeight + 6);
+        }
+
+        const x = margin + col * (approvalCardWidth + approvalGap);
+        const approver = approval.approver || {};
+        const approverName =
+          `${approver.firstName || ''} ${approver.lastName || ''}`.trim() ||
+          'N/A';
+        const decidedDate = approval.decidedAt
+          ? new Date(approval.decidedAt).toLocaleDateString()
+          : 'N/A';
+        const approvalImageFormat = getImageFormat(approver.signature);
+
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.1);
+        doc.rect(x, yPos, approvalCardWidth, approvalCardHeight);
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(40, 40, 40);
+        doc.text(approverName, x + 3, yPos + 5, {
+          maxWidth: approvalCardWidth - 6,
+        });
+
+        doc.setFontSize(7);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(100, 100, 100);
-      }
+        doc.setTextColor(90, 90, 90);
+        doc.text(
+          `${approval.status || 'N/A'} - ${decidedDate}`,
+          x + 3,
+          yPos + 10,
+          {
+            maxWidth: approvalCardWidth - 6,
+          },
+        );
 
-      doc.text('Approver signature:', margin, signatureY);
-      doc.addImage(
-        signatureDataUrl,
-        imageFormat === 'JPG' ? 'JPEG' : imageFormat,
-        margin,
-        signatureY + 3,
-        signatureWidth,
-        signatureHeight,
-      );
+        if (approvalImageFormat) {
+          doc.addImage(
+            approver.signature,
+            approvalImageFormat,
+            x + 3,
+            yPos + 18,
+            approvalSignatureWidth,
+            approvalSignatureHeight,
+          );
+        } else {
+          doc.text('No signature', x + 3, yPos + 27);
+        }
+
+        if (
+          col === approvalsPerRow - 1 ||
+          index === sortedApprovals.length - 1
+        ) {
+          yPos += approvalCardHeight + 6;
+        }
+      });
     }
 
     doc.save(`checklist-${docNumber}.pdf`);
@@ -372,12 +503,15 @@ export default function ViewApproverEntries() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
+      if (e.config?.fieldRef) {
         const rawValue =
           formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
-
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
@@ -405,7 +539,12 @@ export default function ViewApproverEntries() {
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    let rowsData;
+    try {
+      rowsData = JSON.parse(rawValue || '[]');
+    } catch {
+      rowsData = [];
+    }
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -414,13 +553,41 @@ export default function ViewApproverEntries() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
-    const values = rowsData
-      .map((row) => {
-        const raw = row[targetFieldId]?.value;
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const raw = row[targetFieldId]?.value;
+      if (raw !== undefined && raw !== null && raw !== '') {
         const num = Number(raw);
         return isNaN(num) ? null : num;
-      })
-      .filter((v) => v !== null);
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawValue =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawValue === '' || rawValue == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const num = Number(rawValue);
+            scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+          }
+        });
+        const { value, error } = evaluateFormula(expression, scope);
+        if (error || value == null) return null;
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
 
     if (!values.length) return 0;
 
@@ -508,6 +675,10 @@ export default function ViewApproverEntries() {
         )}
       </div>
 
+      <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+        <h2>{checklistTitle}</h2>
+      </div>
+
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />
       ) : entriesData?.length < 1 ? (
@@ -565,7 +736,7 @@ export default function ViewApproverEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeFormulaValue(entry),
+                        value: formatComputedValue(computeFormulaValue(entry)),
                       }}
                       formData={formData}
                       setFormData={setFormData}
@@ -577,7 +748,9 @@ export default function ViewApproverEntries() {
                       entry={{
                         ...entry,
                         type: 'number',
-                        value: computeSectionFormulaValue(entry),
+                        value: formatComputedValue(
+                          computeSectionFormulaValue(entry),
+                        ),
                       }}
                       formData={formData}
                       setFormData={setFormData}

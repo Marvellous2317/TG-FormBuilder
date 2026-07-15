@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import InputField from '../InputField';
 
 export default function EnumForm({
@@ -30,6 +30,24 @@ export default function EnumForm({
 
   const isVisible =
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
+
+  // Ensure a prefilled/default value is included in formData even if the
+  // user never edits the field, so it still gets submitted.
+  useEffect(() => {
+    if (!entryId) return;
+    if (formData[entryId] !== undefined) return;
+    if (!currentValue) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [entryId]: {
+        entryId,
+        value: currentValue,
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryId, currentValue, formData[entryId]]);
+
   if (!isVisible) return null;
 
   return (

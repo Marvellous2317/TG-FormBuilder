@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiMoreVertical } from 'react-icons/fi';
+import { FiSearch, FiMoreVertical, FiX } from 'react-icons/fi';
 import Pagination from '../../../../shared/components/Pagination';
 import DropdownSelect from '../../../../shared/components/DropdownSelect';
 import { createPortal } from 'react-dom';
 import Button from '../../../../shared/components/Button';
-import {
-  deletedOptions,
-  formatDate,
-  statusOptionss,
-} from '../../../../shared/utils/constants';
+import { deletedOptions, formatDate } from '../../../../shared/utils/constants';
 import useToast from '../../../../shared/hooks/useToast';
 import { useNavigate } from 'react-router-dom';
-import AssignLogbookModal from './AssignLogbookModal';
+import AssignLogbookModal from './ExportLogbookModal';
 import Loader from '../../../../shared/components/Loader';
+import ExportLogbookModal from './ExportLogbookModal';
+import { useDepartmentsInfinite } from '@/shared/hooks/superadmin/useDepartments';
+import InputField from '@/shared/components/InputField';
 
 export default function TaskList({
   checklists,
@@ -30,6 +29,7 @@ export default function TaskList({
   handleDepartmentChange,
   handleDeletedChange,
   setIsShowLogbookModal,
+  setChecklistToDuplicate,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('active');
@@ -43,11 +43,38 @@ export default function TaskList({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
     useState(false);
+  const [isShowExportLogbookModal, setIsShowExportLogbookModal] =
+    useState(false);
+  const [checklistToExport, setChecklistToExport] = useState(false);
+  const [departmentSearchInput, setDepartmentSearchInput] = useState('');
 
   const navigate = useNavigate();
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
+
+  const {
+    data: departmentsData,
+    isPending: isLoadingDepartments,
+    fetchNextPage: fetchNextDepartmentsPage,
+    hasNextPage: hasNextDepartmentsPage,
+    isFetchingNextPage: isFetchingNextDepartmentsPage,
+  } = useDepartmentsInfinite(
+    { search: departmentSearchInput },
+    { enabled: checklists?.length > 0 },
+  );
+
+  const allDepartments =
+    departmentsData?.pages.flatMap((p) => p.data.departments) ?? [];
+
+  const departmentsList = [
+    { label: 'All departments', value: '' },
+    ...allDepartments.map((department) => ({
+      ...department,
+      label: department.departmentName,
+      value: department.departmentId,
+    })),
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -129,91 +156,103 @@ export default function TaskList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    {
-      title: 'Entries',
-      value: 'entries',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(
-          `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
-        );
-      },
+  {
+    title: 'Export',
+    value: 'export',
+    onClick: () => {
+      setIsShowExportLogbookModal(true);
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
     },
-    // {
-    //   title: 'Unassign log',
-    //   value: 'unassign',
-    //   onClick: () => {
-    //     setActiveMenuId(null);
-    //     // setActiveMenuRow(null);
-    //     setActionToPerform('unassign');
-    //     setIsShowAssignLogbookModal(true);
-    //   },
-    // },
-    // {
-    //   title: 'Assign log',
-    //   value: 'assign',
-    //   onClick: () => {
-    //     setActiveMenuId(null);
-    //     // setActiveMenuRow(null);
-    //     setActionToPerform('assign');
-    //     setIsShowAssignLogbookModal(true);
-    //   },
-    // },
-    {
-      title: 'Edit log',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditChecklistModalOpen(true);
-      },
+  },
+  {
+    title: 'Entries',
+    value: 'entries',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(
+        `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
+      );
     },
-    {
-      title: 'Delete log',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('Checklist is already deleted.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteChecklistModalOpen(true);
-      },
+  },
+  // {
+  //   title: 'Unassign log',
+  //   value: 'unassign',
+  //   onClick: () => {
+  //     setActiveMenuId(null);
+  //     // setActiveMenuRow(null);
+  //     setActionToPerform('unassign');
+  //     setIsShowAssignLogbookModal(true);
+  //   },
+  // },
+  // {
+  //   title: 'Assign log',
+  //   value: 'assign',
+  //   onClick: () => {
+  //     setActiveMenuId(null);
+  //     // setActiveMenuRow(null);
+  //     setActionToPerform('assign');
+  //     setIsShowAssignLogbookModal(true);
+  //   },
+  // },
+  {
+    title: 'Edit log',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditChecklistModalOpen(true);
     },
-    {
-      title: 'Restore log',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('Checklist is not deleted.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore log' : 'Delete log',
+    value: 'delete-restore',
+    onClick: () => {
+      const rowData = activeMenuRow; // Store reference before clearing
+      
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (rowData?.deletedAt) {
+        // Checklist is deleted - show restore modal
         setIsRestoreChecklistModalOpen(true);
-      },
+      } else {
+        // Checklist is active - show delete modal
+        setIsDeleteChecklistModalOpen(true);
+      }
     },
-    {
-      title: 'Submissions',
-      value: 'submissions',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
-      },
+  },
+  {
+    title: 'Duplicate',
+    value: 'duplicate',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsShowLogbookModal(true);
     },
-    {
-      title: 'Version History',
-      value: 'history',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
-      },
+  },
+  {
+    title: 'Submissions',
+    value: 'submissions',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
     },
-  ];
+  },
+  {
+    title: 'Version History',
+    value: 'history',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
+    },
+  },
+];
+
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -240,9 +279,20 @@ export default function TaskList({
 
     setActiveMenuId(rowId);
     setActiveMenuRow(row);
+    setChecklistToExport(row);
     setChecklistToEdit(row);
     setChecklistToDelete(row);
+    setChecklistToDuplicate(row);
     setChecklistToRestore(row);
+  };
+
+  const handleSetDepartment = (departmentId) => {
+    setCurrentDepartment(departmentId);
+  };
+
+  const clearDepartmentFilter = () => {
+    setCurrentDepartment('');
+    setDepartmentSearchInput('');
   };
 
   return (
@@ -260,8 +310,40 @@ export default function TaskList({
             />
           </div>
 
-          <div className="relative w-full flex items-center gap-4 sm:w-auto">
-            <div className="flex items-center gap-2">
+          <div className="relative flex w-full flex-col items-stretch gap-3 lg:w-auto lg:flex-row lg:items-center lg:gap-4">
+            <div className="flex w-full items-center gap-2 lg:w-auto">
+              <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
+                Department:
+              </h2>
+              <InputField
+                id="department"
+                className="min-w-0 flex-1 lg:w-80"
+                value={currentDepartment}
+                disabled={isLoadingDepartments}
+                options={departmentsList}
+                type="select"
+                searchable
+                placeholder="All departments"
+                onExternalSearchChange={setDepartmentSearchInput}
+                onLoadMore={fetchNextDepartmentsPage}
+                hasNextPage={hasNextDepartmentsPage}
+                isFetchingNextPage={isFetchingNextDepartmentsPage}
+                onChange={(e) => handleSetDepartment(e.target.value)}
+                inputClassName="py-2! rounded-lg!"
+              />
+              {currentDepartment && (
+                <Button
+                  type="button"
+                  onClick={clearDepartmentFilter}
+                  className="rounded-lg border border-secondary-200 p-2 text-secondary transition-colors hover:bg-gray-50"
+                  aria-label="Clear department filter"
+                >
+                  <FiX size={14} />
+                </Button>
+              )}
+              {isLoadingDepartments && <Loader size="w-4.5 h-4.5 mt-4" />}
+            </div>
+            {/* <div className="flex w-full items-center gap-2 lg:w-auto">
               <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
                 Status:
               </h2>
@@ -270,11 +352,12 @@ export default function TaskList({
                 options={statusOptionss}
                 onChange={(value) => setCurrentStatus(value)}
                 placeholder="All status"
+                className="min-w-0 flex-1 lg:w-36"
                 buttonClassName="px-3! py-2! rounded-lg!"
                 menuClassName=""
               />
-            </div>
-            <div className="flex items-center gap-2">
+            </div> */}
+            <div className="flex w-full items-center gap-2 lg:w-auto">
               <h2 className="text-secondary font-geist text-sm whitespace-nowrap">
                 Show deleted:
               </h2>
@@ -283,6 +366,7 @@ export default function TaskList({
                 options={deletedOptions}
                 onChange={(value) => setDeleted(value)}
                 placeholder="False"
+                className="min-w-0 flex-1 lg:w-32"
                 buttonClassName="px-3! py-2! rounded-lg!"
                 menuClassName=""
               />
@@ -295,6 +379,9 @@ export default function TaskList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  #
+                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Checklist
                 </th>
@@ -305,7 +392,10 @@ export default function TaskList({
                   Document Number
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Issued date
+                  Created by
+                </th>
+                <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  Created date
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Assigned to
@@ -325,11 +415,14 @@ export default function TaskList({
                   </td>
                 </tr>
               ) : checklists?.length > 0 ? (
-                checklists.map((row) => (
+                checklists?.map((row, index) => (
                   <tr
                     key={row.checklistId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
+                      {index + 1}
+                    </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {row?.title}
                     </td>
@@ -338,6 +431,9 @@ export default function TaskList({
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row?.documentNumber || 'N/A'}
+                    </td>
+                    <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
+                      {`${row?.creator?.firstName || ''} ${row?.creator?.lastName || ''}`}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       {formatDate(row?.createdAt) || 'N/A'}
@@ -391,6 +487,7 @@ export default function TaskList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(
@@ -425,12 +522,20 @@ export default function TaskList({
             document.body,
           )
         : null}
-      <AssignLogbookModal
+      {/* <AssignLogbookModal
         isShowAssignLogbookModal={isShowAssignLogbookModal}
         setIsShowAssignLogbookModal={setIsShowAssignLogbookModal}
         checklistId={activeMenuRow?.checklistId}
         checklistAssignments={activeMenuRow?.assignments}
         action={actionToPerform}
+      /> */}
+      <ExportLogbookModal
+        key={activeMenuRow?.documentNumber}
+        isShowExportLogbookModal={isShowExportLogbookModal}
+        setIsShowExportLogbookModal={setIsShowExportLogbookModal}
+        checklistId={checklistToExport?.checklistId}
+        documentNumber={checklistToExport?.documentNumber}
+        setChecklistToExport={setChecklistToExport}
       />
     </div>
   );

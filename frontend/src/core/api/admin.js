@@ -1,8 +1,10 @@
 import axiosInstance from '../../shared/utils/axios';
 
 export const fetchChecklists = async (params = {}) => {
+  const { departmentId, ...rest } = params;
+  if (departmentId && departmentId.length > 0) rest.departmentId = departmentId;
   const { data } = await axiosInstance.get('/checklists/admin', {
-    params,
+    params: rest,
   });
   return data;
 };
@@ -164,6 +166,18 @@ export const fetchChecklistVersions = async (checklistId, params) => {
 export const fetchChecklistVersion = async (checklistId, versionId) => {
   const { data } = await axiosInstance.get(
     `/checklists/admin/versions/${checklistId}/${versionId}`,
+  );
+  return data;
+};
+
+export const exportChecklistEntries = async (
+  documentNumber,
+  startDate,
+  endDate,
+) => {
+  const { data } = await axiosInstance.get(
+    `/checklists/export/submissions?documentNumber=${documentNumber}&startDate=${startDate}&endDate=${endDate}`,
+    { responseType: 'blob' },
   );
   return data;
 };

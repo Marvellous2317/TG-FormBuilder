@@ -2,8 +2,16 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginPWA } from 'rsbuild-plugin-pwa';
+import { fileURLToPath } from 'node:url';
+
+const srcPath = fileURLToPath(new URL('./src', import.meta.url));
 
 const config = {
+  resolve: {
+    alias: {
+      '@': srcPath,
+    },
+  },
   plugins: [pluginReact()],
   dev: {
     lazyCompilation: true,
@@ -22,7 +30,7 @@ if (process.env.NODE_ENV === 'production') {
         mode: 'generateSw',
         workboxOptions: {
           navigateFallback: '/index.html',
-          skipWaiting: false,
+          skipWaiting: true,
           clientsClaim: true,
           runtimeCaching: [
             {
@@ -35,8 +43,13 @@ if (process.env.NODE_ENV === 'production') {
               },
             },
             {
-              urlPattern: /\.(?:png|jpg|svg|css|js)$/,
+              urlPattern: /\.(?:png|jpg|svg)$/,
               handler: 'CacheFirst',
+              options: { cacheName: 'image-cache' },
+            },
+            {
+              urlPattern: /\.(?:css|js)$/,
+              handler: 'StaleWhileRevalidate',
               options: { cacheName: 'assets-cache' },
             },
           ],

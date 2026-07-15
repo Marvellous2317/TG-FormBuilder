@@ -4,12 +4,17 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { FiPlus } from 'react-icons/fi';
 import { LuGripVertical } from 'react-icons/lu';
 import { RiDeleteBinLine } from 'react-icons/ri';
+import { FaCopy } from 'react-icons/fa6';
 import Button from '../../../shared/components/Button';
 import DropdownSelect from '../../../shared/components/DropdownSelect';
 import DropdownOptionsModal from './components/DropdownOptionsModal';
 import EnumOptionsModal from './components/EnumOptionsModal';
 import SectionOptionsModal from './components/SectionOptionsModal';
-import { createField, fieldTypeOptions } from '../../../shared/utils/constants';
+import {
+  createField,
+  createFieldId,
+  fieldTypeOptions,
+} from '../../../shared/utils/constants';
 import FormularModal from './components/FormularModal';
 import {
   useChecklistEntries,
@@ -19,7 +24,7 @@ import {
 } from '../../../shared/hooks/admin/useChecklist';
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
-import AssignLogbookModal from './components/AssignLogbookModal';
+import AssignLogbookModal from './components/ExportLogbookModal';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 import DefaultValueModal from './components/DefaultValueModal';
 import {
@@ -41,12 +46,56 @@ import { CSS } from '@dnd-kit/utilities';
 import SectionFormularModal from './components/SectionFormularModal';
 import { getFormDraft, saveFormDraft } from '../../../lib/offlineCache';
 
+const FORMULA_CAPABLE_TYPES = [
+  'number',
+  'text',
+  'formular',
+  'section_formular',
+];
+
+const cloneConfig = (config = {}) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(config)
+    : JSON.parse(JSON.stringify(config));
+
+const removeServerOwnedFields = (field = {}) => {
+  const cleanField = { ...field };
+  delete cleanField.entryId;
+  delete cleanField.checklistEntryId;
+  delete cleanField.checklistId;
+  delete cleanField.createdAt;
+  delete cleanField.updatedAt;
+  delete cleanField.deletedAt;
+  return cleanField;
+};
+
+const getNextFieldRef = (fields) => {
+  const existingRefs = fields
+    .filter(
+      (field) =>
+        FORMULA_CAPABLE_TYPES.includes(field.type) && field.config?.fieldRef,
+    )
+    .map((field) => field.config.fieldRef);
+
+  let index = 1;
+  while (existingRefs.includes(`field${index}`)) index++;
+  return `field${index}`;
+};
+
+const copySectionItems = (items = []) =>
+  items.map((item) => ({
+    ...removeServerOwnedFields(item),
+    id: createFieldId(),
+    config: cloneConfig(item.config),
+  }));
+
 function SortableFieldRow({
   field,
   index,
   isDeletingEntries,
   onFieldChange,
   onRemoveField,
+  onCopyField,
   onFieldVisibility,
   onOpenModal,
 }) {
@@ -69,7 +118,7 @@ function SortableFieldRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="grid grid-cols-[72px_minmax(0,1fr)_500px] border-b border-secondary-200 last:border-b-0 group"
+      className="grid grid-cols-[72px_minmax(0,1fr)_650px] border-b border-secondary-200 last:border-b-0 group"
     >
       <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
         <button
@@ -105,15 +154,17 @@ function SortableFieldRow({
             menuClassName="left-0 right-auto"
           />
         </div>
-        <div className="w-[25%]">
-          {field.type === 'number' && field.config && !field.config.visible && (
-            <p
-              onClick={() => onOpenModal('defaultValue', field.id)}
-              className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
-            >
-              {field.config.defaultValue}
-            </p>
-          )}
+        <div className="w-[20%]">
+          {['number', 'text'].includes(field.type) &&
+            field.config &&
+            !field.config.visible && (
+              <p
+                onClick={() => onOpenModal('defaultValue', field.id)}
+                className="underline text-sm text-primary-200 line-clamp-1 cursor-pointer"
+              >
+                {field.config.defaultValue}
+              </p>
+            )}
           {field.type === 'enum' && field.config && (
             <p
               onClick={() => onOpenModal('enum', field.id)}
@@ -158,6 +209,14 @@ function SortableFieldRow({
         <div className="w-[15%] flex items-center justify-between">
           <Button
             type="button"
+            onClick={() => onCopyField(field.id)}
+            className="justify-center rounded-full p-2 text-black transition hidden group-hover:block"
+            aria-label={`copy field ${index + 1}`}
+          >
+            <FaCopy size={18} />
+          </Button>
+          <Button
+            type="button"
             onClick={() => onRemoveField(field.id, field?.entryId)}
             className="justify-center rounded-full p-2 text-tertiary-500 transition hidden group-hover:block"
             aria-label={`Remove field ${index + 1}`}
@@ -191,8 +250,7 @@ export default function CreateEntries() {
   const [isSectionOptionsModal, setIsSectionOptionsModal] = useState(false);
   const [isSectionFormularModal, setIsSectionFormularModal] = useState(false);
   const [isFormularModal, setIsFormularModal] = useState(false);
-  const [isShowAssignLogbookModal, setIsShowAssignLogbookModal] =
-    useState(false);
+  const [, setIsShowAssignLogbookModal] = useState(false);
   const [activeFieldId, setActiveFieldId] = useState(null);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [fields, setFields] = useState([createField()]);
@@ -318,7 +376,10 @@ export default function CreateEntries() {
           const isCurrentlyVisible = field.config?.visible !== false;
           const willBeVisible = !isCurrentlyVisible;
 
-          if (field.type === 'number' && willBeVisible === false) {
+          if (
+            ['number', 'text'].includes(field.type) &&
+            willBeVisible === false
+          ) {
             setActiveFieldId(id);
             setIsShowDefaultValueModal(true);
           }
@@ -350,6 +411,32 @@ export default function CreateEntries() {
     );
   };
 
+  const handleCopyField = (id) => {
+    setFields((currentFields) => {
+      const fieldToCopy = currentFields.find((f) => f.id === id);
+      if (!fieldToCopy) return currentFields;
+
+      const clonedConfig = cloneConfig(fieldToCopy.config);
+
+      if (FORMULA_CAPABLE_TYPES.includes(fieldToCopy.type)) {
+        clonedConfig.fieldRef = getNextFieldRef(currentFields);
+      }
+
+      if (fieldToCopy.type === 'section' && Array.isArray(clonedConfig.items)) {
+        clonedConfig.items = copySectionItems(clonedConfig.items);
+      }
+
+      const newField = {
+        ...removeServerOwnedFields(fieldToCopy),
+        id: createFieldId(),
+        name: `${fieldToCopy.name} (copy)`,
+        config: clonedConfig,
+      };
+
+      return [...currentFields, newField];
+    });
+  };
+
   const handleSaveEntries = async () => {
     if (!fields || fields.length === 0) {
       showError('Please add a field');
@@ -370,7 +457,9 @@ export default function CreateEntries() {
         await updateEntries({ entries: orderedFields });
         showSuccess('Entries updated successfully');
       } else {
-        await createEntries({ entries: orderedFields });
+        await createEntries({
+          payload: { entries: orderedFields },
+        });
         showSuccess('Entries saved successfully');
         setIsShowAssignLogbookModal(true);
       }
@@ -447,7 +536,7 @@ export default function CreateEntries() {
         ) : (
           <div className="overflow-x-auto border border-secondary-200 bg-white">
             <div className="min-w-205">
-              <div className="grid grid-cols-[72px_minmax(0,1fr)_500px] border-b border-secondary-200 bg-white">
+              <div className="grid grid-cols-[72px_minmax(0,1fr)_650px] border-b border-secondary-200 bg-white">
                 <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                   #
                 </div>
@@ -476,6 +565,7 @@ export default function CreateEntries() {
                       isDeletingEntries={isDeletingEntries}
                       onFieldChange={handleFieldChange}
                       onRemoveField={handleRemoveField}
+                      onCopyField={handleCopyField}
                       onFieldVisibility={handleFieldVisibility}
                       onOpenModal={handleOpenModal}
                     />
@@ -576,6 +666,7 @@ export default function CreateEntries() {
         setIsShowDefaultValueModal={setIsShowDefaultValueModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
+        activeField={activeField}
       />
     </div>
   );

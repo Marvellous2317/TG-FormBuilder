@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   Link,
   useLoaderData,
+  useLocation,
   useNavigate,
-  useSearchParams,
 } from 'react-router-dom';
 import {
   useOperatorSubmittedChecklist,
@@ -17,17 +17,20 @@ import DropdownForm from '../../shared/components/entries/DropdownForm';
 import SectionForm from '../../shared/components/entries/SectionForm';
 import useToast from '../../shared/hooks/useToast';
 import Button from '../../shared/components/Button';
-import { evaluateFormula } from '../../shared/utils/formula';
+import {
+  evaluateFormula,
+  formatComputedValue,
+} from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
 import SignatureModal from '../approver/components/SignatureModal';
 
 export default function ViewOperatorEntries() {
-  let { id: checklistId, back: previousLocation } = useLoaderData();
+  let { id: checklistId } = useLoaderData();
+
+  const { state } = useLocation();
+  const { title: checklistTitle, previousLocation } = state;
 
   const { user } = useAuthStore();
-
-  const [searchParams] = useSearchParams();
-  const title = searchParams.get('title');
 
   const { data, isPending: isLoadingChecklistEntries } =
     useOperatorSubmittedChecklist(checklistId);
@@ -84,7 +87,12 @@ export default function ViewOperatorEntries() {
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    let rowsData;
+    try {
+      rowsData = JSON.parse(rawValue || '[]');
+    } catch {
+      rowsData = [];
+    }
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -93,13 +101,41 @@ export default function ViewOperatorEntries() {
     if (!targetField) return 0;
 
     const targetFieldId = targetField.entryId || targetField.id;
-    const values = rowsData
-      .map((row) => {
-        const raw = row[targetFieldId]?.value;
+    const sectionSubFields = sectionEntry.config?.items || [];
+
+    const resolveRowValue = (row) => {
+      const raw = row[targetFieldId]?.value;
+      if (raw !== undefined && raw !== null && raw !== '') {
         const num = Number(raw);
         return isNaN(num) ? null : num;
-      })
-      .filter((v) => v !== null);
+      }
+
+      if (targetField.type === 'formular') {
+        const expression = targetField.config?.expression;
+        if (!expression) return null;
+        const scope = {};
+        sectionSubFields.forEach((e) => {
+          if (!e.config?.fieldRef) return;
+          const fieldId = e.entryId || e.id;
+          const rawValue =
+            row[fieldId]?.value ?? e.value ?? e?.config?.defaultValue;
+          if (rawValue === '' || rawValue == null) {
+            scope[e.config.fieldRef] = 0;
+          } else {
+            const num = Number(rawValue);
+            scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+          }
+        });
+        const { value, error } = evaluateFormula(expression, scope);
+        if (error || value == null) return null;
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+      }
+
+      return null;
+    };
+
+    const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
 
     if (!values.length) return 0;
 
@@ -149,12 +185,16 @@ export default function ViewOperatorEntries() {
     if (!expression) return '';
     const scope = {};
     entriesData?.forEach((e) => {
-      if (e.type === 'number' && e.config?.fieldRef) {
+      if (e.config?.fieldRef) {
         const rawValue =
           formData[e.entryId]?.value ?? e.value ?? e?.config?.defaultValue;
 
-        scope[e.config.fieldRef] =
-          rawValue === '' || rawValue == null ? 0 : Number(rawValue);
+        if (rawValue === '' || rawValue == null) {
+          scope[e.config.fieldRef] = 0;
+        } else {
+          const num = Number(rawValue);
+          scope[e.config.fieldRef] = isNaN(num) ? String(rawValue) : num;
+        }
       }
     });
     const { value, error } = evaluateFormula(expression, scope);
@@ -169,26 +209,25 @@ export default function ViewOperatorEntries() {
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
       {/* Sticky header */}
-      <div className="shrink-0 bg-white py-4 px-4 md:px-10 lg:px-25 border-b border-secondary-200 grid md:grid-cols-3 items-center">
-        <Link
-          prefetch="intent"
-          className="flex w-fit cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group"
-          to={previousLocation ? `/operator/${previousLocation}` : '/operator'}
-        >
-          <FaArrowLeft
-            className="text-primary-200 group-hover:-translate-x-0.5"
-            size={16}
-          />
-          <p className="text-sm font-medium text-primary-200">
-            {previousLocation
-              ? `Back to ${previousLocation}`
-              : 'Back to dashboard'}
-          </p>
-        </Link>
 
-        <h1 className="flex items-center justify-start md:justify-center w-full text-base mt-4 md:mt-0 lg:text-lg font-semibold text-primary font-geist">
-          {title}
-        </h1>
+      <Link
+        prefetch="intent"
+        className="flex w-fit cursor-pointer items-center gap-2 py-4 transition-all duration-150 ease-in-out group px-4 md:px-10 lg:px-25"
+        to={previousLocation ? `/operator/${previousLocation}` : '/operator'}
+      >
+        <FaArrowLeft
+          className="text-primary-200 group-hover:-translate-x-0.5"
+          size={16}
+        />
+        <p className="text-sm font-medium text-primary-200">
+          {previousLocation
+            ? `Back to ${previousLocation}`
+            : 'Back to dashboard'}
+        </p>
+      </Link>
+
+      <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
+        <h2>{checklistTitle}</h2>
       </div>
 
       {/* Scrollable body */}
@@ -249,7 +288,9 @@ export default function ViewOperatorEntries() {
                         entry={{
                           ...entry,
                           type: 'number',
-                          value: computeFormulaValue(entry),
+                          value: formatComputedValue(
+                            computeFormulaValue(entry),
+                          ),
                         }}
                         formData={formData}
                         setFormData={setFormData}
@@ -261,7 +302,9 @@ export default function ViewOperatorEntries() {
                         entry={{
                           ...entry,
                           type: 'number',
-                          value: computeSectionFormulaValue(entry),
+                          value: formatComputedValue(
+                            computeSectionFormulaValue(entry),
+                          ),
                         }}
                         formData={formData}
                         setFormData={setFormData}

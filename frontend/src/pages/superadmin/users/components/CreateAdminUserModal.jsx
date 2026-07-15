@@ -52,7 +52,7 @@ export default function CreateAdminUserModal({
     isFetchingNextPage: isFetchingNextDepartmentsPage,
   } = useDepartmentsInfinite(
     { search: departmentSearch },
-    { enabled: isCreateUserModalOpen },
+    { enabled: !!isCreateUserModalOpen },
   );
 
   const { data: roles, isLoading: isLoadingRoles } = useRoles();

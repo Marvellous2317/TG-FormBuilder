@@ -144,7 +144,7 @@ export default function Pagination({
             name="page"
             type="number"
             min="1"
-            max={pageSizeValue}
+            max={pageCount}
             value={pageValue}
             onChange={handlePageTyping}
             onBlur={handlePageSubmit}
@@ -179,6 +179,11 @@ export default function Pagination({
           </div>
         </div>
         <p className="text-primary font-geist text-sm">of {pageCount}</p>
+        {typeof totalItems === 'number' && (
+          <p className="text-tertiary font-geist text-sm">
+            | {totalItems} total
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-1 ml-4.75">

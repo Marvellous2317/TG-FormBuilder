@@ -16,6 +16,8 @@ import ErrorBoundary from './shared/components/ErrorBoundary';
 import { syncPendingSubmissions } from './lib/syncQueue';
 import { useEffect } from 'react';
 
+const APP_VERSION_KEY = 'digiforms_frontend_version';
+
 const handleAuthError = (error) => {
   const status = error?.response?.status;
   if (status === 401 || status === 403) {
@@ -44,11 +46,69 @@ const queryClient = new QueryClient({
   },
 });
 
+const checkForNewVersion = async () => {
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`, {
+      cache: 'no-store',
+      header: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+
+    if (!res.ok) return;
+
+    const { version } = await res.json();
+
+    if (!version) return;
+
+    const currentVersion = localStorage.getItem(APP_VERSION_KEY);
+
+    if (!currentVersion) {
+      localStorage.setItem(APP_VERSION_KEY, version);
+      return;
+    }
+
+    if (currentVersion !== version) {
+      const answer = confirm(
+        'There is an update available. Will you like to refresh to see new features? If no will ask again in 5 minutes',
+      );
+      if (answer) {
+        localStorage.setItem(APP_VERSION_KEY, version);
+        window.location.reload();
+        console.log('Frontend refreshed.');
+      } else {
+        console.log('Will ask for refresh in 5 mins.');
+      }
+    }
+  } catch {
+    // ignore version check failure
+  }
+};
+
 const App = () => {
   useEffect(() => {
     const handleOnline = () => syncPendingSubmissions();
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
+  useEffect(() => {
+    checkForNewVersion();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkForNewVersion();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const intervalId = window.setInterval(checkForNewVersion, 5 * 60 * 1000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   return (

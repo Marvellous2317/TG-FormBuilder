@@ -115,72 +115,65 @@ export default function AdminUserList({
   }, [activeMenuId]);
 
   const dropOptions = [
-    {
-      title: 'Edit',
-      value: 'edit',
-      onClick: () => {
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsEditUserModalOpen(true);
-      },
+  {
+    title: 'Edit',
+    value: 'edit',
+    onClick: () => {
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsEditUserModalOpen(true);
     },
-    {
-      title: 'Assign approver',
-      value: 'assign',
-      onClick: () => {
-        if (activeMenuRow?.role?.roleName !== 'operator') {
-          showError('Only operators can be assigned an approver.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsAssignApproverModalOpen(true);
-      },
+  },
+  {
+    title: 'Assign approver',
+    value: 'assign',
+    onClick: () => {
+      if (activeMenuRow?.role?.roleName !== 'operator') {
+        showError('Only operators can be assigned an approver.');
+        return;
+      }
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsAssignApproverModalOpen(true);
     },
-    {
-      title: 'Unassign approver',
-      value: 'unassign',
-      onClick: () => {
-        if (activeMenuRow?.role?.roleName !== 'operator') {
-          showError('Only operators can be unassigned from an approver.');
-          return;
-        }
-        if (activeMenuRow?.operatorApprovers?.length < 1) {
-          showError('This operator does not have an approver.');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsUnassignApproverModalOpen(true);
-      },
+  },
+  {
+    title: 'Unassign approver',
+    value: 'unassign',
+    onClick: () => {
+      if (activeMenuRow?.role?.roleName !== 'operator') {
+        showError('Only operators can be unassigned from an approver.');
+        return;
+      }
+      if (activeMenuRow?.operatorApprovers?.length < 1) {
+        showError('This operator does not have an approver.');
+        return;
+      }
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      setIsUnassignApproverModalOpen(true);
     },
-    {
-      title: 'Delete',
-      value: 'delete',
-      onClick: () => {
-        if (activeMenuRow?.deletedAt) {
-          showError('User is already deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-        setIsDeleteUserModalOpen(true);
-      },
-    },
-    {
-      title: 'Restore',
-      value: 'restore',
-      onClick: () => {
-        if (!activeMenuRow?.deletedAt) {
-          showError('User is not deleted');
-          return;
-        }
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
+  },
+  {
+    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+    value: 'delete-restore',
+    onClick: () => {
+      const rowData = activeMenuRow; // Store reference before clearing
+      
+      setActiveMenuId(null);
+      setActiveMenuRow(null);
+      
+      if (rowData?.deletedAt) {
+        // User is deleted - show restore modal
         setIsRestoreUserModalOpen(true);
-      },
+      } else {
+        // User is active - show delete modal
+        setIsDeleteUserModalOpen(true);
+      }
     },
-  ];
+  },
+];
+
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -260,6 +253,9 @@ export default function AdminUserList({
           <table className="w-full text-left border-collapse relative min-w-160 md:min-w-full">
             <thead className="sticky top-0 z-10 shadow-sm">
               <tr className="bg-tertiary-300">
+                <th className="p-3 md:p-4 w-12 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
+                  #
+                </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Name
                 </th>
@@ -287,11 +283,14 @@ export default function AdminUserList({
                   </td>
                 </tr>
               ) : users?.length > 0 ? (
-                users.map((row) => (
+                users.map((row, index) => (
                   <tr
                     key={row?.userId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-3 md:p-4 text-tertiary text-sm border-r border-gray-200">
+                      {index + 1}
+                    </td>
                     <td className="p-3 gap-1 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200">
                       <p className="text-sm text-secondary">
                         {row?.firstName} {row?.lastName}
@@ -353,6 +352,7 @@ export default function AdminUserList({
         handlePageChange={handlePaginationChange}
         itemsPerPage={pageSize}
         totalPages={pagination?.totalPages}
+        totalItems={pagination?.total}
       />
       {activeMenuId !== null && typeof document !== 'undefined'
         ? createPortal(
