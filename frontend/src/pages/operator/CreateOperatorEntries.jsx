@@ -119,7 +119,9 @@ export default function CreateOperatorEntry() {
     if (data) saveToCache(`checklist-${checklistId}`, data);
   }, [data, checklistId]);
 
-  const entriesData = data?.data?.assignment?.checklist?.entries;
+  const entriesData =
+    data?.data?.assignment?.checklist?.entries ??
+    cachedChecklist?.data?.assignment?.checklist?.entries;
 
   const computeSectionFormulaValue = (entry) => {
     const {

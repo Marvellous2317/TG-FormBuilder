@@ -47,8 +47,9 @@ export default function OperatorDashboard() {
 
   const analyticsData = userAnalytics?.data;
 
-  const checklistsData = data?.data?.assignments;
-  const pagination = data?.data?.pagination;
+  const checklistsData =
+    data?.data?.assignments ?? cachedChecklists?.data?.assignments;
+  const pagination = data?.data?.pagination ?? cachedChecklists?.data?.pagination;
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -192,7 +193,7 @@ export default function OperatorDashboard() {
                 </thead>
 
                 <tbody>
-                  {isFetching ? (
+                  {isFetching && !checklistsData ? (
                     <tr>
                       <td colSpan="3" className="p-12 text-center">
                         <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
