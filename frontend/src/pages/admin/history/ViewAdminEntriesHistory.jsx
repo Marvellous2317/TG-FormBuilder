@@ -17,6 +17,7 @@ import { fieldTypeOptions } from '../../../shared/utils/constants';
 import { IoEye, IoEyeOff, IoClose } from 'react-icons/io5';
 import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
 import Modal from '../../../shared/components/Modal';
+import InputField from '../../../shared/components/InputField';
 
 function ReadOnlyFieldRow({ field, index, onSectionClick }) {
   const typeLabel =
@@ -68,7 +69,9 @@ function ReadOnlyFieldRow({ field, index, onSectionClick }) {
                 {configSummary}
               </p>
             ) : (
-              <p className="text-sm text-primary-200 line-clamp-1">
+              <p 
+              onClick={() => onSectionClick(field)}
+              className="cursor-pointer underline text-sm text-primary-200 line-clamp-1">
                 {configSummary}
               </p>
             ))}
@@ -79,7 +82,7 @@ function ReadOnlyFieldRow({ field, index, onSectionClick }) {
 }
 
 // Image preview component for the admin history view
-function ImagePreviewField({ entry, setFormData }) {
+function ImagePreviewField({ entry, formData, setFormData }) {
   const [imagePreview, setImagePreview] = useState(null);
 
   // Simulate image upload for preview
@@ -260,101 +263,90 @@ function ReadOnlySectionOptionsModal({ isOpen, onClose, sectionField }) {
         </div>
 
         <div className="flex-1 flex flex-col items-center py-6 px-5">
-          {/* Section Name - Readonly */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-secondary mb-1">
-              Section name <span className="text-red-500">*</span>
-            </label>
-            <div className="w-full rounded-none border border-secondary-200 bg-tertiary-700 p-4 text-base text-primary">
-              {sectionField.config?.name || sectionField.name}
-            </div>
-          </div>
+          <InputField
+            type="text"
+            label="Section name"
+            id="sectionName"
+            placeholder="Section name"
+            value={sectionField.config?.name || sectionField.name}
+            readOnly
+          />
 
           {/* Fields Table */}
           <div className="overflow-x-auto border w-full border-secondary-200 bg-white mt-4 rounded-[10px]">
-            <div>
-              {' '}
-              <div className="min-w-205">
-                {' '}
-                <div className="grid grid-cols-[72px_minmax(0,1fr)_650px] border-b border-secondary-200 bg-white">
-                  {' '}
-                  <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
-                    {' '}
-                  </div>{' '}
-                  <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
-                    {' '}
-                  </div>{' '}
-                  <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
-                    {' '}
-                  </div>{' '}
-                </div>{' '}
-                {items.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-sm text-tertiary">
-                    No fields in this section
-                  </div>
-                ) : (
-                  items.map((item, index) => {
-                    const typeLabel =
-                      fieldTypeOptions.find((opt) => opt.value === item.type)
-                        ?.label || item.type;
+            <div className="min-w-full">
+              <div className="grid grid-cols-[63px_minmax(0,1fr)_400px] border-b border-secondary-200 bg-white">
+                <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
+                  #
+                </div>
+                <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
+                  Name
+                </div>
+                <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
+                  Type
+                </div>
+              </div>
 
-                    return (
-                      <div
-                        key={item.id || item.entryId || index}
-                        className="grid grid-cols-[72px_minmax(0,1fr)_650px] border-b border-secondary-200 last:border-b-0 group"
-                      >
-                        <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
-                          <span className="text-sm">{index + 1}</span>
-                        </div>
+              {items.length === 0 ? (
+                <div className="px-5 py-8 text-center text-sm text-tertiary">
+                  No fields in this section
+                </div>
+              ) : (
+                items.map((item, index) => {
+                  const typeLabel =
+                    fieldTypeOptions.find((opt) => opt.value === item.type)
+                      ?.label || item.type;
 
-                        <div className="border-r border-secondary-200 px-4 py-2.5">
-                          <div className="w-full truncate rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary">
-                            {item.name}
-                          </div>
-                        </div>
+                  return (
+                    <div
+                      key={item.id || item.entryId || index}
+                      className="grid grid-cols-[63px_minmax(0,1fr)_400px] border-b border-secondary-200 last:border-b-0 group"
+                    >
+                      <div className="flex items-center gap-2 border-r border-secondary-200 px-4 py-2.5 text-secondary">
+                        <span className="text-sm">{index + 1}</span>
+                      </div>
 
-                        <div className="border-r flex items-center justify-between w-full border-secondary-200 px-4 py-2.5">
-                          <div className="w-[50%]">
-                            <div className="w-full truncate rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary">
-                              {typeLabel}
-                            </div>
-                          </div>
-                          <div className="w-[20%]">
-                            {/* Show config summary if available */}
-                            {item.config && (
-                              <p className="text-sm text-primary-200 line-clamp-1">
-                                {item.type === 'dropdown' && item.config.title}
-                                {item.type === 'enum' && item.config.option}
-                                {item.type === 'formular' &&
-                                  (item.config.expression || 'Formular')}
-                                {item.type === 'section_formular' &&
-                                  (item.config.name || 'SF')}
-                                {item.type === 'number' &&
-                                  !item.config.visible &&
-                                  item.config.defaultValue}
-                                {item.type === 'text' &&
-                                  !item.config.visible &&
-                                  item.config.defaultValue}
-                              </p>
-                            )}
-                          </div>
-                          <div className="w-[15%] flex items-center justify-between">
-                            {/* Visibility indicator - matching CreateEntries */}
-                            {item.config?.visible === false ? (
-                              <IoEyeOff size={18} className="text-gray-400" />
-                            ) : (
-                              <IoEye size={18} className="text-gray-400" />
-                            )}
-                          </div>
+                      <div className="border-r border-secondary-200 px-4 py-2.5">
+                        <div className="w-full truncate rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary">
+                          {item.name}
                         </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+
+                      <div className="border-r flex items-center justify-between w-full border-secondary-200 px-4 py-2.5">
+                        <div className="w-[50%]">
+                          <div className="w-full truncate rounded-none border-0 bg-tertiary-700 p-4 text-base text-primary">
+                            {typeLabel}
+                          </div>
+                        </div>
+                        <div className="w-[20%]">
+                          {item.config && (
+                            <p className="text-sm text-primary-200 line-clamp-1 cursor-pointer">
+                              {item.type === 'dropdown' && item.config.title}
+                              {item.type === 'enum' && item.config.option}
+                              {item.type === 'formular' &&
+                                (item.config.expression || 'Formular')}
+                              {item.type === 'section_formular' &&
+                                (item.config.name || 'SF')}
+                              {item.type === 'number' &&
+                                !item.config.visible &&
+                                item.config.defaultValue}
+                              {item.type === 'text' &&
+                                !item.config.visible &&
+                                item.config.defaultValue}
+                            </p>
+                          )}
+                        </div>
+                       
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
+
+      
 
         <div className="flex items-center mt-6 p-5 border-t border-secondary-200 justify-end gap-3">
           <Button
@@ -381,13 +373,12 @@ export default function ViewAdminEntriesHistory() {
   const [formData, setFormData] = useState({});
   const [isPreview, setIsPreview] = useState(false);
   const [activeSectionField, setActiveSectionField] = useState(null);
-  const [isSectionOptionsModalOpen, setIsSectionOptionsModalOpen] =
-    useState(false);
-
   const handleSectionClick = (field) => {
     setActiveSectionField(field);
     setIsSectionOptionsModalOpen(true);
   };
+  const [isSectionOptionsModalOpen, setIsSectionOptionsModalOpen] =
+    useState(false);
 
   const entriesData = data?.data?.version?.entries;
 
@@ -524,13 +515,18 @@ export default function ViewAdminEntriesHistory() {
               className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
             >
               {isPreview ? (
-                <p className="text-white font-geist font-medium text-sm">
-                  Entries view
-                </p>
+                <>
+                  <p className="text-white font-geist font-medium text-sm">
+                    {' '}
+                    Entries view
+                  </p>
+                </>
               ) : (
-                <p className="text-white font-geist font-medium text-sm">
-                  Preview Form
-                </p>
+                <>
+                  <p className="text-white font-geist font-medium text-sm">
+                    Preview Form
+                  </p>
+                </>
               )}
             </Button>
           )}
@@ -597,6 +593,7 @@ export default function ViewAdminEntriesHistory() {
                       readOnly
                     />
                   )}
+
                   {entry.type === 'section_formular' && (
                     <BasicForm
                       entry={{

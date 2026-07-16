@@ -8,23 +8,22 @@ import path from "path";
   {
     roleName: "operator",
     description: "Basic operator with limited access",
-
-
+    isAdmin: false,
   },
   {
     roleName: "approval",
     description: "Can approve/reject records and requests",
-   
+    isAdmin: false,
   },
   {
     roleName: "admin",
     description: "Administrator with management access",
- 
+    isAdmin: true,
   },
   {
     roleName: "superAdmin",
     description: "Super Administrator with full access",
-
+    isAdmin: true,
   },
 ];
 
@@ -77,7 +76,7 @@ export async function updateRoles() {
       const [affectedCount] = await Role.update(
         {
           description: roleData.description,
-
+          isAdmin: roleData.isAdmin,
         },
         { where: { roleName: roleData.roleName } }
       );

@@ -30,6 +30,7 @@ export default function TaskList({
   handleDeletedChange,
   setIsShowLogbookModal,
   setChecklistToDuplicate,
+  isReadAdmin,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('active');
@@ -155,104 +156,125 @@ export default function TaskList({
     };
   }, [activeMenuId]);
 
-  const dropOptions = [
-  {
-    title: 'Export',
-    value: 'export',
-    onClick: () => {
-      setIsShowExportLogbookModal(true);
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
+  const dropOptionsRead = [
+    {
+      title: 'Export',
+      value: 'export',
+      onClick: () => {
+        setIsShowExportLogbookModal(true);
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+      },
     },
-  },
-  {
-    title: 'Entries',
-    value: 'entries',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      navigate(
-        `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
-      );
+    {
+      title: 'Submissions',
+      value: 'submissions',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
+      },
     },
-  },
-  // {
-  //   title: 'Unassign log',
-  //   value: 'unassign',
-  //   onClick: () => {
-  //     setActiveMenuId(null);
-  //     // setActiveMenuRow(null);
-  //     setActionToPerform('unassign');
-  //     setIsShowAssignLogbookModal(true);
-  //   },
-  // },
-  // {
-  //   title: 'Assign log',
-  //   value: 'assign',
-  //   onClick: () => {
-  //     setActiveMenuId(null);
-  //     // setActiveMenuRow(null);
-  //     setActionToPerform('assign');
-  //     setIsShowAssignLogbookModal(true);
-  //   },
-  // },
-  {
-    title: 'Edit log',
-    value: 'edit',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      setIsEditChecklistModalOpen(true);
-    },
-  },
-  {
-    title: activeMenuRow?.deletedAt ? 'Restore log' : 'Delete log',
-    value: 'delete-restore',
-    onClick: () => {
-      const rowData = activeMenuRow; // Store reference before clearing
-      
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      
-      if (rowData?.deletedAt) {
-        // Checklist is deleted - show restore modal
-        setIsRestoreChecklistModalOpen(true);
-      } else {
-        // Checklist is active - show delete modal
-        setIsDeleteChecklistModalOpen(true);
-      }
-    },
-  },
-  {
-    title: 'Duplicate',
-    value: 'duplicate',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      setIsShowLogbookModal(true);
-    },
-  },
-  {
-    title: 'Submissions',
-    value: 'submissions',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
-    },
-  },
-  {
-    title: 'Version History',
-    value: 'history',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
-    },
-  },
-];
+  ];
 
+  const dropOptionsWrite = [
+    {
+      title: 'Export',
+      value: 'export',
+      onClick: () => {
+        setIsShowExportLogbookModal(true);
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+      },
+    },
+    {
+      title: 'Entries',
+      value: 'entries',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(
+          `/admin/entries/${activeMenuRow?.checklistId}/${encodeURIComponent(activeMenuRow?.title)}`,
+        );
+      },
+    },
+    // {
+    //   title: 'Unassign log',
+    //   value: 'unassign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('unassign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
+    // {
+    //   title: 'Assign log',
+    //   value: 'assign',
+    //   onClick: () => {
+    //     setActiveMenuId(null);
+    //     // setActiveMenuRow(null);
+    //     setActionToPerform('assign');
+    //     setIsShowAssignLogbookModal(true);
+    //   },
+    // },
+    {
+      title: 'Edit log',
+      value: 'edit',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsEditChecklistModalOpen(true);
+      },
+    },
+    {
+      title: activeMenuRow?.deletedAt ? 'Restore log' : 'Delete log',
+      value: 'delete-restore',
+      onClick: () => {
+        const rowData = activeMenuRow; // Store reference before clearing
 
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+
+        if (rowData?.deletedAt) {
+          // Checklist is deleted - show restore modal
+          setIsRestoreChecklistModalOpen(true);
+        } else {
+          // Checklist is active - show delete modal
+          setIsDeleteChecklistModalOpen(true);
+        }
+      },
+    },
+    {
+      title: 'Duplicate',
+      value: 'duplicate',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsShowLogbookModal(true);
+      },
+    },
+    {
+      title: 'Submissions',
+      value: 'submissions',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
+      },
+    },
+    {
+      title: 'Version History',
+      value: 'history',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/history`);
+      },
+    },
+  ];
+
+  const dropOptions = isReadAdmin ? dropOptionsRead : dropOptionsWrite;
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -274,6 +296,11 @@ export default function TaskList({
     if (activeMenuId === rowId) {
       setActiveMenuId(null);
       setActiveMenuRow(null);
+      setChecklistToExport(null);
+      setChecklistToEdit(null);
+      setChecklistToDelete(null);
+      setChecklistToDuplicate(null);
+      setChecklistToRestore(null);
       return;
     }
 

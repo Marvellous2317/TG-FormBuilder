@@ -680,13 +680,13 @@ export default function CreateEntries() {
         initialValue={activeField?.config}
         activeField={activeField}
       />
-      <ImageOptionsModal
+      {/* <ImageOptionsModal
         key={`image-${activeFieldId}`}
         isImageOptionsModal={isImageOptionsModal}
         setIsImageOptionsModal={setIsImageOptionsModal}
         onSave={handleModalSave}
         initialValue={activeField?.config}
-      />
+      /> */}
     </div>
   );
 }
