@@ -3,12 +3,15 @@ import axiosInstance from '../../shared/utils/axios';
 export const getOperatorChecklists = async (params = {}) => {
   const { data } = await axiosInstance.get('/checklists/operator', {
     params,
+    skipGlobalErrorToast: true,
   });
   return data;
 };
 
 export const getOperatorChecklist = async (id) => {
-  const { data } = await axiosInstance.get(`/checklists/operator/${id}`);
+  const { data } = await axiosInstance.get(`/checklists/operator/${id}`, {
+    skipGlobalErrorToast: true,
+  });
   return data;
 };
 
@@ -22,6 +25,7 @@ export const getOperatorSubmittedChecklists = async (params = {}) => {
 export const getOperatorSubmittedChecklist = async (id) => {
   const { data } = await axiosInstance.get(
     `/checklists/operator/submissions/${id}`,
+    { skipGlobalErrorToast: true },
   );
   return data;
 };

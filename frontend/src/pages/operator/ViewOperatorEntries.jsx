@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Link,
   useLoaderData,
@@ -23,6 +23,12 @@ import {
 } from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
 import SignatureModal from '../approver/components/SignatureModal';
+import {
+  saveToCache,
+  getFromCache,
+  getCacheTimestamp,
+} from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
 
 export default function ViewOperatorEntries() {
   let { id: checklistId } = useLoaderData();
@@ -32,8 +38,29 @@ export default function ViewOperatorEntries() {
 
   const { user } = useAuthStore();
 
-  const { data, isPending: isLoadingChecklistEntries } =
-    useOperatorSubmittedChecklist(checklistId);
+  const [cachedSubmission, setCachedSubmission] = useState(null);
+  const [cachedSubmissionAt, setCachedSubmissionAt] = useState(null);
+
+  useEffect(() => {
+    getFromCache(`submission-${checklistId}`).then(setCachedSubmission);
+    getCacheTimestamp(`submission-${checklistId}`).then(setCachedSubmissionAt);
+  }, [checklistId]);
+
+  const {
+    data,
+    isPending: isLoadingChecklistEntries,
+    isPlaceholderData,
+    isError,
+  } = useOperatorSubmittedChecklist(checklistId, {
+    placeholderData: cachedSubmission,
+  });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedSubmission));
+
+  useEffect(() => {
+    if (data) saveToCache(`submission-${checklistId}`, data);
+  }, [data, checklistId]);
 
   const navigate = useNavigate();
 
@@ -43,11 +70,17 @@ export default function ViewOperatorEntries() {
 
   const { showSuccess, showError } = useToast();
 
-  const entriesData = data?.data?.submission?.entries;
+  const entriesData =
+    data?.data?.submission?.entries ??
+    cachedSubmission?.data?.submission?.entries;
 
-  const approver = data?.data?.submission?.approver;
+  const approver =
+    data?.data?.submission?.approver ??
+    cachedSubmission?.data?.submission?.approver;
 
-  const submittedId = data?.data?.submission?.submittedChecklistId;
+  const submittedId =
+    data?.data?.submission?.submittedChecklistId ??
+    cachedSubmission?.data?.submission?.submittedChecklistId;
 
   const { mutateAsync: updateEntries, isPending: isUpdatingEntries } =
     useUpdateOperatorChecklistEntries(submittedId);
@@ -232,6 +265,9 @@ export default function ViewOperatorEntries() {
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto px-4 md:px-10 lg:px-25">
+        <CachedDataNotice
+          cachedAt={isUsingCache ? cachedSubmissionAt : null}
+        />
         {isLoadingChecklistEntries ? (
           <Loader size="h-12 w-12 !border-primary-200 mt-20" />
         ) : entriesData?.length < 1 ? (

@@ -27,10 +27,12 @@ export default function OperatorDashboard() {
 
   const [cachedChecklists, setCachedChecklists] = useState(null);
   const [cachedChecklistsAt, setCachedChecklistsAt] = useState(null);
+  const [cachedAnalytics, setCachedAnalytics] = useState(null);
 
   useEffect(() => {
     getFromCache('operator-checklists').then(setCachedChecklists);
     getCacheTimestamp('operator-checklists').then(setCachedChecklistsAt);
+    getFromCache('user-analytics').then(setCachedAnalytics);
   }, []);
 
   const handleSearch = useCallback((searchValue) => {
@@ -58,9 +60,13 @@ export default function OperatorDashboard() {
   }, [data]);
 
   const { data: userAnalytics, isPending: isLoadingUserAnalytics } =
-    useUserAnalytics();
+    useUserAnalytics(undefined, { placeholderData: cachedAnalytics });
 
-  const analyticsData = userAnalytics?.data;
+  useEffect(() => {
+    if (userAnalytics) saveToCache('user-analytics', userAnalytics);
+  }, [userAnalytics]);
+
+  const analyticsData = userAnalytics?.data ?? cachedAnalytics?.data;
 
   const checklistsData =
     data?.data?.assignments ?? cachedChecklists?.data?.assignments;
