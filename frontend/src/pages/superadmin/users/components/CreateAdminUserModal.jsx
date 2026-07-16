@@ -10,6 +10,11 @@ import { useCompaniesInfinite } from '../../../../shared/hooks/superadmin/useCom
 import { useCreateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 import { useAuthStore } from '../../../../shared/store/authStore';
 
+const accessLevels = [
+  { label: 'Read only', value: 'read' },
+  { label: 'Read and write', value: 'read_write' },
+];
+
 export default function CreateAdminUserModal({
   isCreateUserModalOpen,
   setIsCreateUserModalOpen,
@@ -22,6 +27,7 @@ export default function CreateAdminUserModal({
     role: {},
     entity: {},
     department: {},
+    accessLevel: '',
   });
 
   const [entitySearchInput, setEntitySearchInput] = useState('');
@@ -77,6 +83,10 @@ export default function CreateAdminUserModal({
     label: role.roleName,
     value: role.roleId,
   }));
+
+  const isAdminRole =
+    rolesData?.find((r) => r.label === 'admin')?.roleId ===
+    formData?.role?.roleId;
 
   const allCompanies =
     companiesData?.pages.flatMap((p) => p.data.companies) ?? [];
@@ -222,6 +232,27 @@ export default function CreateAdminUserModal({
             />
             {isLoadingRoles && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
+
+          {isAdminRole && (
+            <div className="flex gap-2 w-full items-center relative">
+              <InputField
+                label="Admin access level"
+                id="accessLevel"
+                className=""
+                value={formData.accessLevel}
+                required
+                readOnly={isLoadingRoles}
+                options={accessLevels}
+                type="select"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    accessLevel: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField
