@@ -9,6 +9,11 @@ import { useRoles } from '../../../../shared/hooks/superadmin/useRoles';
 import { useCompanies } from '../../../../shared/hooks/superadmin/useCompanies';
 import { useUpdateUser } from '../../../../shared/hooks/superadmin/useSuperAdminUser';
 
+const accessLevels = [
+  { label: 'Read only', value: 'read' },
+  { label: 'Read and write', value: 'read_write' },
+];
+
 export default function EditAdminUserModal({
   isEditUserModalOpen,
   setIsEditUserModalOpen,
@@ -24,6 +29,7 @@ export default function EditAdminUserModal({
     entity: userToEdit?.company ?? {},
     departmentId: userToEdit?.departmentId ?? '',
     departmentName: userToEdit?.department ?? '',
+    accessLevel: userToEdit?.accessLevel ?? '',
   });
 
   const { data: departments, isPending: isLoadingDepartments } =
@@ -38,6 +44,10 @@ export default function EditAdminUserModal({
     label: role.roleName,
     value: role.roleId,
   }));
+
+  const isAdminRole =
+    rolesData?.find((r) => r.label === 'admin')?.roleId ===
+    formData?.role?.roleId;
 
   const companiesData = companies?.data?.companies.map((company) => ({
     ...company,
@@ -93,8 +103,15 @@ export default function EditAdminUserModal({
   const { mutateAsync, isPending: isLoading } = useUpdateUser();
 
   const handleSubmit = async () => {
-    const { firstName, lastName, email, role, entity, departmentName } =
-      formData;
+    const {
+      firstName,
+      lastName,
+      email,
+      role,
+      entity,
+      departmentName,
+      accessLevel,
+    } = formData;
 
     if (
       !firstName ||
@@ -102,7 +119,8 @@ export default function EditAdminUserModal({
       !email ||
       !role?.roleId ||
       !entity?.companyId ||
-      !departmentName
+      !departmentName ||
+      !accessLevel
     ) {
       showError('Enter all fields');
       return;
@@ -118,6 +136,7 @@ export default function EditAdminUserModal({
           roleId: role?.roleId,
           companyId: entity?.companyId,
           department: departmentName,
+          accessLevel,
         },
       };
       await mutateAsync(payload);
@@ -137,6 +156,7 @@ export default function EditAdminUserModal({
       entity: {},
       departmentId: '',
       departmentName: '',
+      accessLevel: '',
     });
     setIsEditUserModalOpen(false);
     setUserToEdit?.(null);
@@ -182,6 +202,27 @@ export default function EditAdminUserModal({
             />
             {isLoadingRoles && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
+
+          {isAdminRole && (
+            <div className="flex gap-2 w-full items-center relative">
+              <InputField
+                label="Admin access level"
+                id="accessLevel"
+                className=""
+                value={formData.accessLevel}
+                required
+                readOnly={isLoadingRoles}
+                options={accessLevels}
+                type="select"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    accessLevel: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField
