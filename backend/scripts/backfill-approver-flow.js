@@ -1,28 +1,3 @@
-/**
- * Backfill script: migrate the legacy approval flow to the per-checklist
- * multi-step approver system so no existing data is lost.
- *
- * What it does (idempotent - safe to re-run):
- *   1. For each checklist that has NO new-style approver config yet, derive its
- *      approvers from the legacy `operator_approvers` links of its assigned
- *      operators, create `checklist_approvers` rows (ordered by link createdAt),
- *      and set `approvalMode` to BACKFILL_APPROVAL_MODE.
- *   2. For each submission without snapshot rows, create `submitted_checklist_approvals`:
- *        - terminal (approved/rejected): rows reflecting the recorded outcome
- *          (the recorded approvedBy as the decider; the rest set to the same
- *          terminal status) so history/aggregation stay consistent.
- *        - pending: the full approver chain snapshotted as `pending`.
- *
- * CAVEAT: The legacy flow was single-approval (first approver wins), which has
- * no exact equivalent in the new modes. Backfilled checklists default to
- * 'parallel' (ALL must approve); admins can switch any checklist to
- * 'sequential' afterward. Pending submissions migrated to 'parallel' may now
- * require additional approvals that the legacy flow did not.
- *
- * Usage:
- *   node scripts/backfill-approver-flow.js            # apply changes
- *   node scripts/backfill-approver-flow.js --dry-run  # report only, no writes
- */
 
 import { fileURLToPath } from "url";
 import path from "path";
@@ -36,8 +11,7 @@ import {
   SubmittedChecklistApproval,
 } from "../models/index.js";
 
-// The legacy `operator_approvers` model has been retired from the app, so this
-// one-time migration reads the legacy table directly via raw SQL.
+
 async function getLegacyApproverLinks(operatorIds) {
   if (!operatorIds.length) return [];
   return sequelize.query(

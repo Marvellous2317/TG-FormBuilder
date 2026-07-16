@@ -25,6 +25,15 @@ export const Role = sequelize.define(
       defaultValue: true,
     },
 
+    // Marks a role as an admin-type role — such roles pass the admin route guards.
+    // What an admin user can actually do (read vs read+write) is a per-user
+    // permission on the User model (User.accessLevel), not on the role.
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
   },
   {
     tableName: "packing_check_roles",

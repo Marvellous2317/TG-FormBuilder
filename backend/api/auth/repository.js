@@ -46,7 +46,7 @@ export class AuthRepository {
       const user = await User.findOne({
         where: { email: email.toLowerCase() },
         include: [
-          { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+          { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
         ],
       });
@@ -147,7 +147,7 @@ export class AuthRepository {
     const user = await User.findOne({
       where: { userId },
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });
@@ -302,7 +302,7 @@ export class AuthRepository {
 
     const user = await User.findByPk(record.userId, {
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });
