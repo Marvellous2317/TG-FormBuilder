@@ -89,7 +89,10 @@ export default function AdminDashboard() {
         </div>
         <Button
           className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
-          onClick={() => setIsShowLogbookModal(true)}
+          onClick={() => {
+            setIsShowLogbookModal(true);
+            setChecklistToDuplicate(null);
+          }}
         >
           <IoAddOutline className="text-white" size={14} />
           <p className="text-white font-geist font-medium text-sm">

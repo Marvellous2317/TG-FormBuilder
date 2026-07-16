@@ -105,6 +105,7 @@ export default function CreateLogbookModal({
     approvers: getChecklistApprovers(checklistToDuplicate),
     issuedNumber: checklistToDuplicate?.issuedNumber || '',
     entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
+    approvalRequired: checklistToDuplicate?.approvalRequired || '',
   });
 
   useEffect(() => {
@@ -122,6 +123,7 @@ export default function CreateLogbookModal({
         approvers: getChecklistApprovers(checklistToDuplicate),
         issuedNumber: checklistToDuplicate?.issuedNumber || '',
         entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
+        approvalRequired: checklistToDuplicate?.approvalRequired || '',
       });
     }
   }, [isShowLogbookModal, checklistToDuplicate]);
@@ -581,6 +583,18 @@ export default function CreateLogbookModal({
             className="mb-1"
             value={formData.entityDisplayName}
             onChange={handleInputChange}
+          />
+
+          <InputField
+            label="Does this checklist require approval?"
+            id="approvalRequired"
+            required
+            className="mb-1"
+            value={formData.approvalRequired}
+            onChange={handleInputChange}
+            type="checkbox"
+            className="flex! w-full gap-4 items-center justify-between"
+            inputClassName="!w-4 !h-4 cursor-pointer"
           />
         </div>
 
