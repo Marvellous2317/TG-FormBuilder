@@ -31,6 +31,209 @@ import {
   clearDraft,
 } from '../../lib/offlineCache';
 import CachedDataNotice from '../../shared/components/CachedDataNotice';
+import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
+
+// Image upload component for operator
+function ImageUploadField({ entry, formData, setFormData }) {
+  const [imagePreview, setImagePreview] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Load existing image from formData
+  useEffect(() => {
+    const existingValue = formData[entry.entryId]?.value;
+    if (existingValue) {
+      setImagePreview(existingValue);
+    }
+  }, [entry.entryId, formData]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file is an image
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+
+      // Max size: 5MB
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+
+      setError(null);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          [entry.entryId]: { entryId: entry.entryId, value: base64String },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // const handleCameraCapture = () => {
+  //   // Use file input with capture attribute
+  //   const input = document.createElement('input');
+  //   input.type = 'file';
+  //   input.accept = 'image/*';
+  //   input.capture = 'environment';
+  //   input.onchange = (e) => {
+  //     const file = e.target.files[0];
+  //     if (file) {
+  //       // Validate and process the file
+  //       if (!file.type.startsWith('image/')) {
+  //         setError('Please select an image file');
+  //         return;
+  //       }
+  //       if (file.size > 5 * 1024 * 1024) {
+  //         setError('Image size should be less than 5MB');
+  //         return;
+  //       }
+  //       setError(null);
+  //       const reader = new FileReader();
+  //       reader.onloadend = () => {
+  //         const base64String = reader.result;
+  //         setImagePreview(base64String);
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           [entry.entryId]: { entryId: entry.entryId, value: base64String }
+  //         }));
+  //       };
+  //       reader.readAsDataURL(file);
+  //     }
+  //   };
+  //   input.click();
+  // };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setError(null);
+    setFormData((prev) => ({
+      ...prev,
+      [entry.entryId]: { entryId: entry.entryId, value: null },
+    }));
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please drop an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      setError(null);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          [entry.entryId]: { entryId: entry.entryId, value: base64String },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const fileInputId = `image-upload-${entry.entryId || entry.id}`;
+
+  return (
+    <div className="w-full mb-6">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {entry.name}
+        {entry.config?.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {entry.config?.instructions && (
+        <p className="text-sm text-gray-500 mb-2">
+          {entry.config.instructions}
+        </p>
+      )}
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden "
+        id={fileInputId}
+      />
+
+      {imagePreview ? (
+        // Show uploaded image with options
+        <div className="relative inline-block items-center justify-center ">
+          <img
+            src={imagePreview}
+            alt={entry.name}
+            className="max-h-64 rounded-lg object-contain border border-gray-200"
+          />
+          <div className="absolute top-2 right-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => document.getElementById(fileInputId).click()}
+              className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+              title="Replace image"
+            >
+              <FiUpload size={16} className="text-gray-600" />
+            </button>
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+              title="Remove image"
+            >
+              <FiX size={16} className="text-red-500" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Upload box with drag and drop
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-500 transition-colors"
+        >
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => document.getElementById(fileInputId).click()}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-6 bg-white rounded-lg hover:bg-blue-50 transition-colors border border-gray-200"
+            >
+              <FiUpload size={20} className="text-gray-400" />
+              <span className="text-sm text-gray-600">Upload Image</span>
+            </button>
+
+            {/* <button
+              type="button"
+              onClick={handleCameraCapture}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-6 bg-white rounded-lg hover:bg-blue-50 transition-colors border border-gray-200"
+            >
+              <FiCamera size={20} className="text-gray-400" />
+              <span className="text-sm text-gray-600">Take Photo</span>
+            </button> */}
+          </div>
+          <p className="text-xs text-gray-400 mt-3 text-center">
+            or drag and drop an image here
+          </p>
+        </div>
+      )}
+
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -284,9 +487,7 @@ export default function CreateOperatorEntry() {
       </div>
 
       <div className="px-4 md:px-10 lg:px-25">
-        <CachedDataNotice
-          cachedAt={isUsingCache ? cachedChecklistAt : null}
-        />
+        <CachedDataNotice cachedAt={isUsingCache ? cachedChecklistAt : null} />
       </div>
 
       {isLoadingChecklistEntries ? (
@@ -360,6 +561,13 @@ export default function CreateOperatorEntry() {
                       formData={formData}
                       setFormData={setFormData}
                       readOnly
+                    />
+                  )}
+                  {entry.type === 'image' && (
+                    <ImageUploadField
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
                     />
                   )}
                 </div>
