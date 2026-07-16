@@ -30,6 +30,7 @@ export default function TaskList({
   handleDeletedChange,
   setIsShowLogbookModal,
   setChecklistToDuplicate,
+  isReadAdmin,
 }) {
   const [search, setSearch] = useState('');
   const [currentStatus, setCurrentStatus] = useState('active');
@@ -155,7 +156,28 @@ export default function TaskList({
     };
   }, [activeMenuId]);
 
-  const dropOptions = [
+  const dropOptionsRead = [
+    {
+      title: 'Export',
+      value: 'export',
+      onClick: () => {
+        setIsShowExportLogbookModal(true);
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+      },
+    },
+    {
+      title: 'Submissions',
+      value: 'submissions',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        navigate(`/admin/entries/${activeMenuRow?.checklistId}/submissions`);
+      },
+    },
+  ];
+
+  const dropOptionsWrite = [
     {
       title: 'Export',
       value: 'export',
@@ -251,6 +273,8 @@ export default function TaskList({
       },
     },
   ];
+
+  const dropOptions = isReadAdmin ? dropOptionsRead : dropOptionsWrite;
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
