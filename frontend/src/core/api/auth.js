@@ -27,7 +27,9 @@ export const forgotPassword = async (payload) => {
 };
 
 export const getUserAnalytics = async () => {
-  const { data } = await axiosInstance.get('/user/analytics');
+  const { data } = await axiosInstance.get('/user/analytics', {
+    skipGlobalErrorToast: true,
+  });
   return data;
 };
 

@@ -28,7 +28,7 @@ export async function saveToCache(key, value) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(CHECKLIST_STORE, 'readwrite');
-    tx.objectStore(CHECKLIST_STORE).put({ key, value });
+    tx.objectStore(CHECKLIST_STORE).put({ key, value, cachedAt: Date.now() });
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -40,6 +40,16 @@ export async function getFromCache(key) {
     const tx = db.transaction(CHECKLIST_STORE, 'readonly');
     const req = tx.objectStore(CHECKLIST_STORE).get(key);
     req.onsuccess = () => resolve(req.result?.value ?? null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function getCacheTimestamp(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CHECKLIST_STORE, 'readonly');
+    const req = tx.objectStore(CHECKLIST_STORE).get(key);
+    req.onsuccess = () => resolve(req.result?.cachedAt ?? null);
     req.onerror = () => reject(req.error);
   });
 }

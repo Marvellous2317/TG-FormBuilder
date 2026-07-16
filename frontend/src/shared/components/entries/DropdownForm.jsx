@@ -1,7 +1,8 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import DropdownSelect from '../DropdownSelect';
 import { useChecklistCatalog } from '../../hooks/admin/useChecklist';
 import Loader from '../Loader';
+import { saveToCache, getFromCache } from '../../../lib/offlineCache';
 
 export default function DropdownForm({
   entry,
@@ -12,9 +13,23 @@ export default function DropdownForm({
   const catalogId = entry?.config?.id;
   const entryId = entry?.entryId;
 
-  const { data, isPending: isFetchingCatalog } = useChecklistCatalog(catalogId);
+  const [cachedCatalog, setCachedCatalog] = useState(null);
 
-  const catalogData = data?.data?.catalog;
+  useEffect(() => {
+    if (!catalogId) return;
+    getFromCache(`catalog-${catalogId}`).then(setCachedCatalog);
+  }, [catalogId]);
+
+  const { data, isPending: isFetchingCatalog } = useChecklistCatalog(
+    catalogId,
+    { placeholderData: cachedCatalog },
+  );
+
+  useEffect(() => {
+    if (data && catalogId) saveToCache(`catalog-${catalogId}`, data);
+  }, [data, catalogId]);
+
+  const catalogData = data?.data?.catalog ?? cachedCatalog?.data?.catalog;
 
   const options = useMemo(() => {
     if (!catalogData?.list) return [];

@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         const status = error?.response?.status;
         if (status >= 400 && status < 500) return false;
-        return failureCount < 2;
+        return failureCount < 1;
       },
     },
   },
@@ -89,6 +89,13 @@ const App = () => {
   useEffect(() => {
     const handleOnline = () => syncPendingSubmissions();
     window.addEventListener('online', handleOnline);
+
+    // Also flush any pending submissions on app load — the 'online' event
+    // only fires on a live offline->online transition, so a queue left over
+    // from a previous session (app reopened when already back online) would
+    // otherwise never get synced.
+    if (navigator.onLine) syncPendingSubmissions();
+
     return () => window.removeEventListener('online', handleOnline);
   }, []);
 

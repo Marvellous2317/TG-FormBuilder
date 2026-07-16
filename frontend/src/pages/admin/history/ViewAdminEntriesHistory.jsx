@@ -79,7 +79,7 @@ function ReadOnlyFieldRow({ field, index, onSectionClick }) {
 }
 
 // Image preview component for the admin history view
-function ImagePreviewField({ entry, formData, setFormData }) {
+function ImagePreviewField({ entry, setFormData }) {
   const [imagePreview, setImagePreview] = useState(null);
 
   // Simulate image upload for preview
@@ -237,7 +237,6 @@ function EntriesTableView({ entriesData, onSectionClick }) {
   );
 }
 
-
 function ReadOnlySectionOptionsModal({ isOpen, onClose, sectionField }) {
   if (!isOpen || !sectionField) return null;
 
@@ -273,7 +272,7 @@ function ReadOnlySectionOptionsModal({ isOpen, onClose, sectionField }) {
 
           {/* Fields Table */}
           <div className="overflow-x-auto border w-full border-secondary-200 bg-white mt-4 rounded-[10px]">
-            <div >
+            <div>
               {' '}
               <div className="min-w-205">
                 {' '}
@@ -281,18 +280,14 @@ function ReadOnlySectionOptionsModal({ isOpen, onClose, sectionField }) {
                   {' '}
                   <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                     {' '}
-                  </div>
-                  {' '}
+                  </div>{' '}
                   <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                     {' '}
-                  </div>
-                  {' '}
+                  </div>{' '}
                   <div className="border-r border-secondary-200 px-5 py-5 text-sm font-medium text-secondary">
                     {' '}
-                  </div>
-                  {' '}
-                </div>
-                {' '}
+                  </div>{' '}
+                </div>{' '}
                 {items.length === 0 ? (
                   <div className="px-5 py-8 text-center text-sm text-tertiary">
                     No fields in this section
@@ -386,12 +381,13 @@ export default function ViewAdminEntriesHistory() {
   const [formData, setFormData] = useState({});
   const [isPreview, setIsPreview] = useState(false);
   const [activeSectionField, setActiveSectionField] = useState(null);
+  const [isSectionOptionsModalOpen, setIsSectionOptionsModalOpen] =
+    useState(false);
+
   const handleSectionClick = (field) => {
     setActiveSectionField(field);
     setIsSectionOptionsModalOpen(true);
   };
-  const [isSectionOptionsModalOpen, setIsSectionOptionsModalOpen] =
-    useState(false);
 
   const entriesData = data?.data?.version?.entries;
 
@@ -528,18 +524,13 @@ export default function ViewAdminEntriesHistory() {
               className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
             >
               {isPreview ? (
-                <>
-                  <p className="text-white font-geist font-medium text-sm">
-                    {' '}
-                    Entries view
-                  </p>
-                </>
+                <p className="text-white font-geist font-medium text-sm">
+                  Entries view
+                </p>
               ) : (
-                <>
-                  <p className="text-white font-geist font-medium text-sm">
-                    Preview Form
-                  </p>
-                </>
+                <p className="text-white font-geist font-medium text-sm">
+                  Preview Form
+                </p>
               )}
             </Button>
           )}
@@ -606,7 +597,6 @@ export default function ViewAdminEntriesHistory() {
                       readOnly
                     />
                   )}
-
                   {entry.type === 'section_formular' && (
                     <BasicForm
                       entry={{

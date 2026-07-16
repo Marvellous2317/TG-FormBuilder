@@ -81,7 +81,10 @@ export const fetchChecklistCatalogs = async (params = {}) => {
 };
 
 export const fetchChecklistCatalog = async (id) => {
-  const { data } = await axiosInstance.get(`/checklists/admin/catalogs/${id}`);
+  const { data } = await axiosInstance.get(
+    `/checklists/admin/catalogs/${id}`,
+    { skipGlobalErrorToast: true },
+  );
   return data;
 };
 
