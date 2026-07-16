@@ -59,7 +59,7 @@ export const validateRolesQuery = [
 
 export function validateAddUserMiddleware(req, res, next) {
   try {
-    const { firstName, lastName, email, roleId, companyId, department, ...extraFields } = req.body;
+    const { firstName, lastName, email, roleId, companyId, department, accessLevel, ...extraFields } = req.body;
 
     // Check for extra fields
     const extraKeys = Object.keys(extraFields);
@@ -119,6 +119,13 @@ export function validateAddUserMiddleware(req, res, next) {
       }
     }
 
+    // Validate accessLevel if provided (per-user read/write permission)
+    if (accessLevel !== undefined && accessLevel !== null) {
+      if (!["read_write", "read"].includes(accessLevel)) {
+        throw new ValidationError("accessLevel must be one of: read_write, read");
+      }
+    }
+
     next();
   } catch (error) {
     next(error);
@@ -127,7 +134,7 @@ export function validateAddUserMiddleware(req, res, next) {
 
 export function validateRoleMiddleware(req, res, next) {
   try {
-    const { roleName, description, ...extraFields } = req.body;
+    const { roleName, description, isAdmin, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
@@ -151,7 +158,9 @@ export function validateRoleMiddleware(req, res, next) {
       }
     }
 
-   
+    if (isAdmin !== undefined && typeof isAdmin !== "boolean") {
+      throw new ValidationError("isAdmin must be a boolean");
+    }
 
     next();
   } catch (error) {
@@ -161,7 +170,7 @@ export function validateRoleMiddleware(req, res, next) {
 
 export function validateUpdateUserMiddleware(req, res, next) {
   try {
-    const { firstName, lastName, email, roleId, companyId, department,  ...extraFields } = req.body;
+    const { firstName, lastName, email, roleId, companyId, department, accessLevel, ...extraFields } = req.body;
 
     const extraKeys = Object.keys(extraFields);
     if (extraKeys.length > 0) {
@@ -219,7 +228,11 @@ export function validateUpdateUserMiddleware(req, res, next) {
       }
     }
 
-
+    if (accessLevel !== undefined && accessLevel !== null) {
+      if (!["read_write", "read"].includes(accessLevel)) {
+        throw new ValidationError("accessLevel must be one of: read_write, read");
+      }
+    }
 
     next();
   } catch (error) {

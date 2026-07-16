@@ -190,13 +190,18 @@ export class OperatorRepository {
         }
       }
 
-      const approverConfigs = await ChecklistApprover.findAll({
-        where: { checklistId: assignment.checklistId },
-        order: [["step", "ASC"], ["createdAt", "ASC"]],
-        transaction,
-      });
-      if (approverConfigs.length === 0) {
-        throw new ApplicationError("No approvers are configured for this checklist", 400);
+            const approvalRequired = assignment.checklist.approvalRequired;
+
+      let approverConfigs = [];
+      if (approvalRequired) {
+        approverConfigs = await ChecklistApprover.findAll({
+          where: { checklistId: assignment.checklistId },
+          order: [["step", "ASC"], ["createdAt", "ASC"]],
+          transaction,
+        });
+        if (approverConfigs.length === 0) {
+          throw new ApplicationError("No approvers are configured for this checklist", 400);
+        }
       }
 
       const submittedChecklist = await SubmittedChecklist.create({
@@ -208,6 +213,7 @@ export class OperatorRepository {
         issuedNumber: assignment.checklist.issuedNumber,
         entityDisplayName: assignment.checklist.entityDisplayName,
         submittedAt: new Date(),
+        status: approvalRequired ? "pending" : "approved",
       }, { transaction });
 
       const entriesMap = new Map(assignment.checklist.entries.map((e) => [e.entryId, e]));
@@ -217,18 +223,26 @@ export class OperatorRepository {
         entriesMap.get(r.entryId),
         index,
       )));
+      if (!approvalRequired) {
+        entryData.forEach((e) => { e.status = "approved"; });
+      }
       await SubmittedChecklistEntry.bulkCreate(entryData, { transaction });
 
-      const approvalData = approverConfigs.map((cfg, index) => ({
-        submittedChecklistId: submittedChecklist.submittedChecklistId,
-        approverId: cfg.approverId,
-        step: cfg.step ?? index,
-        status: "pending",
-      }));
-      await SubmittedChecklistApproval.bulkCreate(approvalData, { transaction });
+      if (approvalRequired) {
+        const approvalData = approverConfigs.map((cfg, index) => ({
+          submittedChecklistId: submittedChecklist.submittedChecklistId,
+          approverId: cfg.approverId,
+          step: cfg.step ?? index,
+          status: "pending",
+        }));
+        await SubmittedChecklistApproval.bulkCreate(approvalData, { transaction });
+      }
 
       await transaction.commit();
-      return { submittedChecklist, message: "Checklist submitted successfully" };
+      return {
+        submittedChecklist,
+        message: approvalRequired ? "Checklist submitted successfully" : "Checklist submitted and completed",
+      };
     } catch (error) {
       await transaction.rollback();
       console.error("Error submitting checklist:", error);

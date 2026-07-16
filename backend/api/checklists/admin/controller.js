@@ -6,7 +6,7 @@ export class AdminController {
 
   static async createChecklist(req, res, next) {
     try {
-      const { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators } = req.body;
+      const { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators } = req.body;
       const companyId = req.user.company?.companyId || null;
       const createdBy = req.user.userId;
 
@@ -15,7 +15,7 @@ export class AdminController {
       }
 
       const result = await AdminRepository.createChecklist({
-        title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy,
+        title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators, createdBy,
       });
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) { next(e); }
@@ -70,9 +70,9 @@ export class AdminController {
   static async updateChecklist(req, res, next) {
     try {
       const { checklistId } = req.params;
-      const { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators } = req.body;
+      const { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators } = req.body;
       const updatedBy = req.user.userId;
-      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy });
+      const result = await AdminRepository.updateChecklist(checklistId, { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators, updatedBy });
       return ResponseManager.success(res, result, 200, result.message);
     } catch (e) { next(e); }
   }
