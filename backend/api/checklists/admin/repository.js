@@ -23,14 +23,12 @@ import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/
 
 const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
 
-// An assignment has no status column of its own — it is derived from its latest submission.
-// submissions are expected to be ordered newest-first (createdAt DESC).
 function deriveAssignmentStatus(submissions = []) {
   if (!submissions || submissions.length === 0) return "pending";
   const latest = submissions[0];
   if (latest.status === "approved") return "approved";
   if (latest.status === "rejected") return "rejected";
-  return "submitted"; // a submission exists and is awaiting approval
+  return "submitted"; 
 }
 
 async function hydrateSubmittedEntryImages(submission) {
@@ -50,12 +48,9 @@ async function hydrateSubmittedEntryImages(submission) {
 
 export class AdminRepository {
 
-  // Replace-set the approver chain for a checklist. approvers: [{ approverId, step }]
-  // Returns the list of created approvers with their user info for email notifications.
   static async _setChecklistApprovers(checklistId, companyId, approvers, transaction) {
     if (approvers === undefined) return [];
 
-    // Get existing approvers before destroying
     const existingApproverIds = (await ChecklistApprover.findAll({
       where: { checklistId },
       attributes: ['approverId'],
@@ -85,7 +80,6 @@ export class AdminRepository {
       const step = typeof item === "object" && item.step !== undefined ? Number(item.step) : index;
       rows.push({ checklistId, approverId, step, companyId: approver.companyId || companyId || null });
       
-      // Track newly assigned approvers (not in existing list) for email notification
       if (!existingApproverIds.includes(approverId)) {
         createdApprovers.push({ approver, step });
       }
@@ -94,7 +88,6 @@ export class AdminRepository {
     if (rows.length > 0) {
       await ChecklistApprover.bulkCreate(rows, { transaction });
 
-      // Sync pending submission approvals with the new approver configuration
       await this._syncPendingSubmissionApprovals(checklistId, rows, transaction);
     }
 
@@ -183,11 +176,6 @@ export class AdminRepository {
       transaction,
     });
     const existingByOperator = new Map(existingAssignments.map((a) => [a.assignedTo, a]));
-
-    // Deactivate operators dropped from the list. Never delete: a hard delete cascades
-    // and wipes their submitted_checklists, and a soft delete hides the assignment so the
-    // linked checklist context vanishes from history. Flipping active=false keeps the row
-    // (and every submission under it) fully visible while stopping new submissions.
     for (const assignment of existingAssignments) {
       if (desired.includes(assignment.assignedTo)) continue;
       if (!assignment.active) continue;
@@ -205,8 +193,6 @@ export class AdminRepository {
       await assignment.update({ active: false }, { transaction });
     }
 
-    // Add newly desired operators. If one was previously unassigned, reactivate the same
-    // row so they reconnect to their historical submissions instead of getting a duplicate.
     const created = [];
     for (const operatorId of desired) {
       const operator = operatorMap.get(operatorId);
@@ -355,7 +341,7 @@ export class AdminRepository {
     }
   }
 
-  static async createChecklist({ title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, createdBy }) {
+  static async createChecklist({ title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators, createdBy }) {
     const transaction = await sequelize.transaction();
 
 
@@ -388,23 +374,27 @@ export class AdminRepository {
       if (frequency === "hourly" && (!frequencyInterval || frequencyInterval < 1)) {
         throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);
       }
+      const requiresApproval = approvalRequired === undefined ? true : approvalRequired;
       const checklist = await Checklist.create(
-        { 
-          title, 
+        {
+          title,
           documentNumber,
           issuedNumber: issuedNumber || null,
           entityDisplayName: entityDisplayName || null,
-          companyId, 
-          departmentId, 
+          companyId,
+          departmentId,
           frequency: frequency || null,
           frequencyInterval: frequency === "hourly" ? frequencyInterval : null,
           approvalMode: approvalMode || "sequential",
-          createdBy 
+          approvalRequired: requiresApproval,
+          createdBy
         },
         { transaction }
       );
 
-      const createdApprovers = await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction);
+      const createdApprovers = requiresApproval
+        ? await this._setChecklistApprovers(checklist.checklistId, companyId, approvers, transaction)
+        : [];
       const createdAssignments = await this._setChecklistOperators(checklist.checklistId, companyId, operators, createdBy, transaction);
 
       await transaction.commit();
@@ -486,9 +476,6 @@ export class AdminRepository {
           {
             model: ChecklistAssignment, as: "assignments",
             attributes: ["assignmentId"],
-            // Only currently-assigned (active) operators. Deactivated assignments stay in
-            // the DB for history but must not show up as assigned here. required:false so
-            // checklists with no active operators still appear.
             where: { active: true },
             required: false,
             include: [
@@ -689,7 +676,7 @@ export class AdminRepository {
     }
   }
 
-  static async updateChecklist(checklistId, { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvers, operators, updatedBy }) {
+  static async updateChecklist(checklistId, { title, documentNumber, issuedNumber, entityDisplayName, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators, updatedBy }) {
     const transaction = await sequelize.transaction();
     try {
       const checklist = await Checklist.findByPk(checklistId, { transaction });
@@ -731,6 +718,7 @@ export class AdminRepository {
       }
 
       if (approvalMode !== undefined) checklist.approvalMode = approvalMode;
+      if (approvalRequired !== undefined) checklist.approvalRequired = approvalRequired;
       if (issuedNumber !== undefined) checklist.issuedNumber = issuedNumber || null;
       if (entityDisplayName !== undefined) checklist.entityDisplayName = entityDisplayName || null;
       if (title) checklist.title = title;
@@ -739,12 +727,15 @@ export class AdminRepository {
 
       await checklist.save({ transaction });
 
-      const createdApprovers = await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction);
+      const effectiveApprovalRequired = approvalRequired !== undefined ? approvalRequired : checklist.approvalRequired;
+      const createdApprovers = effectiveApprovalRequired
+        ? await this._setChecklistApprovers(checklistId, checklist.companyId, approvers, transaction)
+        : [];
       const createdAssignments = await this._setChecklistOperators(checklistId, checklist.companyId, operators, updatedBy, transaction);
 
       await transaction.commit();
 
-      // Send emails to newly assigned operators
+
       for (const { operator } of createdAssignments) {
         try {
           await sendAssignmentEmail({
@@ -758,7 +749,6 @@ export class AdminRepository {
         }
       }
 
-      // Send emails to newly assigned approvers
       for (const { approver } of createdApprovers) {
         try {
           await sendApproverAssignmentEmail({
@@ -812,8 +802,6 @@ export class AdminRepository {
       }
 
       await checklist.restore();
-      
-      // Also restore associated entries
       await ChecklistEntry.restore({ where: { checklistId } });
       
       return { message: "Checklist restored successfully", checklist };
@@ -879,7 +867,6 @@ export class AdminRepository {
       const checklist = await Checklist.findByPk(checklistId);
       if (!checklist) throw new ApplicationError("Checklist not found", 404);
 
-      // Snapshot the current state into the version tables before applying changes.
       await this._snapshotChecklistVersion(checklistId, userId, transaction);
 
       const results = [];
@@ -977,8 +964,6 @@ export class AdminRepository {
 
       let assignment;
       if (checkAssignment) {
-        // Operator was previously unassigned: reactivate the same row so their historical
-        // submissions reconnect instead of being orphaned under a stale row.
         assignment = await checkAssignment.update({
           active: true,
           assignedBy,
@@ -1033,9 +1018,6 @@ export class AdminRepository {
           { documentNumber: { [Op.iLike]: `%${search}%` } },
         ];
       }
-
-      // Status lives on the submission, not the assignment, and the requested status maps
-      // to the latest submission — so derive/filter in memory rather than in the SQL where.
       const rows = await ChecklistAssignment.findAll({
         where,
         include: [
@@ -1135,8 +1117,6 @@ export class AdminRepository {
         await transaction.rollback();
         throw new ApplicationError("Assignment not found", 404);
       }
-
-      // Check if there are any pending submissions for this assignment
       const pendingSubmissions = await SubmittedChecklist.count({
         where: { 
           assignmentId: assignment.assignmentId,
@@ -1153,10 +1133,6 @@ export class AdminRepository {
         );
       }
 
-      // Deactivate (never delete). A hard delete cascades and wipes this operator's
-      // submitted_checklists; a soft delete hides the assignment from history joins.
-      // active=false stops new submissions while every past submission stays visible.
-      // Reassigning the operator flips this back (see assignOperator / _setChecklistOperators).
       await assignment.update({ active: false }, { transaction });
       
       await transaction.commit();

@@ -12,7 +12,7 @@ export async function decodeToken(token) {
 
     const user = await User.findByPk(userId, {
       include: [
-        { model: Role, as: "role", attributes: ["roleId", "roleName"] },
+        { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
       ],
     });
@@ -69,8 +69,10 @@ export function adminRequired(req, res, next) {
     return ResponseManager.error(res, "AuthorizationError", "Invalid role format", 400);
   }
 
-  const allowedRoles = ["admin", "superAdmin"];
-  if (!allowedRoles.includes(userRole.roleName)) {
+  // Any role flagged as admin-type (admin or a custom admin role) may reach admin
+  // routes. superAdmin always passes. Whether it can write is decided by
+  // requiresWriteAccess.
+  if (userRole.isAdmin !== true && userRole.roleName !== "superAdmin") {
     return ResponseManager.error(res, "AuthorizationError", "Admin access required", 403);
   }
 
@@ -166,6 +168,22 @@ export function requiresRole(...allowedRoles) {
 
     next();
   };
+}
+
+
+
+export function requiresWriteAccess(req, res, next) {
+  const user = req.user;
+
+  if (!user) {
+    return ResponseManager.error(res, "AuthorizationError", "Unauthorized access", 401);
+  }
+
+  if (user.role?.roleName !== "superAdmin" && user.accessLevel === "read") {
+    return ResponseManager.error(res, "AuthorizationError", "Read-only access: write not permitted", 403);
+  }
+
+  next();
 }
 
 

@@ -56,6 +56,11 @@ export const Checklist = sequelize.define(
       allowNull: false,
       defaultValue: "sequential",
     },
+    approvalRequired: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
   },
   {
     tableName: "checklists",

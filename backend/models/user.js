@@ -22,8 +22,14 @@ export const User = sequelize.define(
 
 
      roleId: {
-      type: DataTypes.UUID,  
-      allowNull: false, 
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+
+      accessLevel: {
+      type: DataTypes.ENUM("read_write", "read"),
+      allowNull: false,
+      defaultValue: "read_write",
     },
 
 	 companyId: {
