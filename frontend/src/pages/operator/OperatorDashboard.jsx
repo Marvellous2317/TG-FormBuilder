@@ -7,7 +7,12 @@ import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorCh
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { saveToCache, getFromCache } from '../../lib/offlineCache';
+import {
+  saveToCache,
+  getFromCache,
+  getCacheTimestamp,
+} from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
@@ -21,9 +26,11 @@ export default function OperatorDashboard() {
   });
 
   const [cachedChecklists, setCachedChecklists] = useState(null);
+  const [cachedChecklistsAt, setCachedChecklistsAt] = useState(null);
 
   useEffect(() => {
     getFromCache('operator-checklists').then(setCachedChecklists);
+    getCacheTimestamp('operator-checklists').then(setCachedChecklistsAt);
   }, []);
 
   const handleSearch = useCallback((searchValue) => {
@@ -34,9 +41,17 @@ export default function OperatorDashboard() {
     }));
   }, []);
 
-  const { data, isFetching } = useOperatorChecklists(usersPagination, {
+  const {
+    data,
+    isFetching,
+    isPlaceholderData,
+    isError,
+  } = useOperatorChecklists(usersPagination, {
     placeholderData: cachedChecklists,
   });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedChecklists));
 
   useEffect(() => {
     if (data) saveToCache('operator-checklists', data);
@@ -157,6 +172,10 @@ export default function OperatorDashboard() {
             loading={isLoadingUserAnalytics}
           />
         </div>
+
+        <CachedDataNotice
+          cachedAt={isUsingCache ? cachedChecklistsAt : null}
+        />
 
         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full min-h-full shadow-sm">
           <section className="flex-col flex w-full min-h-full">

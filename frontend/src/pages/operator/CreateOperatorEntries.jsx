@@ -25,10 +25,12 @@ import {
 import {
   saveToCache,
   getFromCache,
+  getCacheTimestamp,
   saveDraft,
   getDraft,
   clearDraft,
 } from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -45,10 +47,12 @@ export default function CreateOperatorEntry() {
 
   const [formData, setFormData] = useState({});
   const [cachedChecklist, setCachedChecklist] = useState(null);
+  const [cachedChecklistAt, setCachedChecklistAt] = useState(null);
 
   // Load cached checklist entries and any saved draft on mount
   useEffect(() => {
     getFromCache(`checklist-${checklistId}`).then(setCachedChecklist);
+    getCacheTimestamp(`checklist-${checklistId}`).then(setCachedChecklistAt);
     getDraft(checklistId).then((draft) => {
       if (draft) setFormData(draft);
     });
@@ -108,12 +112,17 @@ export default function CreateOperatorEntry() {
     }
   };
 
-  const { data, isPending: isLoadingChecklistEntries } = useOperatorChecklist(
-    checklistId,
-    {
-      placeholderData: cachedChecklist,
-    },
-  );
+  const {
+    data,
+    isPending: isLoadingChecklistEntries,
+    isPlaceholderData,
+    isError,
+  } = useOperatorChecklist(checklistId, {
+    placeholderData: cachedChecklist,
+  });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedChecklist));
 
   useEffect(() => {
     if (data) saveToCache(`checklist-${checklistId}`, data);
@@ -272,6 +281,12 @@ export default function CreateOperatorEntry() {
 
       <div className="flex items-center w-full md:my-2 my-4 md:text-lg text-base justify-center font-medium font-geist text-primary">
         <h2>{checklistTitle}</h2>
+      </div>
+
+      <div className="px-4 md:px-10 lg:px-25">
+        <CachedDataNotice
+          cachedAt={isUsingCache ? cachedChecklistAt : null}
+        />
       </div>
 
       {isLoadingChecklistEntries ? (
