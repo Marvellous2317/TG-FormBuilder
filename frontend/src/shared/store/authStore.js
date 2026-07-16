@@ -8,7 +8,6 @@ const initialState = {
   requiresPasswordChange: false,
   isAuthenticated: false,
   resetEmail: null,
-  accessLevel: null,
 };
 
 const storage =
@@ -52,11 +51,6 @@ export const useAuthStore = create(
       setResetEmail: (email) =>
         set(() => ({
           resetEmail: email,
-        })),
-      setAccessLevel: (accessLevel) =>
-        set(() => ({
-          accessLevel:
-            accessLevel && accessLevel?.length > 0 ? accessLevel : null,
         })),
       clearAuth: () =>
         set(() => ({
