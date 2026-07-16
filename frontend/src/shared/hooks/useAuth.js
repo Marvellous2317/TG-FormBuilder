@@ -63,7 +63,6 @@ export default function useAuth() {
     onSuccess: (response) => {
       useAuthStore.getState().clearAuth();
       useAuthStore.getState().setAuthFromLogin(response);
-      useAuthStore.getState().setAccessLevel(response?.data?.accessLevel);
 
       const user = response?.data?.user;
       const successMessage =
