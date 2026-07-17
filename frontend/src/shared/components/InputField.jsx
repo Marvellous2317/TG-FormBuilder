@@ -166,7 +166,9 @@ function InputField({
             id={inputId}
             name={name}
             type={inputType}
-            value={normalizedValue}
+            {...(inputType === 'checkbox'
+              ? { checked: !!value }
+              : { value: normalizedValue })}
             onChange={!isDisabled && !isReadOnly ? onChange : undefined}
             placeholder={placeholder}
             readOnly={isReadOnly}

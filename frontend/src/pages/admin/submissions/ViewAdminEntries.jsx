@@ -313,21 +313,6 @@ export default function ViewAdminEntries() {
         </div>
       )}
 
-      {/* {!isPending && (
-        <div className="border-t border-secondary-200 mt-6 pt-6 px-4 md:px-10 lg:px-25 flex items-center gap-3">
-          {!isReadAdmin && (
-            <Button
-              className="bg-primary-200 py-2.5 px-5 rounded-2xl text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
-              onClick={() => handleUpdate()}
-              disabled={isUpdatingEntries || isPending}
-            >
-              Update
-              {isUpdatingEntries && <Loader size="h-4.5 w-4.5 border-white!" />}
-            </Button>
-          )}
-        </div>
-      )} */}
-
       {!isPending && !isReadAdmin &&(
         <div className="border-t border-secondary-200 mt-6 pt-6 px-4 md:px-10 lg:px-25 flex items-center gap-3">
          
