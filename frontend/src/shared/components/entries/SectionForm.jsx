@@ -4,19 +4,11 @@ import EnumForm from './EnumForm';
 import DropdownForm from './DropdownForm';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Button from '../Button';
-import { evaluateFormula, formatComputedValue } from '../../utils/formula';
-
-const parseSectionRows = (value) => {
-  if (!value) return [{}];
-
-  try {
-    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [{}];
-  } catch (error) {
-    console.log(error);
-    return [{}];
-  }
-};
+import {
+  evaluateFormula,
+  formatComputedValue,
+  parseSectionRows,
+} from '../../utils/formula';
 
 export default function SectionForm({
   entry,
