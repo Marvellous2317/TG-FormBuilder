@@ -28,6 +28,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import RandomSignatureModal from './components/RandomSignatureModal';
 import { useAuthStore } from '../../shared/store/authStore';
+import ImageForm from '../../shared/components/entries/ImageForm';
 
 export default function ViewRandomEntries() {
   let { id: checklistId } = useLoaderData();
@@ -600,6 +601,13 @@ export default function ViewRandomEntries() {
                       formData={formData}
                       setFormData={setFormData}
                       readOnly
+                    />
+                  )}
+                  {entry.type === 'image' && (
+                    <ImageForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
                     />
                   )}
                 </div>
