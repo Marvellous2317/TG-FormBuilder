@@ -11,6 +11,11 @@ const validate = (req, res, next) => {
   next();
 };
 
+// Approval fields are only validated when approval is actually turned on.
+// isBoolean() accepts the string "false" too, so both forms are treated as off.
+const approvalIsRequired = (value, { req }) =>
+  req.body.approvalRequired !== false && req.body.approvalRequired !== "false";
+
 // Checklist validation
 export const validateCreateChecklist = [
   body("title").trim().notEmpty().withMessage("Checklist title is required")
@@ -23,13 +28,19 @@ export const validateCreateChecklist = [
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
   body("approvalMode")
-    .if((value, { req }) => req.body.approvalRequired !== false && req.body.approvalRequired !== "false")
+    .if(approvalIsRequired)
     .optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
   body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
-  body("approvers").optional().isArray().withMessage("Approvers must be an array"),
-  body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
-  body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
+  body("approvers")
+    .if(approvalIsRequired)
+    .optional().isArray().withMessage("Approvers must be an array"),
+  body("approvers.*.approverId")
+    .if(approvalIsRequired)
+    .optional().isUUID().withMessage("Each approver must have a valid approverId"),
+  body("approvers.*.step")
+    .if(approvalIsRequired)
+    .optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
   body("operators").optional().isArray().withMessage("Operators must be an array"),
   body("operators.*").optional().isUUID().withMessage("Each operator must be a valid UUID"),
   body().custom((body) => {
@@ -53,13 +64,19 @@ export const validateUpdateChecklist = [
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
   body("approvalMode")
-    .if((value, { req }) => req.body.approvalRequired !== false && req.body.approvalRequired !== "false")
+    .if(approvalIsRequired)
     .optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
   body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
-  body("approvers").optional().isArray().withMessage("Approvers must be an array"),
-  body("approvers.*.approverId").optional().isUUID().withMessage("Each approver must have a valid approverId"),
-  body("approvers.*.step").optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
+  body("approvers")
+    .if(approvalIsRequired)
+    .optional().isArray().withMessage("Approvers must be an array"),
+  body("approvers.*.approverId")
+    .if(approvalIsRequired)
+    .optional().isUUID().withMessage("Each approver must have a valid approverId"),
+  body("approvers.*.step")
+    .if(approvalIsRequired)
+    .optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
   body("operators").optional().isArray().withMessage("Operators must be an array"),
   body("operators.*").optional().isUUID().withMessage("Each operator must be a valid UUID"),
   body().custom((body) => {
