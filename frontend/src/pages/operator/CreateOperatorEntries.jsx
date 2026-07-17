@@ -271,6 +271,7 @@ export default function CreateOperatorEntry() {
   // When submitting, you can convert formData object to an array if needed:
   const handleSubmit = async () => {
     const enrichedFormData = { ...formData };
+
     entriesData
       ?.filter((e) => e.type === 'formular' || e.type === 'section_formular')
       .forEach((entry) => {
@@ -313,6 +314,9 @@ export default function CreateOperatorEntry() {
         // showError('Something went wrong');
       }
     }
+
+    console.log('Payload size:', JSON.stringify(formDataArray).length, 'bytes');
+console.log('Sample entry:', formDataArray[0]);
   };
 
   const {
