@@ -359,19 +359,31 @@ export default function CreateLogbookModal({
       }
     }
 
-    const payload = {
-      title: logbookTitle,
-      documentNumber,
-      departmentId: department.departmentId,
-      frequency,
-      ...(frequency === 'hourly' ? { frequencyInterval } : {}),
-      approvalMode,
-      approvers,
-      operators,
-      issuedNumber,
-      entityDisplayName,
-      approvalRequired,
-    };
+    const payload = approvalRequired
+      ? {
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          ...(frequency === 'hourly' ? { frequencyInterval } : {}),
+          approvalMode,
+          approvers,
+          operators,
+          issuedNumber,
+          entityDisplayName,
+          approvalRequired,
+        }
+      : {
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          ...(frequency === 'hourly' ? { frequencyInterval } : {}),
+          operators,
+          issuedNumber,
+          entityDisplayName,
+          approvalRequired,
+        };
 
     try {
       if (checklistToDuplicate) {
