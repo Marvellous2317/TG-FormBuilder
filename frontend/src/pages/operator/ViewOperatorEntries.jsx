@@ -30,6 +30,7 @@ import {
   getCacheTimestamp,
 } from '../../lib/offlineCache';
 import CachedDataNotice from '../../shared/components/CachedDataNotice';
+import ImageForm from '../../shared/components/entries/ImageForm';
 
 // Image upload component for viewing/editing
 function ImageViewField({ entry, formData, setFormData, readOnly }) {
@@ -61,9 +62,9 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
       reader.onloadend = () => {
         const base64String = reader.result;
         setImagePreview(base64String);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          [entry.entryId]: { entryId: entry.entryId, value: base64String }
+          [entry.entryId]: { entryId: entry.entryId, value: base64String },
         }));
       };
       reader.readAsDataURL(file);
@@ -92,9 +93,9 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
         reader.onloadend = () => {
           const base64String = reader.result;
           setImagePreview(base64String);
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            [entry.entryId]: { entryId: entry.entryId, value: base64String }
+            [entry.entryId]: { entryId: entry.entryId, value: base64String },
           }));
         };
         reader.readAsDataURL(file);
@@ -107,9 +108,9 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
     if (readOnly) return;
     setImagePreview(null);
     setError(null);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [entry.entryId]: { entryId: entry.entryId, value: null }
+      [entry.entryId]: { entryId: entry.entryId, value: null },
     }));
   };
 
@@ -121,9 +122,11 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
         {entry.name}
         {entry.config?.required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      
+
       {entry.config?.instructions && (
-        <p className="text-sm text-gray-500 mb-2">{entry.config.instructions}</p>
+        <p className="text-sm text-gray-500 mb-2">
+          {entry.config.instructions}
+        </p>
       )}
 
       <input
@@ -138,9 +141,9 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
       {imagePreview ? (
         // Show uploaded image with options
         <div className="relative inline-block">
-          <img 
-            src={imagePreview} 
-            alt={entry.name} 
+          <img
+            src={imagePreview}
+            alt={entry.name}
             className="max-h-64 rounded-lg object-contain border border-gray-200"
           />
           {!readOnly && (
@@ -182,7 +185,7 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
                   <FiUpload size={20} className="text-gray-400" />
                   <span className="text-sm text-gray-600">Upload Image</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={handleCameraCapture}
@@ -200,9 +203,7 @@ function ImageViewField({ entry, formData, setFormData, readOnly }) {
         </div>
       )}
 
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
   );
 }
@@ -442,9 +443,7 @@ export default function ViewOperatorEntries() {
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto px-4 md:px-10 lg:px-25">
-        <CachedDataNotice
-          cachedAt={isUsingCache ? cachedSubmissionAt : null}
-        />
+        <CachedDataNotice cachedAt={isUsingCache ? cachedSubmissionAt : null} />
         {isLoadingChecklistEntries ? (
           <Loader size="h-12 w-12 !border-primary-200 mt-20" />
         ) : entriesData?.length < 1 ? (
@@ -524,9 +523,8 @@ export default function ViewOperatorEntries() {
                         readOnly
                       />
                     )}
-                    {/* Add image field */}
                     {entry.type === 'image' && (
-                      <ImageViewField
+                      <ImageForm
                         entry={entry}
                         formData={formData}
                         setFormData={setFormData}
