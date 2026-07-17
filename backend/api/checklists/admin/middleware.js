@@ -22,7 +22,9 @@ export const validateCreateChecklist = [
     .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
-  body("approvalMode").optional().isIn(["sequential", "parallel"])
+  body("approvalMode")
+    .if((value, { req }) => req.body.approvalRequired !== false && req.body.approvalRequired !== "false")
+    .optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
   body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
   body("approvers").optional().isArray().withMessage("Approvers must be an array"),
@@ -50,7 +52,9 @@ export const validateUpdateChecklist = [
     .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
   body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
     .withMessage("Frequency interval must be between 1 and 24 hours"),
-  body("approvalMode").optional().isIn(["sequential", "parallel"])
+  body("approvalMode")
+    .if((value, { req }) => req.body.approvalRequired !== false && req.body.approvalRequired !== "false")
+    .optional().isIn(["sequential", "parallel"])
     .withMessage("Approval mode must be sequential or parallel"),
   body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
   body("approvers").optional().isArray().withMessage("Approvers must be an array"),
