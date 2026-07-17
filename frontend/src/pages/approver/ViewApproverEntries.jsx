@@ -28,6 +28,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import SignatureModal from './components/SignatureModal';
 import { useAuthStore } from '../../shared/store/authStore';
+import ImageForm from '../../shared/components/entries/ImageForm';
 
 export default function ViewApproverEntries() {
   let { id: checklistId } = useLoaderData();
@@ -755,6 +756,13 @@ export default function ViewApproverEntries() {
                       formData={formData}
                       setFormData={setFormData}
                       readOnly
+                    />
+                  )}
+                  {entry.type === 'image' && (
+                    <ImageForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
                     />
                   )}
                 </div>
