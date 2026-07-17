@@ -112,6 +112,17 @@ export const evaluateFormula = (expression, fieldValues = {}) => {
   }
 };
 
+export const parseSectionRows = (value) => {
+  if (!value) return [{}];
+
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [{}];
+  } catch {
+    return [{}];
+  }
+};
+
 export const formatComputedValue = (value) => {
   const numericValue = Number(value);
 

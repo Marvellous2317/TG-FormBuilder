@@ -21,6 +21,7 @@ import { queueSubmission } from '../../lib/offlineQueue';
 import {
   evaluateFormula,
   formatComputedValue,
+  parseSectionRows,
 } from '../../shared/utils/formula';
 import {
   saveToCache,
@@ -355,7 +356,7 @@ console.log('Sample entry:', formDataArray[0]);
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    const rowsData = parseSectionRows(rawValue);
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -395,7 +396,14 @@ console.log('Sample entry:', formDataArray[0]);
         return isNaN(num) ? null : num;
       }
 
-      return null;
+      // Row hasn't been touched yet — fall back to the field's own
+      // default/prefilled value instead of dropping it from the aggregate.
+      const fallback = targetField.value ?? targetField.config?.defaultValue;
+      if (fallback === undefined || fallback === null || fallback === '') {
+        return null;
+      }
+      const num = Number(fallback);
+      return isNaN(num) ? null : num;
     };
 
     const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
