@@ -34,7 +34,6 @@ import {
 import CachedDataNotice from '../../shared/components/CachedDataNotice';
 import ImageForm from '../../shared/components/entries/ImageForm';
 
-
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
 
