@@ -45,7 +45,7 @@ router.put("/submissions/:checklistId/:submittedChecklistId", isAuthenticated, a
 
 router.get("/:checklistId", isAuthenticated, adminRequired, validateChecklistId, AdminController.getChecklistById);
 router.put("/:checklistId", isAuthenticated, adminRequired, requiresWriteAccess, validateUpdateChecklist, AdminController.updateChecklist);
-router.delete("/:checklistId", isAuthenticated, adminRequired, requiresWriteAccess, validateChecklistId, AdminController.deleteChecklist);
+router.delete("/:checklistId", validateChecklistId, AdminController.deleteChecklist);
 router.put("/:checklistId/restore", isAuthenticated, adminRequired, requiresWriteAccess, validateChecklistId, AdminController.restoreChecklist);
 router.put("/:checklistId/entries", isAuthenticated, adminRequired, requiresWriteAccess, validateCreateOrUpdateEntries, AdminController.createOrUpdateEntries);
 

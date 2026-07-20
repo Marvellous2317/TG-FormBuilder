@@ -72,6 +72,10 @@ async function uploadSingleFileToAzureBlob(file, fileName = "image") {
     const uniqueId = crypto.randomBytes(8).toString("hex");
     const blobName = `${fileName}-${uniqueId}${ext}`;
 
+    if (!imageClient) {
+      throw new Error("Azure Blob storage is not configured (missing connection string or container name)");
+    }
+
     const createResponse = await imageClient.createIfNotExists();
     if (createResponse.succeeded) {
       await imageClient.setAccessPolicy("blob");
