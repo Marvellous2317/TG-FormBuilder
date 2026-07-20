@@ -21,6 +21,7 @@ import SectionForm from '../../../shared/components/entries/SectionForm';
 import Button from '../../../shared/components/Button';
 import Loader from '../../../shared/components/Loader';
 import useToast from '../../../shared/hooks/useToast';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function ViewAdminEntries() {
   let { id: checklistId, submissionId } = useLoaderData();
@@ -34,6 +35,11 @@ export default function ViewAdminEntries() {
     checklistId,
     submissionId,
   );
+
+  const {user} = useAuthStore();
+
+  const isReadAdmin =
+    user?.accessLevel && user.accessLevel === 'read' ? true : false;
 
   const { mutateAsync: updateEntries, isPending: isUpdatingEntries } =
     useUpdateChecklistsSubmissions();
@@ -220,6 +226,7 @@ export default function ViewAdminEntries() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                      readOnly={isReadAdmin}
                     />
                   )}
                   {entry.type === 'enum' && (
@@ -227,6 +234,7 @@ export default function ViewAdminEntries() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                      readOnly={isReadAdmin}
                     />
                   )}
                   {entry.type === 'dropdown' && (
@@ -234,6 +242,7 @@ export default function ViewAdminEntries() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                      readOnly={isReadAdmin}
                     />
                   )}
                   {entry.type === 'section' && (
@@ -241,6 +250,7 @@ export default function ViewAdminEntries() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                      readOnly={isReadAdmin}
                     />
                   )}
                   {entry.type === 'formular' && (
@@ -303,16 +313,18 @@ export default function ViewAdminEntries() {
         </div>
       )}
 
-      {!isPending && (
+      {!isPending && !isReadAdmin &&(
         <div className="border-t border-secondary-200 mt-6 pt-6 px-4 md:px-10 lg:px-25 flex items-center gap-3">
-          <Button
-            className="bg-primary-200 py-2.5 px-5 rounded-2xl text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
-            onClick={() => handleUpdate()}
-            disabled={isUpdatingEntries || isPending}
-          >
-            Update
-            {isUpdatingEntries && <Loader size="h-4.5 w-4.5 border-white!" />}
-          </Button>
+         
+            <Button
+              className="bg-primary-200 py-2.5 px-5 rounded-2xl text-base font-semibold text-white flex gap-2 w-full sm:w-auto justify-center sm:justify-start"
+              onClick={() => handleUpdate()}
+              disabled={isUpdatingEntries || isPending}
+            >
+              Update
+              {isUpdatingEntries && <Loader size="h-4.5 w-4.5 border-white!" />}
+            </Button>
+          
         </div>
       )}
     </div>

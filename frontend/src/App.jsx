@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         const status = error?.response?.status;
         if (status >= 400 && status < 500) return false;
-        return failureCount < 2;
+        return failureCount < 1;
       },
     },
   },
@@ -89,7 +89,25 @@ const App = () => {
   useEffect(() => {
     const handleOnline = () => syncPendingSubmissions();
     window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+
+    // Also flush any pending submissions on app load — the 'online' event
+    // only fires on a live offline->online transition, so a queue left over
+    // from a previous session (app reopened when already back online) would
+    // otherwise never get synced.
+    if (navigator.onLine) syncPendingSubmissions();
+
+    // The browser 'online' event is unreliable in practice — e.g. Wi-Fi stays
+    // connected while the actual internet route drops and comes back, which
+    // never toggles the network interface and so never fires 'online'. Poll
+    // as a fallback so the queue doesn't get stuck until the app is reloaded.
+    const intervalId = window.setInterval(() => {
+      if (navigator.onLine) syncPendingSubmissions();
+    }, 30000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {

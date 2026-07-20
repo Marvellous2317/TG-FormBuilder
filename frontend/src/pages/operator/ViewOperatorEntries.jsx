@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Link,
   useLoaderData,
@@ -11,6 +11,7 @@ import {
 } from '../../shared/hooks/operator/useOperatorChecklists';
 import BasicForm from '../../shared/components/entries/BasicForm';
 import { FaArrowLeft } from 'react-icons/fa';
+import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
 import Loader from '../../shared/components/Loader';
 import EnumForm from '../../shared/components/entries/EnumForm';
 import DropdownForm from '../../shared/components/entries/DropdownForm';
@@ -23,6 +24,189 @@ import {
 } from '../../shared/utils/formula';
 import { useAuthStore } from '../../shared/store/authStore';
 import SignatureModal from '../approver/components/SignatureModal';
+import {
+  saveToCache,
+  getFromCache,
+  getCacheTimestamp,
+} from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
+import ImageForm from '../../shared/components/entries/ImageForm';
+
+// Image upload component for viewing/editing
+function ImageViewField({ entry, formData, setFormData, readOnly }) {
+  const [imagePreview, setImagePreview] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Load existing image from formData or entry value
+  useEffect(() => {
+    const existingValue = formData[entry.entryId]?.value || entry?.value;
+    if (existingValue) {
+      setImagePreview(existingValue);
+    }
+  }, [entry.entryId, formData, entry?.value]);
+
+  const handleFileChange = (e) => {
+    if (readOnly) return;
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      setError(null);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          [entry.entryId]: { entryId: entry.entryId, value: base64String },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraCapture = () => {
+    if (readOnly) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          setError('Please select an image file');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image size should be less than 5MB');
+          return;
+        }
+        setError(null);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result;
+          setImagePreview(base64String);
+          setFormData((prev) => ({
+            ...prev,
+            [entry.entryId]: { entryId: entry.entryId, value: base64String },
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleRemoveImage = () => {
+    if (readOnly) return;
+    setImagePreview(null);
+    setError(null);
+    setFormData((prev) => ({
+      ...prev,
+      [entry.entryId]: { entryId: entry.entryId, value: null },
+    }));
+  };
+
+  const fileInputId = `image-upload-${entry.entryId || entry.id}`;
+
+  return (
+    <div className="w-full mb-6">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {entry.name}
+        {entry.config?.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {entry.config?.instructions && (
+        <p className="text-sm text-gray-500 mb-2">
+          {entry.config.instructions}
+        </p>
+      )}
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+        id={fileInputId}
+        disabled={readOnly}
+      />
+
+      {imagePreview ? (
+        // Show uploaded image with options
+        <div className="relative inline-block">
+          <img
+            src={imagePreview}
+            alt={entry.name}
+            className="max-h-64 rounded-lg object-contain border border-gray-200"
+          />
+          {!readOnly && (
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => document.getElementById(fileInputId).click()}
+                className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+                title="Replace image"
+              >
+                <FiUpload size={16} className="text-gray-600" />
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+                title="Remove image"
+              >
+                <FiX size={16} className="text-red-500" />
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Upload box (or read-only message)
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+          {readOnly ? (
+            <div className="text-center">
+              <p className="text-sm text-gray-400">No image uploaded</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById(fileInputId).click()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-6 bg-white rounded-lg hover:bg-blue-50 transition-colors border border-gray-200"
+                >
+                  <FiUpload size={20} className="text-gray-400" />
+                  <span className="text-sm text-gray-600">Upload Image</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCameraCapture}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-6 bg-white rounded-lg hover:bg-blue-50 transition-colors border border-gray-200"
+                >
+                  <FiCamera size={20} className="text-gray-400" />
+                  <span className="text-sm text-gray-600">Take Photo</span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3 text-center">
+                or drag and drop an image here
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 export default function ViewOperatorEntries() {
   let { id: checklistId } = useLoaderData();
@@ -32,8 +216,29 @@ export default function ViewOperatorEntries() {
 
   const { user } = useAuthStore();
 
-  const { data, isPending: isLoadingChecklistEntries } =
-    useOperatorSubmittedChecklist(checklistId);
+  const [cachedSubmission, setCachedSubmission] = useState(null);
+  const [cachedSubmissionAt, setCachedSubmissionAt] = useState(null);
+
+  useEffect(() => {
+    getFromCache(`submission-${checklistId}`).then(setCachedSubmission);
+    getCacheTimestamp(`submission-${checklistId}`).then(setCachedSubmissionAt);
+  }, [checklistId]);
+
+  const {
+    data,
+    isPending: isLoadingChecklistEntries,
+    isPlaceholderData,
+    isError,
+  } = useOperatorSubmittedChecklist(checklistId, {
+    placeholderData: cachedSubmission,
+  });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedSubmission));
+
+  useEffect(() => {
+    if (data) saveToCache(`submission-${checklistId}`, data);
+  }, [data, checklistId]);
 
   const navigate = useNavigate();
 
@@ -43,11 +248,17 @@ export default function ViewOperatorEntries() {
 
   const { showSuccess, showError } = useToast();
 
-  const entriesData = data?.data?.submission?.entries;
+  const entriesData =
+    data?.data?.submission?.entries ??
+    cachedSubmission?.data?.submission?.entries;
 
-  const approver = data?.data?.submission?.approver;
+  const approver =
+    data?.data?.submission?.approver ??
+    cachedSubmission?.data?.submission?.approver;
 
-  const submittedId = data?.data?.submission?.submittedChecklistId;
+  const submittedId =
+    data?.data?.submission?.submittedChecklistId ??
+    cachedSubmission?.data?.submission?.submittedChecklistId;
 
   const { mutateAsync: updateEntries, isPending: isUpdatingEntries } =
     useUpdateOperatorChecklistEntries(submittedId);
@@ -232,6 +443,7 @@ export default function ViewOperatorEntries() {
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto px-4 md:px-10 lg:px-25">
+        <CachedDataNotice cachedAt={isUsingCache ? cachedSubmissionAt : null} />
         {isLoadingChecklistEntries ? (
           <Loader size="h-12 w-12 !border-primary-200 mt-20" />
         ) : entriesData?.length < 1 ? (
@@ -309,6 +521,14 @@ export default function ViewOperatorEntries() {
                         formData={formData}
                         setFormData={setFormData}
                         readOnly
+                      />
+                    )}
+                    {entry.type === 'image' && (
+                      <ImageForm
+                        entry={entry}
+                        formData={formData}
+                        setFormData={setFormData}
+                        readOnly={previousLocation === 'pending' ? false : true}
                       />
                     )}
                   </div>

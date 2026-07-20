@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Link,
-  NavLink,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 import { FiMenu, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Icons from '../../assets/icons';
@@ -34,14 +28,27 @@ const navDetails = [
   },
 ];
 
+const navDetailsRead = [
+  {
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
+    title: 'Dashboard',
+    to: '/admin',
+  },
+  {
+    icon: Icons.settingsActive,
+    icon2: Icons.settingsInactive,
+    title: 'Settings',
+    to: '/admin/settings',
+  },
+];
+
 export default function AdminLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   const { user } = useAuthStore();
-
-  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -61,6 +68,11 @@ export default function AdminLayout() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const navigate = useNavigate();
+
+  const adminNavDetails =
+    user?.accessLevel && user.accessLevel === 'read'
+      ? navDetailsRead
+      : navDetails;
 
   return (
     <div className="flex h-screen w-full bg-white relative">
@@ -156,7 +168,7 @@ export default function AdminLayout() {
 
         {/* Navigation - scrollable */}
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:space-y-3 overflow-y-auto">
-          {navDetails.map(({ icon, title, to, icon2 }) => (
+          {adminNavDetails.map(({ icon, title, to, icon2 }) => (
             <NavLink
               key={to}
               to={to}

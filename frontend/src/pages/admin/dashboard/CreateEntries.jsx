@@ -45,6 +45,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import SectionFormularModal from './components/SectionFormularModal';
 import { getFormDraft, saveFormDraft } from '../../../lib/offlineCache';
+import ImageOptionsModal from '../../../shared/components/ImageOptionsModal';
 
 const FORMULA_CAPABLE_TYPES = [
   'number',
@@ -181,6 +182,11 @@ function SortableFieldRow({
               {field.config.title}
             </p>
           )}
+
+          {field.type === 'image' && (
+            <div className="text-sm text-secondary-300">{''}</div>
+          )}
+
           {field.type === 'section' && field.config && (
             <p
               onClick={() => onOpenModal('section', field.id)}
@@ -254,6 +260,7 @@ export default function CreateEntries() {
   const [activeFieldId, setActiveFieldId] = useState(null);
   const [isShowDefaultValueModal, setIsShowDefaultValueModal] = useState(false);
   const [fields, setFields] = useState([createField()]);
+  const [isImageOptionsModal, setIsImageOptionsModal] = useState(false);
 
   useEffect(() => {
     getFormDraft(checklistId).then((draft) => {
@@ -359,6 +366,10 @@ export default function CreateEntries() {
       case 'section_formular':
         setActiveFieldId(id);
         setIsSectionFormularModal(true);
+        break;
+      case 'image':
+        setActiveFieldId(id);
+        setIsImageOptionsModal(true);
         break;
       default:
         break;
@@ -492,6 +503,7 @@ export default function CreateEntries() {
     else if (type === 'formular') setIsFormularModal(true);
     else if (type === 'defaultValue') setIsShowDefaultValueModal(true);
     else if (type === 'sectionFormular') setIsSectionFormularModal(true);
+    else if (type === 'image') setIsImageOptionsModal(true);
   };
 
   const formularFields = fields.filter(
@@ -668,6 +680,13 @@ export default function CreateEntries() {
         initialValue={activeField?.config}
         activeField={activeField}
       />
+      {/* <ImageOptionsModal
+        key={`image-${activeFieldId}`}
+        isImageOptionsModal={isImageOptionsModal}
+        setIsImageOptionsModal={setIsImageOptionsModal}
+        onSave={handleModalSave}
+        initialValue={activeField?.config}
+      /> */}
     </div>
   );
 }

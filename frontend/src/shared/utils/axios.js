@@ -53,17 +53,21 @@ axiosInstance.interceptors.response.use(
 
     // If no response — likely a network error
     if (!error.response) {
-      showError('Network error. Please check your connection.');
+      if (!originalRequest?.skipGlobalErrorToast) {
+        showError('Network error. Please check your connection.');
+      }
       return Promise.reject(error);
     }
 
     // Non-401 errors
     if (error.response.status !== 401) {
-      const message =
-        error?.response?.data?.message ||
-        error.message ||
-        'Something went wrong';
-      showError(message);
+      if (!originalRequest?.skipGlobalErrorToast) {
+        const message =
+          error?.response?.data?.message ||
+          error.message ||
+          'Something went wrong';
+        showError(message);
+      }
       return Promise.reject(error);
     }
 

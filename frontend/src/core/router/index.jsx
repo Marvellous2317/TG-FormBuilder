@@ -42,7 +42,7 @@ import ResetPassword from '../../pages/auth/ResetPassword';
 import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsManagement';
 import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
 import HistoryManagement from '../../pages/admin/history/HistoryManagement';
-import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntiesHistory';
+import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
 
 export const router = createBrowserRouter([
   {

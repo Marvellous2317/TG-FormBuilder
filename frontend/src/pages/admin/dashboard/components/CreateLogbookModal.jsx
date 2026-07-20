@@ -105,6 +105,7 @@ export default function CreateLogbookModal({
     approvers: getChecklistApprovers(checklistToDuplicate),
     issuedNumber: checklistToDuplicate?.issuedNumber || '',
     entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
+    approvalRequired: checklistToDuplicate?.approvalRequired || true,
   });
 
   useEffect(() => {
@@ -122,6 +123,7 @@ export default function CreateLogbookModal({
         approvers: getChecklistApprovers(checklistToDuplicate),
         issuedNumber: checklistToDuplicate?.issuedNumber || '',
         entityDisplayName: checklistToDuplicate?.entityDisplayName || '',
+        approvalRequired: checklistToDuplicate?.approvalRequired || true,
       });
     }
   }, [isShowLogbookModal, checklistToDuplicate]);
@@ -300,10 +302,10 @@ export default function CreateLogbookModal({
   };
 
   const handleInputChange = (e) => {
-    const { id, value } = e.target;
+    const { id, type, value, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -328,6 +330,7 @@ export default function CreateLogbookModal({
       approvers,
       issuedNumber,
       entityDisplayName,
+      approvalRequired,
     } = formData;
 
     if (
@@ -356,18 +359,31 @@ export default function CreateLogbookModal({
       }
     }
 
-    const payload = {
-      title: logbookTitle,
-      documentNumber,
-      departmentId: department.departmentId,
-      frequency,
-      ...(frequency === 'hourly' ? { frequencyInterval } : {}),
-      approvalMode,
-      approvers,
-      operators,
-      issuedNumber,
-      entityDisplayName,
-    };
+    const payload = approvalRequired
+      ? {
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          ...(frequency === 'hourly' ? { frequencyInterval } : {}),
+          approvalMode,
+          approvers,
+          operators,
+          issuedNumber,
+          entityDisplayName,
+          approvalRequired,
+        }
+      : {
+          title: logbookTitle,
+          documentNumber,
+          departmentId: department.departmentId,
+          frequency,
+          ...(frequency === 'hourly' ? { frequencyInterval } : {}),
+          operators,
+          issuedNumber,
+          entityDisplayName,
+          approvalRequired,
+        };
 
     try {
       if (checklistToDuplicate) {
@@ -421,6 +437,7 @@ export default function CreateLogbookModal({
       approvers: [],
       issuedNumber: '',
       entityDisplayName: '',
+      approvalRequired: false,
     });
     setDepartmentSearchInput('');
     setDepartmentSearch('');
@@ -494,16 +511,53 @@ export default function CreateLogbookModal({
           )}
 
           <InputField
-            label="Approval mode"
-            id="approvalMode"
-            className=""
-            value={formData.approvalMode}
+            label="Does this checklist require approval?"
+            id="approvalRequired"
             required
-            placeholder="Select approval mode"
-            options={approvalModeList}
-            type="select"
-            onChange={(e) => handleSetApprovalMode(e.target.value)}
+            className="mb-1"
+            value={formData.approvalRequired}
+            onChange={handleInputChange}
+            type="checkbox"
+            className="flex! w-full gap-4 items-center justify-between"
+            inputClassName="!w-4 !h-4 mt-4 cursor-pointer"
           />
+
+          {formData.approvalRequired && (
+            <InputField
+              label="Approval mode"
+              id="approvalMode"
+              className=""
+              value={formData.approvalMode}
+              required
+              placeholder="Select approval mode"
+              options={approvalModeList}
+              type="select"
+              onChange={(e) => handleSetApprovalMode(e.target.value)}
+            />
+          )}
+
+          {formData.approvalRequired && (
+            <div className="flex items-center gap-1">
+              <InputField
+                label="Approvers"
+                id="approvers"
+                className="mb-1"
+                placeholder="Select approvers"
+                value={formData.approvers.map((o) => o.approverId)}
+                multiple
+                disabled={isLoadingOtherUsers}
+                options={usersOtherList}
+                type="select"
+                searchable
+                onExternalSearchChange={setUserOtherSearch}
+                onLoadMore={fetchNextOtherUsersPage}
+                hasNextPage={hasNextOtherUsersPage}
+                isFetchingNextPage={isFetchingNextOtherUsersPage}
+                onChange={(e) => handleSetApprover(e.target.value)}
+              />
+              {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+            </div>
+          )}
 
           <div className="flex items-center gap-1">
             <InputField
@@ -524,27 +578,6 @@ export default function CreateLogbookModal({
               onChange={(e) => handleSetOperator(e.target.value)}
             />
             {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
-          </div>
-
-          <div className="flex items-center gap-1">
-            <InputField
-              label="Approvers"
-              id="approvers"
-              className="mb-1"
-              placeholder="Select approvers"
-              value={formData.approvers.map((o) => o.approverId)}
-              multiple
-              disabled={isLoadingOtherUsers}
-              options={usersOtherList}
-              type="select"
-              searchable
-              onExternalSearchChange={setUserOtherSearch}
-              onLoadMore={fetchNextOtherUsersPage}
-              hasNextPage={hasNextOtherUsersPage}
-              isFetchingNextPage={isFetchingNextOtherUsersPage}
-              onChange={(e) => handleSetApprover(e.target.value)}
-            />
-            {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
 
           <InputField

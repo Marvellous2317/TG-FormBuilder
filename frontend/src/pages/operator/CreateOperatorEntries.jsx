@@ -21,14 +21,18 @@ import { queueSubmission } from '../../lib/offlineQueue';
 import {
   evaluateFormula,
   formatComputedValue,
+  parseSectionRows,
 } from '../../shared/utils/formula';
 import {
   saveToCache,
   getFromCache,
+  getCacheTimestamp,
   saveDraft,
   getDraft,
   clearDraft,
 } from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
+import ImageForm from '../../shared/components/entries/ImageForm';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -45,10 +49,12 @@ export default function CreateOperatorEntry() {
 
   const [formData, setFormData] = useState({});
   const [cachedChecklist, setCachedChecklist] = useState(null);
+  const [cachedChecklistAt, setCachedChecklistAt] = useState(null);
 
   // Load cached checklist entries and any saved draft on mount
   useEffect(() => {
     getFromCache(`checklist-${checklistId}`).then(setCachedChecklist);
+    getCacheTimestamp(`checklist-${checklistId}`).then(setCachedChecklistAt);
     getDraft(checklistId).then((draft) => {
       if (draft) setFormData(draft);
     });
@@ -64,6 +70,7 @@ export default function CreateOperatorEntry() {
   // When submitting, you can convert formData object to an array if needed:
   const handleSubmit = async () => {
     const enrichedFormData = { ...formData };
+
     entriesData
       ?.filter((e) => e.type === 'formular' || e.type === 'section_formular')
       .forEach((entry) => {
@@ -106,20 +113,30 @@ export default function CreateOperatorEntry() {
         // showError('Something went wrong');
       }
     }
+
+    console.log('Payload size:', JSON.stringify(formDataArray).length, 'bytes');
+    console.log('Sample entry:', formDataArray[0]);
   };
 
-  const { data, isPending: isLoadingChecklistEntries } = useOperatorChecklist(
-    checklistId,
-    {
-      placeholderData: cachedChecklist,
-    },
-  );
+  const {
+    data,
+    isPending: isLoadingChecklistEntries,
+    isPlaceholderData,
+    isError,
+  } = useOperatorChecklist(checklistId, {
+    placeholderData: cachedChecklist,
+  });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedChecklist));
 
   useEffect(() => {
     if (data) saveToCache(`checklist-${checklistId}`, data);
   }, [data, checklistId]);
 
-  const entriesData = data?.data?.assignment?.checklist?.entries;
+  const entriesData =
+    data?.data?.assignment?.checklist?.entries ??
+    cachedChecklist?.data?.assignment?.checklist?.entries;
 
   const computeSectionFormulaValue = (entry) => {
     const {
@@ -137,7 +154,7 @@ export default function CreateOperatorEntry() {
     const sectionEntryId =
       sectionEntry.entryId || sectionEntry.id || sectionEntry.name;
     const rawValue = formData[sectionEntryId]?.value ?? sectionEntry?.value;
-    const rowsData = JSON.parse(rawValue || '[]');
+    const rowsData = parseSectionRows(rawValue);
     if (!rowsData.length) return 0;
 
     const targetField = (sectionEntry.config?.items || []).find(
@@ -177,7 +194,14 @@ export default function CreateOperatorEntry() {
         return isNaN(num) ? null : num;
       }
 
-      return null;
+      // Row hasn't been touched yet — fall back to the field's own
+      // default/prefilled value instead of dropping it from the aggregate.
+      const fallback = targetField.value ?? targetField.config?.defaultValue;
+      if (fallback === undefined || fallback === null || fallback === '') {
+        return null;
+      }
+      const num = Number(fallback);
+      return isNaN(num) ? null : num;
     };
 
     const values = rowsData.map(resolveRowValue).filter((v) => v !== null);
@@ -272,6 +296,10 @@ export default function CreateOperatorEntry() {
         <h2>{checklistTitle}</h2>
       </div>
 
+      <div className="px-4 md:px-10 lg:px-25">
+        <CachedDataNotice cachedAt={isUsingCache ? cachedChecklistAt : null} />
+      </div>
+
       {isLoadingChecklistEntries ? (
         <Loader size="h-12 w-12 !border-primary-200 mt-20" />
       ) : entriesData?.length < 1 ? (
@@ -343,6 +371,13 @@ export default function CreateOperatorEntry() {
                       formData={formData}
                       setFormData={setFormData}
                       readOnly
+                    />
+                  )}
+                  {entry.type === 'image' && (
+                    <ImageForm
+                      entry={entry}
+                      formData={formData}
+                      setFormData={setFormData}
                     />
                   )}
                 </div>

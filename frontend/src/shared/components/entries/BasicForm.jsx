@@ -32,11 +32,14 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
     entry?.config?.visible !== undefined ? entry?.config?.visible : true;
 
   if (isVisible) {
-    currentValue = formData[entryId]?.value || entry?.value || '';
+    currentValue = readOnly
+      ? (entry?.value ?? formData[entryId]?.value ?? '')
+      : formData[entryId]?.value || entry?.value || '';
   }
 
   useEffect(() => {
     if (!entryId) return;
+    if (readOnly) return;
     if (formData[entryId] !== undefined) return;
     if (!currentValue) return;
 
@@ -47,7 +50,7 @@ export default function BasicForm({ entry, formData, setFormData, readOnly }) {
         value: currentValue,
       },
     }));
-  }, [entryId, currentValue, formData[entryId]]);
+  }, [entryId, currentValue, formData[entryId], readOnly]);
 
   if (!isVisible && ['number'].includes(entry.type)) return null;
 

@@ -12,6 +12,7 @@ import {
 import EditLogbookModal from './components/EditLogbookModal';
 import DeleteChecklistModal from './components/DeleteChecklistModal';
 import RestoreChecklistModal from './components/RestoreChecklistModal';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function AdminDashboard() {
   const [isShowLogbookModal, setIsShowLogbookModal] = useState(false);
@@ -34,6 +35,11 @@ export default function AdminDashboard() {
     departmentId: '',
     deleted: 'false',
   });
+
+  const { user } = useAuthStore();
+
+  const isReadAdmin =
+    user?.accessLevel && user?.accessLevel === 'read' ? true : false;
 
   const { data, isFetching } = useChecklists(checklistPagination);
 
@@ -87,15 +93,20 @@ export default function AdminDashboard() {
             Here's an overview of your task list
           </p>
         </div>
-        <Button
-          className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
-          onClick={() => setIsShowLogbookModal(true)}
-        >
-          <IoAddOutline className="text-white" size={14} />
-          <p className="text-white font-geist font-medium text-sm">
-            Add a task list
-          </p>
-        </Button>
+        {!isReadAdmin && (
+          <Button
+            className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+            onClick={() => {
+              setIsShowLogbookModal(true);
+              setChecklistToDuplicate(null);
+            }}
+          >
+            <IoAddOutline className="text-white" size={14} />
+            <p className="text-white font-geist font-medium text-sm">
+              Add a task list
+            </p>
+          </Button>
+        )}
       </header>
 
       <section className="py-6 px-8">
@@ -139,6 +150,7 @@ export default function AdminDashboard() {
           handleDepartmentChange={handleDepartmentChange}
           handleDeletedChange={handleDeletedChange}
           setIsShowLogbookModal={setIsShowLogbookModal}
+          isReadAdmin={isReadAdmin}
         />
       </section>
 

@@ -65,6 +65,7 @@ export default function EditLogbookModal({
     approvers: getChecklistApprovers(checklistToEdit),
     issuedNumber: checklistToEdit?.issuedNumber || '',
     entityDisplayName: checklistToEdit?.entityDisplayName || '',
+    approvalRequired: checklistToEdit?.approvalRequired || true,
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
@@ -88,6 +89,7 @@ export default function EditLogbookModal({
         approvers: getChecklistApprovers(checklistToEdit),
         issuedNumber: checklistToEdit?.issuedNumber || '',
         entityDisplayName: checklistToEdit?.entityDisplayName || '',
+        approvalRequired: checklistToEdit?.approvalRequired || true,
       });
     }
   }, [isEditChecklistModalOpen, checklistToEdit]);
@@ -254,10 +256,10 @@ export default function EditLogbookModal({
   };
 
   const handleInputChange = (e) => {
-    const { id, value } = e.target;
+    const { id, type, value, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -273,6 +275,7 @@ export default function EditLogbookModal({
       approvers,
       issuedNumber,
       entityDisplayName,
+      approvalRequired,
     } = formData;
 
     if (
@@ -300,6 +303,7 @@ export default function EditLogbookModal({
             approvers,
             issuedNumber,
             entityDisplayName,
+            approvalRequired,
           },
         });
       } else {
@@ -315,6 +319,7 @@ export default function EditLogbookModal({
             approvers,
             issuedNumber,
             entityDisplayName,
+            approvalRequired,
           },
         });
       }
@@ -342,6 +347,7 @@ export default function EditLogbookModal({
       approvers: [],
       issuedNumber: '',
       entityDisplayName: '',
+      approvalRequired: false,
     });
     setIsEditChecklistModalOpen(false);
     setChecklistToEdit(null);
@@ -431,16 +437,54 @@ export default function EditLogbookModal({
           )}
 
           <InputField
-            label="Approval mode"
-            id="approvalMode"
-            className=""
-            value={formData.approvalMode}
+            label="Does this checklist require approval?"
+            id="approvalRequired"
             required
-            placeholder="Select approval mode"
-            options={approvalModeList}
-            type="select"
-            onChange={(e) => handleSetApprovalMode(e.target.value)}
+            className="mb-1"
+            value={formData.approvalRequired}
+            onChange={handleInputChange}
+            type="checkbox"
+            className="flex! w-full gap-4 items-center justify-between"
+            inputClassName="!w-4 !h-4 mt-4 cursor-pointer"
           />
+
+          {formData.approvalRequired && (
+            <InputField
+              label="Approval mode"
+              id="approvalMode"
+              className=""
+              value={formData.approvalMode}
+              required
+              placeholder="Select approval mode"
+              options={approvalModeList}
+              type="select"
+              onChange={(e) => handleSetApprovalMode(e.target.value)}
+            />
+          )}
+
+          {formData.approvalRequired && (
+            <div className="flex items-center gap-1">
+              <InputField
+                label="Approvers"
+                id="approvers"
+                className="mb-1"
+                placeholder="Select approvers"
+                value={formData.approvers.map((o) => o.approverId)}
+                multiple
+                required
+                disabled={isLoadingOtherUsers}
+                options={usersOtherList}
+                type="select"
+                searchable
+                onExternalSearchChange={setUserOtherSearch}
+                onLoadMore={fetchNextOtherUsersPage}
+                hasNextPage={hasNextOtherUsersPage}
+                isFetchingNextPage={isFetchingNextOtherUsersPage}
+                onChange={(e) => handleSetApprover(e.target.value)}
+              />
+              {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
+            </div>
+          )}
 
           <div className="flex items-center gap-1">
             <InputField
@@ -462,28 +506,6 @@ export default function EditLogbookModal({
               onChange={(e) => handleSetOperator(e.target.value)}
             />
             {isLoadingUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
-          </div>
-
-          <div className="flex items-center gap-1">
-            <InputField
-              label="Approvers"
-              id="approvers"
-              className="mb-1"
-              placeholder="Select approvers"
-              value={formData.approvers.map((o) => o.approverId)}
-              multiple
-              required
-              disabled={isLoadingOtherUsers}
-              options={usersOtherList}
-              type="select"
-              searchable
-              onExternalSearchChange={setUserOtherSearch}
-              onLoadMore={fetchNextOtherUsersPage}
-              hasNextPage={hasNextOtherUsersPage}
-              isFetchingNextPage={isFetchingNextOtherUsersPage}
-              onChange={(e) => handleSetApprover(e.target.value)}
-            />
-            {isLoadingOtherUsers && <Loader size="w-4.5 h-4.5 mt-4" />}
           </div>
 
           <InputField

@@ -7,7 +7,12 @@ import { useOperatorChecklists } from '../../shared/hooks/operator/useOperatorCh
 import { useUserAnalytics } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
-import { saveToCache, getFromCache } from '../../lib/offlineCache';
+import {
+  saveToCache,
+  getFromCache,
+  getCacheTimestamp,
+} from '../../lib/offlineCache';
+import CachedDataNotice from '../../shared/components/CachedDataNotice';
 
 export default function OperatorDashboard() {
   const [search, setSearch] = useState('');
@@ -21,9 +26,13 @@ export default function OperatorDashboard() {
   });
 
   const [cachedChecklists, setCachedChecklists] = useState(null);
+  const [cachedChecklistsAt, setCachedChecklistsAt] = useState(null);
+  const [cachedAnalytics, setCachedAnalytics] = useState(null);
 
   useEffect(() => {
     getFromCache('operator-checklists').then(setCachedChecklists);
+    getCacheTimestamp('operator-checklists').then(setCachedChecklistsAt);
+    getFromCache('user-analytics').then(setCachedAnalytics);
   }, []);
 
   const handleSearch = useCallback((searchValue) => {
@@ -34,21 +43,34 @@ export default function OperatorDashboard() {
     }));
   }, []);
 
-  const { data, isFetching } = useOperatorChecklists(usersPagination, {
+  const {
+    data,
+    isFetching,
+    isPlaceholderData,
+    isError,
+  } = useOperatorChecklists(usersPagination, {
     placeholderData: cachedChecklists,
   });
+
+  const isUsingCache =
+    isPlaceholderData || (isError && Boolean(cachedChecklists));
 
   useEffect(() => {
     if (data) saveToCache('operator-checklists', data);
   }, [data]);
 
   const { data: userAnalytics, isPending: isLoadingUserAnalytics } =
-    useUserAnalytics();
+    useUserAnalytics(undefined, { placeholderData: cachedAnalytics });
 
-  const analyticsData = userAnalytics?.data;
+  useEffect(() => {
+    if (userAnalytics) saveToCache('user-analytics', userAnalytics);
+  }, [userAnalytics]);
 
-  const checklistsData = data?.data?.assignments;
-  const pagination = data?.data?.pagination;
+  const analyticsData = userAnalytics?.data ?? cachedAnalytics?.data;
+
+  const checklistsData =
+    data?.data?.assignments ?? cachedChecklists?.data?.assignments;
+  const pagination = data?.data?.pagination ?? cachedChecklists?.data?.pagination;
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -157,6 +179,10 @@ export default function OperatorDashboard() {
           />
         </div>
 
+        <CachedDataNotice
+          cachedAt={isUsingCache ? cachedChecklistsAt : null}
+        />
+
         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full min-h-full shadow-sm">
           <section className="flex-col flex w-full min-h-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
@@ -192,7 +218,7 @@ export default function OperatorDashboard() {
                 </thead>
 
                 <tbody>
-                  {isFetching ? (
+                  {isFetching && !checklistsData ? (
                     <tr>
                       <td colSpan="3" className="p-12 text-center">
                         <Loader size="h-8 w-8 !border-primary-200 mx-auto" />
