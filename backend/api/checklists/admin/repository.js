@@ -776,14 +776,15 @@ export class AdminRepository {
       if (!checklist) throw new ApplicationError("Checklist not found", 404);
 
       const activeAssignments = await ChecklistAssignment.count({
-        where: { checklistId },
+        where: { checklistId, active: true },
       });
+
       if (activeAssignments > 0) {
         throw new ApplicationError("Cannot delete checklist with active assignments", 400);
       }
 
-      await ChecklistEntry.destroy({ where: { checklistId }, force: false });
-      await checklist.destroy();
+     await ChecklistEntry.destroy({ where: { checklistId }, force: false });
+     await checklist.destroy();
       return { message: "Checklist deleted successfully" };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
