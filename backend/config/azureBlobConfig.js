@@ -5,13 +5,13 @@ import config from "../appConfig.js"
 
 const isProduction = config.NODE_ENV === 'production';
 
-const connectionString = isProduction 
-  ? config.AZURE_BLOB_CONNECTION_STRING 
-  : config.AZURE_BLOB_CONNECTION_STRING_UAT;
+const connectionString = (isProduction
+  ? config.AZURE_BLOB_CONNECTION_STRING
+  : config.AZURE_BLOB_CONNECTION_STRING_UAT) || config.AZURE_BLOB_CONNECTION_STRING_UAT;
 
-const containerName = isProduction 
-  ? config.AZURE_BLOB_CONTAINER_NAME 
-  : config.AZURE_BLOB_CONTAINER_NAME_UAT;
+const containerName = (isProduction
+  ? config.AZURE_BLOB_CONTAINER_NAME
+  : config.AZURE_BLOB_CONTAINER_NAME_UAT) || config.AZURE_BLOB_CONTAINER_NAME_UAT;
 
 let blobServiceClient = null;
 let imageClient = null;

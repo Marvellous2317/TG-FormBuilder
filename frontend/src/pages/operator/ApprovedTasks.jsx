@@ -142,7 +142,7 @@ export default function ApprovedTasks() {
                         onClick={() =>
                           handleRowClick(
                             row?.submittedChecklistId,
-                            row?.assignment?.checklist.title,
+                            row?.assignment?.checklist?.title,
                           )
                         }
                       >
@@ -150,7 +150,7 @@ export default function ApprovedTasks() {
                           {index + 1}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
-                          {row.assignment?.checklist.title || 'N/A'}
+                          {row.assignment?.checklist?.title || 'N/A'}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row.documentNumber}

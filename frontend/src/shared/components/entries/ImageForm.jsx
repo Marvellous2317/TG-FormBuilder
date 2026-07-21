@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import InputField from '../InputField';
 import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
 
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
@@ -20,7 +20,12 @@ function validateImageFile(file) {
   return null;
 }
 
-export default function ImageForm({ entry, formData, setFormData, readOnly = false }) {
+export default function ImageForm({
+  entry,
+  formData,
+  setFormData,
+  readOnly = false,
+}) {
   const entryId = entry?.entryId;
   const [error, setError] = useState(null);
 
@@ -101,13 +106,17 @@ export default function ImageForm({ entry, formData, setFormData, readOnly = fal
         <label className="mb-2 block font-geist text-sm font-regular text-secondary">
           {entry.name}
           {entry?.required && (
-            <span className="ml-1 text-red-600 text-xs" aria-hidden="true">*</span>
+            <span className="ml-1 text-red-600 text-xs" aria-hidden="true">
+              *
+            </span>
           )}
         </label>
       )}
 
       {entry?.config?.instructions && (
-        <p className="mb-2 text-sm text-secondary-400">{entry.config.instructions}</p>
+        <p className="mb-2 text-sm text-secondary-400">
+          {entry.config.instructions}
+        </p>
       )}
 
       {/* Hidden real input, rendered through the shared InputField */}
@@ -153,7 +162,9 @@ export default function ImageForm({ entry, formData, setFormData, readOnly = fal
         </div>
       ) : readOnly ? (
         <div className="rounded-2xl border-2 border-dashed border-secondary-200 p-8 text-center">
-          <p className="text-sm font-geist text-secondary-400">No image uploaded</p>
+          <p className="text-sm font-geist text-secondary-400">
+            No image uploaded
+          </p>
         </div>
       ) : (
         <div
@@ -168,7 +179,9 @@ export default function ImageForm({ entry, formData, setFormData, readOnly = fal
               className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-secondary-200 bg-white px-4 py-6 hover:bg-primary-200/5 transition-colors cursor-pointer"
             >
               <FiUpload size={20} className="text-secondary-400" />
-              <span className="font-geist text-sm text-secondary">Upload Image</span>
+              <span className="font-geist text-sm text-secondary">
+                Upload Image
+              </span>
             </button>
             <button
               type="button"
@@ -176,7 +189,9 @@ export default function ImageForm({ entry, formData, setFormData, readOnly = fal
               className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-secondary-200 bg-white px-4 py-6 hover:bg-primary-200/5 transition-colors cursor-pointer"
             >
               <FiCamera size={20} className="text-secondary-400" />
-              <span className="font-geist text-sm text-secondary">Take Photo</span>
+              <span className="font-geist text-sm text-secondary">
+                Take Photo
+              </span>
             </button>
           </div>
           <p className="mt-3 text-center font-geist text-xs text-secondary-400">
