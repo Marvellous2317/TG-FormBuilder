@@ -43,6 +43,7 @@ import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsMana
 import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
 import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
+import GuestRoute from './GuestRoute';
 
 export const router = createBrowserRouter([
   {
@@ -58,7 +59,11 @@ export const router = createBrowserRouter([
           },
           {
             path: '/login',
-            element: <Login />,
+            element: (
+              <GuestRoute>
+                <Login />
+              </GuestRoute>
+            ),
           },
           {
             path: '/logout',
