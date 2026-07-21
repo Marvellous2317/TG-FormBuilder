@@ -2,16 +2,14 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../shared/store/authStore';
 import Loader from '../../shared/components/Loader';
 
-export default function ProtectedRoute({ allowedRoles }) {
-  const { isAuthenticated, user } = useAuthStore();
+export default function ProtectedRoute() {
+  const { accessToken, user, hasHydrated } = useAuthStore();
 
-  const isLoading = false;
-
-  if (isLoading) {
+  if (!hasHydrated) {
     return <Loader size="h-20 w-20 !border-primary-200" />;
   }
 
-  if (!isAuthenticated || !user) {
+  if (!accessToken || !user) {
     return <Navigate to="/login" replace />;
   }
 
