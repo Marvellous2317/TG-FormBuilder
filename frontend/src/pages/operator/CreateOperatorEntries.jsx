@@ -33,6 +33,8 @@ import {
 } from '../../lib/offlineCache';
 import CachedDataNotice from '../../shared/components/CachedDataNotice';
 import ImageForm from '../../shared/components/entries/ImageForm';
+import SignatureModal from '../approver/components/SignatureModal';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export default function CreateOperatorEntry() {
   let { id: checklistId } = useLoaderData();
@@ -44,12 +46,15 @@ export default function CreateOperatorEntry() {
     useCreateOperatorChecklistEntries(checklistId);
 
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   const { showError, showSuccess } = useToast();
 
   const [formData, setFormData] = useState({});
   const [cachedChecklist, setCachedChecklist] = useState(null);
   const [cachedChecklistAt, setCachedChecklistAt] = useState(null);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load cached checklist entries and any saved draft on mount
   useEffect(() => {
@@ -69,6 +74,20 @@ export default function CreateOperatorEntry() {
 
   // When submitting, you can convert formData object to an array if needed:
   const handleSubmit = async () => {
+    // Check if user has a signature already
+    if (user?.signature) {
+      // If user has a signature, submit directly
+      await submitWithSignature(user.signature);
+    } else {
+      // Otherwise, open modal to capture signature
+      setIsSignatureModalOpen(true);
+    }
+  };
+
+  // Handle submission with signature
+  const submitWithSignature = async (signatureData) => {
+    setIsSubmitting(true);
+    
     const enrichedFormData = { ...formData };
 
     entriesData
@@ -88,17 +107,27 @@ export default function CreateOperatorEntry() {
 
     const formDataArray = Object.values(enrichedFormData);
 
+    // Include signature in payload
+    const payload = { 
+      data: formDataArray,
+      signature: signatureData 
+    };
+
     if (!navigator.onLine) {
-      await queueSubmission({ checklistId, payload: { data: formDataArray } });
+      await queueSubmission({ checklistId, payload });
       showSuccess('Saved offline — will sync when reconnected');
+      setIsSubmitting(false);
+      setIsSignatureModalOpen(false);
       return;
     }
 
     try {
-      await submitEntries({ payload: { data: formDataArray } });
+      await submitEntries({ payload });
       showSuccess('Entries submitted successfully');
       await clearDraft(checklistId);
       setFormData({});
+      setIsSubmitting(false);
+      setIsSignatureModalOpen(false);
       navigate('/operator/');
     } catch (err) {
       console.log(err);
@@ -106,16 +135,27 @@ export default function CreateOperatorEntry() {
       if (isNetworkError) {
         await queueSubmission({
           checklistId,
-          payload: { data: formDataArray },
+          payload,
         });
         showSuccess('Saved offline — will sync when reconnected');
+        setIsSubmitting(false);
+        setIsSignatureModalOpen(false);
       } else {
         // showError('Something went wrong');
+        setIsSubmitting(false);
       }
     }
 
     console.log('Payload size:', JSON.stringify(formDataArray).length, 'bytes');
     console.log('Sample entry:', formDataArray[0]);
+  };
+
+  const handleSignatureConfirm = async () => {
+    // The modal saves the signature to the user store
+    // We can now submit with the newly saved signature
+    if (user?.signature) {
+      await submitWithSignature(user.signature);
+    }
   };
 
   const {
@@ -398,6 +438,11 @@ export default function CreateOperatorEntry() {
           </Button>
         </div>
       )}
+
+      <SignatureModal
+        isSignatureModalOpen={isSignatureModalOpen}
+        setIsSignatureModalOpen={setIsSignatureModalOpen}
+      />
     </div>
   );
 }

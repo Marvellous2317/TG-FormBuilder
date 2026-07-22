@@ -33,6 +33,6 @@
   ],
   "name": "DigiForms App",
   "scope": "/",
-  "start_url": "/login",
+  "start_url": "/",
   "description": "Digitalization form builder"
 }

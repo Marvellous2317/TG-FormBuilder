@@ -18,6 +18,7 @@ import { IoEye, IoEyeOff, IoClose } from 'react-icons/io5';
 import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
 import Modal from '../../../shared/components/Modal';
 import InputField from '../../../shared/components/InputField';
+import ImageForm from '../../../shared/components/entries/ImageForm';
 
 function ReadOnlyFieldRow({ field, index, onSectionClick }) {
   const typeLabel =
@@ -81,126 +82,6 @@ function ReadOnlyFieldRow({ field, index, onSectionClick }) {
   );
 }
 
-// Image preview component for the admin history view
-function ImagePreviewField({ entry, formData, setFormData }) {
-  const [imagePreview, setImagePreview] = useState(null);
-
-  // Simulate image upload for preview
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result;
-        setImagePreview(base64String);
-        setFormData((prev) => ({
-          ...prev,
-          [entry.id]: { value: base64String },
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    setFormData((prev) => ({
-      ...prev,
-      [entry.id]: { value: null },
-    }));
-    // Reset file input
-    const fileInput = document.getElementById(`image-upload-${entry.id}`);
-    if (fileInput) fileInput.value = '';
-  };
-
-  // const handleCameraCapture = () => {
-  //   // Simulate camera capture for preview
-  //   const input = document.createElement('input');
-  //   input.type = 'file';
-  //   input.accept = 'image/*';
-  //   input.capture = 'environment';
-  //   input.onchange = (e) => handleImageUpload(e);
-  //   input.click();
-  // };
-
-  return (
-    <div className="w-full mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {entry.name}
-        {entry.config?.required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-
-      {entry.config?.instructions && (
-        <p className="text-sm text-gray-500 mb-2">
-          {entry.config.instructions}
-        </p>
-      )}
-
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleImageUpload}
-        className="hidden"
-        id={`image-upload-${entry.id}`}
-      />
-
-      {imagePreview ? (
-        // Show uploaded image with options
-        <div className="relative inline-block">
-          <img
-            src={imagePreview}
-            alt={entry.name}
-            className="max-h-64 rounded-lg object-contain border border-gray-200"
-          />
-          <div className="absolute top-2 right-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                document.getElementById(`image-upload-${entry.id}`).click()
-              }
-              className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
-              title="Replace image"
-            >
-              <FiUpload size={16} className="text-gray-600" />
-            </button>
-            <button
-              type="button"
-              onClick={handleRemoveImage}
-              className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
-              title="Remove image"
-            >
-              <FiX size={16} className="text-red-500" />
-            </button>
-          </div>
-        </div>
-      ) : (
-        // Upload box
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              document.getElementById(`image-upload-${entry.id}`).click()
-            }
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-          >
-            <FiUpload size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Upload Image</span>
-          </button>
-
-          {/* <button
-            type="button"
-            onClick={handleCameraCapture}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-          >
-            <FiCamera size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Take Photo</span>
-          </button> */}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function EntriesTableView({ entriesData, onSectionClick }) {
   const sortedFields = [...(entriesData || [])].sort(
@@ -609,7 +490,7 @@ export default function ViewAdminEntriesHistory() {
                     />
                   )}
                   {entry.type === 'image' && (
-                    <ImagePreviewField
+                    <ImageForm
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
