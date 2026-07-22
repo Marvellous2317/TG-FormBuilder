@@ -1,7 +1,8 @@
 // shared/components/entries/ImageForm.jsx
 import React, { useEffect, useState } from 'react';
 import InputField from '../InputField';
-import { FiUpload, FiCamera, FiX } from 'react-icons/fi';
+import { FiUpload, FiCamera, FiX, FiZoomIn, FiDownload } from 'react-icons/fi';
+import CameraModal from '../CameraModal';
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
@@ -16,8 +17,60 @@ function readFileAsBase64(file) {
 
 function validateImageFile(file) {
   if (!file.type.startsWith('image/')) return 'Please select an image file';
-  if (file.size > MAX_SIZE_BYTES) return 'Image size should be less than 5MB';
+  if (file.size > MAX_SIZE_BYTES) return 'Image size should be less than 2MB';
   return null;
+}
+
+// Inline lightbox — kept in this file so ImageForm is fully self-contained.
+function ImageViewerModal({ src, alt = 'Image', onClose }) {
+  if (!src) return null;
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = src;
+    link.download = alt || 'image';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-4xl max-h-[90vh] w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="absolute -top-12 right-0 flex gap-2">
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="rounded-full bg-white/90 p-2 shadow-md hover:bg-white transition-colors cursor-pointer"
+            title="Download image"
+          >
+            <FiDownload size={18} className="text-secondary-400" />
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full bg-white/90 p-2 shadow-md hover:bg-white transition-colors cursor-pointer"
+            title="Close"
+          >
+            <FiX size={18} className="text-red-500" />
+          </button>
+        </div>
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full max-h-[90vh] object-contain rounded-2xl"
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function ImageForm({
@@ -28,10 +81,24 @@ export default function ImageForm({
 }) {
   const entryId = entry?.entryId;
   const [error, setError] = useState(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showViewer, setShowViewer] = useState(false);
+  const [useFallbackSrc, setUseFallbackSrc] = useState(false);
 
-  const imagePreview = formData[entryId]?.value ?? entry?.value ?? null;
+  const storedSrc =
+    formData[entryId]?.value ?? entry?.value ?? entry?.imageUrl ?? null;
+  const base64Src = entry?.image ?? null;
 
-  // Seed formData from an existing entry.value, same guard pattern as BasicForm
+  const imagePreview = useFallbackSrc
+    ? (base64Src ?? storedSrc)
+    : (storedSrc ?? base64Src);
+
+  const handleImageError = () => {
+    if (!useFallbackSrc && base64Src && storedSrc && storedSrc !== base64Src) {
+      setUseFallbackSrc(true);
+    }
+  };
+
   useEffect(() => {
     if (!entryId) return;
     if (formData[entryId] !== undefined) return;
@@ -54,6 +121,7 @@ export default function ImageForm({
     try {
       const base64String = await readFileAsBase64(file);
       if (!entryId) return;
+      setUseFallbackSrc(false);
       setFormData((prev) => ({
         ...prev,
         [entryId]: { entryId, value: base64String },
@@ -68,17 +136,9 @@ export default function ImageForm({
     event.target.value = ''; // allow re-selecting the same file
   };
 
-  // Camera capture uses a separate, temporary input (capture="environment"
-  // only makes sense on its own input — mixing it into the gallery picker
-  // above would force camera on every "Upload Image" tap on mobile).
   const handleCameraCapture = () => {
     if (readOnly) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e) => processFile(e.target.files?.[0]);
-    input.click();
+    setShowCameraModal(true);
   };
 
   const handleDrop = (event) => {
@@ -133,12 +193,25 @@ export default function ImageForm({
       />
 
       {imagePreview ? (
-        <div className="relative inline-block">
+        <div className="group relative inline-block">
           <img
             src={imagePreview}
-            alt={entry?.name}
-            className="max-h-64 rounded-2xl border border-secondary-200 object-contain"
+            alt={entry?.name || 'Uploaded image'}
+            onError={handleImageError}
+            onClick={() => setShowViewer(true)}
+            className="max-h-64 cursor-zoom-in rounded-2xl border border-secondary-200 object-contain transition-opacity hover:opacity-90"
           />
+
+          {/* Always-visible view affordance, even in readOnly mode */}
+          <button
+            type="button"
+            onClick={() => setShowViewer(true)}
+            className="absolute bottom-2 left-2 rounded-full bg-white/90 p-2 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white cursor-pointer"
+            title="View full size"
+          >
+            <FiZoomIn size={16} className="text-secondary-400" />
+          </button>
+
           {!readOnly && (
             <div className="absolute top-2 right-2 flex gap-2">
               <button
@@ -170,7 +243,7 @@ export default function ImageForm({
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="rounded-2xl border-2 border-dashed border-secondary-200 p-8 hover:border-primary-200/75 transition-colors"
+          className="rounded-2xl border-secondary-200 p-8 transition-colors"
         >
           <div className="flex flex-col sm:flex-row gap-3">
             <button
@@ -194,13 +267,26 @@ export default function ImageForm({
               </span>
             </button>
           </div>
-          <p className="mt-3 text-center font-geist text-xs text-secondary-400">
-            or drag and drop an image here
-          </p>
         </div>
       )}
 
       {error && <p className="mt-1 text-sm text-red-500 font-geist">{error}</p>}
+
+      {showCameraModal && (
+        <CameraModal
+          facingMode="environment"
+          onCapture={(file) => processFile(file)}
+          onClose={() => setShowCameraModal(false)}
+        />
+      )}
+
+      {showViewer && (
+        <ImageViewerModal
+          src={imagePreview}
+          alt={entry?.name}
+          onClose={() => setShowViewer(false)}
+        />
+      )}
     </div>
   );
 }
