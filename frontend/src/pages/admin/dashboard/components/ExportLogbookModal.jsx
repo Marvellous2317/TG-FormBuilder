@@ -14,6 +14,20 @@ date.setMonth(date.getMonth() - 2);
 
 const twoMonthsAgo = date.toISOString().split('T')[0];
 
+const FALLBACK_ERROR = 'Unable to export logbook. Please try again.';
+
+async function readErrorMessage(err) {
+  const body = err.response?.data;
+  if (body instanceof Blob) {
+    try {
+      return JSON.parse(await body.text())?.message ?? FALLBACK_ERROR;
+    } catch {
+      return FALLBACK_ERROR;
+    }
+  }
+  return body?.message ?? FALLBACK_ERROR;
+}
+
 export default function ExportLogbookModal({
   isShowExportLogbookModal,
   setIsShowExportLogbookModal,
@@ -60,10 +74,11 @@ export default function ExportLogbookModal({
       showSuccess('Logbook exported successfully');
       handleCancel();
     } catch (err) {
-      showError(
-        err.response?.data?.message ??
-          'Unable to export logbook. Please try again.',
-      );
+      // The request asks for a blob, so an error body arrives as a Blob too and
+      // has to be read back before the server's message is readable.
+      showError(await readErrorMessage(err));
+      // Keep the modal open so the dates can be adjusted and retried.
+      return;
     }
 
     setFormData({

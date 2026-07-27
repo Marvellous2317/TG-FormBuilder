@@ -231,53 +231,6 @@ export class AuthRepository {
 
 
 
-  static async createBulkUsers() {
-    const usersData = [
-      { email: "olatunjiadebayosmith@gmail.com", firstName: "smith", lastName: "olatunjiadebayo" },
-    ];
-
-    try {
-      const createdUsers = [];
-      const defaultRole = await Role.findOne({ where: { roleName: "operator" } });
-
-      for (const data of usersData) {
-        const existing = await User.findOne({ where: { email: data.email.toLowerCase() } });
-        if (existing) continue;
-
-        const randomPassword = crypto.randomBytes(6).toString("base64").slice(0, 10);
-
-        const user = User.build({
-          email: data.email.toLowerCase(),
-          firstName: data.firstName,
-          lastName: data.lastName,
-          roleId: defaultRole?.roleId,
-          newLogin: true,
-        });
-        await user.setPassword(randomPassword);
-        await user.save();
-
-        const { otp, expiry } = generateOpt();
-        await Verification.create({ userId: user.userId, otp, expiry });
-
-        await sendPasswordMail({
-          email: data.email,
-          firstName: user.firstName,
-          password: randomPassword,
-        });
-
-        const userData = user.toSafeJSON();
-        createdUsers.push({ user: userData });
-      }
-
-      return {
-        message: "Bulk users created successfully. Emails sent.",
-        users: createdUsers,
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Bulk user creation failed", 500);
-    }
-  }
 
   static async refreshToken(request) {
     const raw = request.body?.refreshToken;

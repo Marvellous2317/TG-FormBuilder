@@ -53,14 +53,6 @@ export class AuthController {
 
 
 
-  static async createBulkUsersApi(req, res, next) {
-    try {
-      const response = await AuthRepository.createBulkUsers();
-      return ResponseManager.success(res, response, 200, response.message);
-    } catch (err) {
-      next(err);
-    }
-  }
 
   static async refreshTokenApi(req, res, next) {
     try {
