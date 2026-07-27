@@ -14,16 +14,19 @@ date.setMonth(date.getMonth() - 2);
 
 const twoMonthsAgo = date.toISOString().split('T')[0];
 
+const today = new Date().toISOString().split('T')[0];
+
 export default function ExportLogbookModal({
   isShowExportLogbookModal,
   setIsShowExportLogbookModal,
   documentNumber,
   setChecklistToExport,
 }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     documentNumber: documentNumber || null,
-    startDate: '',
-    endDate: '',
+    startDate: twoMonthsAgo,
+    endDate: today,
   });
 
   useEffect(() => {
@@ -33,6 +36,7 @@ export default function ExportLogbookModal({
   const { showError, showSuccess } = useToast();
 
   const handleSubmit = async () => {
+    setIsLoading(true);
     const { documentNumber, startDate, endDate } = formData;
 
     if (!documentNumber) {
@@ -73,6 +77,8 @@ export default function ExportLogbookModal({
     });
     setIsShowExportLogbookModal(false);
     setChecklistToExport(null);
+
+    setIsLoading(false);
   };
 
   const handleCancel = () => {
@@ -119,7 +125,7 @@ export default function ExportLogbookModal({
               label="Start date"
               id="startDate"
               className="mb-1"
-              value={formData?.startDate}
+              value={formData.startDate}
               required
               type="date"
               min={twoMonthsAgo}
@@ -131,10 +137,11 @@ export default function ExportLogbookModal({
           </div>
           <div className="flex items-center">
             <InputField
+              placeholder={formData.endDate}
               label="End date"
               id="endDate"
               className="mb-1"
-              value={formData?.endDate}
+              value={today}
               required
               type="date"
               min={formData?.startDate}
@@ -158,10 +165,10 @@ export default function ExportLogbookModal({
             type="button"
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white flex gap-2"
             onClick={() => handleSubmit()}
-            // disabled={isLoading}
+            disabled={isLoading}
           >
             Continue
-            {/* {isLoading && <Loader size="border-white! h-4.5 w-4.5" />} */}
+            {isLoading && <Loader size="border-white! h-4.5 w-4.5" />}
           </Button>
         </div>
       </div>
