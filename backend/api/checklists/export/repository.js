@@ -7,7 +7,8 @@ import {
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { cleanText, presentationFor, sectionHeading, summaryHeading, titleCase } from "./presentation.js";
 
-const EXPORT_SUBMISSION_LIMIT = 1000;
+const DEFAULT_SUBMISSION_LIMIT = 100;
+const MAX_SUBMISSION_LIMIT = 500;
 
 const INK = "FF1F2933";
 const VALUE_INK = "FF0F766E";
@@ -246,9 +247,9 @@ export class ExportRepository {
     try {
       if (!documentNumber) throw new ApplicationError("documentNumber is required", 400);
 
-      let submissionLimit = limit !== undefined ? Number(limit) : EXPORT_SUBMISSION_LIMIT;
-      if (!Number.isFinite(submissionLimit) || submissionLimit < 1) submissionLimit = EXPORT_SUBMISSION_LIMIT;
-      if (submissionLimit > EXPORT_SUBMISSION_LIMIT) submissionLimit = EXPORT_SUBMISSION_LIMIT;
+      let submissionLimit = limit !== undefined ? Number(limit) : DEFAULT_SUBMISSION_LIMIT;
+      if (!Number.isFinite(submissionLimit) || submissionLimit < 1) submissionLimit = DEFAULT_SUBMISSION_LIMIT;
+      if (submissionLimit > MAX_SUBMISSION_LIMIT) submissionLimit = MAX_SUBMISSION_LIMIT;
 
 
       const submissionWhere = { companyId, documentNumber };
@@ -259,15 +260,19 @@ export class ExportRepository {
         if (endDate) submissionWhere.createdAt[Op.lte] = rangeEnd(endDate);
       }
 
-      const submissions = await SubmittedChecklist.findAll({
-        where: submissionWhere,
-        attributes: [
-          "submittedChecklistId", "documentNumber", "title", "issuedNumber",
-          "entityDisplayName", "status", "submittedAt", "createdAt",
-        ],
-        order: [["submittedAt", "ASC"], ["createdAt", "ASC"]],
-        limit: submissionLimit,
-      });
+      // Newest first so the cap keeps the most recent submissions, then flipped
+      // back so the workbook still reads oldest to newest.
+      const submissions = (
+        await SubmittedChecklist.findAll({
+          where: submissionWhere,
+          attributes: [
+            "submittedChecklistId", "documentNumber", "title", "issuedNumber",
+            "entityDisplayName", "status", "submittedAt", "createdAt",
+          ],
+          order: [["submittedAt", "DESC"], ["createdAt", "DESC"]],
+          limit: submissionLimit,
+        })
+      ).reverse();
 
    
       if (!submissions.length) {
