@@ -178,8 +178,9 @@ export const exportChecklistEntries = async (
   startDate,
   endDate,
 ) => {
+  const params = new URLSearchParams({ documentNumber, startDate, endDate });
   const { data } = await axiosInstance.get(
-    `/checklists/export/submissions?documentNumber=${documentNumber}&startDate=${startDate}&endDate=${endDate}`,
+    `/checklists/export/submissions?${params.toString()}`,
     { responseType: 'blob' },
   );
   return data;
