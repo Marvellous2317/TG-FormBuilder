@@ -5,79 +5,250 @@ import {
   SubmittedChecklistEntry,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
+import { cleanText, presentationFor, sectionHeading, summaryHeading, titleCase } from "./presentation.js";
 
-const EXPORT_ROW_LIMIT = 1000;
+const EXPORT_SUBMISSION_LIMIT = 1000;
 
-// Render a value for an Excel cell: objects/arrays are stringified, null becomes "".
-function toCell(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") return JSON.stringify(value);
-  return value;
+const INK = "FF1F2933";
+const VALUE_INK = "FF0F766E";
+const TITLE_FONT = { bold: true, size: 14, color: { argb: INK } };
+const HEADING_FONT = { bold: true, size: 12, color: { argb: INK } };
+const LABEL_FONT = { size: 11, color: { argb: INK } };
+const HEADER_FONT = { bold: true, size: 11, color: { argb: INK } };
+const VALUE_FONT = { size: 11, color: { argb: VALUE_INK } };
+const LEFT = { horizontal: "left", vertical: "middle" };
+
+const NUMERIC_FIELD_TYPES = new Set(["number", "formular"]);
+
+// The picker sends plain "YYYY-MM-DD", which parses to midnight — an end date of
+// the 17th would otherwise drop everything logged during the 17th.
+function rangeStart(value) {
+  return new Date(value);
 }
 
-// Parse entry value - if it's a JSON object/array with nested field values, expand them
-// For type "section", combine all values into one string with newlines
-function parseEntryValue(entry) {
-  const raw = entry.value;
-  const isSection = entry.type === "section";
-  
+function rangeEnd(value) {
+  const date = new Date(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value).trim())) {
+    date.setUTCHours(23, 59, 59, 999);
+  }
+  return date;
+}
 
-  let parsed;
+// Values are stored as `[{ "<fieldId>": { entryId, value } }]` — one object per
+// repeated row of the section. Key order in the stored JSON is not reliable, so
+// rows are keyed by field id and later read back in config.items order.
+function sectionRows(entry) {
+  const raw = entry?.value;
+  if (raw === null || raw === undefined || raw === "") return [];
+
+  let parsed = raw;
   if (typeof raw === "string") {
-    const trimmed = raw.trim();
-    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-      try { parsed = JSON.parse(trimmed); } catch { parsed = undefined; }
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return [];
     }
   }
 
-
-  const extractedValues = [];
-
-
-  if (Array.isArray(parsed)) {
-    for (const item of parsed) {
-      if (item && typeof item === "object") {
-
-        for (const [fieldId, fieldData] of Object.entries(item)) {
-          let actualValue;
-          if (fieldData && typeof fieldData === "object" && "value" in fieldData) {
-            actualValue = fieldData.value;
-          } else {
-            actualValue = fieldData;
-          }
-          extractedValues.push({ fieldId, value: toCell(actualValue) });
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  return list
+    .map((row) => {
+      const cells = {};
+      if (row && typeof row === "object") {
+        for (const [fieldId, cell] of Object.entries(row)) {
+          cells[fieldId] = cell && typeof cell === "object" && "value" in cell ? cell.value : cell;
         }
-      } else {
-
-        extractedValues.push({ fieldId: entry.name || "", value: toCell(item) });
       }
+      return cells;
+    })
+    .filter((cells) => Object.values(cells).some((v) => v !== null && v !== undefined && String(v).trim() !== ""));
+}
+
+// Hidden helper fields (carton weights feeding a formula) never print.
+function visibleFields(entry) {
+  const items = entry?.config?.items;
+  if (!Array.isArray(items)) return [];
+  return items.filter((item) => item?.config?.visible !== false);
+}
+
+// Submissions are ordered by the date the operator logged, not by when the form
+// was saved — a shift filled in late still belongs on its own day in the logbook.
+function recordDate(entries) {
+  for (const entry of entries) {
+    if (entry.type === "section") {
+      const dateField = visibleFields(entry).find((field) => field.type === "date");
+      if (!dateField) continue;
+      for (const cells of sectionRows(entry)) {
+        const raw = cleanText(cells[dateField.id]);
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+      }
+      continue;
     }
-  } else if (parsed && typeof parsed === "object") {
-
-    for (const [fieldId, fieldData] of Object.entries(parsed)) {
-      let actualValue;
-      if (fieldData && typeof fieldData === "object" && "value" in fieldData) {
-        actualValue = fieldData.value;
-      } else {
-        actualValue = fieldData;
-      }
-      extractedValues.push({ fieldId, value: toCell(actualValue) });
+    if (entry.type === "date") {
+      const raw = cleanText(entry.value);
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
     }
   }
+  return null;
+}
 
+function formatValue(value, fieldType) {
+  const text = cleanText(value);
+  if (!text) return "";
 
-  if (extractedValues.length) {
-
-    if (isSection) {
-      const combinedValue = extractedValues.map(v => v.value).join(", ");
-      return [{ fieldId: entry.name || "", value: combinedValue }];
-    }
-
-    return extractedValues;
+  if (fieldType === "date") {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+    if (match) return `${match[3]}/${match[2]}/${match[1]}`;
   }
 
+  // Numbers land in the sheet as numbers so "934.20" prints as 934.2 and totals stay usable.
+  if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
+  return text;
+}
 
-  return [{ fieldId: entry.name || "", value: toCell(raw) }];
+// Layout is decided once per section for the whole workbook, so the same
+// section never prints as a table for one submission and a list for another.
+//   - every field an enum  -> "Check / Result" list
+//   - a single row of non-numeric fields -> label/value list (record header block)
+//   - anything else -> table with a header row
+function layoutFor(fields, maxRows) {
+  if (fields.length && fields.every((field) => field.type === "enum")) return "checks";
+  if (maxRows <= 1 && !fields.some((field) => NUMERIC_FIELD_TYPES.has(field.type))) return "pairs";
+  return "table";
+}
+
+class SheetWriter {
+  constructor(sheet) {
+    this.sheet = sheet;
+    this.maxColumns = 2;
+  }
+
+  blank() {
+    this.sheet.addRow([]);
+  }
+
+  title(text) {
+    const row = this.sheet.addRow([text]);
+    row.getCell(1).font = TITLE_FONT;
+    row.getCell(1).alignment = LEFT;
+    row.height = 22;
+  }
+
+  heading(text) {
+    const row = this.sheet.addRow([text]);
+    row.getCell(1).font = HEADING_FONT;
+    row.getCell(1).alignment = LEFT;
+  }
+
+  pair(label, value) {
+    const row = this.sheet.addRow([label, value]);
+    row.getCell(1).font = LABEL_FONT;
+    row.getCell(1).alignment = LEFT;
+    row.getCell(2).font = VALUE_FONT;
+    row.getCell(2).alignment = LEFT;
+  }
+
+  table(headers, rows) {
+    const headerRow = this.sheet.addRow(headers);
+    headers.forEach((_, index) => {
+      const cell = headerRow.getCell(index + 1);
+      cell.font = HEADER_FONT;
+      cell.alignment = LEFT;
+    });
+
+    for (const values of rows) {
+      const row = this.sheet.addRow(values);
+      headers.forEach((_, index) => {
+        const cell = row.getCell(index + 1);
+        cell.font = VALUE_FONT;
+        cell.alignment = LEFT;
+      });
+    }
+
+    this.maxColumns = Math.max(this.maxColumns, headers.length);
+  }
+}
+
+function writeSection(writer, presentation, entry, layout) {
+  const fields = visibleFields(entry);
+  const rows = sectionRows(entry);
+
+  writer.heading(presentation.heading(sectionHeading(entry)));
+
+  if (!fields.length) {
+    for (const cells of rows) {
+      for (const [fieldId, value] of Object.entries(cells)) {
+        writer.pair(presentation.label({ id: fieldId, name: fieldId }), formatValue(value));
+      }
+    }
+    return;
+  }
+
+  if (layout === "checks") {
+    writer.table(
+      ["Check", "Result"],
+      rows.flatMap((cells) =>
+        fields.map((field) => [presentation.label(field), formatValue(cells[field.id], field.type)]),
+      ),
+    );
+    return;
+  }
+
+  if (layout === "pairs") {
+    const cells = rows[0] || {};
+    for (const field of fields) {
+      writer.pair(presentation.label(field), formatValue(cells[field.id], field.type));
+    }
+    return;
+  }
+
+  writer.table(
+    fields.map((field) => presentation.label(field)),
+    rows.map((cells) => fields.map((field) => formatValue(cells[field.id], field.type))),
+  );
+}
+
+function writeSubmission(writer, presentation, submission, entries, layouts, index) {
+  writer.title(`${presentation.documentTitle(submission.title)} — SUBMISSION ${index + 1}`);
+  writer.blank();
+
+  writer.heading("Submission Information");
+  writer.pair("Document Number", cleanText(submission.documentNumber));
+  writer.pair("Status", titleCase(submission.status));
+  writer.blank();
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i];
+
+    if (entry.type === "section") {
+      writeSection(writer, presentation, entry, layouts.get(entry.entryId) || "table");
+      writer.blank();
+      continue;
+    }
+
+    if (entry.type === "section_formular") {
+      // Consecutive rollups sharing a config.name print under one heading.
+      const group = [entry];
+      while (
+        i + 1 < entries.length &&
+        entries[i + 1].type === "section_formular" &&
+        cleanText(entries[i + 1].config?.name) === cleanText(entry.config?.name)
+      ) {
+        i += 1;
+        group.push(entries[i]);
+      }
+      writer.heading(presentation.heading(summaryHeading(entry)));
+      for (const item of group) {
+        writer.pair(presentation.label(item), formatValue(item.value, "number"));
+      }
+      writer.blank();
+      continue;
+    }
+
+    writer.heading(presentation.heading(titleCase(entry.name)));
+    writer.pair(presentation.label(entry), formatValue(entry.value, entry.type));
+    writer.blank();
+  }
 }
 
 export class ExportRepository {
@@ -85,84 +256,106 @@ export class ExportRepository {
     try {
       if (!documentNumber) throw new ApplicationError("documentNumber is required", 400);
 
-      let rowLimit = limit !== undefined ? Number(limit) : EXPORT_ROW_LIMIT;
-      if (!Number.isFinite(rowLimit) || rowLimit < 1) rowLimit = EXPORT_ROW_LIMIT;
-      if (rowLimit > EXPORT_ROW_LIMIT) rowLimit = EXPORT_ROW_LIMIT;
+      let submissionLimit = limit !== undefined ? Number(limit) : EXPORT_SUBMISSION_LIMIT;
+      if (!Number.isFinite(submissionLimit) || submissionLimit < 1) submissionLimit = EXPORT_SUBMISSION_LIMIT;
+      if (submissionLimit > EXPORT_SUBMISSION_LIMIT) submissionLimit = EXPORT_SUBMISSION_LIMIT;
 
-      const end = endDate ? new Date(endDate) : new Date();
-      const start = startDate
-        ? new Date(startDate)
-        : new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-      const submissionWhere = {
-        companyId,
-        documentNumber,
-        createdAt: { [Op.gte]: start, [Op.lte]: end },
-      };
+      // The document number is the filter. Dates only narrow the range when the
+      // caller asks for them — otherwise every submission of the logbook exports.
+      const submissionWhere = { companyId, documentNumber };
       if (status) submissionWhere.status = status;
+      if (startDate || endDate) {
+        submissionWhere.createdAt = {};
+        if (startDate) submissionWhere.createdAt[Op.gte] = rangeStart(startDate);
+        if (endDate) submissionWhere.createdAt[Op.lte] = rangeEnd(endDate);
+      }
 
       const submissions = await SubmittedChecklist.findAll({
         where: submissionWhere,
-        attributes: ["submittedChecklistId", "documentNumber", "title", "issuedNumber", "entityDisplayName", "status", "submittedAt", "createdAt"],
-        order: [["createdAt", "DESC"]],
+        attributes: [
+          "submittedChecklistId", "documentNumber", "title", "issuedNumber",
+          "entityDisplayName", "status", "submittedAt", "createdAt",
+        ],
+        order: [["submittedAt", "ASC"], ["createdAt", "ASC"]],
+        limit: submissionLimit,
       });
+
+      // A blank workbook looks like a broken export. Say why nothing matched instead.
+      if (!submissions.length) {
+        throw new ApplicationError(
+          startDate || endDate
+            ? "No submissions found for this document number in the selected date range."
+            : "No submissions found for this document number.",
+          404,
+        );
+      }
 
       const submissionIds = submissions.map((s) => s.submittedChecklistId);
       const entryRows = submissionIds.length
         ? await SubmittedChecklistEntry.findAll({
             where: { submittedChecklistId: { [Op.in]: submissionIds } },
-            attributes: ["submittedChecklistId", "entryId", "name", "value", "type", "section", "status", "order"],
+            attributes: [
+              "submittedChecklistId", "entryId", "name", "value",
+              "type", "section", "status", "order", "config",
+            ],
             order: [["order", "ASC"]],
           })
         : [];
 
-      const entriesBySubmission = new Map();
+      const entriesBySubmission = new Map(submissionIds.map((id) => [id, []]));
       for (const entry of entryRows) {
-        if (!entriesBySubmission.has(entry.submittedChecklistId)) {
-          entriesBySubmission.set(entry.submittedChecklistId, []);
-        }
-        entriesBySubmission.get(entry.submittedChecklistId).push(entry);
+        entriesBySubmission.get(entry.submittedChecklistId)?.push(entry);
       }
 
+      // Pass one: pick each section's layout from the widest use of it across
+      // the whole export, so a section is drawn the same way on every sheet block.
+      const rowCounts = new Map();
+      const sectionFields = new Map();
+      for (const entry of entryRows) {
+        if (entry.type !== "section") continue;
+        const previous = rowCounts.get(entry.entryId) || 0;
+        rowCounts.set(entry.entryId, Math.max(previous, sectionRows(entry).length));
+        const fields = visibleFields(entry);
+        if (fields.length > (sectionFields.get(entry.entryId)?.length || 0)) {
+          sectionFields.set(entry.entryId, fields);
+        }
+      }
+      const layouts = new Map();
+      for (const [entryId, fields] of sectionFields) {
+        layouts.set(entryId, layoutFor(fields, rowCounts.get(entryId) || 0));
+      }
+
+      const submittedTime = (submission) =>
+        new Date(submission.submittedAt || submission.createdAt).getTime() || 0;
+      const ordered = submissions
+        .map((submission) => {
+          const entries = entriesBySubmission.get(submission.submittedChecklistId) || [];
+          const logged = recordDate(entries);
+          return {
+            submission,
+            entries,
+            loggedAt: logged ? new Date(`${logged}T00:00:00Z`).getTime() : submittedTime(submission),
+          };
+        })
+        .sort((a, b) => a.loggedAt - b.loggedAt || submittedTime(a.submission) - submittedTime(b.submission));
+
+      const presentation = presentationFor(documentNumber);
       const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Submissions");
-      sheet.columns = [
-        { header: "Document Number", key: "documentNumber", width: 24 },
-        { header: "Title", key: "title", width: 28 },
-        { header: "Name", key: "name", width: 32 },
-        { header: "Type", key: "type", width: 14 },
-        { header: "Value", key: "value", width: 50 },
-        { header: "Status", key: "status", width: 14 },
-      ];
-      sheet.getRow(1).font = { bold: true };
+      const sheetTitle = cleanText(submissions[0]?.title) || "Submissions";
+      const sheet = workbook.addWorksheet(sheetTitle.replace(/[\\/*?:[\]]/g, " ").slice(0, 31));
+      const writer = new SheetWriter(sheet);
 
-      let emitted = 0;
-      for (const submission of submissions) {
-        if (emitted >= rowLimit) break;
+      ordered.forEach(({ submission, entries }, index) => {
+        if (index > 0) writer.blank();
+        writeSubmission(writer, presentation, submission, entries, layouts, index);
+      });
 
-        const entries = entriesBySubmission.get(submission.submittedChecklistId) || [];
-
-        for (const entry of entries) {
-          const valueRows = parseEntryValue(entry);
-          
-          for (const { fieldId, value } of valueRows) {
-            if (emitted >= rowLimit) break;
-            
-            sheet.addRow({
-              documentNumber: submission.documentNumber || "",
-              title: submission.title || "",
-              section: entry.section || "",
-              name: entry.name || fieldId || "",
-              type: entry.type || "",
-              value,
-              status: entry.status || "",
-            });
-            
-            emitted += 1;
-          }
-          if (emitted >= rowLimit) break;
-        }
+      sheet.getColumn(1).width = 46;
+      sheet.getColumn(2).width = 30;
+      for (let column = 3; column <= Math.max(writer.maxColumns, 3); column += 1) {
+        sheet.getColumn(column).width = 22;
       }
+
       const buffer = await workbook.xlsx.writeBuffer();
       const safeName = String(documentNumber).replace(/[^a-z0-9_-]+/gi, "_").slice(0, 60) || "submissions";
       const filename = `${safeName}_submissions.xlsx`;
