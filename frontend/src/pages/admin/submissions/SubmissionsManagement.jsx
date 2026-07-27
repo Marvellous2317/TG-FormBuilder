@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useChecklistsSubmissions } from '../../../shared/hooks/admin/useChecklist';
 import { formatDate } from '../../../shared/utils/constants';
 import { FiSearch } from 'react-icons/fi';
+import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../../shared/components/Loader';
 import Pagination from '../../../shared/components/Pagination';
 
@@ -95,6 +96,22 @@ export default function SubmissionsManagement() {
       </header>
 
       <div className="px-4 sm:px-6 lg:px-25">
+        <div className='mt-5 mb-5 '>
+          <Link
+            prefetch="intent"
+            className="flex w-1/3 cursor-pointer items-center gap-2 transition-all duration-150 ease-in-out group "
+            to={`/admin/`}
+          >
+            <FaArrowLeft
+              className="text-primary-200 group-hover:-translate-x-0.5"
+              size={16}
+            />
+            <p className="text-sm font-medium text-primary-200">
+              Back to Dashboard
+            </p>
+          </Link>
+        </div>
+
         <div className="border border-gray-200 overflow-hidden bg-white w-full min-h-full">
           <section className="flex-col flex w-full min-h-full">
             {/* SEARCH */}
