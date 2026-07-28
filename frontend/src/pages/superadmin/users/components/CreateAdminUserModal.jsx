@@ -27,7 +27,7 @@ export default function CreateAdminUserModal({
     role: {},
     entity: {},
     department: {},
-    accessLevel: '',
+    accessLevel: 'read_write',
   });
 
   const [entitySearchInput, setEntitySearchInput] = useState('');
@@ -145,7 +145,15 @@ export default function CreateAdminUserModal({
   };
 
   const handleSubmit = async () => {
-    const { firstName, lastName, email, role, entity, department } = formData;
+    const {
+      firstName,
+      lastName,
+      email,
+      role,
+      entity,
+      department,
+      accessLevel,
+    } = formData;
 
     if (
       !firstName ||
@@ -171,6 +179,7 @@ export default function CreateAdminUserModal({
         roleId: role?.roleId,
         companyId: isFromAdmin ? selectedEntity?.companyId : entity?.companyId,
         department: department.label,
+        accessLevel,
       });
       showSuccess('Admin User created successfully');
       handleCloseModal();
