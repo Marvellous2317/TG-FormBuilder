@@ -4,7 +4,8 @@ import InputField from '../../shared/components/InputField';
 import Icons from '../../assets/icons';
 import { useAuthStore } from '../../shared/store/authStore';
 import useToast from '../../shared/hooks/useToast';
-import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
+import useAuth from '../../shared/hooks/useAuth';
+import { useProfile, useProfileUpdate,  } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
 import clearAllCaches from '../../lib/clearCache';
@@ -21,6 +22,40 @@ export default function Settings() {
     email: user?.email || '',
     role: user?.role?.roleName || '',
   });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const { changePassword, isChangingPassword } = useAuth();
+
+  // const { mutateAsync: changePassword, isPending: isChangingPassword } =
+  // useChangePassword();
+
+  
+
+  const handlePasswordChange = (e) => {
+  const { name, value } = e.target;
+  setPasswordData((prev) => ({ ...prev, [name]: value }));
+};
+
+const handleSavePassword = async (e) => {
+  e.preventDefault();
+
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    showError('New password and confirm password do not match');
+    return;
+  }
+
+  try {
+    await changePassword(passwordData);
+    // no need to reset state — onSuccess navigates to /login anyway
+  } catch (error) {
+    console.error('Error', error);
+  }
+};
 
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
@@ -178,6 +213,60 @@ export default function Settings() {
                   Save Changes
                 </p>
                 {isUpdatingProfile && (
+                  <Loader size="border-white! h-4.5 w-4.5" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-secondary-200 p-6 md:p-8 shadow-sm  mt-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <InputField
+                id="current password"
+                name="currentPassword"
+                label="Current Password"
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+                className="w-full"
+              />
+
+              <InputField
+                id="new password"
+                name="newPassword"
+                label="New Password"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                className="w-full"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                id="confirm password"
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                // readOnly={true}
+                // disabled
+                // inputClassName="bg-secondary-700! cursor-not-allowed"
+                // className="w-full cursor-not-allowed"
+              />
+            </div>
+
+            <div className="flex justify-end mt-10">
+              <Button
+                type="button"
+                onClick={handleSavePassword}
+                className="bg-primary-200 p-3 px-5 rounded-xl flex items-center gap-2"
+              >
+                <p className="text-white font-geist font-medium text-sm">
+                  Save Password
+                </p>
+                {isChangingPassword && (
                   <Loader size="border-white! h-4.5 w-4.5" />
                 )}
               </Button>
