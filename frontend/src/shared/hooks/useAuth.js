@@ -89,7 +89,9 @@ export default function useAuth() {
       useAuthStore.getState().clearAuth();
       navigate('/login', { replace: true });
     },
-    onError: () => {},
+    onError: (error) => {
+  showError(error?.response?.data?.message || 'Failed to change password');
+},
   });
 
   const resetPasswordMutation = useMutation({
