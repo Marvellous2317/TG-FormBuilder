@@ -1,6 +1,30 @@
 import React from 'react';
 import { FaChevronRight } from 'react-icons/fa';
 
+const accountSetupSteps = [
+  {
+    title: 'Invitation by Email',
+    description: 'An Admin invites the user via email.',
+  },
+  {
+    title: 'Receive a One-Time Password (OTP)',
+    description: 'The invited user receives an OTP in their inbox.',
+  },
+  {
+    title: 'First Login',
+    description: 'Log in with the invited email address and the OTP.',
+  },
+  {
+    title: 'Set a Permanent Password',
+    description: 'On first login you are required to create your own password.',
+  },
+  {
+    title: 'All Subsequent Logins',
+    description:
+      'Use your email and the password you created. No OTP needed going forward.',
+  },
+];
+
 export default function SOPHome() {
   return (
     <div className="flex min-h-screen w-full flex-col font-inter bg-white">
@@ -93,6 +117,49 @@ export default function SOPHome() {
           not cover backend system configuration or IT infrastructure
           administration.
         </p>
+      </section>
+
+      <section className="my-16 w-full block px-32">
+        <div className="w-full border border-sop-200"></div>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3">
+            <span className="text-sop-400 text-sm font-bold">03</span>
+            <span className="uppercase border rounded-full border-sop-400/25 bg-sop-400/8 text-sop-400 px-3 py-1 text-[11px] font-bold">
+              All roles
+            </span>
+          </div>
+          <span className="font-extrabold my-2.5 text-4xl">
+            Account Setup &amp; Login
+          </span>
+          <span className="w-9 border-sop-400 rounded-full border-2"></span>
+        </div>
+
+        <p className="mt-9 text-[15px] leading-6.75">
+          Every user, regardless of role, accesses the application through a{' '}
+          <span className="font-bold">single shared link</span>. What they
+          see after logging in is determined entirely by their assigned
+          role.
+        </p>
+
+        <div className="mt-9 relative flex flex-col gap-7">
+          <span className="absolute left-3 top-3 bottom-3 w-px bg-sop-200" />
+          {accountSetupSteps.map((step, idx) => (
+            <div key={step.title} className="relative z-10 flex gap-4">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sop-400 text-xs font-bold text-white">
+                {idx + 1}
+              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">{step.title}</span>
+                <span className="mt-1 text-sm text-sop-800">
+                  {step.description}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="my-16 w-full block px-32">
