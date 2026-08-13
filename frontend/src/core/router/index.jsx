@@ -44,6 +44,7 @@ import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
 import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
 import GuestRoute from './GuestRoute';
+import SOPHome from '@/pages/sop/SOPHome';
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
           {
             path: '/',
             element: <RoleRedirect />,
+          },
+          {
+            path: '/sop',
+            element: (
+              <GuestRoute>
+                <SOPHome />
+              </GuestRoute>
+            ),
           },
           {
             path: '/login',

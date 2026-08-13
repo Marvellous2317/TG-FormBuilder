@@ -115,6 +115,15 @@ function Login() {
               {isLoggingIn ? <Loader /> : 'Login'}
             </Button>
           </form>
+
+          <div className="flex items-center justify-center text-center my-2 w-full">
+            <a
+              href="/sop"
+              className="text-sm underline text-primary-200 font-geist font-medium cursor-pointer"
+            >
+              View the S.O.P
+            </a>
+          </div>
         </div>
       </section>
     </div>
