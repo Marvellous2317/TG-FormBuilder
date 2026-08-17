@@ -260,6 +260,20 @@ const sectionFieldSteps = [
   },
 ];
 
+const sectionFormularFieldSteps = [
+  {
+    title:
+      'Select the Section, then the specific field within it to calculate on.',
+  },
+  {
+    title:
+      'Select the operation; Sum, Subtract, Multiply, Average, Count, Min, Max, and other available operations.',
+  },
+  {
+    title: 'Save the formula.',
+  },
+];
+
 export default function SOPHome() {
   return (
     <div className="flex min-h-screen w-full flex-col font-inter bg-white">
@@ -496,30 +510,131 @@ export default function SOPHome() {
         <SOPScreenshot key={`23`} src={`/sop/23.png`} alt={`23 image`} />
         <SOPScreenshot key={`24`} src={`/sop/24.png`} alt={`24 image`} />
       </section>
-      ;;
+
       <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`21`} src={`/sop/21.png`} alt={`21 image`} />
-        <SOPScreenshot key={`22`} src={`/sop/22.png`} alt={`22 image`} />
-      </section>
+
       <section className="w-full px-32">
         <div className="mt-12">
           <div className="mt-6">
             <StagePanel
-              label="3. Section"
+              label="4. Section Formula"
               description={
-                "A Section groups related fields together for inputs that belong as a set and, importantly, a section can be filled in more than once per submission, so it's used whenever the Operator may need to log multiple entries of the same group of fields within a single logbook record (e.g., logging several sightings or checks in one submission)."
+                'A Section Formula runs a calculation across all the entries of one specific field within a section, since a section can have multiple entries, this is how you get a single calculated value (e.g., a total or average) out of every instance of that field, rather than calculating across separate standalone fields.'
               }
             />
           </div>
 
-          <StepTimeline steps={sectionFieldSteps} />
+          <StepTimeline steps={sectionFormularFieldSteps} />
         </div>
       </section>
       <SectionDivider />
       <section className="w-full px-32">
-        <SOPScreenshot key={`23`} src={`/sop/23.png`} alt={`23 image`} />
-        <SOPScreenshot key={`24`} src={`/sop/24.png`} alt={`24 image`} />
+        <SOPScreenshot key={`25`} src={`/sop/25.png`} alt={`25 image`} />
+        <SOPScreenshot key={`26`} src={`/sop/26.png`} alt={`26 image`} />
+        <SOPScreenshot key={`27`} src={`/sop/27.png`} alt={`27 image`} />
+      </section>
+
+      <SectionDivider />
+
+      <section className="w-full px-32">
+        <SubSectionHeading number="5.6" title="Action menus" />
+
+        <div className="my-6">
+          <StagePanel
+            label="1. Export"
+            description={
+              'Exports all submissions for a specific date range you select (Start date/End date), delivered as an XLS file.'
+            }
+          />
+        </div>
+
+        <section className="w-full">
+          <SOPScreenshot key={`28`} src={`/sop/28.png`} alt={`28 image`} />
+          <SOPScreenshot key={`29`} src={`/sop/29.png`} alt={`29 image`} />
+        </section>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="2. Entries"
+            description={
+              'Opens the individual data entries already logged for that logbook, where they can be edited.'
+            }
+          />
+        </div>
+
+        <section className="w-full">
+          <SOPScreenshot key={`30`} src={`/sop/30.png`} alt={`30 image`} />
+        </section>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="3. Edit log"
+            description={
+              "Edits the logbook's own configuration details (title, document number, whether approval is required, etc.) rather than the entries themselves."
+            }
+          />
+        </div>
+
+        <section className="w-full">
+          <SOPScreenshot key={`31`} src={`/sop/31.png`} alt={`31 image`} />
+        </section>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="4. Delete  log"
+            description={'Deletes the logbook but can always be restored.'}
+          />
+        </div>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="5. Duplicate"
+            description={
+              'Creates a copy of the logbook as a starting point for a new one.'
+            }
+          />
+        </div>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="6. Submissions"
+            description={
+              'Shows every submission made by Operators that has been approved by an Approver, including who approved it and when.'
+            }
+          />
+        </div>
+
+        <section className="w-full">
+          <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`32 image`} />
+          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`33 image`} />
+        </section>
+      </section>
+
+      <section className="w-full px-32">
+        <div className="my-6">
+          <StagePanel
+            label="7. Version History"
+            description={
+              'Shows a log of every past version of how the form itself was built. Selecting a version shows the exact field configuration at that point in time (including saved formulas, section fields, and dropdown sources), and you can tap Preview Form to see exactly how an Operator would have seen the form at that version, not just the current version.'
+            }
+          />
+        </div>
+
+        <section className="w-full">
+          <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`34 image`} />
+          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`35 image`} />
+          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`36 image`} />
+        </section>
       </section>
     </div>
   );
