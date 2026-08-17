@@ -1,11 +1,18 @@
 import React from 'react';
 import {
-  FaChevronRight,
   FaEye,
   FaUserShield,
   FaClipboardList,
   FaCheckCircle,
 } from 'react-icons/fa';
+import SOPTopBar from './components/SOPTopBar';
+import SOPHero from './components/SOPHero';
+import SectionDivider from './components/SectionDivider';
+import SectionHeading from './components/SectionHeading';
+import StepTimeline from './components/StepTimeline';
+import RoleCard from './components/RoleCard';
+import SOPScreenshot from './components/SOPScreenshot';
+import { FiSettings } from 'react-icons/fi';
 
 const accountSetupSteps = [
   {
@@ -122,69 +129,14 @@ const systemRoles = [
 export default function SOPHome() {
   return (
     <div className="flex min-h-screen w-full flex-col font-inter bg-white">
-      <section className="flex items-center justify-between w-full px-10 py-3.5 border-b border-sop-200">
-        <p className="flex items-center gap-2">
-          <span className="font-bold text-sop-400 text-sm">Digiforms</span>
-          <FaChevronRight className="text-sop-100 m-1" size={12} />
-          <span className=" text-sop-100 text-sm">
-            Standard Operating Procedure
-          </span>
-        </p>
+      <SOPTopBar />
 
-        <p className="font-bold text-sm text-sop-100 mx-4 my-1">VERSION 1.0</p>
-      </section>
+      <SOPHero />
 
-      <section className="w-full mt-10 px-32">
-        <div className="uppercase border rounded-full border-sop-400/25 bg-sop-400/8 text-sop-400 px-4 py-1.5 text-xs font-bold w-fit my-10">
-          Controlled document
-        </div>
-
-        <h1 className="text-6xl font-extrabold flex flex-col mt-5">
-          <span>Standard</span>
-          <span className="text-sop-400">Operating</span>
-          <span>Procedure</span>
-        </h1>
-
-        <p className="text-sop-800 mt-4.5">
-          Digital Forms and Logbook Application.
-        </p>
-
-        <div className="mt-9 border-sop-200 rounded-xl border flex w-full">
-          <div className="flex flex-col pt-4 pl-5 w-full border-r border-sop-200 h-22.75 bg-sop-300">
-            <span className="font-bold text-sop-100 uppercase text-xs">
-              version
-            </span>
-            <span className="text-sop-800 font-bold text-sm">1.0</span>
-          </div>
-          <div className="flex flex-col pt-4 pl-5 w-full border-r border-sop-200 h-22.75">
-            <span className="font-bold text-sop-100 uppercase text-xs">
-              prepared by
-            </span>
-            <span className="text-sop-800 font-bold text-sm">
-              Roseline Amarachi
-            </span>
-          </div>
-          <div className="flex flex-col pt-4 pl-5 w-full h-22.75 bg-sop-300">
-            <span className="font-bold text-sop-100 uppercase text-xs">
-              applies to
-            </span>
-            <span className="text-sop-800 font-bold text-sm">
-              Admin, Operator, Approver
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="my-16 w-full block px-32">
-        <div className="w-full border border-sop-200"></div>
-      </section>
+      <SectionDivider />
 
       <section className="w-full px-32">
-        <div className="flex flex-col">
-          <span className="text-sop-400 text-sm font-bold">01</span>
-          <span className="font-extrabold my-2.5 text-4xl">Purpose</span>
-          <span className="w-9 border-sop-400 rounded-full border-2"></span>
-        </div>
+        <SectionHeading number="01" title="Purpose" />
         <p className="mt-9 text-[15px] leading-6.75">
           This SOP defines the step-by-step procedures for using the Digital
           Packaging Logbook application. It covers how each user type (Admin
@@ -194,16 +146,10 @@ export default function SOPHome() {
         </p>
       </section>
 
-      <section className="my-16 w-full block px-32">
-        <div className="w-full border border-sop-200"></div>
-      </section>
+      <SectionDivider />
 
       <section className="w-full px-32">
-        <div className="flex flex-col">
-          <span className="text-sop-400 text-sm font-bold">02</span>
-          <span className="font-extrabold my-2.5 text-4xl">Scope</span>
-          <span className="w-9 border-sop-400 rounded-full border-2"></span>
-        </div>
+        <SectionHeading number="02" title="Scope" />
         <p className="mt-9 text-[15px] leading-6.75">
           This SOP applies to all users of the Digital Packaging Logbook
           application, regardless of assigned role. It covers login, account
@@ -213,23 +159,14 @@ export default function SOPHome() {
         </p>
       </section>
 
-      <section className="my-16 w-full block px-32">
-        <div className="w-full border border-sop-200"></div>
-      </section>
+      <SectionDivider />
 
       <section className="w-full px-32">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-3">
-            <span className="text-sop-400 text-sm font-bold">03</span>
-            <span className="uppercase border rounded-full border-sop-400/25 bg-sop-400/8 text-sop-400 px-3 py-1 text-[11px] font-bold">
-              All roles
-            </span>
-          </div>
-          <span className="font-extrabold my-2.5 text-4xl">
-            Account Setup &amp; Login
-          </span>
-          <span className="w-9 border-sop-400 rounded-full border-2"></span>
-        </div>
+        <SectionHeading
+          number="03"
+          title="Account Setup & Login"
+          badge="All roles"
+        />
 
         <p className="mt-9 text-[15px] leading-6.75">
           Every user, regardless of role, accesses the application through a{' '}
@@ -237,51 +174,25 @@ export default function SOPHome() {
           after logging in is determined entirely by their assigned role.
         </p>
 
-        <div className="mt-9 relative flex flex-col gap-7">
-          <span className="absolute left-3 top-3 bottom-3 w-px bg-sop-200" />
-          {accountSetupSteps.map((step, idx) => (
-            <div key={step.title} className="relative z-10 flex gap-4">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sop-400 text-xs font-bold text-white">
-                {idx + 1}
-              </span>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold">{step.title}</span>
-                <span className="mt-1 text-sm text-sop-800">
-                  {step.description}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <StepTimeline steps={accountSetupSteps} />
       </section>
 
-      <section className="my-16 w-full block px-32">
-        <div className="w-full border border-sop-200"></div>
-      </section>
+      <SectionDivider />
 
       <section className="w-full px-32">
         {firstSectionImages.map((image) => (
-          <img
+          <SOPScreenshot
             key={image.id}
             src={image.src}
             alt={`${image.id} image`}
-            className="w-full my-1"
           />
         ))}
       </section>
 
-      <section className="my-16 w-full block px-32">
-        <div className="w-full border border-sop-200"></div>
-      </section>
+      <SectionDivider />
 
       <section className="w-full px-32">
-        <div className="flex flex-col">
-          <span className="text-sop-400 text-sm font-bold">04</span>
-          <span className="font-extrabold my-2.5 text-4xl">
-            System Roles Overview
-          </span>
-          <span className="w-9 border-sop-400 rounded-full border-2"></span>
-        </div>
+        <SectionHeading number="04" title="System Roles Overview" />
         <p className="mt-9 text-[15px] leading-6.75">
           Four distinct roles govern what each user can see and do inside
           DigiForms.
@@ -289,41 +200,30 @@ export default function SOPHome() {
 
         <div className="mt-9 flex flex-col gap-6">
           {systemRoles.map((role) => (
-            <>
-              <div
-                key={role.title}
-                className="w-full overflow-hidden rounded-xl border border-sop-200"
-              >
-                <div className={`flex items-center gap-3 px-5 py-4 ${role.bg}`}>
-                  <role.icon className="text-lg text-sop-800" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold">{role.title}</span>
-                    <span className="text-sm text-sop-800">
-                      {role.subtitle}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-sop-200 px-5 py-4">
-                  {role.permissions.map((permission) => (
-                    <span
-                      key={permission}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sop-400" />
-                      {permission}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <img
-                key={role.src}
-                src={role.src}
-                alt={`image`}
-                className="w-full my-1"
+            <React.Fragment key={role.title}>
+              <RoleCard
+                title={role.title}
+                subtitle={role.subtitle}
+                icon={role.icon}
+                bg={role.bg}
+                permissions={role.permissions}
               />
-            </>
+              <SOPScreenshot src={role.src} alt={`${role.title} screenshot`} />
+            </React.Fragment>
           ))}
         </div>
+      </section>
+
+      <SectionDivider />
+
+      <section className="w-full px-32">
+        <RoleCard
+          title="SOP for Admin Users"
+          subtitle="Section 5: Covers both Read-Only and Read-and-Write Admin roles"
+          icon={FiSettings}
+          bg={'bg-sop-500'}
+          showPermissions={false}
+        />
       </section>
     </div>
   );
