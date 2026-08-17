@@ -6,6 +6,11 @@ import {
   FaCheckCircle,
   FaListOl,
   FaBolt,
+  FaPencilAlt,
+  FaDesktop,
+  FaLock,
+  FaImage,
+  FaSave,
 } from 'react-icons/fa';
 import SOPTopBar from './components/SOPTopBar';
 import SOPHero from './components/SOPHero';
@@ -18,6 +23,7 @@ import SubSectionHeading from './components/SubSectionHeading';
 import AdminTypeCard from './components/AdminTypeCard';
 import StagePanel from './components/StagePanel';
 import SOPCallout from './components/SOPCallout';
+import SOPNote from './components/SOPNote';
 import { FiSettings } from 'react-icons/fi';
 
 const accountSetupSteps = [
@@ -271,6 +277,105 @@ const sectionFormularFieldSteps = [
   },
   {
     title: 'Save the formula.',
+  },
+];
+
+const operatorTabs = [
+  {
+    id: 'pending',
+    title: 'Pending Tab',
+    description:
+      'Entries submitted but are yet to be approved. Changes can be made  whilst it is in pending.',
+    icon: FaLock,
+  },
+  {
+    id: 'approved',
+    title: 'Approved Tab',
+    description:
+      'Entries that have completed the approval process and are now permanently locked.',
+    icon: FaLock,
+  },
+  {
+    id: 'rejected',
+    title: 'Rejected Tab',
+    description:
+      'Entries that was rejected by the approver. These gets logged in the rejected tab. ',
+    icon: FaLock,
+  },
+];
+
+const dataEntrySteps = [
+  {
+    title: 'Open your assigned logbook',
+    description: 'You only see logbooks you have been assigned to.',
+  },
+  {
+    title: 'Enter all required data accurately and completely',
+  },
+  {
+    title: 'Submit the entry',
+    description:
+      "It moves to your Pending tab and routes to the Approver(s) based on the logbook's approval mode.",
+  },
+];
+
+const editEntrySteps = [
+  {
+    title: 'Open a pending task',
+  },
+  {
+    title: 'Edit and update',
+  },
+];
+
+const signatureSetupOptions = [
+  {
+    title: 'Draw it',
+    description: 'Use the in-app drawing tool to sign directly on screen.',
+    icon: FaPencilAlt,
+  },
+  {
+    title: 'Upload it',
+    description: 'Upload an image of your handwritten signature instead.',
+    icon: FaImage,
+  },
+  {
+    title: 'Saved to profile',
+    description:
+      'Stored once and applied automatically to every submission you make going forward.',
+    icon: FaSave,
+  },
+];
+
+const editSetupOptions = [
+  {
+    title: 'While pending',
+    description:
+      'Go back in and edit at any time before the Approver acts on it.',
+    icon: FaPencilAlt,
+  },
+  {
+    title: 'Once approved',
+    description:
+      'The entry is locked. Only a Read-and-Write Admin can make changes to an approved record.',
+    icon: FaLock,
+  },
+];
+
+const approverTabs = [
+  {
+    id: 'approved',
+    title: 'Approved Tab',
+    description:
+      'Entries that have completed the approval process and are now permanently locked.',
+    icon: FaLock,
+  },
+  {
+    id: 'approved-2',
+    title: 'Approved Tab',
+    description:
+      'Entries that have completed the approval process and are now permanently locked.',
+    icon: FaLock,
   },
 ];
 
@@ -631,10 +736,139 @@ export default function SOPHome() {
         </div>
 
         <section className="w-full">
-          <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`34 image`} />
-          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`35 image`} />
-          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`36 image`} />
+          <SOPScreenshot key={`34`} src={`/sop/34.png`} alt={`34 image`} />
+          <SOPScreenshot key={`35`} src={`/sop/35.png`} alt={`35 image`} />
+          <SOPScreenshot key={`36`} src={`/sop/36.png`} alt={`36 image`} />
         </section>
+      </section>
+
+      <SectionDivider />
+
+      <section className="w-full px-32">
+        <RoleCard
+          title="SOP for Operator Users"
+          subtitle="Section 6: Data entry, submission, and corrections"
+          icon={FaPencilAlt}
+          bg={'bg-sop-600'}
+          showPermissions={false}
+        />
+
+        <div className="mt-9 flex flex-col gap-5">
+          <AdminTypeCard
+            title="Dashboard"
+            description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
+            icon={FaDesktop}
+          />
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {operatorTabs.map((tab) => (
+              <AdminTypeCard
+                key={tab.id}
+                title={tab.title}
+                description={tab.description}
+                icon={tab.icon}
+              />
+            ))}
+          </div>
+
+          <SOPScreenshot key={`37`} src={`/sop/37.png`} alt={`37 image`} />
+        </div>
+
+        <div className="mt-12">
+          <SubSectionHeading number="6.1" title="Data Entry & Submission" />
+
+          <StepTimeline steps={dataEntrySteps} />
+
+          <div className="my-9">
+            <SOPNote lead="Do this before anything else.">
+              You cannot submit an entry without a signature set up on your
+              account.
+            </SOPNote>
+          </div>
+
+          <section className="w-full">
+            <SOPScreenshot key={`38`} src={`/sop/38.png`} alt={`38 image`} />
+            <SOPScreenshot key={`39`} src={`/sop/39.png`} alt={`39 image`} />
+          </section>
+        </div>
+
+        <div className="mt-12">
+          <SubSectionHeading
+            number="6.2"
+            title="Signature Setup (Required Before First Submission)"
+          />
+
+          <div className="mt-6 grid grid-cols-3 gap-5">
+            {signatureSetupOptions.map((option) => (
+              <AdminTypeCard
+                key={option.title}
+                title={option.title}
+                description={option.description}
+                icon={option.icon}
+              />
+            ))}
+          </div>
+
+          <section className="w-full my-6">
+            <SOPScreenshot key={`40`} src={`/sop/40.png`} alt={`40 image`} />
+            <SOPScreenshot key={`41`} src={`/sop/41.png`} alt={`41 image`} />
+          </section>
+        </div>
+
+        <div className="mt-12">
+          <SubSectionHeading number="6.3" title="Editing an Entry" />
+
+          <div className="mt-6 grid grid-cols-2 gap-5">
+            {editSetupOptions.map((option) => (
+              <AdminTypeCard
+                key={option.title}
+                title={option.title}
+                description={option.description}
+                icon={option.icon}
+              />
+            ))}
+          </div>
+
+          <StepTimeline steps={editEntrySteps} />
+
+          <section className="w-full my-6">
+            <SOPScreenshot key={`42`} src={`/sop/42.png`} alt={`42 image`} />
+            <SOPScreenshot key={`43`} src={`/sop/43.png`} alt={`43 image`} />
+          </section>
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      <section className="w-full px-32">
+        <RoleCard
+          title="SOP for Approver Users"
+          subtitle="Section 7: Review, approve, reject, and export"
+          icon={FaCheckCircle}
+          bg={'bg-sop-700'}
+          showPermissions={false}
+        />
+
+        <div className="mt-9 flex flex-col gap-5">
+          <AdminTypeCard
+            title="Dashboard"
+            description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
+            icon={FaDesktop}
+          />
+
+          <div className="grid grid-cols-2 gap-5">
+            {approverTabs.map((tab) => (
+              <AdminTypeCard
+                key={tab.id}
+                title={tab.title}
+                description={tab.description}
+                icon={tab.icon}
+              />
+            ))}
+          </div>
+
+          <SOPScreenshot key={`42`} src={`/sop/42.png`} alt={`42 image`} />
+        </div>
       </section>
     </div>
   );
