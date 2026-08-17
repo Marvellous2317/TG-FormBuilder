@@ -12,6 +12,9 @@ import SectionHeading from './components/SectionHeading';
 import StepTimeline from './components/StepTimeline';
 import RoleCard from './components/RoleCard';
 import SOPScreenshot from './components/SOPScreenshot';
+import SubSectionHeading from './components/SubSectionHeading';
+import AdminTypeCard from './components/AdminTypeCard';
+import StagePanel from './components/StagePanel';
 import { FiSettings } from 'react-icons/fi';
 
 const accountSetupSteps = [
@@ -126,6 +129,51 @@ const systemRoles = [
   },
 ];
 
+const adminTypes = [
+  {
+    title: 'Read-Only Admin',
+    description:
+      'Can view the Submissions list and export submissions. Cannot create, edit, or delete logbooks or forms.',
+    icon: FaEye,
+  },
+  {
+    title: 'Read-and-Write Admin',
+    description:
+      "Full permissions: creates users, creates and edits logbooks, and is the only role able to edit a form's data after it has already been approved.",
+    icon: FiSettings,
+  },
+];
+
+const creatingUsersSteps = [
+  {
+    title: 'Log in with a Read-and-Write Admin account',
+  },
+  {
+    title: 'Navigate to User Management',
+  },
+  {
+    title: 'Create a new user account',
+    description:
+      'Set their role: Operator, Approver, Admin(Read-Only, or Admin – Read-and-Write), select their department, add their names and their email address.',
+  },
+  {
+    title: 'System sends an OTP email to the invited user',
+    description: 'They follow the login flow in Section 3.',
+  },
+];
+
+const logbookSetupFields = [
+  'Department',
+  'Frequency (hourly / daily / weekly)',
+  'Requires approval? (toggle)',
+  'Approval mode: Sequential or Parallel',
+  'Assigned Approvers',
+  'Assigned Operators',
+  'Logbook title',
+  'Document number',
+  'Issued number',
+];
+
 export default function SOPHome() {
   return (
     <div className="flex min-h-screen w-full flex-col font-inter bg-white">
@@ -224,6 +272,49 @@ export default function SOPHome() {
           bg={'bg-sop-500'}
           showPermissions={false}
         />
+
+        <div className="mt-12">
+          <SubSectionHeading number="5.1" title="Admin Types" />
+          <div className="mt-6 grid grid-cols-2 gap-5">
+            {adminTypes.map((adminType) => (
+              <AdminTypeCard
+                key={adminType.title}
+                title={adminType.title}
+                description={adminType.description}
+                icon={adminType.icon}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <SubSectionHeading number="5.2" title="Creating Users" />
+          <StepTimeline steps={creatingUsersSteps} />
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      <section className="w-full px-32">
+        <SOPScreenshot key={`11`} src={`/sop/11.png`} alt={`11 image`} />
+        <SOPScreenshot key={`12`} src={`/sop/12.png`} alt={`12 image`} />
+      </section>
+
+      <section className="w-full px-32">
+        <div className="mt-12">
+          <SubSectionHeading number="5.3" title="Creating a Logbook" />
+          <p className="mt-4 text-[15px] leading-6.75">
+            A logbook is created in two stages: the setup form, then defining
+            the data fields.
+          </p>
+
+          <div className="mt-6">
+            <StagePanel
+              label="Stage 1: Logbook Setup Form"
+              items={logbookSetupFields}
+            />
+          </div>
+        </div>
       </section>
     </div>
   );

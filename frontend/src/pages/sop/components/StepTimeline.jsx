@@ -11,7 +11,11 @@ export default function StepTimeline({ steps = [] }) {
           </span>
           <div className="flex flex-col">
             <span className="text-sm font-bold">{step.title}</span>
-            <span className="mt-1 text-sm text-sop-800">{step.description}</span>
+            {step.description && (
+              <span className="mt-1 text-sm text-sop-800">
+                {step.description}
+              </span>
+            )}
           </div>
         </div>
       ))}
