@@ -483,7 +483,21 @@ const sopSections = [
     children: [
       { id: 'section-5-1', number: '5.1', title: 'Admin Types' },
       { id: 'section-5-2', number: '5.2', title: 'Creating Users' },
-      { id: 'section-5-3', number: '5.3', title: 'Creating a Logbook' },
+      {
+        id: 'section-5-3',
+        number: '5.3',
+        title: 'Creating a Logbook',
+        children: [
+          {
+            id: 'section-5-3-1',
+            title: 'Stage 1: Logbook Setup Form',
+          },
+          {
+            id: 'section-5-3-2',
+            title: 'Stage 2: Define the Fields',
+          },
+        ],
+      },
       { id: 'section-5-4', number: '5.4', title: 'Approval Modes' },
       { id: 'section-5-5', number: '5.5', title: 'Field types' },
       { id: 'section-5-6', number: '5.6', title: 'Action menus' },
@@ -661,7 +675,7 @@ export default function SOPHome() {
                 defining the data fields.
               </p>
 
-              <div className="mt-6">
+              <div id="section-5-3-1" className="mt-6">
                 <StagePanel
                   label="Stage 1: Logbook Setup Form"
                   items={logbookSetupFields}
@@ -683,7 +697,7 @@ export default function SOPHome() {
               </SOPCallout>
             </div>
 
-            <div className="mt-9">
+            <div id="section-5-3-2" className="mt-9">
               <StagePanel
                 label="Stage 2: Define the Fields"
                 description="Once the setup form is submitted, define the data fields the logbook will capture. Each row needs:"
@@ -829,10 +843,10 @@ export default function SOPHome() {
               />
             </div>
 
-            <section className="w-full">
+            <div className="w-full">
               <SOPScreenshot key={`28`} src={`/sop/28.png`} alt={`28 image`} />
               <SOPScreenshot key={`29`} src={`/sop/29.png`} alt={`29 image`} />
-            </section>
+            </div>
           </section>
 
           <section className="w-full px-14.5">
@@ -845,9 +859,9 @@ export default function SOPHome() {
               />
             </div>
 
-            <section className="w-full">
+            <div className="w-full">
               <SOPScreenshot key={`30`} src={`/sop/30.png`} alt={`30 image`} />
-            </section>
+            </div>
           </section>
 
           <section className="w-full px-14.5">
@@ -860,9 +874,9 @@ export default function SOPHome() {
               />
             </div>
 
-            <section className="w-full">
+            <div className="w-full">
               <SOPScreenshot key={`31`} src={`/sop/31.png`} alt={`31 image`} />
-            </section>
+            </div>
           </section>
 
           <section className="w-full px-14.5">
@@ -895,10 +909,10 @@ export default function SOPHome() {
               />
             </div>
 
-            <section className="w-full">
+            <div className="w-full">
               <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`32 image`} />
               <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`33 image`} />
-            </section>
+            </div>
           </section>
 
           <section className="w-full px-14.5">
@@ -911,11 +925,11 @@ export default function SOPHome() {
               />
             </div>
 
-            <section className="w-full">
+            <div className="w-full">
               <SOPScreenshot key={`34`} src={`/sop/34.png`} alt={`34 image`} />
               <SOPScreenshot key={`35`} src={`/sop/35.png`} alt={`35 image`} />
               <SOPScreenshot key={`36`} src={`/sop/36.png`} alt={`36 image`} />
-            </section>
+            </div>
           </section>
 
           <SectionDivider />
@@ -966,7 +980,7 @@ export default function SOPHome() {
                 </SOPNote>
               </div>
 
-              <section className="w-full">
+              <div className="w-full">
                 <SOPScreenshot
                   key={`38`}
                   src={`/sop/38.png`}
@@ -977,7 +991,7 @@ export default function SOPHome() {
                   src={`/sop/39.png`}
                   alt={`39 image`}
                 />
-              </section>
+              </div>
             </div>
 
             <div className="mt-12">
@@ -998,7 +1012,7 @@ export default function SOPHome() {
                 ))}
               </div>
 
-              <section className="w-full my-6">
+              <div className="w-full my-6">
                 <SOPScreenshot
                   key={`40`}
                   src={`/sop/40.png`}
@@ -1009,7 +1023,7 @@ export default function SOPHome() {
                   src={`/sop/41.png`}
                   alt={`41 image`}
                 />
-              </section>
+              </div>
             </div>
 
             <div className="mt-12">
@@ -1032,7 +1046,7 @@ export default function SOPHome() {
 
               <StepTimeline steps={editEntrySteps} />
 
-              <section className="w-full my-6">
+              <div className="w-full my-6">
                 <SOPScreenshot
                   key={`42`}
                   src={`/sop/42.png`}
@@ -1043,7 +1057,7 @@ export default function SOPHome() {
                   src={`/sop/43.png`}
                   alt={`43 image`}
                 />
-              </section>
+              </div>
             </div>
           </section>
 
@@ -1089,10 +1103,10 @@ export default function SOPHome() {
               <StepTimeline steps={reviewApprovalSteps} />
             </div>
 
-            <section className="w-full my-6">
+            <div className="w-full my-6">
               <SOPScreenshot key={`45`} src={`/sop/45.png`} alt={`45 image`} />
               <SOPScreenshot key={`46`} src={`/sop/46.png`} alt={`46 image`} />
-            </section>
+            </div>
 
             <div className="mt-12">
               <SubSectionHeading
@@ -1119,10 +1133,10 @@ export default function SOPHome() {
               </div>
             </div>
 
-            <section className="w-full my-6">
+            <div className="w-full my-6">
               <SOPScreenshot key={`47`} src={`/sop/47.png`} alt={`47 image`} />
               <SOPScreenshot key={`48`} src={`/sop/48.png`} alt={`48 image`} />
-            </section>
+            </div>
 
             <SOPCallout>
               <span className="font-bold">Sequential:</span> an entry only
@@ -1143,10 +1157,10 @@ export default function SOPHome() {
               <StepTimeline steps={exportSubmissionSteps} />
             </div>
 
-            <section className="w-full my-6">
+            <div className="w-full my-6">
               <SOPScreenshot key={`49`} src={`/sop/49.png`} alt={`49 image`} />
               <SOPScreenshot key={`50`} src={`/sop/50.png`} alt={`50 image`} />
-            </section>
+            </div>
           </section>
 
           <SectionDivider />
