@@ -479,7 +479,7 @@ const sopSections = [
   {
     id: 'section-05',
     number: '05',
-    title: 'SOP for Admin Users',
+    title: 'Guide for Admin Users',
     children: [
       { id: 'section-5-1', number: '5.1', title: 'Admin Types' },
       { id: 'section-5-2', number: '5.2', title: 'Creating Users' },
@@ -492,7 +492,7 @@ const sopSections = [
   {
     id: 'section-06',
     number: '06',
-    title: 'SOP for Operator Users',
+    title: 'Guide for Operator Users',
     children: [
       { id: 'section-6-1', number: '6.1', title: 'Data Entry & Submission' },
       { id: 'section-6-2', number: '6.2', title: 'Signature Setup' },
@@ -502,7 +502,7 @@ const sopSections = [
   {
     id: 'section-07',
     number: '07',
-    title: 'SOP for Approver Users',
+    title: 'Guide for Approver Users',
     children: [
       {
         id: 'section-7-1',
@@ -534,11 +534,11 @@ export default function SOPHome() {
           <section id="section-01" className="w-full px-14.5">
             <SectionHeading number="01" title="Purpose" />
             <p className="mt-9 text-[15px] leading-6.75">
-              This SOP defines the step-by-step procedures for using the Digital
-              Packaging Logbook application. It covers how each user type (Admin
-              Read-Only and Read-and-Write, Operator, and Approver) logs into
-              and operates the system, so that logbook records are created,
-              submitted, reviewed, and approved consistently and remain
+              This document defines the step-by-step procedures for using the
+              Digital Packaging Logbook application. It covers how each user
+              type (Admin Read-Only and Read-and-Write, Operator, and Approver)
+              logs into and operates the system, so that logbook records are
+              created, submitted, reviewed, and approved consistently and remain
               audit-ready.
             </p>
           </section>
@@ -546,11 +546,11 @@ export default function SOPHome() {
           <section id="section-02" className="w-full px-14.5">
             <SectionHeading number="02" title="Scope" />
             <p className="mt-9 text-[15px] leading-6.75">
-              This SOP applies to all users of the Digital Packaging Logbook
-              application, regardless of assigned role. It covers login, account
-              setup, and day-to-day use of the application for each role. It
-              does not cover backend system configuration or IT infrastructure
-              administration.
+              This document applies to all users of the Digital Packaging
+              Logbook application, regardless of assigned role. It covers login,
+              account setup, and day-to-day use of the application for each
+              role. It does not cover backend system configuration or IT
+              infrastructure administration.
             </p>
           </section>
           <SectionDivider />
@@ -610,7 +610,7 @@ export default function SOPHome() {
           <SectionDivider />
           <section id="section-05" className="w-full px-14.5">
             <RoleCard
-              title="SOP for Admin Users"
+              title="Guide for Admin Users"
               subtitle="Section 5: Covers both Read-Only and Read-and-Write Admin roles"
               icon={FiSettings}
               bg={'bg-sop-500'}
@@ -922,7 +922,7 @@ export default function SOPHome() {
 
           <section id="section-06" className="w-full px-14.5">
             <RoleCard
-              title="SOP for Operator Users"
+              title="Guide for Operator Users"
               subtitle="Section 6: Data entry, submission, and corrections"
               icon={FaPencilAlt}
               bg={'bg-sop-600'}
@@ -1051,7 +1051,7 @@ export default function SOPHome() {
 
           <section id="section-07" className="w-full px-14.5">
             <RoleCard
-              title="SOP for Approver Users"
+              title="Guide for Approver Users"
               subtitle="Section 7: Review, approve, reject, and export"
               icon={FaCheckCircle}
               bg={'bg-sop-700'}
