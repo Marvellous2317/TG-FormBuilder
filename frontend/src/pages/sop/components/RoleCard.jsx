@@ -7,9 +7,13 @@ export default function RoleCard({
   bg,
   permissions = [],
   showPermissions = true,
+  id = '',
 }) {
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-sop-200">
+    <div
+      className="w-full overflow-hidden rounded-xl border border-sop-200"
+      id={id}
+    >
       <div className={`flex items-center gap-3 px-5 py-4 ${bg}`}>
         {Icon ? <Icon className="text-lg text-sop-800" /> : null}
         <div className="flex flex-col">

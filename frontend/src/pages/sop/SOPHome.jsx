@@ -11,6 +11,9 @@ import {
   FaLock,
   FaImage,
   FaSave,
+  FaMobileAlt,
+  FaBan,
+  FaSitemap,
 } from 'react-icons/fa';
 import SOPTopBar from './components/SOPTopBar';
 import SOPHero from './components/SOPHero';
@@ -24,6 +27,7 @@ import AdminTypeCard from './components/AdminTypeCard';
 import StagePanel from './components/StagePanel';
 import SOPCallout from './components/SOPCallout';
 import SOPNote from './components/SOPNote';
+import SOPSidebar from './components/SOPSidebar';
 import { FiSettings } from 'react-icons/fi';
 
 const accountSetupSteps = [
@@ -371,505 +375,803 @@ const approverTabs = [
     icon: FaLock,
   },
   {
-    id: 'approved-2',
-    title: 'Approved Tab',
+    id: 'rejected',
+    title: 'Rejected Tab',
     description:
-      'Entries that have completed the approval process and are now permanently locked.',
+      'Entries that was rejected by the approver. These gets logged in the rejected tab. ',
     icon: FaLock,
   },
+];
+
+const reviewApprovalSteps = [
+  {
+    title: 'Select a pending logbook sheet',
+    description: 'On dashboard, select an entry submitted by an Operator.',
+  },
+  {
+    title: 'Review the entry',
+    description:
+      "If a correction is needed, you may edit the entry's data directly before approving.",
+  },
+  {
+    title: 'Approve (if the entry is correct)',
+    description:
+      'Your signature applies automatically. The record becomes locked and non-editable immediately.',
+  },
+  {
+    title: 'Reject (if the Operator should fix it)',
+    description:
+      "Provide a clear, specific reason. It returns to the Operator's Pending tab for correction and re-submission.",
+  },
+];
+
+const exportSubmissionSteps = [
+  {
+    title: 'Go to the Approved tab',
+  },
+  {
+    title: 'Use the search function',
+    description: 'Filter by date or logbook type to locate the record.',
+  },
+  {
+    title: 'Open the record',
+  },
+  {
+    title: 'Tap Export as PDF',
+    description: 'The PDF includes all entries and the applied signatures.',
+  },
+];
+
+const generalNotes = [
+  {
+    title: 'Offline Access',
+    description:
+      'DigiForms can be downloaded as an offline app. Entries made offline sync once the device reconnects. An active connection is recommended for real-time sync.',
+    icon: FaMobileAlt,
+  },
+  {
+    title: 'No Spreadsheet Workarounds',
+    description:
+      'All entries must go through the application, online or offline. Do not revert to Excel or paper logs under any circumstances.',
+    icon: FaBan,
+  },
+  {
+    title: 'Locked Records',
+    description:
+      'Once approved, a record cannot be edited by the Operator or Approver. Only a Read-and-Write Admin can modify an approved form.',
+    icon: FaLock,
+  },
+  {
+    title: 'Signatures are Mandatory',
+    description:
+      'Operators must have a signature before submitting. Approvers must have one before approving. No exceptions.',
+    icon: FaPencilAlt,
+  },
+  {
+    title: 'Role-Based Visibility',
+    description:
+      'All users share one link. What each person sees is determined solely by the role assigned to their account.',
+    icon: FaEye,
+  },
+  {
+    title: 'Check Your Approval Routing',
+    description:
+      'Know whether your logbook is Sequential or Parallel, as this determines when and how approvers are notified.',
+    icon: FaSitemap,
+  },
+];
+
+const sopSections = [
+  { id: 'section-01', number: '01', title: 'Purpose' },
+  { id: 'section-02', number: '02', title: 'Scope' },
+  { id: 'section-03', number: '03', title: 'Account Setup & Login' },
+  {
+    id: 'section-04',
+    number: '04',
+    title: 'System Roles Overview',
+    children: [
+      { id: 'section-4-1', number: '4.1', title: 'Admin Admin: Read-Only' },
+      { id: 'section-4-2', number: '4.2', title: 'Admin: Read-and-Write' },
+      { id: 'section-4-3', number: '4.3', title: 'Operator' },
+      { id: 'section-4-4', number: '4.4', title: 'Approver' },
+    ],
+  },
+  {
+    id: 'section-05',
+    number: '05',
+    title: 'SOP for Admin Users',
+    children: [
+      { id: 'section-5-1', number: '5.1', title: 'Admin Types' },
+      { id: 'section-5-2', number: '5.2', title: 'Creating Users' },
+      { id: 'section-5-3', number: '5.3', title: 'Creating a Logbook' },
+      { id: 'section-5-4', number: '5.4', title: 'Approval Modes' },
+      { id: 'section-5-5', number: '5.5', title: 'Field types' },
+      { id: 'section-5-6', number: '5.6', title: 'Action menus' },
+    ],
+  },
+  {
+    id: 'section-06',
+    number: '06',
+    title: 'SOP for Operator Users',
+    children: [
+      { id: 'section-6-1', number: '6.1', title: 'Data Entry & Submission' },
+      { id: 'section-6-2', number: '6.2', title: 'Signature Setup' },
+      { id: 'section-6-3', number: '6.3', title: 'Editing an Entry' },
+    ],
+  },
+  {
+    id: 'section-07',
+    number: '07',
+    title: 'SOP for Approver Users',
+    children: [
+      {
+        id: 'section-7-1',
+        number: '7.1',
+        title: 'Reviewing and Approving Entries',
+      },
+      { id: 'section-7-2', number: '7.2', title: 'Signature Setup' },
+      {
+        id: 'section-7-3',
+        number: '7.3',
+        title: 'Exporting Approved Submissions',
+      },
+    ],
+  },
+  { id: 'section-08', number: '08', title: 'General Notes' },
 ];
 
 export default function SOPHome() {
   return (
     <div className="flex min-h-screen w-full flex-col font-inter bg-white">
       <SOPTopBar />
-      <SOPHero />
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SectionHeading number="01" title="Purpose" />
-        <p className="mt-9 text-[15px] leading-6.75">
-          This SOP defines the step-by-step procedures for using the Digital
-          Packaging Logbook application. It covers how each user type (Admin
-          Read-Only and Read-and-Write, Operator, and Approver) logs into and
-          operates the system, so that logbook records are created, submitted,
-          reviewed, and approved consistently and remain audit-ready.
-        </p>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SectionHeading number="02" title="Scope" />
-        <p className="mt-9 text-[15px] leading-6.75">
-          This SOP applies to all users of the Digital Packaging Logbook
-          application, regardless of assigned role. It covers login, account
-          setup, and day-to-day use of the application for each role. It does
-          not cover backend system configuration or IT infrastructure
-          administration.
-        </p>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SectionHeading
-          number="03"
-          title="Account Setup & Login"
-          badge="All roles"
-        />
 
-        <p className="mt-9 text-[15px] leading-6.75">
-          Every user, regardless of role, accesses the application through a{' '}
-          <span className="font-bold">single shared link</span>. What they see
-          after logging in is determined entirely by their assigned role.
-        </p>
+      <div className="flex w-full flex-1 items-start">
+        <SOPSidebar sections={sopSections} />
 
-        <StepTimeline steps={accountSetupSteps} />
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        {firstSectionImages.map((image) => (
-          <SOPScreenshot
-            key={image.id}
-            src={image.src}
-            alt={`${image.id} image`}
-          />
-        ))}
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SectionHeading number="04" title="System Roles Overview" />
-        <p className="mt-9 text-[15px] leading-6.75">
-          Four distinct roles govern what each user can see and do inside
-          DigiForms.
-        </p>
-
-        <div className="mt-9 flex flex-col gap-6">
-          {systemRoles.map((role) => (
-            <React.Fragment key={role.title}>
-              <RoleCard
-                title={role.title}
-                subtitle={role.subtitle}
-                icon={role.icon}
-                bg={role.bg}
-                permissions={role.permissions}
-              />
-              <SOPScreenshot src={role.src} alt={`${role.title} screenshot`} />
-            </React.Fragment>
-          ))}
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <RoleCard
-          title="SOP for Admin Users"
-          subtitle="Section 5: Covers both Read-Only and Read-and-Write Admin roles"
-          icon={FiSettings}
-          bg={'bg-sop-500'}
-          showPermissions={false}
-        />
-
-        <div className="mt-12">
-          <SubSectionHeading number="5.1" title="Admin Types" />
-          <div className="mt-6 grid grid-cols-2 gap-5">
-            {adminTypes.map((adminType) => (
-              <AdminTypeCard
-                key={adminType.title}
-                title={adminType.title}
-                description={adminType.description}
-                icon={adminType.icon}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <SubSectionHeading number="5.2" title="Creating Users" />
-          <StepTimeline steps={creatingUsersSteps} />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`11`} src={`/sop/11.png`} alt={`11 image`} />
-        <SOPScreenshot key={`12`} src={`/sop/12.png`} alt={`12 image`} />
-      </section>
-      <section className="w-full px-32">
-        <div className="mt-12">
-          <SubSectionHeading number="5.3" title="Creating a Logbook" />
-          <p className="mt-4 text-[15px] leading-6.75">
-            A logbook is created in two stages: the setup form, then defining
-            the data fields.
-          </p>
-
-          <div className="mt-6">
-            <StagePanel
-              label="Stage 1: Logbook Setup Form"
-              items={logbookSetupFields}
-            />
-          </div>
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`13`} src={`/sop/13.png`} alt={`13 image`} />
-        <SOPScreenshot key={`14`} src={`/sop/14.png`} alt={`14 image`} />
-      </section>
-      <section className="w-full px-32">
-        <div className="mt-6">
-          <SOPCallout>
-            The &ldquo;Requires Approval&rdquo; toggle when unselected are for
-            logbooks that are used purely for record-keeping and do not require
-            any approval process.
-          </SOPCallout>
-        </div>
-
-        <div className="mt-9">
-          <StagePanel
-            label="Stage 2: Define the Fields"
-            description="Once the setup form is submitted, define the data fields the logbook will capture. Each row needs:"
-            cards={logbookFieldDefinitions}
-          />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`15`} src={`/sop/15.png`} alt={`15 image`} />
-        <SOPScreenshot key={`16`} src={`/sop/16.png`} alt={`16 image`} />
-      </section>
-      <section className="w-full px-32">
-        <div className="mt-6">
-          <SOPCallout>
-            Operator and Approver assignment happens at the point of logbook
-            creation, not as a separate step in User Management.
-          </SOPCallout>
-        </div>
-
-        <div className="mt-12">
-          <SubSectionHeading number="5.4" title="Approval Modes" />
-          <div className="mt-6 grid grid-cols-2 gap-5">
-            {approvalModes.map((mode) => (
-              <AdminTypeCard
-                key={mode.title}
-                title={mode.title}
-                caption={mode.caption}
-                description={mode.description}
-                icon={mode.icon}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <SubSectionHeading number="5.5" title="Field types" />
-
-          <div className="mt-6">
-            <StagePanel
-              label="1. Dropdown"
-              description={
-                'A Dropdown field lets the Operator select from a predefined list instead of typing free text. These lists are called "sources," and they\'re reusable, a source created once (e.g., SKU, Plant, Months, Job Role, Status) can be used across multiple logbooks, forms, and records, and can be edited or deleted centrally at any time.'
-              }
-            />
-          </div>
-
-          <StepTimeline steps={dropdownFieldSteps} />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`17`} src={`/sop/17.png`} alt={`17 image`} />
-        <SOPScreenshot key={`18`} src={`/sop/18.png`} alt={`18 image`} />
-        <SOPScreenshot key={`19`} src={`/sop/19.png`} alt={`19 image`} />
-        <SOPScreenshot key={`20`} src={`/sop/20.png`} alt={`20 image`} />
-      </section>
-      <section className="w-full px-32">
-        <div className="mt-12">
-          <div className="mt-6">
-            <StagePanel
-              label="2. Formula"
-              description={
-                'A Formula field lets you set up a calculation using other fields on the same logbook, for whenever a logbook needs a computed value instead of manual entry.'
-              }
-            />
-          </div>
-
-          <StepTimeline steps={formularFieldSteps} />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`21`} src={`/sop/21.png`} alt={`21 image`} />
-        <SOPScreenshot key={`22`} src={`/sop/22.png`} alt={`22 image`} />
-      </section>
-      <section className="w-full px-32">
-        <div className="mt-12">
-          <div className="mt-6">
-            <StagePanel
-              label="3. Section"
-              description={
-                "A Section groups related fields together for inputs that belong as a set and, importantly, a section can be filled in more than once per submission, so it's used whenever the Operator may need to log multiple entries of the same group of fields within a single logbook record (e.g., logging several sightings or checks in one submission)."
-              }
-            />
-          </div>
-
-          <StepTimeline steps={sectionFieldSteps} />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`23`} src={`/sop/23.png`} alt={`23 image`} />
-        <SOPScreenshot key={`24`} src={`/sop/24.png`} alt={`24 image`} />
-      </section>
-
-      <SectionDivider />
-
-      <section className="w-full px-32">
-        <div className="mt-12">
-          <div className="mt-6">
-            <StagePanel
-              label="4. Section Formula"
-              description={
-                'A Section Formula runs a calculation across all the entries of one specific field within a section, since a section can have multiple entries, this is how you get a single calculated value (e.g., a total or average) out of every instance of that field, rather than calculating across separate standalone fields.'
-              }
-            />
-          </div>
-
-          <StepTimeline steps={sectionFormularFieldSteps} />
-        </div>
-      </section>
-      <SectionDivider />
-      <section className="w-full px-32">
-        <SOPScreenshot key={`25`} src={`/sop/25.png`} alt={`25 image`} />
-        <SOPScreenshot key={`26`} src={`/sop/26.png`} alt={`26 image`} />
-        <SOPScreenshot key={`27`} src={`/sop/27.png`} alt={`27 image`} />
-      </section>
-
-      <SectionDivider />
-
-      <section className="w-full px-32">
-        <SubSectionHeading number="5.6" title="Action menus" />
-
-        <div className="my-6">
-          <StagePanel
-            label="1. Export"
-            description={
-              'Exports all submissions for a specific date range you select (Start date/End date), delivered as an XLS file.'
-            }
-          />
-        </div>
-
-        <section className="w-full">
-          <SOPScreenshot key={`28`} src={`/sop/28.png`} alt={`28 image`} />
-          <SOPScreenshot key={`29`} src={`/sop/29.png`} alt={`29 image`} />
-        </section>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="2. Entries"
-            description={
-              'Opens the individual data entries already logged for that logbook, where they can be edited.'
-            }
-          />
-        </div>
-
-        <section className="w-full">
-          <SOPScreenshot key={`30`} src={`/sop/30.png`} alt={`30 image`} />
-        </section>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="3. Edit log"
-            description={
-              "Edits the logbook's own configuration details (title, document number, whether approval is required, etc.) rather than the entries themselves."
-            }
-          />
-        </div>
-
-        <section className="w-full">
-          <SOPScreenshot key={`31`} src={`/sop/31.png`} alt={`31 image`} />
-        </section>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="4. Delete  log"
-            description={'Deletes the logbook but can always be restored.'}
-          />
-        </div>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="5. Duplicate"
-            description={
-              'Creates a copy of the logbook as a starting point for a new one.'
-            }
-          />
-        </div>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="6. Submissions"
-            description={
-              'Shows every submission made by Operators that has been approved by an Approver, including who approved it and when.'
-            }
-          />
-        </div>
-
-        <section className="w-full">
-          <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`32 image`} />
-          <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`33 image`} />
-        </section>
-      </section>
-
-      <section className="w-full px-32">
-        <div className="my-6">
-          <StagePanel
-            label="7. Version History"
-            description={
-              'Shows a log of every past version of how the form itself was built. Selecting a version shows the exact field configuration at that point in time (including saved formulas, section fields, and dropdown sources), and you can tap Preview Form to see exactly how an Operator would have seen the form at that version, not just the current version.'
-            }
-          />
-        </div>
-
-        <section className="w-full">
-          <SOPScreenshot key={`34`} src={`/sop/34.png`} alt={`34 image`} />
-          <SOPScreenshot key={`35`} src={`/sop/35.png`} alt={`35 image`} />
-          <SOPScreenshot key={`36`} src={`/sop/36.png`} alt={`36 image`} />
-        </section>
-      </section>
-
-      <SectionDivider />
-
-      <section className="w-full px-32">
-        <RoleCard
-          title="SOP for Operator Users"
-          subtitle="Section 6: Data entry, submission, and corrections"
-          icon={FaPencilAlt}
-          bg={'bg-sop-600'}
-          showPermissions={false}
-        />
-
-        <div className="mt-9 flex flex-col gap-5">
-          <AdminTypeCard
-            title="Dashboard"
-            description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
-            icon={FaDesktop}
-          />
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {operatorTabs.map((tab) => (
-              <AdminTypeCard
-                key={tab.id}
-                title={tab.title}
-                description={tab.description}
-                icon={tab.icon}
-              />
-            ))}
-          </div>
-
-          <SOPScreenshot key={`37`} src={`/sop/37.png`} alt={`37 image`} />
-        </div>
-
-        <div className="mt-12">
-          <SubSectionHeading number="6.1" title="Data Entry & Submission" />
-
-          <StepTimeline steps={dataEntrySteps} />
-
-          <div className="my-9">
-            <SOPNote lead="Do this before anything else.">
-              You cannot submit an entry without a signature set up on your
-              account.
-            </SOPNote>
-          </div>
-
-          <section className="w-full">
-            <SOPScreenshot key={`38`} src={`/sop/38.png`} alt={`38 image`} />
-            <SOPScreenshot key={`39`} src={`/sop/39.png`} alt={`39 image`} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <SOPHero />
+          <SectionDivider />
+          <section id="section-01" className="w-full px-14.5">
+            <SectionHeading number="01" title="Purpose" />
+            <p className="mt-9 text-[15px] leading-6.75">
+              This SOP defines the step-by-step procedures for using the Digital
+              Packaging Logbook application. It covers how each user type (Admin
+              Read-Only and Read-and-Write, Operator, and Approver) logs into
+              and operates the system, so that logbook records are created,
+              submitted, reviewed, and approved consistently and remain
+              audit-ready.
+            </p>
           </section>
-        </div>
-
-        <div className="mt-12">
-          <SubSectionHeading
-            number="6.2"
-            title="Signature Setup (Required Before First Submission)"
-          />
-
-          <div className="mt-6 grid grid-cols-3 gap-5">
-            {signatureSetupOptions.map((option) => (
-              <AdminTypeCard
-                key={option.title}
-                title={option.title}
-                description={option.description}
-                icon={option.icon}
-              />
-            ))}
-          </div>
-
-          <section className="w-full my-6">
-            <SOPScreenshot key={`40`} src={`/sop/40.png`} alt={`40 image`} />
-            <SOPScreenshot key={`41`} src={`/sop/41.png`} alt={`41 image`} />
+          <SectionDivider />
+          <section id="section-02" className="w-full px-14.5">
+            <SectionHeading number="02" title="Scope" />
+            <p className="mt-9 text-[15px] leading-6.75">
+              This SOP applies to all users of the Digital Packaging Logbook
+              application, regardless of assigned role. It covers login, account
+              setup, and day-to-day use of the application for each role. It
+              does not cover backend system configuration or IT infrastructure
+              administration.
+            </p>
           </section>
-        </div>
+          <SectionDivider />
+          <section id="section-03" className="w-full px-14.5">
+            <SectionHeading
+              number="03"
+              title="Account Setup & Login"
+              badge="All roles"
+            />
 
-        <div className="mt-12">
-          <SubSectionHeading number="6.3" title="Editing an Entry" />
+            <p className="mt-9 text-[15px] leading-6.75">
+              Every user, regardless of role, accesses the application through a{' '}
+              <span className="font-bold">single shared link</span>. What they
+              see after logging in is determined entirely by their assigned
+              role.
+            </p>
 
-          <div className="mt-6 grid grid-cols-2 gap-5">
-            {editSetupOptions.map((option) => (
-              <AdminTypeCard
-                key={option.title}
-                title={option.title}
-                description={option.description}
-                icon={option.icon}
-              />
-            ))}
-          </div>
-
-          <StepTimeline steps={editEntrySteps} />
-
-          <section className="w-full my-6">
-            <SOPScreenshot key={`42`} src={`/sop/42.png`} alt={`42 image`} />
-            <SOPScreenshot key={`43`} src={`/sop/43.png`} alt={`43 image`} />
+            <StepTimeline steps={accountSetupSteps} />
           </section>
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      <section className="w-full px-32">
-        <RoleCard
-          title="SOP for Approver Users"
-          subtitle="Section 7: Review, approve, reject, and export"
-          icon={FaCheckCircle}
-          bg={'bg-sop-700'}
-          showPermissions={false}
-        />
-
-        <div className="mt-9 flex flex-col gap-5">
-          <AdminTypeCard
-            title="Dashboard"
-            description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
-            icon={FaDesktop}
-          />
-
-          <div className="grid grid-cols-2 gap-5">
-            {approverTabs.map((tab) => (
-              <AdminTypeCard
-                key={tab.id}
-                title={tab.title}
-                description={tab.description}
-                icon={tab.icon}
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            {firstSectionImages.map((image) => (
+              <SOPScreenshot
+                key={image.id}
+                src={image.src}
+                alt={`${image.id} image`}
               />
             ))}
-          </div>
+          </section>
+          <SectionDivider />
+          <section id="section-04" className="w-full px-14.5">
+            <SectionHeading number="04" title="System Roles Overview" />
+            <p className="mt-9 text-[15px] leading-6.75">
+              Four distinct roles govern what each user can see and do inside
+              DigiForms.
+            </p>
 
-          <SOPScreenshot key={`42`} src={`/sop/42.png`} alt={`42 image`} />
+            <div className="mt-9 flex flex-col gap-6">
+              {systemRoles.map((role, index) => (
+                <React.Fragment key={role.title}>
+                  <RoleCard
+                    title={role.title}
+                    subtitle={role.subtitle}
+                    icon={role.icon}
+                    bg={role.bg}
+                    permissions={role.permissions}
+                    id={`section-4-${index + 1}`}
+                  />
+                  <SOPScreenshot
+                    src={role.src}
+                    alt={`${role.title} screenshot`}
+                  />
+                </React.Fragment>
+              ))}
+            </div>
+          </section>
+          <SectionDivider />
+          <section id="section-05" className="w-full px-14.5">
+            <RoleCard
+              title="SOP for Admin Users"
+              subtitle="Section 5: Covers both Read-Only and Read-and-Write Admin roles"
+              icon={FiSettings}
+              bg={'bg-sop-500'}
+              showPermissions={false}
+            />
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-5-1"
+                number="5.1"
+                title="Admin Types"
+              />
+              <div className="mt-6 grid grid-cols-2 gap-5">
+                {adminTypes.map((adminType) => (
+                  <AdminTypeCard
+                    key={adminType.title}
+                    title={adminType.title}
+                    description={adminType.description}
+                    icon={adminType.icon}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-5-2"
+                number="5.2"
+                title="Creating Users"
+              />
+              <StepTimeline steps={creatingUsersSteps} />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`11`} src={`/sop/11.png`} alt={`11 image`} />
+            <SOPScreenshot key={`12`} src={`/sop/12.png`} alt={`12 image`} />
+          </section>
+          <section className="w-full px-14.5">
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-5-3"
+                number="5.3"
+                title="Creating a Logbook"
+              />
+              <p className="mt-4 text-[15px] leading-6.75">
+                A logbook is created in two stages: the setup form, then
+                defining the data fields.
+              </p>
+
+              <div className="mt-6">
+                <StagePanel
+                  label="Stage 1: Logbook Setup Form"
+                  items={logbookSetupFields}
+                />
+              </div>
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`13`} src={`/sop/13.png`} alt={`13 image`} />
+            <SOPScreenshot key={`14`} src={`/sop/14.png`} alt={`14 image`} />
+          </section>
+          <section className="w-full px-14.5">
+            <div className="mt-6">
+              <SOPCallout>
+                The &ldquo;Requires Approval&rdquo; toggle when unselected are
+                for logbooks that are used purely for record-keeping and do not
+                require any approval process.
+              </SOPCallout>
+            </div>
+
+            <div className="mt-9">
+              <StagePanel
+                label="Stage 2: Define the Fields"
+                description="Once the setup form is submitted, define the data fields the logbook will capture. Each row needs:"
+                cards={logbookFieldDefinitions}
+              />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`15`} src={`/sop/15.png`} alt={`15 image`} />
+            <SOPScreenshot key={`16`} src={`/sop/16.png`} alt={`16 image`} />
+          </section>
+          <section className="w-full px-14.5">
+            <div className="mt-6">
+              <SOPCallout>
+                Operator and Approver assignment happens at the point of logbook
+                creation, not as a separate step in User Management.
+              </SOPCallout>
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-5-4"
+                number="5.4"
+                title="Approval Modes"
+              />
+              <div className="mt-6 grid grid-cols-2 gap-5">
+                {approvalModes.map((mode) => (
+                  <AdminTypeCard
+                    key={mode.title}
+                    title={mode.title}
+                    caption={mode.caption}
+                    description={mode.description}
+                    icon={mode.icon}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-5-5"
+                number="5.5"
+                title="Field types"
+              />
+
+              <div className="mt-6">
+                <StagePanel
+                  label="1. Dropdown"
+                  description={
+                    'A Dropdown field lets the Operator select from a predefined list instead of typing free text. These lists are called "sources," and they\'re reusable, a source created once (e.g., SKU, Plant, Months, Job Role, Status) can be used across multiple logbooks, forms, and records, and can be edited or deleted centrally at any time.'
+                  }
+                />
+              </div>
+
+              <StepTimeline steps={dropdownFieldSteps} />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`17`} src={`/sop/17.png`} alt={`17 image`} />
+            <SOPScreenshot key={`18`} src={`/sop/18.png`} alt={`18 image`} />
+            <SOPScreenshot key={`19`} src={`/sop/19.png`} alt={`19 image`} />
+            <SOPScreenshot key={`20`} src={`/sop/20.png`} alt={`20 image`} />
+          </section>
+          <section className="w-full px-14.5">
+            <div className="mt-12">
+              <div className="mt-6">
+                <StagePanel
+                  label="2. Formula"
+                  description={
+                    'A Formula field lets you set up a calculation using other fields on the same logbook, for whenever a logbook needs a computed value instead of manual entry.'
+                  }
+                />
+              </div>
+
+              <StepTimeline steps={formularFieldSteps} />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`21`} src={`/sop/21.png`} alt={`21 image`} />
+            <SOPScreenshot key={`22`} src={`/sop/22.png`} alt={`22 image`} />
+          </section>
+          <section className="w-full px-14.5">
+            <div className="mt-12">
+              <div className="mt-6">
+                <StagePanel
+                  label="3. Section"
+                  description={
+                    "A Section groups related fields together for inputs that belong as a set and, importantly, a section can be filled in more than once per submission, so it's used whenever the Operator may need to log multiple entries of the same group of fields within a single logbook record (e.g., logging several sightings or checks in one submission)."
+                  }
+                />
+              </div>
+
+              <StepTimeline steps={sectionFieldSteps} />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`23`} src={`/sop/23.png`} alt={`23 image`} />
+            <SOPScreenshot key={`24`} src={`/sop/24.png`} alt={`24 image`} />
+          </section>
+
+          <SectionDivider />
+
+          <section className="w-full px-14.5">
+            <div className="mt-12">
+              <div className="mt-6">
+                <StagePanel
+                  label="4. Section Formula"
+                  description={
+                    'A Section Formula runs a calculation across all the entries of one specific field within a section, since a section can have multiple entries, this is how you get a single calculated value (e.g., a total or average) out of every instance of that field, rather than calculating across separate standalone fields.'
+                  }
+                />
+              </div>
+
+              <StepTimeline steps={sectionFormularFieldSteps} />
+            </div>
+          </section>
+          <SectionDivider />
+          <section className="w-full px-14.5">
+            <SOPScreenshot key={`25`} src={`/sop/25.png`} alt={`25 image`} />
+            <SOPScreenshot key={`26`} src={`/sop/26.png`} alt={`26 image`} />
+            <SOPScreenshot key={`27`} src={`/sop/27.png`} alt={`27 image`} />
+          </section>
+
+          <SectionDivider />
+
+          <section className="w-full px-14.5">
+            <SubSectionHeading
+              id="section-5-6"
+              number="5.6"
+              title="Action menus"
+            />
+
+            <div className="my-6">
+              <StagePanel
+                label="1. Export"
+                description={
+                  'Exports all submissions for a specific date range you select (Start date/End date), delivered as an XLS file.'
+                }
+              />
+            </div>
+
+            <section className="w-full">
+              <SOPScreenshot key={`28`} src={`/sop/28.png`} alt={`28 image`} />
+              <SOPScreenshot key={`29`} src={`/sop/29.png`} alt={`29 image`} />
+            </section>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="2. Entries"
+                description={
+                  'Opens the individual data entries already logged for that logbook, where they can be edited.'
+                }
+              />
+            </div>
+
+            <section className="w-full">
+              <SOPScreenshot key={`30`} src={`/sop/30.png`} alt={`30 image`} />
+            </section>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="3. Edit log"
+                description={
+                  "Edits the logbook's own configuration details (title, document number, whether approval is required, etc.) rather than the entries themselves."
+                }
+              />
+            </div>
+
+            <section className="w-full">
+              <SOPScreenshot key={`31`} src={`/sop/31.png`} alt={`31 image`} />
+            </section>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="4. Delete  log"
+                description={'Deletes the logbook but can always be restored.'}
+              />
+            </div>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="5. Duplicate"
+                description={
+                  'Creates a copy of the logbook as a starting point for a new one.'
+                }
+              />
+            </div>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="6. Submissions"
+                description={
+                  'Shows every submission made by Operators that has been approved by an Approver, including who approved it and when.'
+                }
+              />
+            </div>
+
+            <section className="w-full">
+              <SOPScreenshot key={`32`} src={`/sop/32.png`} alt={`32 image`} />
+              <SOPScreenshot key={`33`} src={`/sop/33.png`} alt={`33 image`} />
+            </section>
+          </section>
+
+          <section className="w-full px-14.5">
+            <div className="my-6">
+              <StagePanel
+                label="7. Version History"
+                description={
+                  'Shows a log of every past version of how the form itself was built. Selecting a version shows the exact field configuration at that point in time (including saved formulas, section fields, and dropdown sources), and you can tap Preview Form to see exactly how an Operator would have seen the form at that version, not just the current version.'
+                }
+              />
+            </div>
+
+            <section className="w-full">
+              <SOPScreenshot key={`34`} src={`/sop/34.png`} alt={`34 image`} />
+              <SOPScreenshot key={`35`} src={`/sop/35.png`} alt={`35 image`} />
+              <SOPScreenshot key={`36`} src={`/sop/36.png`} alt={`36 image`} />
+            </section>
+          </section>
+
+          <SectionDivider />
+
+          <section id="section-06" className="w-full px-14.5">
+            <RoleCard
+              title="SOP for Operator Users"
+              subtitle="Section 6: Data entry, submission, and corrections"
+              icon={FaPencilAlt}
+              bg={'bg-sop-600'}
+              showPermissions={false}
+            />
+
+            <div className="mt-9 flex flex-col gap-5">
+              <AdminTypeCard
+                title="Dashboard"
+                description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
+                icon={FaDesktop}
+              />
+
+              <div className="grid md:grid-cols-3 gap-5">
+                {operatorTabs.map((tab) => (
+                  <AdminTypeCard
+                    key={tab.id}
+                    title={tab.title}
+                    description={tab.description}
+                    icon={tab.icon}
+                  />
+                ))}
+              </div>
+
+              <SOPScreenshot key={`37`} src={`/sop/37.png`} alt={`37 image`} />
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-6-1"
+                number="6.1"
+                title="Data Entry & Submission"
+              />
+
+              <StepTimeline steps={dataEntrySteps} />
+
+              <div className="my-9">
+                <SOPNote lead="Do this before anything else.">
+                  You cannot submit an entry without a signature set up on your
+                  account.
+                </SOPNote>
+              </div>
+
+              <section className="w-full">
+                <SOPScreenshot
+                  key={`38`}
+                  src={`/sop/38.png`}
+                  alt={`38 image`}
+                />
+                <SOPScreenshot
+                  key={`39`}
+                  src={`/sop/39.png`}
+                  alt={`39 image`}
+                />
+              </section>
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-6-2"
+                number="6.2"
+                title="Signature Setup (Required Before First Submission)"
+              />
+
+              <div className="mt-6 grid grid-cols-3 gap-5">
+                {signatureSetupOptions.map((option) => (
+                  <AdminTypeCard
+                    key={option.title}
+                    title={option.title}
+                    description={option.description}
+                    icon={option.icon}
+                  />
+                ))}
+              </div>
+
+              <section className="w-full my-6">
+                <SOPScreenshot
+                  key={`40`}
+                  src={`/sop/40.png`}
+                  alt={`40 image`}
+                />
+                <SOPScreenshot
+                  key={`41`}
+                  src={`/sop/41.png`}
+                  alt={`41 image`}
+                />
+              </section>
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-6-3"
+                number="6.3"
+                title="Editing an Entry"
+              />
+
+              <div className="mt-6 grid grid-cols-2 gap-5">
+                {editSetupOptions.map((option) => (
+                  <AdminTypeCard
+                    key={option.title}
+                    title={option.title}
+                    description={option.description}
+                    icon={option.icon}
+                  />
+                ))}
+              </div>
+
+              <StepTimeline steps={editEntrySteps} />
+
+              <section className="w-full my-6">
+                <SOPScreenshot
+                  key={`42`}
+                  src={`/sop/42.png`}
+                  alt={`42 image`}
+                />
+                <SOPScreenshot
+                  key={`43`}
+                  src={`/sop/43.png`}
+                  alt={`43 image`}
+                />
+              </section>
+            </div>
+          </section>
+
+          <SectionDivider />
+
+          <section id="section-07" className="w-full px-14.5">
+            <RoleCard
+              title="SOP for Approver Users"
+              subtitle="Section 7: Review, approve, reject, and export"
+              icon={FaCheckCircle}
+              bg={'bg-sop-700'}
+              showPermissions={false}
+            />
+
+            <div className="mt-9 flex flex-col gap-5">
+              <AdminTypeCard
+                title="Dashboard"
+                description="Gives an overview of activity across all logbooks. Shows all pending logs, approved logs, and rejected logs at the top. Followed by a table of every logbook/checklist assigned to that operator with its Department, Document Number and Frequency."
+                icon={FaDesktop}
+              />
+
+              <div className="grid grid-cols-2 gap-5">
+                {approverTabs.map((tab) => (
+                  <AdminTypeCard
+                    key={tab.id}
+                    title={tab.title}
+                    description={tab.description}
+                    icon={tab.icon}
+                  />
+                ))}
+              </div>
+
+              <SOPScreenshot key={`44`} src={`/sop/44.png`} alt={`44 image`} />
+            </div>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-7-1"
+                number="7.1"
+                title="Reviewing and Approving Entries"
+              />
+
+              <StepTimeline steps={reviewApprovalSteps} />
+            </div>
+
+            <section className="w-full my-6">
+              <SOPScreenshot key={`45`} src={`/sop/45.png`} alt={`45 image`} />
+              <SOPScreenshot key={`46`} src={`/sop/46.png`} alt={`46 image`} />
+            </section>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-7-2"
+                number="7.2"
+                title="Signature Setup (Required Before First Approval)"
+              />
+
+              <div className="mt-6">
+                <SOPNote lead="Set up your signature before your first approval.">
+                  You cannot approve an entry without one on your account.
+                </SOPNote>
+              </div>
+
+              <div className="mt-6 grid grid-cols-3 gap-5">
+                {signatureSetupOptions.map((option) => (
+                  <AdminTypeCard
+                    key={option.title}
+                    title={option.title}
+                    description={option.description}
+                    icon={option.icon}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <section className="w-full my-6">
+              <SOPScreenshot key={`47`} src={`/sop/47.png`} alt={`47 image`} />
+              <SOPScreenshot key={`48`} src={`/sop/48.png`} alt={`48 image`} />
+            </section>
+
+            <SOPCallout>
+              <span className="font-bold">Sequential:</span> an entry only
+              reaches you after every approver ahead of you has approved it. You
+              won&apos;t see it before then.{' '}
+              <span className="font-bold">Parallel:</span> all approvers see the
+              entry simultaneously; whoever responds first completes the
+              approval.
+            </SOPCallout>
+
+            <div className="mt-12">
+              <SubSectionHeading
+                id="section-7-3"
+                number="7.3"
+                title="Exporting Approved Submissions"
+              />
+
+              <StepTimeline steps={exportSubmissionSteps} />
+            </div>
+
+            <section className="w-full my-6">
+              <SOPScreenshot key={`49`} src={`/sop/49.png`} alt={`49 image`} />
+              <SOPScreenshot key={`50`} src={`/sop/50.png`} alt={`50 image`} />
+            </section>
+          </section>
+
+          <SectionDivider />
+
+          <section id="section-08" className="w-full px-14.5">
+            <SectionHeading
+              number="08"
+              title="General Notes"
+              badge="All roles"
+            />
+
+            <div className="mt-9 flex flex-col gap-4">
+              {generalNotes.map((note) => (
+                <AdminTypeCard
+                  key={note.title}
+                  title={note.title}
+                  description={note.description}
+                  icon={note.icon}
+                />
+              ))}
+            </div>
+          </section>
+          <SectionDivider />
         </div>
-      </section>
+      </div>
     </div>
   );
 }

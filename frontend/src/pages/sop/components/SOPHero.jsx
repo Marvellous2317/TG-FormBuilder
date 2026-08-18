@@ -12,18 +12,16 @@ export default function SOPHero({
   ];
 
   return (
-    <section className="w-full mt-10 px-32">
+    <section className="w-full mt-10 px-14.5">
       <div className="uppercase border rounded-full border-sop-400/25 bg-sop-400/8 text-sop-400 px-4 py-1.5 text-xs font-bold w-fit my-10">
         Controlled document
       </div>
 
       <h1 className="text-6xl font-extrabold flex flex-col mt-5">
-        <span>Standard</span>
-        <span className="text-sop-400">Operating</span>
-        <span>Procedure</span>
+        <span>Digiforms</span>
+        <span className="text-sop-400">Training</span>
+        <span>Document</span>
       </h1>
-
-      <p className="text-sop-800 mt-4.5">Digital Forms and Logbook Application.</p>
 
       <div className="mt-9 border-sop-200 rounded-xl border flex w-full">
         {meta.map((item, idx) => (

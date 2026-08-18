@@ -3,7 +3,7 @@ import { FaChevronRight } from 'react-icons/fa';
 
 export default function SOPTopBar({
   brand = 'Digiforms',
-  title = 'Standard Operating Procedure',
+  title = 'Digiforms Training Document',
   version = 'VERSION 1.0',
 }) {
   return (
