@@ -68,6 +68,13 @@ export const suspendCompany = async (companyId, payload) => {
   return data;
 };
 
+export const restoreCompany = async (companyId) => {
+  const { data } = await axiosInstance.put(
+    `/admin/companies/${companyId}/restore`,
+  );
+  return data;
+};
+
 export const activateCompany = async (companyId, payload) => {
   const { data } = await axiosInstance.put(
     `/admin/companies/${companyId}/activate`,
