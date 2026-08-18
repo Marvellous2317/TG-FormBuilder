@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
             element: <RoleRedirect />,
           },
           {
-            path: '/sop',
+            path: '/guide',
             element: (
               <GuestRoute>
                 <SOPHome />

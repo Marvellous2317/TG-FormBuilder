@@ -118,10 +118,10 @@ function Login() {
 
           <div className="flex items-center justify-center text-center my-2 w-full">
             <a
-              href="/sop"
+              href="/guide"
               className="text-sm underline text-primary-200 font-geist font-medium cursor-pointer"
             >
-              View the S.O.P
+              View the Guide
             </a>
           </div>
         </div>
