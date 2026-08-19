@@ -490,17 +490,42 @@ const sopSections = [
         children: [
           {
             id: 'section-5-3-1',
+            number: '5.3.1',
             title: 'Stage 1: Logbook Setup Form',
           },
           {
             id: 'section-5-3-2',
+            number: '5.3.2',
             title: 'Stage 2: Define the Fields',
           },
         ],
       },
       { id: 'section-5-4', number: '5.4', title: 'Approval Modes' },
-      { id: 'section-5-5', number: '5.5', title: 'Field types' },
-      { id: 'section-5-6', number: '5.6', title: 'Action menus' },
+      {
+        id: 'section-5-5',
+        number: '5.5',
+        title: 'Field types',
+        children: [
+          { id: 'section-5-5-1', number: '5.5.1', title: 'Dropdown' },
+          { id: 'section-5-5-2', number: '5.5.2', title: 'Formula' },
+          { id: 'section-5-5-3', number: '5.5.3', title: 'Section' },
+          { id: 'section-5-5-4', number: '5.5.4', title: 'Section Formula' },
+        ],
+      },
+      {
+        id: 'section-5-6',
+        number: '5.6',
+        title: 'Action menus',
+        children: [
+          { id: 'section-5-6-1', number: '5.6.1', title: 'Export' },
+          { id: 'section-5-6-2', number: '5.6.2', title: 'Entries' },
+          { id: 'section-5-6-3', number: '5.6.3', title: 'Edit Log' },
+          { id: 'section-5-6-4', number: '5.6.4', title: 'Delete Log' },
+          { id: 'section-5-6-5', number: '5.6.5', title: 'Duplicate' },
+          { id: 'section-5-6-6', number: '5.6.6', title: 'Submissions' },
+          { id: 'section-5-6-7', number: '5.6.7', title: 'Version History' },
+        ],
+      },
     ],
   },
   {
@@ -744,7 +769,7 @@ export default function SOPHome() {
                 title="Field types"
               />
 
-              <div className="mt-6">
+              <div className="mt-6" id="section-5-5-1">
                 <StagePanel
                   label="1. Dropdown"
                   description={
@@ -765,7 +790,7 @@ export default function SOPHome() {
           </section>
           <section className="w-full px-14.5">
             <div className="mt-12">
-              <div className="mt-6">
+              <div className="mt-6" id="section-5-5-2">
                 <StagePanel
                   label="2. Formula"
                   description={
@@ -784,7 +809,7 @@ export default function SOPHome() {
           </section>
           <section className="w-full px-14.5">
             <div className="mt-12">
-              <div className="mt-6">
+              <div className="mt-6" id="section-5-5-3">
                 <StagePanel
                   label="3. Section"
                   description={
@@ -806,7 +831,7 @@ export default function SOPHome() {
 
           <section className="w-full px-14.5">
             <div className="mt-12">
-              <div className="mt-6">
+              <div className="mt-6" id="section-5-5-4">
                 <StagePanel
                   label="4. Section Formula"
                   description={
@@ -834,7 +859,7 @@ export default function SOPHome() {
               title="Action menus"
             />
 
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-1">
               <StagePanel
                 label="1. Export"
                 description={
@@ -850,7 +875,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-2">
               <StagePanel
                 label="2. Entries"
                 description={
@@ -865,7 +890,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-3">
               <StagePanel
                 label="3. Edit log"
                 description={
@@ -880,7 +905,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-4">
               <StagePanel
                 label="4. Delete  log"
                 description={'Deletes the logbook but can always be restored.'}
@@ -889,7 +914,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-5">
               <StagePanel
                 label="5. Duplicate"
                 description={
@@ -900,7 +925,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-6">
               <StagePanel
                 label="6. Submissions"
                 description={
@@ -916,7 +941,7 @@ export default function SOPHome() {
           </section>
 
           <section className="w-full px-14.5">
-            <div className="my-6">
+            <div className="my-6" id="section-5-6-7">
               <StagePanel
                 label="7. Version History"
                 description={
