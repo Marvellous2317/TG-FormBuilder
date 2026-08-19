@@ -43,6 +43,8 @@ import SubmissionsManagement from '../../pages/admin/submissions/SubmissionsMana
 import ViewAdminEntries from '../../pages/admin/submissions/ViewAdminEntries';
 import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
+import GuestRoute from './GuestRoute';
+import SOPHome from '@/pages/sop/SOPHome';
 
 export const router = createBrowserRouter([
   {
@@ -57,8 +59,20 @@ export const router = createBrowserRouter([
             element: <RoleRedirect />,
           },
           {
+            path: '/guide',
+            element: (
+              <GuestRoute>
+                <SOPHome />
+              </GuestRoute>
+            ),
+          },
+          {
             path: '/login',
-            element: <Login />,
+            element: (
+              <GuestRoute>
+                <Login />
+              </GuestRoute>
+            ),
           },
           {
             path: '/logout',

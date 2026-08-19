@@ -19,6 +19,12 @@ export const useAuthStore = create(
   persist(
     (set) => ({
       ...initialState,
+      hasHydrated: false,
+      markHydrated: () =>
+        set((state) => ({
+          hasHydrated: true,
+          isAuthenticated: Boolean(state.accessToken && state.user),
+        })),
       setAuth: (payload) =>
         set(() => {
           const accessToken = payload?.data?.token ?? null;
@@ -53,8 +59,9 @@ export const useAuthStore = create(
           resetEmail: email,
         })),
       clearAuth: () =>
-        set(() => ({
+        set((state) => ({
           ...initialState,
+          hasHydrated: state.hasHydrated,
         })),
     }),
     {
@@ -68,6 +75,9 @@ export const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
         resetEmail: state.resetEmail,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.markHydrated();
+      },
     },
   ),
 );

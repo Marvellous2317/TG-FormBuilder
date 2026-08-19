@@ -49,6 +49,7 @@ export default function EditLogbookModal({
   checklistToEdit,
   setChecklistToEdit,
 }) {
+  console.log(checklistToEdit);
   const [formData, setFormData] = useState({
     logbookTitle: checklistToEdit?.title ?? '',
     documentNumber: checklistToEdit?.documentNumber ?? '',
@@ -65,7 +66,7 @@ export default function EditLogbookModal({
     approvers: getChecklistApprovers(checklistToEdit),
     issuedNumber: checklistToEdit?.issuedNumber || '',
     entityDisplayName: checklistToEdit?.entityDisplayName || '',
-    approvalRequired: checklistToEdit?.approvalRequired || true,
+    approvalRequired: checklistToEdit?.approvalRequired || false,
   });
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
@@ -89,7 +90,7 @@ export default function EditLogbookModal({
         approvers: getChecklistApprovers(checklistToEdit),
         issuedNumber: checklistToEdit?.issuedNumber || '',
         entityDisplayName: checklistToEdit?.entityDisplayName || '',
-        approvalRequired: checklistToEdit?.approvalRequired || true,
+        approvalRequired: checklistToEdit?.approvalRequired || false,
       });
     }
   }, [isEditChecklistModalOpen, checklistToEdit]);

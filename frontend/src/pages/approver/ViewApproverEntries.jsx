@@ -763,6 +763,7 @@ export default function ViewApproverEntries() {
                       entry={entry}
                       formData={formData}
                       setFormData={setFormData}
+                      readOnly={previousLocation === 'pending' ? false : true}
                     />
                   )}
                 </div>

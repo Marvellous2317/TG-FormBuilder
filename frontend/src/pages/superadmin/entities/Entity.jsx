@@ -10,6 +10,7 @@ import Icons from '../../../assets/icons';
 import { RiEditLine } from 'react-icons/ri';
 import { GoDotFill } from 'react-icons/go';
 import SuspendEntityModal from './components/SuspendEntityModal';
+import DeleteEntityModal from './components/DeleteEntityModal';
 import {
   useActivateCompany,
   useCompany,
@@ -43,6 +44,7 @@ export default function Entity() {
   let { id: entityId } = useLoaderData();
 
   const [isSuspendEntityModal, setIsSuspendEntityModal] = useState(false);
+  const [isDeleteEntityModal, setIsDeleteEntityModal] = useState(false);
   const [isEditEntityModal, setIsEditEntityModal] = useState(false);
 
   const { data, isPending: isLoading } = useCompany(entityId);
@@ -52,6 +54,9 @@ export default function Entity() {
   const navigate = useNavigate();
 
   const { mutateAsync, isPending: isActivatingCompanyLoading } =
+    useActivateCompany();
+
+  const { mutateAsync: restoreCompany, isPending: isRestoringCompanyLoading } =
     useActivateCompany();
 
   const { data: companyAnalytics, isPending: isCompanyAnalyticsLoading } =
@@ -100,6 +105,15 @@ export default function Entity() {
     }
   };
 
+  const handleRestoreCompany = async () => {
+    try {
+      await restoreCompany({ companyId: companyData?.companyId });
+      showSuccess('Entity restored successfully');
+    } catch (error) {
+      console.error('Error', error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex w-full max-w-6xl items-start justify-start sm:mb-10">
@@ -138,24 +152,45 @@ export default function Entity() {
                 </p>
               </div>
             </div>
-            {companyData?.status === 'active' ? (
-              <Button
-                onClick={() => setIsSuspendEntityModal(true)}
-                className="flex w-full items-center justify-center rounded-[10px] bg-tertiary-500 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end"
-              >
-                Suspend entity
-              </Button>
-            ) : (
-              <Button
-                onClick={() => handleActivateCompany()}
-                className="flex w-full items-center justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end gap-2"
-              >
-                Activate entity
-                {isActivatingCompanyLoading && (
-                  <Loader size="border-white! h-4.5 w-4.5" />
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-3">
+              {companyData?.status === 'active' ? (
+                <Button
+                  onClick={() => setIsSuspendEntityModal(true)}
+                  className="flex w-full items-center justify-center rounded-[10px] bg-tertiary-500 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end"
+                >
+                  Suspend
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => handleActivateCompany()}
+                  className="flex w-full items-center justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end gap-2"
+                >
+                  Activate
+                  {isActivatingCompanyLoading && (
+                    <Loader size="border-white! h-4.5 w-4.5" />
+                  )}
+                </Button>
+              )}
+
+              {companyData?.status === 'active' ? (
+                <Button
+                  onClick={() => setIsDeleteEntityModal(true)}
+                  className="flex w-full items-center justify-center rounded-[10px] bg-tertiary-500 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end"
+                >
+                  Delete
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => handleRestoreCompany()}
+                  className="flex w-full items-center justify-center rounded-[10px] bg-primary-200 px-3 py-2.5 text-sm font-medium text-white sm:w-auto sm:justify-end gap-2"
+                >
+                  Restore
+                  {isActivatingCompanyLoading && (
+                    <Loader size="border-white! h-4.5 w-4.5" />
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
 
           <Divider className="my-6! w-full max-w-6xl" />
@@ -300,6 +335,12 @@ export default function Entity() {
       <SuspendEntityModal
         isSuspendEntityModal={isSuspendEntityModal}
         setIsSuspendEntityModal={setIsSuspendEntityModal}
+        companyId={companyData?.companyId}
+      />
+
+      <DeleteEntityModal
+        isDeleteEntityModal={isDeleteEntityModal}
+        setIsDeleteEntityModal={setIsDeleteEntityModal}
         companyId={companyData?.companyId}
       />
 
