@@ -14,6 +14,7 @@ import {
   Catalog,
   VersionChecklist,
   VersionChecklistEntry,
+  UserCompany,
 } from "../../../models/index.js";
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { sequelize } from "../../../config/database.js";
@@ -64,6 +65,24 @@ async function hydrateSubmittedEntryImages(submission) {
 
 export class AdminRepository {
 
+  // A user may only be attached to a checklist in a company they belong to.
+  // Membership lives in UserCompany; user.companyId is their active workspace.
+  static async _assertCompanyMembership(user, companyId, transaction) {
+    if (!companyId) return;
+    if (user.companyId === companyId) return;
+
+    const membership = await UserCompany.findOne({
+      where: { userId: user.userId, companyId },
+      transaction,
+    });
+    if (!membership) {
+      throw new ApplicationError(
+        `User ${user.userId} does not belong to the company this checklist belongs to`,
+        403
+      );
+    }
+  }
+
   static async _setChecklistApprovers(checklistId, companyId, approvers, transaction) {
     if (approvers === undefined) return [];
 
@@ -92,9 +111,10 @@ export class AdminRepository {
       if (approver.role?.roleName === "operator") {
         throw new ApplicationError(`User ${approverId} does not have the approval role`, 400);
       }
+      await this._assertCompanyMembership(approver, companyId, transaction);
 
       const step = typeof item === "object" && item.step !== undefined ? Number(item.step) : index;
-      rows.push({ checklistId, approverId, step, companyId: approver.companyId || companyId || null });
+      rows.push({ checklistId, approverId, step, companyId: companyId || approver.companyId || null });
       
       if (!existingApproverIds.includes(approverId)) {
         createdApprovers.push({ approver, step });
@@ -182,6 +202,7 @@ export class AdminRepository {
         if (operator.role?.roleName !== "operator") {
           throw new ApplicationError(`User ${operatorId} is not an operator`, 400);
         }
+        await this._assertCompanyMembership(operator, companyId, transaction);
         desired.push(operatorId);
         operatorMap.set(operatorId, operator);
       }
@@ -217,7 +238,7 @@ export class AdminRepository {
       if (existing) {
         if (!existing.active) {
           const assignment = await existing.update(
-            { active: true, assignedBy, companyId: operator.companyId || companyId || null },
+            { active: true, assignedBy, companyId: companyId || operator.companyId || null },
             { transaction },
           );
           created.push({ assignment, operator });
@@ -229,7 +250,7 @@ export class AdminRepository {
         checklistId,
         assignedTo: operatorId,
         assignedBy,
-        companyId: operator.companyId || companyId || null,
+        companyId: companyId || operator.companyId || null,
       }, { transaction });
       created.push({ assignment, operator });
     }

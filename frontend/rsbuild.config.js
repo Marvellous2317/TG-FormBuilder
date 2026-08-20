@@ -62,7 +62,7 @@ if (process.env.NODE_ENV === 'production') {
           name: 'DigiForms App',
           short_name: 'DigiForms',
           description: 'Digitalization form builder',
-          start_url: '/login',
+          start_url: '/',
           display: 'standalone',
           background_color: '#2463eb',
           theme_color: '#2463eb',

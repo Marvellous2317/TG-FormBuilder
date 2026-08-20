@@ -601,7 +601,6 @@ export default function CreateLogbookModal({
           <InputField
             label="Issued number"
             id="issuedNumber"
-            required
             className="mb-1"
             value={formData.issuedNumber}
             onChange={handleInputChange}
@@ -610,7 +609,6 @@ export default function CreateLogbookModal({
           <InputField
             label="Entity display name"
             id="entityDisplayName"
-            required
             className="mb-1"
             value={formData.entityDisplayName}
             onChange={handleInputChange}

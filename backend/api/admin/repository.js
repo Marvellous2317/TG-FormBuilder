@@ -79,7 +79,7 @@ export class AdminRepository {
   static async getAllRoles(user, { deleted } = {}) {
     const role = user.roleId ? await Role.findByPk(user.roleId) : null;
 
-    // Determine paranoid setting based on deleted filter
+
     let paranoid = true;
     let deletedAtCondition = null;
 
@@ -90,7 +90,7 @@ export class AdminRepository {
       paranoid = false;
     }
 
-    if (role?.roleName === "superAdmin") {
+    if (role?.roleName === ROLE_SUPER_ADMIN) {
       try {
         const where = deletedAtCondition || {};
         const roles = await Role.findAll({
@@ -104,10 +104,14 @@ export class AdminRepository {
       }
     }
 
+
+    const hidden = [ROLE_SUPER_ADMIN];
+    if (role?.roleName !== ROLE_CORPORATE_ADMIN) hidden.push(ROLE_CORPORATE_ADMIN);
+
     try {
       const where = {
         isActive: true,
-        roleName: { [Op.notIn]: ["superAdmin"] },
+        roleName: { [Op.notIn]: hidden },
       };
       if (deletedAtCondition) {
         Object.assign(where, deletedAtCondition);

@@ -27,7 +27,7 @@ export default function CreateAdminUserModal({
     role: {},
     entity: {},
     department: {},
-    accessLevel: '',
+    accessLevel: 'read_write',
   });
 
   const [entitySearchInput, setEntitySearchInput] = useState('');
@@ -145,7 +145,15 @@ export default function CreateAdminUserModal({
   };
 
   const handleSubmit = async () => {
-    const { firstName, lastName, email, role, entity, department } = formData;
+    const {
+      firstName,
+      lastName,
+      email,
+      role,
+      entity,
+      department,
+      accessLevel,
+    } = formData;
 
     if (
       !firstName ||
@@ -164,13 +172,15 @@ export default function CreateAdminUserModal({
     }
 
     try {
+      const companyId = isFromAdmin ? user.companyId : entity.companyId;
       await mutateAsync({
         firstName,
         lastName,
         email,
         roleId: role?.roleId,
-        companyId: isFromAdmin ? selectedEntity?.companyId : entity?.companyId,
+        companyId,
         department: department.label,
+        accessLevel,
       });
       showSuccess('Admin User created successfully');
       handleCloseModal();
@@ -194,10 +204,6 @@ export default function CreateAdminUserModal({
     setDepartmentSearch('');
     setIsCreateUserModalOpen(false);
   };
-
-  const selectedEntity = companiesList.find(
-    (company) => company.companyId === user.companyId,
-  );
 
   return (
     <Modal
@@ -254,30 +260,37 @@ export default function CreateAdminUserModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full items-center relative">
+          {isFromAdmin ? (
             <InputField
               label="Entity"
               id="entity"
               className=""
-              value={
-                isFromAdmin
-                  ? selectedEntity?.companyId
-                  : formData.entity?.companyId
-              }
-              required
-              disabled={isLoadingEntities || isFromAdmin}
-              options={companiesList}
-              type="select"
-              searchable
-              onExternalSearchChange={setEntitySearchInput}
-              onLoadMore={fetchNextEntitiesPage}
-              hasNextPage={hasNextEntitiesPage}
-              isFetchingNextPage={isFetchingNextEntitiesPage}
-              onChange={(e) => handleSetEntity(e.target.value)}
+              value={user?.company?.companyName}
               readOnly={isFromAdmin}
+              disabled={isFromAdmin}
+              onChange={handleInputChange}
             />
-            {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
-          </div>
+          ) : (
+            <div className="flex gap-2 w-full items-center relative">
+              <InputField
+                label="Entity"
+                id="entity"
+                className=""
+                value={formData.entity?.companyId}
+                required
+                disabled={isLoadingEntities}
+                options={companiesList}
+                type="select"
+                searchable
+                onExternalSearchChange={setEntitySearchInput}
+                onLoadMore={fetchNextEntitiesPage}
+                hasNextPage={hasNextEntitiesPage}
+                isFetchingNextPage={isFetchingNextEntitiesPage}
+                onChange={(e) => handleSetEntity(e.target.value)}
+              />
+              {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
+            </div>
+          )}
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField
