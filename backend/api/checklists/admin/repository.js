@@ -23,6 +23,22 @@ import { AzureImageDownloader, uploadChecklistImageValue } from "../../../utils/
 
 const isOptionalSubmittedEntry = (entry) => entry?.image || entry?.section_formular || entry?.type === "image" || entry?.type === "section_formular";
 
+// The application-level duplicate check is a read followed by a write, so two
+// concurrent requests can both pass it. The unique index is the real guarantee —
+// translate its error into the same 400 the pre-check would have returned.
+function asDuplicateChecklistError(error) {
+  if (error?.name !== "SequelizeUniqueConstraintError") return null;
+
+  const fields = Object.keys(error.fields || {});
+  if (fields.includes("documentNumber")) {
+    return new ApplicationError("Document number already exists for this company", 400);
+  }
+  if (fields.includes("title")) {
+    return new ApplicationError("Checklist with the same title already exists for this company", 400);
+  }
+  return new ApplicationError("Checklist already exists", 400);
+}
+
 function deriveAssignmentStatus(submissions = []) {
   if (!submissions || submissions.length === 0) return "pending";
   const latest = submissions[0];
@@ -348,6 +364,7 @@ export class AdminRepository {
     try {
       const existing = await Checklist.findOne({
         where: {
+          companyId : companyId,
           [Op.or]: [
             { documentNumber },
             { title }
@@ -431,7 +448,204 @@ export class AdminRepository {
     } catch (error) {
       await transaction.rollback();
       if (error instanceof ApplicationError) throw error;
+      const duplicate = asDuplicateChecklistError(error);
+      if (duplicate) throw duplicate;
       throw new ApplicationError(error.message || "Failed to create checklist", 500);
+    }
+  }
+
+
+  static async searchChecklistByDocumentNumber({ documentNumber, companyIds, isSuperAdmin }) {
+    try {
+      const where = { documentNumber };
+      if (!isSuperAdmin) where.companyId = { [Op.in]: companyIds };
+
+      const checklists = await Checklist.findAll({
+        where,
+        include: [
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: Department, as: "department", attributes: ["departmentId", "departmentName"] },
+          { model: User, as: "creator", attributes: ["userId", "firstName", "lastName"] },
+          {
+            model: ChecklistEntry,
+            as: "entries",
+            separate: true,
+            order: [["order", "ASC"]],
+          },
+        ],
+        order: [["createdAt", "ASC"]],
+      });
+
+
+      if (checklists.length === 0) {
+        throw new ApplicationError("Checklist not found for this document number", 404);
+      }
+
+            return { checklists, total: checklists.length, checklist: checklists[0] };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      throw new ApplicationError("Failed to search checklist", 500);
+    }
+  }
+
+    static async duplicateChecklist({
+    sourceChecklistId, title, documentNumber, issuedNumber, entityDisplayName,
+    companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
+    approvers, operators, entries, createdBy, isSuperAdmin,
+  }) {
+    const transaction = await sequelize.transaction();
+
+    try {
+      let source = null;
+      if (sourceChecklistId) {
+        source = await Checklist.findByPk(sourceChecklistId, {
+          include: [{ model: ChecklistEntry, as: "entries" }],
+          transaction,
+        });
+        if (!source) throw new ApplicationError("Source checklist not found", 404);
+        if (!isSuperAdmin && source.companyId !== companyId) {
+          throw new ApplicationError("Source checklist belongs to another company", 403);
+        }
+      }
+
+      const pick = (value, sourceValue) => (value === undefined ? sourceValue : value);
+
+      const resolved = {
+        issuedNumber: pick(issuedNumber, source?.issuedNumber) ?? null,
+        entityDisplayName: pick(entityDisplayName, source?.entityDisplayName) ?? null,
+        departmentId: pick(departmentId, source?.departmentId) ?? null,
+        frequency: pick(frequency, source?.frequency) ?? null,
+        frequencyInterval: pick(frequencyInterval, source?.frequencyInterval) ?? null,
+        approvalMode: pick(approvalMode, source?.approvalMode) || "sequential",
+        approvalRequired: pick(approvalRequired, source?.approvalRequired) ?? true,
+      };
+
+      const existing = await Checklist.findOne({
+        where: {
+          companyId,
+          [Op.or]: [{ documentNumber }, { title }],
+        },
+        transaction,
+      });
+
+      if (existing) {
+        if (existing.documentNumber === documentNumber) {
+          throw new ApplicationError("Document number already exists for this company", 400);
+        }
+        throw new ApplicationError("Checklist with the same title already exists for this company", 400);
+      }
+
+      if (resolved.departmentId) {
+        const department = await Department.findByPk(resolved.departmentId, { transaction });
+        if (!department) throw new ApplicationError("Department not found", 404);
+      }
+
+      if (resolved.frequency === "hourly" && (!resolved.frequencyInterval || resolved.frequencyInterval < 1)) {
+        throw new ApplicationError("Frequency interval is required for hourly frequency and must be at least 1", 400);
+      }
+
+      const checklist = await Checklist.create(
+        {
+          title,
+          documentNumber,
+          issuedNumber: resolved.issuedNumber,
+          entityDisplayName: resolved.entityDisplayName,
+          companyId,
+          departmentId: resolved.departmentId,
+          frequency: resolved.frequency,
+          frequencyInterval: resolved.frequency === "hourly" ? resolved.frequencyInterval : null,
+          approvalMode: resolved.approvalMode,
+          approvalRequired: resolved.approvalRequired,
+          createdBy,
+        },
+        { transaction }
+      );
+
+      const sourceEntries = Array.isArray(entries)
+        ? entries
+        : [...(source?.entries || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+      let createdEntries = [];
+      if (sourceEntries.length > 0) {
+        const entryData = sourceEntries.map((e, index) => ({
+          checklistId: checklist.checklistId,
+          name: e.name,
+          type: e.type || "text",
+          section: e.section || null,
+          image: e.image || false,
+          section_formular: e.section_formular || null,
+          order: e.order ?? index,
+          required: e.required || false,
+          options: e.options || null,
+          formulaExpression: e.formulaExpression || null,
+          metadata: e.metadata || null,
+          config: e.config || null,
+        }));
+        createdEntries = await ChecklistEntry.bulkCreate(entryData, { transaction });
+      }
+
+      let resolvedApprovers = approvers;
+      if (resolvedApprovers === undefined && source) {
+        const sourceApprovers = await ChecklistApprover.findAll({
+          where: { checklistId: source.checklistId },
+          attributes: ["approverId", "step"],
+          transaction,
+        });
+        resolvedApprovers = sourceApprovers.map((a) => ({ approverId: a.approverId, step: a.step }));
+      }
+
+      let resolvedOperators = operators;
+      if (resolvedOperators === undefined && source) {
+        const sourceAssignments = await ChecklistAssignment.findAll({
+          where: { checklistId: source.checklistId, active: true },
+          attributes: ["assignedTo"],
+          transaction,
+        });
+        resolvedOperators = sourceAssignments.map((a) => a.assignedTo);
+      }
+
+      const createdApprovers = resolved.approvalRequired
+        ? await this._setChecklistApprovers(checklist.checklistId, companyId, resolvedApprovers, transaction)
+        : [];
+      const createdAssignments = await this._setChecklistOperators(
+        checklist.checklistId, companyId, resolvedOperators, createdBy, transaction
+      );
+
+      await transaction.commit();
+
+      for (const { operator } of createdAssignments) {
+        try {
+          await sendAssignmentEmail({
+            email: operator.email,
+            firstName: operator.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send assignment email:", emailError);
+        }
+      }
+
+      for (const { approver } of createdApprovers) {
+        try {
+          await sendApproverAssignmentEmail({
+            email: approver.email,
+            firstName: approver.firstName,
+            checklistTitle: checklist.title,
+            documentNumber: checklist.documentNumber,
+          });
+        } catch (emailError) {
+          console.error("Failed to send approver assignment email:", emailError);
+        }
+      }
+
+      return { checklist, entries: createdEntries, message: "Checklist duplicated successfully" };
+    } catch (error) {
+      await transaction.rollback();
+      if (error instanceof ApplicationError) throw error;
+      const duplicate = asDuplicateChecklistError(error);
+      if (duplicate) throw duplicate;
+      throw new ApplicationError(error.message || "Failed to duplicate checklist", 500);
     }
   }
 
@@ -766,6 +980,8 @@ export class AdminRepository {
     } catch (error) {
       await transaction.rollback();
       if (error instanceof ApplicationError) throw error;
+      const duplicate = asDuplicateChecklistError(error);
+      if (duplicate) throw duplicate;
       throw new ApplicationError("Failed to update checklist", 500);
     }
   }

@@ -161,9 +161,14 @@ class SheetWriter {
   }
 }
 
+// Returns false when the section held nothing, so the caller can skip its spacer.
 function writeSection(writer, presentation, entry, layout) {
   const fields = visibleFields(entry);
   const rows = sectionRows(entry);
+
+  // A section the operator never filled in would otherwise print as a heading
+  // over a column header with no data, or a column of blank labels.
+  if (!rows.length) return false;
 
   writer.heading(presentation.heading(sectionHeading(entry)));
 
@@ -173,7 +178,7 @@ function writeSection(writer, presentation, entry, layout) {
         writer.pair(presentation.label({ id: fieldId, name: fieldId }), formatValue(value));
       }
     }
-    return;
+    return true;
   }
 
   if (layout === "checks") {
@@ -183,7 +188,7 @@ function writeSection(writer, presentation, entry, layout) {
         fields.map((field) => [presentation.label(field), formatValue(cells[field.id], field.type)]),
       ),
     );
-    return;
+    return true;
   }
 
   if (layout === "pairs") {
@@ -191,13 +196,14 @@ function writeSection(writer, presentation, entry, layout) {
     for (const field of fields) {
       writer.pair(presentation.label(field), formatValue(cells[field.id], field.type));
     }
-    return;
+    return true;
   }
 
   writer.table(
     fields.map((field) => presentation.label(field)),
     rows.map((cells) => fields.map((field) => formatValue(cells[field.id], field.type))),
   );
+  return true;
 }
 
 function writeSubmission(writer, presentation, submission, entries, layouts, index) {
@@ -213,8 +219,9 @@ function writeSubmission(writer, presentation, submission, entries, layouts, ind
     const entry = entries[i];
 
     if (entry.type === "section") {
-      writeSection(writer, presentation, entry, layouts.get(entry.entryId) || "table");
-      writer.blank();
+      if (writeSection(writer, presentation, entry, layouts.get(entry.entryId) || "table")) {
+        writer.blank();
+      }
       continue;
     }
 
@@ -236,8 +243,13 @@ function writeSubmission(writer, presentation, submission, entries, layouts, ind
       continue;
     }
 
-    writer.heading(presentation.heading(titleCase(entry.name)));
-    writer.pair(presentation.label(entry), formatValue(entry.value, entry.type));
+    // A standalone entry carries one name, so heading + label repeat it ("NB"
+    // over "NB | SKU 2"). Only print the heading when a label override renamed
+    // the value row to something different.
+    const heading = presentation.heading(titleCase(entry.name));
+    const label = presentation.label(entry);
+    if (label !== heading) writer.heading(heading);
+    writer.pair(label, formatValue(entry.value, entry.type));
     writer.blank();
   }
 }
@@ -260,8 +272,7 @@ export class ExportRepository {
         if (endDate) submissionWhere.createdAt[Op.lte] = rangeEnd(endDate);
       }
 
-      // Newest first so the cap keeps the most recent submissions, then flipped
-      // back so the workbook still reads oldest to newest.
+
       const submissions = (
         await SubmittedChecklist.findAll({
           where: submissionWhere,
