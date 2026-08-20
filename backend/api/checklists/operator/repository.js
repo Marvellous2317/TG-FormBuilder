@@ -111,74 +111,74 @@ export class OperatorRepository {
       });
 
       if (!assignment) throw new ApplicationError("Assignment not found", 404);
+//disable frequency check 
+      // const { frequency, frequencyInterval } = assignment.checklist;
+      // if (frequency) {
+      //   const interval = Math.max(1, Number(frequencyInterval) || 1);
+      //   const lastSubmission = await SubmittedChecklist.findOne({
+      //     where: {
+      //       assignmentId,
+      //       submittedBy: userId,
+      //       submittedAt: { [Op.ne]: null },
+      //     },
+      //     order: [["submittedAt", "DESC"]],
+      //   });
 
-      const { frequency, frequencyInterval } = assignment.checklist;
-      if (frequency) {
-        const interval = Math.max(1, Number(frequencyInterval) || 1);
-        const lastSubmission = await SubmittedChecklist.findOne({
-          where: {
-            assignmentId,
-            submittedBy: userId,
-            submittedAt: { [Op.ne]: null },
-          },
-          order: [["submittedAt", "DESC"]],
-        });
+      //   if (lastSubmission?.submittedAt) {
+      //     const last = new Date(lastSubmission.submittedAt);
+      //     const now = new Date();
+      //     let blocked = false;
+      //     let retryMessage = "";
 
-        if (lastSubmission?.submittedAt) {
-          const last = new Date(lastSubmission.submittedAt);
-          const now = new Date();
-          let blocked = false;
-          let retryMessage = "";
+      //     if (frequency === "hourly") {
+      //       const windowMs = 60 * 60 * 1000 * interval;
+      //       const elapsed = now.getTime() - last.getTime();
+      //       if (elapsed < windowMs) {
+      //         blocked = true;
+      //         retryMessage = `Please try again in ${Math.ceil((windowMs - elapsed) / 60000)} minute(s).`;
+      //       }
+      //     } else if (frequency === "daily") {
+      //       const sameDay =
+      //         last.getFullYear() === now.getFullYear() &&
+      //         last.getMonth() === now.getMonth() &&
+      //         last.getDate() === now.getDate();
+      //       if (sameDay) {
+      //         blocked = true;
+      //         retryMessage = "Please try again tomorrow.";
+      //       }
+      //     } else if (frequency === "weekly") {
+      //       const getWeek = (d) => {
+      //         const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      //         const day = tmp.getUTCDay() || 7;
+      //         tmp.setUTCDate(tmp.getUTCDate() + 4 - day);
+      //         const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+      //         const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+      //         return `${tmp.getUTCFullYear()}-${weekNo}`;
+      //       };
+      //       if (getWeek(last) === getWeek(now)) {
+      //         blocked = true;
+      //         retryMessage = "Please try again next week.";
+      //       }
+      //     } else if (frequency === "monthly") {
+      //       const sameMonth =
+      //         last.getFullYear() === now.getFullYear() &&
+      //         last.getMonth() === now.getMonth();
+      //       if (sameMonth) {
+      //         blocked = true;
+      //         retryMessage = "Please try again next month.";
+      //       }
+      //     }
 
-          if (frequency === "hourly") {
-            const windowMs = 60 * 60 * 1000 * interval;
-            const elapsed = now.getTime() - last.getTime();
-            if (elapsed < windowMs) {
-              blocked = true;
-              retryMessage = `Please try again in ${Math.ceil((windowMs - elapsed) / 60000)} minute(s).`;
-            }
-          } else if (frequency === "daily") {
-            const sameDay =
-              last.getFullYear() === now.getFullYear() &&
-              last.getMonth() === now.getMonth() &&
-              last.getDate() === now.getDate();
-            if (sameDay) {
-              blocked = true;
-              retryMessage = "Please try again tomorrow.";
-            }
-          } else if (frequency === "weekly") {
-            const getWeek = (d) => {
-              const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-              const day = tmp.getUTCDay() || 7;
-              tmp.setUTCDate(tmp.getUTCDate() + 4 - day);
-              const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-              const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
-              return `${tmp.getUTCFullYear()}-${weekNo}`;
-            };
-            if (getWeek(last) === getWeek(now)) {
-              blocked = true;
-              retryMessage = "Please try again next week.";
-            }
-          } else if (frequency === "monthly") {
-            const sameMonth =
-              last.getFullYear() === now.getFullYear() &&
-              last.getMonth() === now.getMonth();
-            if (sameMonth) {
-              blocked = true;
-              retryMessage = "Please try again next month.";
-            }
-          }
-
-          if (blocked) {
-            const cadence =
-              interval > 1 ? `every ${interval} ${frequency.replace(/ly$/, "")}s` : frequency;
-            throw new ApplicationError(
-              `This checklist can only be submitted ${cadence}. ${retryMessage}`,
-              400
-            );
-          }
-        }
-      }
+      //     if (blocked) {
+      //       const cadence =
+      //         interval > 1 ? `every ${interval} ${frequency.replace(/ly$/, "")}s` : frequency;
+      //       throw new ApplicationError(
+      //         `This checklist can only be submitted ${cadence}. ${retryMessage}`,
+      //         400
+      //       );
+      //     }
+      //   }
+      // }
 
       const requiredEntries = assignment.checklist.entries.filter((e) => e.required && !isOptionalSubmittedEntry(e));
       const responseMap = new Map(data.map((r) => [r.entryId, r.value ?? r.image]));
