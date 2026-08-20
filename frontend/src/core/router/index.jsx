@@ -45,6 +45,8 @@ import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
 import GuestRoute from './GuestRoute';
 import SOPHome from '@/pages/sop/SOPHome';
+import WorkspaceLogin from '../../../public/WorkspaceLogin';
+
 
 export const router = createBrowserRouter([
   {
@@ -97,6 +99,14 @@ export const router = createBrowserRouter([
           {
             path: '/reset-password',
             element: <ResetPassword />,
+          },
+          {
+            path: '/workspace',
+            element: (
+              <GuestRoute>
+                <WorkspaceLogin />
+              </GuestRoute>
+            ),
           },
         ],
       },
