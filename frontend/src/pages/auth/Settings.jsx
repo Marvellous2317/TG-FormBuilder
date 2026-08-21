@@ -20,7 +20,9 @@ export default function Settings() {
   const { clearAuth, user } = useAuthStore();
   const { showSuccess, showError } = useToast();
 
-  const [selectedWorkspace, setSelectedWorkspace] = useState('');
+  const [selectedWorkspace, setSelectedWorkspace] = useState(
+    user?.companyId ?? user?.company?.companyId ?? '',
+  );
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -40,6 +42,13 @@ export default function Settings() {
 
   const { data: profile, isPending: isLoadingProfile } = useProfile();
   const profileData = profile?.data?.user;
+  const currentCompanyId =
+    profileData?.companyId ??
+    profileData?.company?.companyId ??
+    user?.companyId ??
+    user?.company?.companyId ??
+    '';
+  const activeWorkspace = selectedWorkspace || currentCompanyId;
 
   const workspaceCompanies = (user?.companies ?? []).map((c) => {
     return { label: c.companyName, value: c.companyId };
@@ -67,7 +76,7 @@ export default function Settings() {
     currentRole === 'corporate admin' || currentRole.includes('corporate');
 
   const handleWorkspaceSelectChange = async (companyId) => {
-    if (!companyId || companyId === selectedWorkspace) return;
+    if (!companyId || companyId === activeWorkspace) return;
 
     try {
       await switchWorkspace({ companyId });
@@ -108,17 +117,6 @@ export default function Settings() {
       role: user?.role?.roleName || '',
     });
   }, [user, profile]);
-
-  useEffect(() => {
-    const currentCompanyId =
-      profileData?.companyId ??
-      profileData?.company?.companyId ??
-      user?.companyId ??
-      user?.company?.companyId ??
-      '';
-
-    setSelectedWorkspace(currentCompanyId);
-  }, [profileData, user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -173,7 +171,7 @@ export default function Settings() {
                   name="workspace"
                   label="Workspace"
                   options={workspaceCompanies}
-                  value={selectedWorkspace}
+                  value={activeWorkspace}
                   onChange={(e) =>
                     handleWorkspaceSelectChange(e.target.value)
                   }
