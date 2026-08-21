@@ -172,7 +172,7 @@ export default function Settings() {
               {/* Workspace dropdown rendered only for Corporate Admin */}
               {isCorporateAdmin && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500 font-geist">
+                  <label className="text-xs mb-1 font-medium text-gray-500 font-geist">
                     Workspace
                   </label>
                   <DropdownSelect
@@ -184,6 +184,8 @@ export default function Settings() {
                   />
                 </div>
               )}
+
+             
             </div>
 
             <Button
@@ -337,7 +339,7 @@ export default function Settings() {
       />
 
       {/* Confirmation Modal for Switching Workspace */}
-      <DropdownModal
+      <DropdownSelect
         isOpen={isWorkspaceModalOpen}
         onClose={handleCancelSwitch}
         onConfirm={handleConfirmSwitch}
