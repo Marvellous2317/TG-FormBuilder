@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Button from '../src/shared/components/Button';
-import Images from '../src/assets/images';
-import Loader from '../src/shared/components/Loader';
-import useToast from '../src/shared/hooks/useToast';
+import Button from '../../shared/components/Button';
+import Images from '../../assets/images';
+import Loader from '../../shared/components/Loader';
+import useToast from '../../shared/hooks/useToast';
 
 const SAMPLE_WORKSPACES = [
   {
@@ -119,7 +119,6 @@ function WorkspaceLogin() {
                         <h4 className="font-geist text-sm font-medium text-gray-900">
                           {workspace.name}
                         </h4>
-                        
                       </div>
                     </div>
 

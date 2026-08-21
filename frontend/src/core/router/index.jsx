@@ -45,8 +45,7 @@ import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
 import GuestRoute from './GuestRoute';
 import SOPHome from '@/pages/sop/SOPHome';
-import WorkspaceLogin from '../../../public/WorkspaceLogin';
-
+import WorkspaceLogin from '../../pages/auth/WorkspaceLogin';
 
 export const router = createBrowserRouter([
   {
