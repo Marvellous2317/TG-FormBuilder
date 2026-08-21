@@ -335,17 +335,6 @@ export default function Settings() {
         setIsSignatureModalOpen={setIsSignatureModalOpen}
         toUpdate={true}
       />
-
-      {/* Confirmation Modal for Switching Workspace */}
-      <DropdownModal
-        isOpen={isWorkspaceModalOpen}
-        onClose={handleCancelSwitch}
-        onConfirm={handleConfirmSwitch}
-        title="Switch Workspace?"
-        targetName={
-          WORKSPACE_OPTIONS.find((w) => w.value === pendingWorkspace)?.label
-        }
-      />
     </div>
   );
 }

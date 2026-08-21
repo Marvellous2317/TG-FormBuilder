@@ -49,7 +49,6 @@ export default function EditLogbookModal({
   checklistToEdit,
   setChecklistToEdit,
 }) {
-  console.log(checklistToEdit);
   const [formData, setFormData] = useState({
     logbookTitle: checklistToEdit?.title ?? '',
     documentNumber: checklistToEdit?.documentNumber ?? '',

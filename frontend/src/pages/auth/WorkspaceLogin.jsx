@@ -3,6 +3,9 @@ import Button from '../../shared/components/Button';
 import Images from '../../assets/images';
 import Loader from '../../shared/components/Loader';
 import useToast from '../../shared/hooks/useToast';
+import { useAuthStore } from '@/shared/store/authStore';
+import { useSwitchWorkspace } from '@/shared/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const SAMPLE_WORKSPACES = [
   {
@@ -37,8 +40,15 @@ const SAMPLE_WORKSPACES = [
 
 function WorkspaceLogin() {
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
+  const { user } = useAuthStore();
+
+  const workspaceCompanies = user?.companies;
+
+  const navigate = useNavigate();
+
+  const { mutateAsync: switchWorkspace, isPending: isSwitchingWorkspace } =
+    useSwitchWorkspace();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -47,11 +57,13 @@ function WorkspaceLogin() {
       return;
     }
 
-    setIsSubmitting(true);
-    // Simulate workspace selection submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-    }, 1000);
+    try {
+      await switchWorkspace({ companyId: selectedWorkspace.companyId });
+      showSuccess('Workspace switched successfully');
+      navigate('/admin');
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -93,11 +105,12 @@ function WorkspaceLogin() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="max-h-64 overflow-y-auto rounded-2xl border border-gray-200 p-2 space-y-2">
-              {SAMPLE_WORKSPACES.map((workspace) => {
-                const isSelected = selectedWorkspace?.id === workspace.id;
+              {workspaceCompanies.map((workspace) => {
+                const isSelected =
+                  selectedWorkspace?.companyId === workspace.companyId;
                 return (
                   <div
-                    key={workspace.id}
+                    key={workspace.companyId}
                     onClick={() => setSelectedWorkspace(workspace)}
                     className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
                       isSelected
@@ -113,16 +126,16 @@ function WorkspaceLogin() {
                             : 'bg-gray-100 text-gray-600'
                         }`}
                       >
-                        {workspace.name.charAt(0)}
+                        {workspace.companyName.charAt(0)}
                       </div>
                       <div>
                         <h4 className="font-geist text-sm font-medium text-gray-900">
-                          {workspace.name}
+                          {workspace.companyName}
                         </h4>
                       </div>
                     </div>
 
-                    <div className="ml-3 flex-shrink-0">
+                    <div className="ml-3 shrink-0">
                       {isSelected ? (
                         <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-200 text-white">
                           <svg
@@ -151,20 +164,12 @@ function WorkspaceLogin() {
             <Button
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90 disabled:bg-primary disabled:opacity-50 flex items-center justify-center cursor-pointer"
-              disabled={!selectedWorkspace || isSubmitting}
+              disabled={!selectedWorkspace || isSwitchingWorkspace}
+              onClick={handleSubmit}
             >
-              {isSubmitting ? <Loader /> : 'Continue'}
+              {isSwitchingWorkspace ? <Loader /> : 'Continue'}
             </Button>
           </form>
-
-          {/* <div className="flex items-center justify-center text-center my-2 w-full">
-            <a
-              href="/guide"
-              className="text-sm underline text-primary-200 font-geist font-medium cursor-pointer"
-            >
-              View the Guide
-            </a>
-          </div> */}
         </div>
       </section>
     </div>
