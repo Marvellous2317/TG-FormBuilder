@@ -488,10 +488,18 @@ export class AdminRepository {
             as: "company",
             attributes: ["companyId", "companyName"],
           },
+          {
+            model: Company,
+            as: "companies",
+            attributes: ["companyId", "companyName"],
+            through: { attributes: [] },
+            required: false,
+          },
         ],
         limit,
         offset,
         order: [["createdAt", "DESC"]],
+        distinct: true,
         paranoid,
       });
 
