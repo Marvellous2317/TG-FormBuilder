@@ -9,7 +9,6 @@ import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
 import DropdownSelect from '../../shared/components/DropdownSelect';
-import DropdownModal from './components/DropdownModal';
 import clearAllCaches from '../../lib/clearCache';
 import { useQueryClient } from '@tanstack/react-query';
 
