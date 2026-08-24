@@ -74,6 +74,10 @@ export default function AdminLayout() {
       ? navDetailsRead
       : navDetails;
 
+  const workspaceName = user?.company?.companyName ?? 'DigiForms';
+  const isCorporateAdmin =
+    user?.role?.roleName.toLowerCase() === 'corporateadmin';
+
   return (
     <div className="flex h-screen w-full bg-white relative">
       {/* Mobile menu button */}
@@ -257,6 +261,11 @@ export default function AdminLayout() {
         <div className="pt-14 lg:pt-0 h-full relative">
           <Outlet />
         </div>
+        {isCorporateAdmin && (
+          <div className="absolute bottom-0 border-t shadow-lg w-full border-tertiary-400 font-geist flex items-center justify-center p-1 text-sm bg-white font-medium">
+            Current workspace - {workspaceName}
+          </div>
+        )}
       </main>
     </div>
   );
