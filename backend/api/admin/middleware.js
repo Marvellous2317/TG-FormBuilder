@@ -5,6 +5,30 @@ import ResponseManager from "../../utils/responseManager.js";
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// `companyId` accepts a single UUID string (legacy payload) or an array of UUIDs.
+// Returns the list; duplicates are rejected. An empty array means "no company".
+function normalizeCompanyIds(companyId) {
+  if (companyId === undefined || companyId === null || companyId === "") return [];
+
+  const list = Array.isArray(companyId) ? companyId : [companyId];
+  if (Array.isArray(companyId) && companyId.length === 0) return [];
+
+  const seen = new Set();
+  for (const id of list) {
+    if (typeof id !== "string" || !UUID_REGEX.test(id)) {
+      throw new ValidationError("Company ID must be a valid UUID");
+    }
+    // Reject rather than silently collapse: a repeated id means the caller
+    // built the payload wrong, and quietly fixing it hides that.
+    if (seen.has(id)) {
+      throw new ValidationError("Duplicate company ID: " + id);
+    }
+    seen.add(id);
+  }
+
+  return [...seen];
+}
+
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -102,12 +126,8 @@ export function validateAddUserMiddleware(req, res, next) {
       throw new ValidationError("Role ID must be a valid UUID");
     }
 
-    // Validate companyId if provided (UUID)
-    if (companyId !== undefined && companyId !== null) {
-      if (typeof companyId !== "string" || !UUID_REGEX.test(companyId)) {
-        throw new ValidationError("Company ID must be a valid UUID");
-      }
-    }
+    // Validate companyId if provided (single UUID or array of UUIDs)
+    normalizeCompanyIds(companyId);
 
     // Validate department if provided
     if (department !== undefined && department !== null) {
@@ -213,11 +233,8 @@ export function validateUpdateUserMiddleware(req, res, next) {
       }
     }
 
-    if (companyId !== undefined && companyId !== null && companyId !== "") {
-      if (typeof companyId !== "string" || !UUID_REGEX.test(companyId)) {
-        throw new ValidationError("Company ID must be a valid UUID");
-      }
-    }
+    // Single UUID or array of UUIDs
+    normalizeCompanyIds(companyId);
 
     if (department !== undefined && department !== null) {
       if (typeof department !== "string") {

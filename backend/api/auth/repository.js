@@ -1,8 +1,9 @@
 
 import { generateJWT, generateOpt, generateRefreshSecret, hashRefreshSecret, compareRefreshSecret, composeRefreshToken, parseRefreshToken, getRefreshTokenTtlMs } from "./helper.js";
 
-import { User, Verification, Role, Company, RefreshToken } from "../../models/index.js";
+import { User, Verification, Role, Company, RefreshToken, UserCompany } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
+import { ROLE_SUPER_ADMIN } from "../constants/roles.js";
 import config from "../../appConfig.js";
 import { sendPasswordMail, sendVerificationMail } from "../../views/index.js";
 import crypto from "crypto";
@@ -48,6 +49,12 @@ export class AuthRepository {
         include: [
           { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
           { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          {
+            model: Company,
+            as: "companies",
+            attributes: ["companyId", "companyName"],
+            through: { attributes: [] },
+          },
         ],
       });
 
@@ -60,7 +67,7 @@ export class AuthRepository {
       if (user.status === "pending") throw new ApplicationError("Account pending approval.", 403);
 
       const userData = user.toSafeJSON();
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       const { refreshToken } = await issueRefreshToken(
         user.userId,
         getRequestContext(request)
@@ -116,7 +123,7 @@ export class AuthRepository {
       const { otp, expiry } = generateOpt();
       await Verification.create({ userId: user.userId, otp, expiry });
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       const { refreshToken, refreshTokenExpiresAt } = await issueRefreshToken(
         user.userId,
         getRequestContext(request)
@@ -149,6 +156,12 @@ export class AuthRepository {
       include: [
         { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+        {
+          model: Company,
+          as: "companies",
+          attributes: ["companyId", "companyName"],
+          through: { attributes: [] },
+        },
       ],
     });
     if (!user) throw new ApplicationError("User not found", 404);
@@ -165,7 +178,7 @@ export class AuthRepository {
       await user.save();
       await otpRecord.destroy();
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       const userData = user.toSafeJSON();
 
       return {
@@ -192,7 +205,7 @@ export class AuthRepository {
       await Verification.create({ userId: user.userId, otp, expiry });
       await sendVerificationMail({ email: user.email, otp, firstName: user.firstName });
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       return { message: "OTP successfully sent.", token };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -221,7 +234,7 @@ export class AuthRepository {
       user.newLogin = false;
       await user.save();
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       return { message: "Password changed successfully", token };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -257,6 +270,12 @@ export class AuthRepository {
       include: [
         { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+        {
+          model: Company,
+          as: "companies",
+          attributes: ["companyId", "companyName"],
+          through: { attributes: [] },
+        },
       ],
     });
     if (!user) throw new ApplicationError("User not found", 404);
@@ -267,13 +286,70 @@ export class AuthRepository {
     record.replacedByTokenId = issued.refreshTokenId;
     await record.save();
 
-    const token = generateJWT(user.userId);
+    const token = generateJWT(user.userId, user.companyId);
     return {
       message: "Token refreshed",
       token,
       refreshToken: issued.refreshToken,
       user: user.toSafeJSON(),
     };
+  }
+
+  // Switches the caller's ACTIVE workspace (users.companyId) to another company
+  // they are a member of, and re-issues credentials with the same shape as signin.
+  static async switchWorkspace(userId, companyId, request) {
+    if (!userId) throw new ApplicationError("Authentication error", 401);
+    if (!companyId) throw new ValidationError("companyId is required");
+
+    const userIncludes = [
+      { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
+      { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+      {
+        model: Company,
+        as: "companies",
+        attributes: ["companyId", "companyName"],
+        through: { attributes: [] },
+      },
+    ];
+
+    try {
+      const user = await User.findByPk(userId, { include: userIncludes });
+      if (!user) throw new ApplicationError("User not found", 404);
+      if (user.status === "suspended")
+        throw new ApplicationError("Account suspended. Contact administrator.", 403);
+
+      const company = await Company.findByPk(companyId);
+      if (!company) throw new ApplicationError("Company not found", 404);
+      if (company.status === "suspended")
+        throw new ApplicationError("This company is suspended.", 403);
+
+      // superAdmin may enter any company; everyone else needs a membership row.
+      if (user.role?.roleName !== ROLE_SUPER_ADMIN) {
+        const membership = await UserCompany.findOne({ where: { userId, companyId } });
+        if (!membership)
+          throw new ApplicationError("You do not belong to this company", 403);
+      }
+
+      if (user.companyId !== companyId) {
+        user.companyId = companyId;
+        await user.save();
+      }
+
+      const refreshedUser = await User.findByPk(userId, { include: userIncludes });
+      const token = generateJWT(userId, companyId);
+      const { refreshToken } = await issueRefreshToken(userId, getRequestContext(request));
+
+      return {
+        token,
+        refreshToken,
+        user: refreshedUser.toSafeJSON(),
+        message: "Workspace switched successfully",
+        requiresPasswordChange: refreshedUser.newLogin === true,
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError || error instanceof ValidationError) throw error;
+      throw new ApplicationError(error.message || "Failed to switch workspace", 500);
+    }
   }
 
   static async signout(request) {

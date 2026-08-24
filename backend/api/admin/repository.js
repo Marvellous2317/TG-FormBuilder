@@ -9,8 +9,10 @@ import {
   // LEGACY: OperatorApprover (operator_approvers table) replaced by per-checklist approver flow.
   // OperatorApprover,
   SubmittedChecklist,
+  UserCompany,
 } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
+import { MULTI_COMPANY_ROLES, ROLE_CORPORATE_ADMIN, ROLE_SUPER_ADMIN } from "../constants/roles.js";
 
 import { generateJWT } from "../auth/helper.js";
 import { sendApprovalEmail, sendPasswordMail } from "../../views/index.js";
@@ -56,7 +58,7 @@ export class AdminRepository {
         throw new ApplicationError("Unauthorized access", 401);
       }
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       const requiresPasswordChange = userRaw.newLogin === true;
 
       return {
@@ -77,7 +79,7 @@ export class AdminRepository {
   static async getAllRoles(user, { deleted } = {}) {
     const role = user.roleId ? await Role.findByPk(user.roleId) : null;
 
-    // Determine paranoid setting based on deleted filter
+
     let paranoid = true;
     let deletedAtCondition = null;
 
@@ -88,7 +90,7 @@ export class AdminRepository {
       paranoid = false;
     }
 
-    if (role?.roleName === "superAdmin") {
+    if (role?.roleName === ROLE_SUPER_ADMIN) {
       try {
         const where = deletedAtCondition || {};
         const roles = await Role.findAll({
@@ -102,10 +104,14 @@ export class AdminRepository {
       }
     }
 
+
+    const hidden = [ROLE_SUPER_ADMIN];
+    if (role?.roleName !== ROLE_CORPORATE_ADMIN) hidden.push(ROLE_CORPORATE_ADMIN);
+
     try {
       const where = {
         isActive: true,
-        roleName: { [Op.notIn]: ["superAdmin"] },
+        roleName: { [Op.notIn]: hidden },
       };
       if (deletedAtCondition) {
         Object.assign(where, deletedAtCondition);
@@ -196,7 +202,7 @@ export class AdminRepository {
       const role = await Role.findByPk(roleId);
       if (!role) throw new ApplicationError("Role not found", 404);
 
-      const protectedRoles = ["operator", "approval", "admin", "superAdmin"];
+      const protectedRoles = ["operator", "approval", "admin", ROLE_CORPORATE_ADMIN, ROLE_SUPER_ADMIN];
       if (protectedRoles.includes(role.roleName)) {
         throw new ApplicationError("Cannot delete protected system role", 400);
       }
@@ -276,14 +282,51 @@ export class AdminRepository {
     }
   }
 
+  // Accepts `companyId` as a single UUID string or an array of UUIDs and returns
+  // a validated, de-duplicated list. Only MULTI_COMPANY_ROLES may hold more than one.
+  static async _resolveCompanyIds(role, companyId, transaction) {
+    const ids = Array.isArray(companyId)
+      ? [...new Set(companyId.filter(Boolean))]
+      : companyId
+        ? [companyId]
+        : [];
+
+    for (const id of ids) {
+      const company = await Company.findByPk(id, { transaction });
+      if (!company) throw new ValidationError(`Invalid company ID: ${id}`);
+    }
+
+    if (ids.length > 1 && !MULTI_COMPANY_ROLES.includes(role?.roleName)) {
+      throw new ValidationError(
+        `Only ${ROLE_CORPORATE_ADMIN} users can belong to more than one company`,
+      );
+    }
+
+    return ids;
+  }
+
+  static async _setUserCompanies(userId, companyIds, transaction) {
+    await UserCompany.destroy({ where: { userId }, transaction });
+    if (companyIds.length === 0) return;
+    await UserCompany.bulkCreate(
+      companyIds.map((cid) => ({ userId, companyId: cid })),
+      { transaction },
+    );
+  }
+
   static async addUser(
     admin,
     { email, firstName, lastName, roleId, companyId, department, accessLevel },
   ) {
+    const transaction = await sequelize.transaction();
+    let password;
+    let createdUser;
+
     try {
       const existingUser = await User.findOne({
         where: { email: email.toLowerCase().trim() },
         paranoid: false,
+        transaction,
       });
 
       if (existingUser) {
@@ -297,18 +340,15 @@ export class AdminRepository {
       }
 
       if (!roleId) throw new ValidationError("Role ID is required");
-      const role = await Role.findByPk(roleId);
+      const role = await Role.findByPk(roleId, { transaction });
       if (!role) throw new ValidationError("Invalid role ID");
 
-      if (companyId) {
-        const company = await Company.findByPk(companyId);
-        if (!company) throw new ValidationError("Invalid company ID");
-      }
+      const companyIds = await this._resolveCompanyIds(role, companyId, transaction);
 
-      const checkAdminRole = await Role.findByPk(admin.roleId);
+      const checkAdminRole = await Role.findByPk(admin.roleId, { transaction });
       if (
-        role.roleName === "superAdmin" &&
-        checkAdminRole.roleName !== "superAdmin"
+        role.roleName === ROLE_SUPER_ADMIN &&
+        checkAdminRole.roleName !== ROLE_SUPER_ADMIN
       ) {
         throw new ApplicationError(
           "Only SuperAdmin is Allowed to add SuperAdmin",
@@ -316,7 +356,7 @@ export class AdminRepository {
         );
       }
 
-      const password = generateRandomPassword();
+      password = generateRandomPassword();
 
       const user = User.build({
         email: email.toLowerCase(),
@@ -324,28 +364,34 @@ export class AdminRepository {
         lastName,
         status: "active",
         roleId,
-        companyId: companyId || null,
+        companyId: companyIds[0] || null,
         department: department || null,
         accessLevel: accessLevel || "read_write",
         newLogin: true,
       });
 
       await user.setPassword(password);
-      await user.save();
+      await user.save({ transaction });
 
-      sendPasswordMail({
-        email: user.email,
-        password,
-        firstName: user.firstName,
-      });
+      await this._setUserCompanies(user.userId, companyIds, transaction);
 
-      return { message: "User added successfully" };
+      await transaction.commit();
+      createdUser = user;
     } catch (error) {
+      await transaction.rollback();
       if (error instanceof ApplicationError || error instanceof ValidationError)
         throw error;
       console.log("Error in addUser:", error);
       throw new ApplicationError("Failed to add user", 500);
     }
+
+    sendPasswordMail({
+      email: createdUser.email,
+      password,
+      firstName: createdUser.firstName,
+    });
+
+    return { message: "User added successfully" };
   }
 
   static async getAllUsers(
@@ -442,23 +488,18 @@ export class AdminRepository {
             as: "company",
             attributes: ["companyId", "companyName"],
           },
-          // LEGACY: operator-approver mapping. Replaced by the per-checklist approver flow.
-          // {
-          //   model: OperatorApprover,
-          //   as: "operatorApprovers",
-          //   attributes: ["id"],
-          //   include: [
-          //     {
-          //       model: User,
-          //       as: "approver",
-          //       attributes: ["firstName", "lastName", "userId"],
-          //     },
-          //   ],
-          // },
+          {
+            model: Company,
+            as: "companies",
+            attributes: ["companyId", "companyName"],
+            through: { attributes: [] },
+            required: false,
+          },
         ],
         limit,
         offset,
         order: [["createdAt", "DESC"]],
+        distinct: true,
         paranoid,
       });
 
@@ -503,6 +544,7 @@ export class AdminRepository {
   }
 
   static async updateUser({ userId, data, admin }) {
+    const transaction = await sequelize.transaction();
     try {
       const firstName = (data.firstName || "").trim();
       const lastName = (data.lastName || "").trim();
@@ -513,7 +555,7 @@ export class AdminRepository {
       const status = data.status;
       const accessLevel = data.accessLevel;
 
-      const user = await User.findOne({ where: { userId } });
+      const user = await User.findOne({ where: { userId }, transaction });
       if (!user) throw new ApplicationError("User not found", 404);
 
       if (user.userId === admin.userId) {
@@ -527,18 +569,49 @@ export class AdminRepository {
       if (lastName) user.lastName = lastName;
       if (email) user.email = email;
 
+  
+      let effectiveRole = await Role.findByPk(user.roleId, { transaction });
+
       if (roleId) {
-        const role = await Role.findByPk(roleId);
+        const role = await Role.findByPk(roleId, { transaction });
         if (!role) throw new ValidationError("Invalid role ID");
+
+        const adminRole = await Role.findByPk(admin.roleId, { transaction });
+        if (
+          role.roleName === ROLE_SUPER_ADMIN &&
+          adminRole?.roleName !== ROLE_SUPER_ADMIN
+        ) {
+          throw new ApplicationError(
+            "Only SuperAdmin is Allowed to assign the SuperAdmin role",
+            403,
+          );
+        }
+
         user.roleId = roleId;
+        effectiveRole = role;
       }
 
       if (companyId !== undefined) {
-        if (companyId) {
-          const company = await Company.findByPk(companyId);
-          if (!company) throw new ValidationError("Invalid company ID");
+        const companyIds = await this._resolveCompanyIds(
+          effectiveRole,
+          companyId,
+          transaction,
+        );
+        await this._setUserCompanies(user.userId, companyIds, transaction);
+
+        user.companyId = companyIds.includes(user.companyId)
+          ? user.companyId
+          : companyIds[0] || null;
+      } else if (roleId && !MULTI_COMPANY_ROLES.includes(effectiveRole.roleName)) {
+        const memberships = await UserCompany.count({
+          where: { userId: user.userId },
+          transaction,
+        });
+        if (memberships > 1) {
+          throw new ValidationError(
+            `This user belongs to ${memberships} companies. Send a single companyId along with the new role to reduce their memberships.`,
+          );
         }
-        user.companyId = companyId || null;
       }
 
       if (department !== undefined) {
@@ -553,11 +626,14 @@ export class AdminRepository {
         user.accessLevel = accessLevel;
       }
 
-      await user.save();
+      await user.save({ transaction });
+      await transaction.commit();
       return { message: "User updated successfully" };
     } catch (error) {
+      await transaction.rollback();
       if (error instanceof ApplicationError || error instanceof ValidationError)
         throw error;
+      console.log(error)
       throw new ApplicationError("Failed to update user", 500);
     }
   }
@@ -628,91 +704,6 @@ export class AdminRepository {
     }
   }
 
-  /* LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
-  static async assignApprover(operatorId, approverId) {
-    try {
-      const operator = await User.findByPk(operatorId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!operator) throw new ApplicationError("Operator not found", 404);
-      if (operator.role?.roleName !== "operator") {
-        throw new ApplicationError("User is not an operator", 400);
-      }
-
-      const approver = await User.findByPk(approverId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!approver) throw new ApplicationError("Approver not found", 404);
-      if (approver.role?.roleName !== "approval") {
-        throw new ApplicationError(
-          "Selected user does not have approval role",
-          400,
-        );
-      }
-
-      const existing = await OperatorApprover.findOne({
-        where: { operatorId, approverId },
-      });
-      if (existing)
-        throw new ApplicationError(
-          "Approver is already assigned to this operator",
-          400,
-        );
-
-      await OperatorApprover.create({ operatorId, approverId });
-
-      return { message: "Approver assigned to operator successfully" };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to assign approver", 500);
-    }
-  }
-
-  static async unassignApprover(operatorId, approverId) {
-    try {
-      const record = await OperatorApprover.findOne({
-        where: { operatorId, approverId },
-      });
-      if (!record)
-        throw new ApplicationError(
-          "Approver is not assigned to this operator",
-          404,
-        );
-
-      await record.destroy();
-
-      return { message: "Approver unassigned from operator successfully" };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to unassign approver", 500);
-    }
-  }
-
-  static async getOperatorApprovers(operatorId) {
-    try {
-      const operator = await User.findByPk(operatorId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!operator) throw new ApplicationError("Operator not found", 404);
-
-      const approvers = await OperatorApprover.findAll({
-        where: { operatorId },
-        include: [
-          {
-            model: User,
-            as: "approver",
-            attributes: ["userId", "firstName", "lastName", "email"],
-          },
-        ],
-      });
-
-      return { approvers: approvers.map((r) => r.approver) };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to fetch approvers", 500);
-    }
-  }
-  */
 
   static async getAllCompanies({
     status,

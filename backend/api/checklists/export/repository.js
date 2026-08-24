@@ -7,7 +7,8 @@ import {
 import { ApplicationError } from "../../../utils/errorHandler.js";
 import { cleanText, presentationFor, sectionHeading, summaryHeading, titleCase } from "./presentation.js";
 
-const EXPORT_SUBMISSION_LIMIT = 1000;
+const DEFAULT_SUBMISSION_LIMIT = 100;
+const MAX_SUBMISSION_LIMIT = 500;
 
 const INK = "FF1F2933";
 const VALUE_INK = "FF0F766E";
@@ -20,8 +21,7 @@ const LEFT = { horizontal: "left", vertical: "middle" };
 
 const NUMERIC_FIELD_TYPES = new Set(["number", "formular"]);
 
-// The picker sends plain "YYYY-MM-DD", which parses to midnight — an end date of
-// the 17th would otherwise drop everything logged during the 17th.
+
 function rangeStart(value) {
   return new Date(value);
 }
@@ -34,9 +34,7 @@ function rangeEnd(value) {
   return date;
 }
 
-// Values are stored as `[{ "<fieldId>": { entryId, value } }]` — one object per
-// repeated row of the section. Key order in the stored JSON is not reliable, so
-// rows are keyed by field id and later read back in config.items order.
+
 function sectionRows(entry) {
   const raw = entry?.value;
   if (raw === null || raw === undefined || raw === "") return [];
@@ -64,15 +62,14 @@ function sectionRows(entry) {
     .filter((cells) => Object.values(cells).some((v) => v !== null && v !== undefined && String(v).trim() !== ""));
 }
 
-// Hidden helper fields (carton weights feeding a formula) never print.
+
 function visibleFields(entry) {
   const items = entry?.config?.items;
   if (!Array.isArray(items)) return [];
   return items.filter((item) => item?.config?.visible !== false);
 }
 
-// Submissions are ordered by the date the operator logged, not by when the form
-// was saved — a shift filled in late still belongs on its own day in the logbook.
+
 function recordDate(entries) {
   for (const entry of entries) {
     if (entry.type === "section") {
@@ -101,16 +98,11 @@ function formatValue(value, fieldType) {
     if (match) return `${match[3]}/${match[2]}/${match[1]}`;
   }
 
-  // Numbers land in the sheet as numbers so "934.20" prints as 934.2 and totals stay usable.
   if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
   return text;
 }
 
-// Layout is decided once per section for the whole workbook, so the same
-// section never prints as a table for one submission and a list for another.
-//   - every field an enum  -> "Check / Result" list
-//   - a single row of non-numeric fields -> label/value list (record header block)
-//   - anything else -> table with a header row
+
 function layoutFor(fields, maxRows) {
   if (fields.length && fields.every((field) => field.type === "enum")) return "checks";
   if (maxRows <= 1 && !fields.some((field) => NUMERIC_FIELD_TYPES.has(field.type))) return "pairs";
@@ -169,9 +161,14 @@ class SheetWriter {
   }
 }
 
+// Returns false when the section held nothing, so the caller can skip its spacer.
 function writeSection(writer, presentation, entry, layout) {
   const fields = visibleFields(entry);
   const rows = sectionRows(entry);
+
+  // A section the operator never filled in would otherwise print as a heading
+  // over a column header with no data, or a column of blank labels.
+  if (!rows.length) return false;
 
   writer.heading(presentation.heading(sectionHeading(entry)));
 
@@ -181,7 +178,7 @@ function writeSection(writer, presentation, entry, layout) {
         writer.pair(presentation.label({ id: fieldId, name: fieldId }), formatValue(value));
       }
     }
-    return;
+    return true;
   }
 
   if (layout === "checks") {
@@ -191,7 +188,7 @@ function writeSection(writer, presentation, entry, layout) {
         fields.map((field) => [presentation.label(field), formatValue(cells[field.id], field.type)]),
       ),
     );
-    return;
+    return true;
   }
 
   if (layout === "pairs") {
@@ -199,13 +196,14 @@ function writeSection(writer, presentation, entry, layout) {
     for (const field of fields) {
       writer.pair(presentation.label(field), formatValue(cells[field.id], field.type));
     }
-    return;
+    return true;
   }
 
   writer.table(
     fields.map((field) => presentation.label(field)),
     rows.map((cells) => fields.map((field) => formatValue(cells[field.id], field.type))),
   );
+  return true;
 }
 
 function writeSubmission(writer, presentation, submission, entries, layouts, index) {
@@ -221,13 +219,13 @@ function writeSubmission(writer, presentation, submission, entries, layouts, ind
     const entry = entries[i];
 
     if (entry.type === "section") {
-      writeSection(writer, presentation, entry, layouts.get(entry.entryId) || "table");
-      writer.blank();
+      if (writeSection(writer, presentation, entry, layouts.get(entry.entryId) || "table")) {
+        writer.blank();
+      }
       continue;
     }
 
     if (entry.type === "section_formular") {
-      // Consecutive rollups sharing a config.name print under one heading.
       const group = [entry];
       while (
         i + 1 < entries.length &&
@@ -245,8 +243,13 @@ function writeSubmission(writer, presentation, submission, entries, layouts, ind
       continue;
     }
 
-    writer.heading(presentation.heading(titleCase(entry.name)));
-    writer.pair(presentation.label(entry), formatValue(entry.value, entry.type));
+    // A standalone entry carries one name, so heading + label repeat it ("NB"
+    // over "NB | SKU 2"). Only print the heading when a label override renamed
+    // the value row to something different.
+    const heading = presentation.heading(titleCase(entry.name));
+    const label = presentation.label(entry);
+    if (label !== heading) writer.heading(heading);
+    writer.pair(label, formatValue(entry.value, entry.type));
     writer.blank();
   }
 }
@@ -256,12 +259,11 @@ export class ExportRepository {
     try {
       if (!documentNumber) throw new ApplicationError("documentNumber is required", 400);
 
-      let submissionLimit = limit !== undefined ? Number(limit) : EXPORT_SUBMISSION_LIMIT;
-      if (!Number.isFinite(submissionLimit) || submissionLimit < 1) submissionLimit = EXPORT_SUBMISSION_LIMIT;
-      if (submissionLimit > EXPORT_SUBMISSION_LIMIT) submissionLimit = EXPORT_SUBMISSION_LIMIT;
+      let submissionLimit = limit !== undefined ? Number(limit) : DEFAULT_SUBMISSION_LIMIT;
+      if (!Number.isFinite(submissionLimit) || submissionLimit < 1) submissionLimit = DEFAULT_SUBMISSION_LIMIT;
+      if (submissionLimit > MAX_SUBMISSION_LIMIT) submissionLimit = MAX_SUBMISSION_LIMIT;
 
-      // The document number is the filter. Dates only narrow the range when the
-      // caller asks for them — otherwise every submission of the logbook exports.
+
       const submissionWhere = { companyId, documentNumber };
       if (status) submissionWhere.status = status;
       if (startDate || endDate) {
@@ -270,17 +272,20 @@ export class ExportRepository {
         if (endDate) submissionWhere.createdAt[Op.lte] = rangeEnd(endDate);
       }
 
-      const submissions = await SubmittedChecklist.findAll({
-        where: submissionWhere,
-        attributes: [
-          "submittedChecklistId", "documentNumber", "title", "issuedNumber",
-          "entityDisplayName", "status", "submittedAt", "createdAt",
-        ],
-        order: [["submittedAt", "ASC"], ["createdAt", "ASC"]],
-        limit: submissionLimit,
-      });
 
-      // A blank workbook looks like a broken export. Say why nothing matched instead.
+      const submissions = (
+        await SubmittedChecklist.findAll({
+          where: submissionWhere,
+          attributes: [
+            "submittedChecklistId", "documentNumber", "title", "issuedNumber",
+            "entityDisplayName", "status", "submittedAt", "createdAt",
+          ],
+          order: [["submittedAt", "DESC"], ["createdAt", "DESC"]],
+          limit: submissionLimit,
+        })
+      ).reverse();
+
+   
       if (!submissions.length) {
         throw new ApplicationError(
           startDate || endDate
@@ -307,8 +312,7 @@ export class ExportRepository {
         entriesBySubmission.get(entry.submittedChecklistId)?.push(entry);
       }
 
-      // Pass one: pick each section's layout from the widest use of it across
-      // the whole export, so a section is drawn the same way on every sheet block.
+
       const rowCounts = new Map();
       const sectionFields = new Map();
       for (const entry of entryRows) {

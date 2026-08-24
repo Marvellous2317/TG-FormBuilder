@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { User, Role, Company } from "../../models/index.js";
 import ResponseManager from "../../utils/responseManager.js";
 import config from "../../appConfig.js";
+import { ROLE_SUPER_ADMIN, APPROVAL_ROLES, OPERATOR_ROLES } from "../constants/roles.js";
 
 export async function decodeToken(token) {
   try {
@@ -14,11 +15,45 @@ export async function decodeToken(token) {
       include: [
         { model: Role, as: "role", attributes: ["roleId", "roleName", "isAdmin"] },
         { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+        {
+          model: Company,
+          as: "companies",
+          attributes: ["companyId", "companyName"],
+          through: { attributes: [] },
+        },
       ],
     });
     if (!user) return null;
-    return user.toSafeJSON();
-  } catch {
+
+    const data = user.toSafeJSON();
+
+    // The token decides the active workspace. Fall back to the stored company for
+    // tokens issued before companyId was part of the payload.
+    const tokenCompanyId = decoded.companyId || null;
+    if (!tokenCompanyId) return data;
+
+    const memberships = data.companies || [];
+    const isMember = memberships.some((c) => c.companyId === tokenCompanyId);
+    const isSuperAdmin = data.role?.roleName === ROLE_SUPER_ADMIN;
+
+    // Membership can be revoked after the token was issued; the token must not
+    // outlive the access it claims.
+    if (!isMember && !isSuperAdmin) {
+      const error = new Error("Your access to this workspace has been removed. Please sign in again.");
+      error.name = "WorkspaceAccessError";
+      throw error;
+    }
+
+    // Every consumer of req.user.companyId / req.user.company now tracks the token.
+    data.companyId = tokenCompanyId;
+    data.company =
+      memberships.find((c) => c.companyId === tokenCompanyId) ||
+      (await Company.findByPk(tokenCompanyId, { attributes: ["companyId", "companyName"] }))?.toJSON() ||
+      null;
+
+    return data;
+  } catch (error) {
+    if (error?.name === "WorkspaceAccessError") throw error;
     return null;
   }
 }
@@ -46,6 +81,9 @@ export function isAuthenticated(req, res, next) {
       next();
     })
     .catch((err) => {
+      if (err.name === "WorkspaceAccessError") {
+        return ResponseManager.error(res, "WorkspaceAccessError", err.message, 403);
+      }
       if (err.name === "TokenExpiredError") {
         return ResponseManager.error(res, "AuthenticationError", "Token expired", 401);
       }
@@ -114,8 +152,7 @@ export function approvalRequired(req, res, next) {
     return ResponseManager.error(res, "AuthorizationError", "Invalid role format", 400);
   }
 
-  const allowedRoles = ["approval", "admin", "superAdmin"];
-  if (!allowedRoles.includes(userRole.roleName)) {
+  if (!APPROVAL_ROLES.includes(userRole.roleName)) {
     return ResponseManager.error(res, "AuthorizationError", "Approval access required", 403);
   }
 
@@ -135,8 +172,7 @@ export function operatorRequired(req, res, next) {
     return ResponseManager.error(res, "AuthorizationError", "Invalid role format", 400);
   }
 
-  const allowedRoles = ["operator", "approval", "admin", "superAdmin"];
-  if (!allowedRoles.includes(userRole.roleName)) {
+  if (!OPERATOR_ROLES.includes(userRole.roleName)) {
     return ResponseManager.error(res, "AuthorizationError", "Operator access required", 403);
   }
 
