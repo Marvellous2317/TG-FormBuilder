@@ -41,6 +41,9 @@ export default function AdminDashboard() {
   const isReadAdmin =
     user?.accessLevel && user?.accessLevel === 'read' ? true : false;
 
+  const isCorporateAdmin =
+    user?.role?.roleName.toLowerCase() === 'corporateadmin';
+
   const { data, isFetching } = useChecklists(checklistPagination);
 
   const { data: checklistsAnalytics, isPending: isChecklistsAnalyticsLoading } =
@@ -93,20 +96,36 @@ export default function AdminDashboard() {
             Here's an overview of your task list
           </p>
         </div>
-        {!isReadAdmin && (
-          <Button
-            className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
-            onClick={() => {
-              setIsShowLogbookModal(true);
-              setChecklistToDuplicate(null);
-            }}
-          >
-            <IoAddOutline className="text-white" size={14} />
-            <p className="text-white font-geist font-medium text-sm">
-              Add a task list
-            </p>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!isReadAdmin && (
+            <Button
+              className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+              onClick={() => {
+                setIsShowLogbookModal(true);
+                setChecklistToDuplicate(null);
+              }}
+            >
+              <IoAddOutline className="text-white" size={14} />
+              <p className="text-white font-geist font-medium text-sm">
+                Add a task list
+              </p>
+            </Button>
+          )}
+          {isCorporateAdmin && (
+            <Button
+              className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+              onClick={() => {
+                setIsShowLogbookModal(true);
+                setChecklistToDuplicate(null);
+              }}
+            >
+              <IoAddOutline className="text-white" size={14} />
+              <p className="text-white font-geist font-medium text-sm">
+                Duplicate task list
+              </p>
+            </Button>
+          )}
+        </div>
       </header>
 
       <section className="py-6 px-8">
