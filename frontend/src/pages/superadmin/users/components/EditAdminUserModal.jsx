@@ -49,6 +49,10 @@ export default function EditAdminUserModal({
     rolesData?.find((r) => r.label === 'admin')?.roleId ===
     formData?.role?.roleId;
 
+  const isCorporateAdminRole =
+    rolesData?.find((r) => r.label === 'corporateAdmin')?.roleId ===
+    formData?.role?.roleId;
+
   const companiesData = companies?.data?.companies.map((company) => ({
     ...company,
     label: company.companyName,
@@ -62,22 +66,43 @@ export default function EditAdminUserModal({
   }));
 
   const handleSetRole = (roleId) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: {
-        roleId,
-        label: rolesData?.find((r) => r.roleId === roleId)?.label,
-      },
-    }));
+    const selectedRole = rolesData?.find((r) => r.roleId === roleId);
+    const isCorporateAdmin = selectedRole?.label === 'corporateAdmin';
+
+    setFormData((prev) => {
+      let entity = prev.entity;
+
+      if (isCorporateAdmin && !Array.isArray(entity)) {
+        entity = entity?.companyId ? [entity] : [];
+      }
+
+      if (!isCorporateAdmin && Array.isArray(entity)) {
+        entity = entity[0] ?? {};
+      }
+
+      return {
+        ...prev,
+        role: {
+          roleId,
+          label: selectedRole?.label,
+        },
+        entity,
+      };
+    });
   };
 
   const handleSetEntity = (companyId) => {
     setFormData((prev) => ({
       ...prev,
-      entity: {
-        companyId,
-        label: companiesData?.find((r) => r.companyId === companyId)?.label,
-      },
+      entity: isCorporateAdminRole
+        ? companyId.map((id) => ({
+            companyId: id,
+            label: companiesData?.find((r) => r.companyId === id)?.label,
+          }))
+        : {
+            companyId,
+            label: companiesData?.find((r) => r.companyId === companyId)?.label,
+          },
     }));
   };
 
@@ -118,7 +143,9 @@ export default function EditAdminUserModal({
       !lastName ||
       !email ||
       !role?.roleId ||
-      !entity?.companyId ||
+      (isCorporateAdminRole
+        ? !Array.isArray(entity) || entity.length === 0
+        : !entity?.companyId) ||
       !departmentName ||
       !accessLevel
     ) {
@@ -134,7 +161,9 @@ export default function EditAdminUserModal({
           lastName,
           email,
           roleId: role?.roleId,
-          companyId: entity?.companyId,
+          companyId: isCorporateAdminRole
+            ? entity.map(({ companyId }) => companyId)
+            : entity?.companyId,
           department: departmentName,
           accessLevel,
         },
@@ -229,12 +258,19 @@ export default function EditAdminUserModal({
               label="Entity"
               id="entity"
               className=""
-              value={formData.entity?.companyId}
+              value={
+                isCorporateAdminRole
+                  ? Array.isArray(formData.entity)
+                    ? formData.entity.map(({ companyId }) => companyId)
+                    : []
+                  : formData.entity?.companyId
+              }
               required
               readOnly={isLoadingEntities}
               disabled={fromAdmin}
               options={companiesData}
               type="select"
+              multiple={isCorporateAdminRole}
               onChange={(e) => handleSetEntity(e.target.value)}
             />
             {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}

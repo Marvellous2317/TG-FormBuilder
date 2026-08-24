@@ -24,6 +24,8 @@ export default function RoleRedirect() {
       return <Navigate to="/superadmin/" replace />;
     case 'admin':
       return <Navigate to="/admin/" replace />;
+    case 'corporateadmin':
+      return <Navigate to="/workspace/" replace />;
     case 'operator':
       return <Navigate to="/operator/" replace />;
     case 'approver':

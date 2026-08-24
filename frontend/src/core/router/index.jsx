@@ -101,6 +101,10 @@ export const router = createBrowserRouter([
           },
           {
             path: '/workspace',
+            element: <WorkspaceLogin />,
+          },
+          {
+            path: '/workspace',
             element: (
               <GuestRoute>
                 <WorkspaceLogin />

@@ -9,6 +9,7 @@ import {
   getUserProfile,
   login,
   resetPassword,
+  switchWorkspace,
   userProfileUpdate,
 } from '../../core/api/auth';
 
@@ -24,6 +25,8 @@ const getRoleHomePath = (user) => {
       return '/operator';
     case 'approver':
       return '/approver';
+    case 'corporateadmin':
+      return '/workspace';
     default:
       return '/';
   }
@@ -56,7 +59,7 @@ const getRoleHomePath = (user) => {
 
 export default function useAuth() {
   const navigate = useNavigate();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -90,8 +93,8 @@ export default function useAuth() {
       navigate('/login', { replace: true });
     },
     onError: (error) => {
-  showError(error?.response?.data?.message || 'Failed to change password');
-},
+      showError(error?.response?.data?.message || 'Failed to change password');
+    },
   });
 
   const resetPasswordMutation = useMutation({
@@ -169,6 +172,26 @@ export function useProfileUpdate(options = {}) {
       await queryClient.invalidateQueries({
         queryKey: ['user', 'profile'],
       });
+
+      if (onSuccess) {
+        await onSuccess(response, variables, context);
+      }
+    },
+    ...mutationOptions,
+  });
+}
+
+export function useSwitchWorkspace(options = {}) {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options;
+
+  return useMutation({
+    mutationFn: (payload) => switchWorkspace(payload),
+    onSuccess: async (response, variables, context) => {
+      await queryClient.clear();
+
+      useAuthStore.getState().clearAuth();
+      useAuthStore.getState().setAuthFromLogin(response);
 
       if (onSuccess) {
         await onSuccess(response, variables, context);

@@ -5,31 +5,24 @@ import Icons from '../../assets/icons';
 import { useAuthStore } from '../../shared/store/authStore';
 import useToast from '../../shared/hooks/useToast';
 import useAuth from '../../shared/hooks/useAuth';
-import { useProfile, useProfileUpdate } from '../../shared/hooks/useAuth';
+import {
+  useProfile,
+  useProfileUpdate,
+  useSwitchWorkspace,
+} from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
-import DropdownSelect from '../../shared/components/DropdownSelect';
 import clearAllCaches from '../../lib/clearCache';
 import { useQueryClient } from '@tanstack/react-query';
-
-const WORKSPACE_OPTIONS = [
-  { label: 'Packaging Line A', value: 'ws-1' },
-  { label: 'Quality Assurance Lab', value: 'ws-2' },
-  { label: 'Central Warehouse', value: 'ws-3' },
-  { label: 'Bottling & Assembly Hub', value: 'ws-4' },
-  { label: 'Maintenance & Operations', value: 'ws-5' },
-  { label: 'Research & Development', value: 'ws-6' },
-  { label: 'Global Supply Chain', value: 'ws-7' },
-];
 
 export default function Settings() {
   const queryClient = useQueryClient();
   const { clearAuth, user } = useAuthStore();
   const { showSuccess, showError } = useToast();
 
-  const [selectedWorkspace, setSelectedWorkspace] = useState('ws-1');
-  const [pendingWorkspace, setPendingWorkspace] = useState(null);
-  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(
+    user?.companyId ?? user?.company?.companyId ?? '',
+  );
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -49,9 +42,22 @@ export default function Settings() {
 
   const { data: profile, isPending: isLoadingProfile } = useProfile();
   const profileData = profile?.data?.user;
+  const currentCompanyId =
+    profileData?.companyId ??
+    profileData?.company?.companyId ??
+    user?.companyId ??
+    user?.company?.companyId ??
+    '';
+  const activeWorkspace = selectedWorkspace || currentCompanyId;
+
+  const workspaceCompanies = (user?.companies ?? []).map((c) => {
+    return { label: c.companyName, value: c.companyId };
+  });
 
   const { mutateAsync: updateProfile, isPending: isUpdatingProfile } =
     useProfileUpdate();
+  const { mutateAsync: switchWorkspace, isPending: isSwitchingWorkspace } =
+    useSwitchWorkspace();
 
   // Role validation for Corporate Admin
   const currentRole = (
@@ -69,29 +75,18 @@ export default function Settings() {
   const isCorporateAdmin =
     currentRole === 'corporate admin' || currentRole.includes('corporate');
 
-  const handleWorkspaceSelectChange = (val) => {
-    if (val === selectedWorkspace) return;
-    setPendingWorkspace(val);
-    setIsWorkspaceModalOpen(true);
-  };
+  const handleWorkspaceSelectChange = async (companyId) => {
+    if (!companyId || companyId === activeWorkspace) return;
 
-  const handleConfirmSwitch = () => {
-    if (pendingWorkspace) {
-      setSelectedWorkspace(pendingWorkspace);
-      const chosenOption = WORKSPACE_OPTIONS.find(
-        (w) => w.value === pendingWorkspace,
-      );
-      showSuccess(
-        `Switched workspace to ${chosenOption?.label || 'selected workspace'}`,
+    try {
+      await switchWorkspace({ companyId });
+      setSelectedWorkspace(companyId);
+      showSuccess('Workspace switched successfully');
+    } catch (error) {
+      showError(
+        error?.response?.data?.message || 'Failed to switch workspace',
       );
     }
-    setPendingWorkspace(null);
-    setIsWorkspaceModalOpen(false);
-  };
-
-  const handleCancelSwitch = () => {
-    setPendingWorkspace(null);
-    setIsWorkspaceModalOpen(false);
   };
 
   const handlePasswordChange = (e) => {
@@ -162,7 +157,7 @@ export default function Settings() {
       ) : (
         <section className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
           <div className="flex flex-row justify-between items-center mb-8">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 w-2/4">
               <img
                 src={Icons.userProfile}
                 alt="User Profile"
@@ -171,18 +166,20 @@ export default function Settings() {
 
               {/* Workspace dropdown rendered only for Corporate Admin */}
               {isCorporateAdmin && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs mb-1 font-medium text-gray-500 font-geist">
-                    Workspace
-                  </label>
-                  <DropdownSelect
-                    options={WORKSPACE_OPTIONS}
-                    value={selectedWorkspace}
-                    onChange={handleWorkspaceSelectChange}
-                    placeholder="Select Workspace"
-                    className="w-56 sm:w-64"
-                  />
-                </div>
+                <InputField
+                  id="workspace"
+                  name="workspace"
+                  label="Workspace"
+                  options={workspaceCompanies}
+                  value={activeWorkspace}
+                  onChange={(e) =>
+                    handleWorkspaceSelectChange(e.target.value)
+                  }
+                  placeholder="Select Workspace"
+                  className="w-full"
+                  type="select"
+                  readOnly={isSwitchingWorkspace}
+                />
               )}
 
              
