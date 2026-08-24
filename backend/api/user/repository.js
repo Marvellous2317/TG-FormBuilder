@@ -10,6 +10,7 @@ import {
   SubmittedChecklistApproval,
 } from "../../models/index.js";
 import { generateJWT, generateOpt } from "../auth/helper.js";
+import { ADMIN_ROLES, ROLE_OPERATOR, ROLE_SUPER_ADMIN } from "../constants/roles.js";
 import { sendVerificationMail } from "../../views/index.js";
 import { getStateAndLGA } from "../../utils/index.js";
 import {
@@ -80,7 +81,7 @@ export class UserRepository {
       await user.setPassword(newPassword);
       await user.save();
 
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
 
       return {
         token,
@@ -123,7 +124,7 @@ export class UserRepository {
       await user.setPassword(password);
       await user.save();
       await verifyOtp.destroy();
-      const token = generateJWT(user.userId);
+      const token = generateJWT(user.userId, user.companyId);
       return {
         token,
         user,
@@ -228,7 +229,7 @@ export class UserRepository {
       startOfWeek.setDate(today.getDate() - diff);
       startOfWeek.setHours(0, 0, 0, 0);
 
-      if (role === "superAdmin") {
+      if (role === ROLE_SUPER_ADMIN) {
         const totalActiveCompanies = await Company.count({
           where: { status: "active" },
         });
@@ -263,7 +264,7 @@ export class UserRepository {
         };
       }
 
-      if (role === "admin") {
+      if (ADMIN_ROLES.includes(role)) {
         if (!companyId)
           throw new ApplicationError("Admin must belong to a company", 400);
 
@@ -303,7 +304,7 @@ export class UserRepository {
         };
       }
 
-      if (role === "operator") {
+      if (role === ROLE_OPERATOR) {
         const myChecklistsToday = await SubmittedChecklist.count({
           where: {
             submittedBy: userId,
@@ -340,7 +341,7 @@ export class UserRepository {
         };
       }
 
-      if (role !== "admin"  && role !=="operator") {
+      if (!ADMIN_ROLES.includes(role) && role !== ROLE_OPERATOR) {
              const existingSubmission = () => ({
           model: SubmittedChecklist,
           as: "submittedChecklist",

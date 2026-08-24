@@ -88,6 +88,29 @@ export const changePasswordMiddleware = (req, res, next) => {
   }
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export const switchWorkspaceMiddleware = (req, res, next) => {
+  try {
+    const { companyId, ...extraFields } = req.body || {};
+
+    const extraKeys = Object.keys(extraFields);
+    if (extraKeys.length > 0) {
+      throw new ValidationError(`${extraKeys.join(", ")} not required`);
+    }
+
+    if (!companyId) throw new ValidationError("companyId is required");
+
+    if (typeof companyId !== "string" || !UUID_REGEX.test(companyId)) {
+      throw new ValidationError("companyId must be a valid UUID");
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const refreshTokenMiddleware = (req, res, next) => {
   try {
     const { refreshToken, ...extraFields } = req.body || {};

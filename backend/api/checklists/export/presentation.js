@@ -1,18 +1,10 @@
-// Presentation helpers for the submitted-checklist Excel export.
-//
-// Headings and column labels are derived from the checklist definition itself
-// (entry name + section config name + field names), so any checklist exports
-// with a sensible logbook layout. DOCUMENT_OVERRIDES then lets a specific
-// document number restate wording that the printed logbook words differently
-// from the way it was captured in the form builder.
 
 const MINOR_WORDS = new Set([
   "a", "an", "and", "are", "as", "at", "but", "by", "for", "from", "in",
   "is", "of", "on", "or", "the", "to", "with",
 ]);
 
-// Collapse tabs/newlines/double spaces and tidy padded brackets: the form
-// builder stores a lot of "Glue Tank temperature\t\t\t\t" style labels.
+
 export function cleanText(value) {
   return String(value ?? "")
     .replace(/[\t\r\n]+/g, " ")
@@ -27,13 +19,13 @@ export function titleCase(value) {
   return words
     .map((word, index) => {
       if (!word) return word;
-      // Unit hints such as "(kg)" are already written the way they should print.
+
       if (word.startsWith("(")) return word;
-      // Shouted labels ("ISSUES FACED") become sentence case...
+
       if (/^[A-Z][A-Z/&.-]{3,}$/.test(word)) {
         return word.charAt(0) + word.slice(1).toLowerCase();
       }
-      // ...but short/mixed-case tokens keep their casing (HMA, SKU, WIP, Lot/IBD).
+
       if (/[A-Z]/.test(word.slice(1))) return word;
       const lower = word.toLowerCase();
       if (index > 0 && MINOR_WORDS.has(lower)) return lower;
@@ -42,9 +34,7 @@ export function titleCase(value) {
     .join(" ");
 }
 
-// A section entry is named "Checks" with its qualifier held in config.name
-// ("during operation"). Join the two unless the qualifier is only a note in
-// brackets, or repeats words the entry name already carries.
+
 export function sectionHeading(entry) {
   const base = cleanText(entry?.name);
   const qualifier = cleanText(entry?.config?.name);
@@ -58,7 +48,7 @@ export function sectionHeading(entry) {
   return titleCase(`${base} ${qualifier}`);
 }
 
-// Rolled-up section formulas share a config.name such as "SF-Output".
+
 export function summaryHeading(entry) {
   const raw = cleanText(entry?.config?.name).replace(/^SF[\s-]*/i, "");
   return raw ? `${titleCase(raw)} Summary` : "Summary";
@@ -67,7 +57,6 @@ export function summaryHeading(entry) {
 const DOCUMENT_OVERRIDES = {
   "FM / MFG / PKG_MONO / H-1": {
     title: "MONO CARTON LOGBOOK",
-    // Keyed by the heading derived above.
     headings: {
       "Record Detail": "Record Details",
       "Checks to Be Carried Out Before Starting Mono Cartoning Activity": "Checks Before Starting",
@@ -122,7 +111,6 @@ export function presentationFor(documentNumber) {
     heading(text) {
       return headings[text] || text;
     },
-    // `field` is a section item ({ id, name }) or a top-level submitted entry.
     label(field) {
       const name = cleanText(field?.name);
       return labels[field?.id] || labels[field?.entryId] || labels[name] || titleCase(name);

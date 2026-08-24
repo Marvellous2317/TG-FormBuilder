@@ -4,6 +4,7 @@ import { Department } from "./department.js";
 import { Verification } from "./verification.js";
 import { RefreshToken } from "./refreshToken.js";
 import { Role } from "./role.js";
+import { UserCompany } from "./userCompany.js";
 import { makePassword, checkPassword } from "../api/auth/helper.js";
 
 import { Checklist } from "./checklist.js";
@@ -20,8 +21,16 @@ import { VersionChecklist } from "./versionChecklist.js";
 import { VersionChecklistEntry } from "./versionChecklistEntry.js";
 
 
+// user.companyId is the ACTIVE workspace (a single company at any time).
 User.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 Company.hasMany(User, { foreignKey: "companyId", as: "users" });
+
+// Every company the user belongs to. corporateAdmin may hold several; other roles hold one.
+User.belongsToMany(Company, { through: UserCompany, foreignKey: "userId", otherKey: "companyId", as: "companies" });
+Company.belongsToMany(User, { through: UserCompany, foreignKey: "companyId", otherKey: "userId", as: "members" });
+
+UserCompany.belongsTo(User, { foreignKey: "userId", as: "user" });
+UserCompany.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 
 User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 Role.hasMany(User, { foreignKey: "roleId", as: "users" });
@@ -139,6 +148,7 @@ export {
   Verification,
   RefreshToken,
   Role,
+  UserCompany,
   // LEGACY: OperatorApprover replaced by the per-checklist approver flow.
   // OperatorApprover,
   ChecklistApprover,

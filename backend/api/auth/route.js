@@ -1,7 +1,7 @@
 import router from "express";
 import { AuthController } from "./controller.js";
 import { UserController } from "../user/controller.js";
-import { sigInMiddleware, sigUpMiddleware, accountVerificationMiddleware, changePasswordMiddleware, refreshTokenMiddleware } from "./middleware.js";
+import { sigInMiddleware, sigUpMiddleware, accountVerificationMiddleware, changePasswordMiddleware, refreshTokenMiddleware, switchWorkspaceMiddleware } from "./middleware.js";
 import { forgotPasswordMiddleware } from "../user/middleware.js";
 import { adminRequired, isAuthenticated } from "../middlewares/authorization.js";
 
@@ -12,6 +12,8 @@ route.post("/verify-account", accountVerificationMiddleware, isAuthenticated, Au
 route.post("/request-otp", isAuthenticated, AuthController.requestOtpApi);
 
 route.post("/change-password", isAuthenticated, changePasswordMiddleware, AuthController.changePasswordApi);
+
+route.post("/switch-workspace", isAuthenticated, switchWorkspaceMiddleware, AuthController.switchWorkspaceApi);
 
 route.post("/refresh-token", refreshTokenMiddleware, AuthController.refreshTokenApi);
 route.post("/signout", AuthController.signoutApi);

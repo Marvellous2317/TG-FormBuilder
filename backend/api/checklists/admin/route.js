@@ -1,5 +1,6 @@
 import express from "express";
 import { isAuthenticated, adminRequired, requiresRole, requiresWriteAccess } from "../../middlewares/authorization.js";
+import { OPERATOR_ROLES } from "../../constants/roles.js";
 import { AdminController } from "./controller.js";
 import {
   validateCreateChecklist, validateUpdateChecklist, validateChecklistId,
@@ -9,6 +10,7 @@ import {
   validateCreateCatalog, validateUpdateCatalog, validateCatalogId, validateCatalogQuery,
   validateSubmittedChecklistId, validateSubmittedChecklistQuery, validateSubmittedChecklistUpdate,
   validateVersionQuery, validateVersionId,
+  validateChecklistSearch, validateDuplicateChecklist,
 } from "./middleware.js";
 
 const router = express.Router();
@@ -18,6 +20,11 @@ const router = express.Router();
 
 router.post("/", isAuthenticated, adminRequired, requiresWriteAccess, validateCreateChecklist, AdminController.createChecklist);
 router.get("/", isAuthenticated, adminRequired, validateChecklistQuery, AdminController.getChecklists);
+
+
+
+router.get("/search", isAuthenticated, adminRequired, validateChecklistSearch, AdminController.searchChecklistByDocumentNumber);
+router.post("/duplicate", isAuthenticated, adminRequired, requiresWriteAccess, validateDuplicateChecklist, AdminController.duplicateChecklist);
 
 
 router.delete("/entries/:entryId", isAuthenticated, adminRequired, requiresWriteAccess, validateEntryId, AdminController.deleteEntry);
@@ -31,7 +38,7 @@ router.get("/assignments/:assignmentId", isAuthenticated, adminRequired, validat
 
 router.post("/catalogs", isAuthenticated, adminRequired, requiresWriteAccess, validateCreateCatalog, AdminController.createCatalog);
 router.get("/get-all-catalogs", isAuthenticated, adminRequired, validateCatalogQuery, AdminController.getCatalogs);
-router.get("/catalogs/:catalogId", isAuthenticated, requiresRole("admin", "superAdmin","operator", "approval"), validateCatalogId, AdminController.getCatalogById);
+router.get("/catalogs/:catalogId", isAuthenticated, requiresRole(...OPERATOR_ROLES), validateCatalogId, AdminController.getCatalogById);
 router.put("/catalogs/:catalogId", isAuthenticated, adminRequired, requiresWriteAccess, validateUpdateCatalog, AdminController.updateCatalog);
 router.delete("/catalogs/:catalogId", isAuthenticated, adminRequired, requiresWriteAccess, validateCatalogId, AdminController.deleteCatalog);
 
