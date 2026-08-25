@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ErrorElement } from '../../shared/components/ErrorBoundary';
 import Login from '../../pages/auth/Login';
+import LandingPage from '../../pages/auth/LandingPage';
 import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
@@ -57,7 +58,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '/',
-            element: <RoleRedirect />,
+            element: <LandingPage />,
           },
           {
             path: '/guide',
