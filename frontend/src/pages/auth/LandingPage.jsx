@@ -4,6 +4,7 @@ import Icons from '../../assets/icons';
 import Images from '../../assets/images';
 import { FaArrowRight } from 'react-icons/fa6';
 import { IoBookOutline } from 'react-icons/io5';
+import { GiUdder } from 'react-icons/gi';
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,12 +117,12 @@ export default function LandingPage() {
   return (
     <div
       id="landing-page-root"
-      className="min-h-screen bg-[#FAF8FF] text-[#191B23] antialiased flex flex-col font-sans selection:bg-[#2463EB] selection:text-white"
+      className="min-h-screen bg-white text-[#191B23] antialiased flex flex-col font-inter selection:bg-[#2463EB] selection:text-white"
     >
       {/* Top Navigation Bar */}
       <nav
         id="top-navbar"
-        className="fixed top-0 left-0 right-0 w-full z-50 bg-[#FAF8FF]/90 backdrop-blur-md border-b border-[#E1E2ED]/70 shadow-xs transition-colors"
+        className="fixed top-0 left-0 right-0 w-full z-50 bg-white backdrop-blur-md border-b border-[#E1E2ED]/70 shadow-xs transition-colors"
       >
         <div className="flex justify-between items-center px-6 lg:px-12 py-4 max-w-[1440px] mx-auto w-full">
           {/* Logo */}
@@ -132,7 +133,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
               <img src={Icons.logo} className="w-5 h-5 " />
             </div>
-            <span className="text-xl font-bold text-[#004BC6] tracking-tight font-headline">
+            <span className="text-xl font-bold text-[#004BC6] tracking-tight font-geist">
               DigiForms
             </span>
           </div>
@@ -208,7 +209,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#C3C6D7]/60 bg-white shadow-2xs mb-6"
             >
               <span className="w-2 h-2 rounded-full bg-[#BA1A1A] animate-pulse"></span>
-              <span className="text-[11px] lg:text-[12px] font-semibold text-[#5F5E5E] tracking-wider uppercase font-sans">
+              <span className="text-[11px] lg:text-[12px] font-semibold text-[#5F5E5E] tracking-wider uppercase font-geist">
                 CONTROLLED DOCUMENT • AUDIT-READY PACKAGING PLATFORM
               </span>
             </div> */}
@@ -216,7 +217,7 @@ export default function LandingPage() {
             {/* Main Headline */}
             <h1
               id="hero-title"
-              className="text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-bold text-[#191B23] leading-[1.18] tracking-tight font-headline mb-6"
+              className="text-3xl sm:text-4xl lg:text-[42px] xl:text-[48px] font-bold text-[#191B23] leading-[1.18] tracking-tight font-geist mb-6"
             >
               Transform Packaging Checklists into Real-Time{' '}
               <span className="text-[#004BC6]">Operational Intelligence</span>.
@@ -241,7 +242,7 @@ export default function LandingPage() {
                 onClick={LoginPage}
                 className="bg-[#004BC6] hover:bg-[#003EA7] text-white px-7 py-3.5 rounded-xl text-[15px] font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
               >
-                <span>Login</span>
+                <span>Get Started</span>
                 <FaArrowRight className="w-3 h-3" />
               </button>
 
@@ -289,7 +290,7 @@ export default function LandingPage() {
           <div className="text-center mb-12 lg:mb-16">
             <h2
               id="capabilities-title"
-              className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-[#191B23] tracking-tight font-headline mb-3"
+              className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-[#191B23] tracking-tight font-geist mb-3"
             >
               Core Capabilities
             </h2>
@@ -313,7 +314,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl bg-[#2463EB] text-white flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                   <img src={Icons.logbook} className="w-10 h-10" />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
                   Smart Logbook Builder
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
@@ -336,7 +337,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl bg-[#0053DA]/10  flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                   <img src={Icons.formula} className="w-10 h-10" />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
                   Live Formula Engine
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
@@ -359,7 +360,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl bg-[#726C69] text-white flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                   <img src={Icons.roleBased} className="w-10 h-10" />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
                   Role-Based Workflows
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
@@ -373,7 +374,7 @@ export default function LandingPage() {
               </div> */}
             </div>
 
-            {/* Card 4: Cryptographic Signatures */}
+            {/* Card 4: Electronic Signatures */}
             <div
               id="capability-card-4"
               className="bg-white border border-[#E1E2ED] rounded-2xl p-6 lg:p-7 hover:shadow-md transition-all flex flex-col justify-between group"
@@ -385,12 +386,12 @@ export default function LandingPage() {
                     className="w-10 h-10 text-[#1C1B1B]"
                   />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
-                  Cryptographic Signatures
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
+                  Electronic Signatures
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
-                  Ensure compliance with Part 11 compliant digital signatures
-                  and immutable audit trails.
+                  Capture drawn or uploaded signatures for seamless sign-offs,
+                  multi-tier approvals, and audit trails.
                 </p>
               </div>
               {/* <div className="mt-4 pt-3 flex items-center text-[12px] font-semibold text-[#004BC6] group-hover:translate-x-1 transition-transform">
@@ -408,7 +409,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl bg-[#2463EB] text-white flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                   <img src={Icons.offline} className="w-10 h-10" />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
                   Offline-First PWA
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
@@ -431,7 +432,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl bg-[#FFDAD6] text-[#93000A] flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                   <img src={Icons.compliance} className="w-10 h-10" />
                 </div>
-                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-headline">
+                <h3 className="text-[18px] font-bold text-[#191B23] mb-2 font-geist">
                   Compliance Export
                 </h3>
                 <p className="text-[14px] text-[#434655] leading-relaxed">
@@ -460,7 +461,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                 <img src={Icons.logo} className="w-5 h-5 " />
               </div>
-              <span className="text-[18px] font-bold text-[#191B23] font-headline">
+              <span className="text-[18px] font-bold text-[#191B23] font-geist">
                 DigiForms
               </span>
             </div>
