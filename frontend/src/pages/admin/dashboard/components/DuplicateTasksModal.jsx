@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
-import Icons from '../../../../assets/icons';
 import Loader from '../../../../shared/components/Loader';
 import { useChecklists } from '../../../../shared/hooks/admin/useChecklist';
 
@@ -14,12 +13,13 @@ export default function DuplicateTasksModal({
 }) {
   const [documentNumber, setDocumentNumber] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedChecklist, setSelectedChecklist] = useState(null);
 
-  // Debounce search query (waits 2 seconds after typing stops)
+  // Debounce search query (waits 400ms after typing stops)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(documentNumber.trim());
-    }, 2000);
+    }, 400);
     return () => clearTimeout(timer);
   }, [documentNumber]);
 
@@ -28,13 +28,14 @@ export default function DuplicateTasksModal({
     if (!isDuplicateTasksModalOpen) {
       setDocumentNumber('');
       setDebouncedSearch('');
+      setSelectedChecklist(null);
     }
   }, [isDuplicateTasksModalOpen]);
 
   const { data, isPending, isFetching } = useChecklists(
     {
       search: debouncedSearch,
-      limit: 10,
+      limit: 30,
       deleted: 'false',
     },
     {
@@ -47,19 +48,46 @@ export default function DuplicateTasksModal({
 
   const checklists = data?.data?.checklists || [];
 
-  // Find exact matching checklist by documentNumber (case-insensitive) or default to top match
-  const matchedChecklist = debouncedSearch
-    ? checklists.find(
-        (c) =>
-          c.documentNumber?.toLowerCase() === debouncedSearch.toLowerCase(),
-      ) ||
-      checklists[0] ||
-      null
-    : null;
+  // Filter & sort matching checklists (documents starting with query come first, followed by containing query)
+  const matchingChecklists = debouncedSearch
+    ? [...checklists]
+        .filter((c) => {
+          const query = debouncedSearch.toLowerCase();
+          const docNum = (c.documentNumber || '').toLowerCase();
+          const title = (c.title || '').toLowerCase();
+          return docNum.includes(query) || title.includes(query);
+        })
+        .sort((a, b) => {
+          const query = debouncedSearch.toLowerCase();
+          const aDoc = (a.documentNumber || '').toLowerCase();
+          const bDoc = (b.documentNumber || '').toLowerCase();
+
+          const aStarts = aDoc.startsWith(query);
+          const bStarts = bDoc.startsWith(query);
+
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return 0;
+        })
+    : [];
+
+  // Auto select first match if current selected is invalid
+  useEffect(() => {
+    if (matchingChecklists.length > 0) {
+      const exists = matchingChecklists.some(
+        (item) => item.checklistId === selectedChecklist?.checklistId,
+      );
+      if (!exists) {
+        setSelectedChecklist(matchingChecklists[0]);
+      }
+    } else {
+      setSelectedChecklist(null);
+    }
+  }, [matchingChecklists]);
 
   const handleContinue = () => {
-    if (!matchedChecklist) return;
-    setChecklistToDuplicate(matchedChecklist);
+    if (!selectedChecklist) return;
+    setChecklistToDuplicate(selectedChecklist);
     setIsDuplicateTasksModalOpen(false);
     setIsShowLogbookModal(true);
   };
@@ -69,7 +97,7 @@ export default function DuplicateTasksModal({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && matchedChecklist) {
+    if (e.key === 'Enter' && selectedChecklist) {
       e.preventDefault();
       handleContinue();
     }
@@ -79,37 +107,30 @@ export default function DuplicateTasksModal({
     <Modal
       isOpen={isDuplicateTasksModalOpen}
       onClose={handleClose}
-      position="center"
-      width="max-w-[420px]"
-      className="overflow-hidden"
+      position="right"
+      width="max-w-[460px]"
+      className=""
     >
       <div className="flex h-full flex-col p-5">
-        <div className="mt-9 flex justify-center items-center mb-4">
-          <div className="flex items-center justify-center w-14 h-14 bg-secondary-700 rounded-xl">
-            <img
-              src={Icons.documentIcon}
-              alt="duplicate task list"
-              className="w-6 h-6 object-contain"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-0.5 w-full text-center flex items-center flex-col mb-5">
+        <div className="space-y-0.5">
           <p className="text-base font-semibold font-geist text-primary">
             Duplicate task list
           </p>
           <p className="text-sm font-geist text-tertiary">
-            Paste a document number to duplicate its details
+            Search and select a document to duplicate its details
           </p>
         </div>
 
-        <div className="w-full space-y-3 mb-6" onKeyDown={handleKeyDown}>
-          <div className="relative w-full">
+        <div
+          className="flex-1 flex flex-col mt-7 min-h-0 overflow-y-auto pr-1"
+          onKeyDown={handleKeyDown}
+        >
+          <div className="relative w-full mb-4">
             <InputField
               label="Document Number"
               id="documentNumberInput"
               type="text"
-              placeholder="Paste document number (e.g. FM/QCPC_PSIL/P-5)"
+              placeholder="Search document number (e.g. 3 or FM/QCPC)"
               value={documentNumber}
               onChange={(e) => setDocumentNumber(e.target.value)}
               inputClassName="placeholder:text-gray-400! pr-10"
@@ -123,37 +144,58 @@ export default function DuplicateTasksModal({
             )}
           </div>
 
-          {/* Found document preview */}
-          {!isLoadingChecklists && matchedChecklist && (
-            <div className="p-3.5 bg-secondary-700 border border-secondary-200 rounded-xl flex flex-col gap-1 text-left font-geist">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-primary-200 uppercase tracking-wider">
-                  Document Found
-                </span>
-                <span className="text-xs font-medium text-tertiary">
-                  {matchedChecklist.documentNumber}
-                </span>
-              </div>
-              <p className="text-sm font-semibold text-primary truncate">
-                {matchedChecklist.title}
+          {/* Results list */}
+          {!isLoadingChecklists && matchingChecklists.length > 0 && (
+            <div className="flex-1 space-y-2.5 overflow-y-auto max-h-[360px] pr-1 font-geist">
+              <p className="text-xs font-medium text-tertiary uppercase tracking-wider mb-1">
+                Matching Documents ({matchingChecklists.length})
               </p>
-              {matchedChecklist.department?.departmentName && (
-                <p className="text-xs text-tertiary">
-                  Department: {matchedChecklist.department.departmentName}
-                </p>
-              )}
+              {matchingChecklists.map((checklist) => {
+                const isSelected =
+                  selectedChecklist?.checklistId === checklist.checklistId;
+                return (
+                  <div
+                    key={checklist.checklistId}
+                    onClick={() => setSelectedChecklist(checklist)}
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-left flex flex-col gap-1 ${
+                      isSelected
+                        ? 'border-primary-200 bg-secondary-700 shadow-sm ring-1 ring-primary-200'
+                        : 'border-secondary-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-primary-200">
+                        {checklist.documentNumber}
+                      </span>
+                      {isSelected && (
+                        <span className="text-[10px] font-semibold bg-primary-200 text-white px-2 py-0.5 rounded-full">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-primary truncate">
+                      {checklist.title}
+                    </p>
+                    {checklist.department?.departmentName && (
+                      <p className="text-xs text-tertiary">
+                        Department: {checklist.department.departmentName}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* No results message */}
-          {!isLoadingChecklists && debouncedSearch && !matchedChecklist && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-geist text-red-600 text-center">
+          {!isLoadingChecklists && debouncedSearch && matchingChecklists.length === 0 && (
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-geist text-red-600 text-center">
               No task list found matching "{debouncedSearch}"
             </div>
           )}
         </div>
 
-        <div className="flex items-center mt-2 justify-end gap-3">
+        <div className="flex items-center mt-6 pb-4 justify-end gap-3">
           <Button
             type="button"
             onClick={handleClose}
@@ -163,7 +205,7 @@ export default function DuplicateTasksModal({
           </Button>
           <Button
             type="button"
-            disabled={!matchedChecklist || isLoadingChecklists}
+            disabled={!selectedChecklist || isLoadingChecklists}
             className="rounded-[10px] bg-primary-200 px-4 py-2.5 text-sm font-medium font-geist text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleContinue}
           >
@@ -174,3 +216,4 @@ export default function DuplicateTasksModal({
     </Modal>
   );
 }
+
