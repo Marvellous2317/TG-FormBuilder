@@ -54,6 +54,19 @@ export class AuthController {
 
 
 
+  static async switchWorkspaceApi(req, res, next) {
+    try {
+      const response = await AuthRepository.switchWorkspace(
+        req.user?.userId,
+        req.body.companyId,
+        req,
+      );
+      return ResponseManager.success(res, response, 200, response.message);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async refreshTokenApi(req, res, next) {
     try {
       const response = await AuthRepository.refreshToken(req);
