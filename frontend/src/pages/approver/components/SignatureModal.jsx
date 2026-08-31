@@ -213,7 +213,12 @@ export default function SignatureModal({
       showSuccess('Signature saved successfully');
       setUser({ ...user, signature: signatureDataURL });
     } catch (error) {
-      console.error('Error saving signature', error);
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to save signature',
+      );
       return;
     }
 

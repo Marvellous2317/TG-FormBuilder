@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ErrorElement } from '../../shared/components/ErrorBoundary';
 import Login from '../../pages/auth/Login';
+import LandingPage from '../../pages/auth/LandingPage';
 import RoleRedirect from './RoleRedirect';
 import Unauthorized from '../../pages/auth/Unauthorized';
 import ProtectedRoute from './ProtectedRoute';
@@ -45,6 +46,7 @@ import HistoryManagement from '../../pages/admin/history/HistoryManagement';
 import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesHistory';
 import GuestRoute from './GuestRoute';
 import SOPHome from '@/pages/sop/SOPHome';
+import WorkspaceLogin from '../../pages/auth/WorkspaceLogin';
 
 export const router = createBrowserRouter([
   {
@@ -56,7 +58,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '/',
-            element: <RoleRedirect />,
+            element: <LandingPage />,
           },
           {
             path: '/guide',
@@ -97,6 +99,18 @@ export const router = createBrowserRouter([
           {
             path: '/reset-password',
             element: <ResetPassword />,
+          },
+          {
+            path: '/workspace',
+            element: <WorkspaceLogin />,
+          },
+          {
+            path: '/workspace',
+            element: (
+              <GuestRoute>
+                <WorkspaceLogin />
+              </GuestRoute>
+            ),
           },
         ],
       },
