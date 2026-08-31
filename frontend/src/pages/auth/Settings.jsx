@@ -180,6 +180,15 @@ export default function Settings() {
 
   return (
     <div className="w-full min-h-screen bg-secondary-200/20">
+      {isSwitchingWorkspace && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-white/70 backdrop-blur-sm">
+          <Loader size="h-10 w-10 !border-primary-200" />
+          <p className="text-sm font-medium text-primary">
+            Switching workspace...
+          </p>
+        </div>
+      )}
+
       <section className="py-5 px-4 sm:px-6 lg:px-25 gap-1 border-b border-secondary-200">
         <h2 className="font-medium text-primary text-xl">Settings</h2>
         <p className="text-xs text-tertiary">

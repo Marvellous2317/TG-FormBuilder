@@ -3,7 +3,10 @@ import Modal from '../../../../shared/components/Modal';
 import InputField from '../../../../shared/components/InputField';
 import Button from '../../../../shared/components/Button';
 import Loader from '../../../../shared/components/Loader';
-import { useChecklists } from '../../../../shared/hooks/admin/useChecklist';
+import {
+  useChecklists,
+  useSearchChecklists,
+} from '../../../../shared/hooks/admin/useChecklist';
 
 export default function DuplicateTasksModal({
   isDuplicateTasksModalOpen,
@@ -32,11 +35,9 @@ export default function DuplicateTasksModal({
     }
   }, [isDuplicateTasksModalOpen]);
 
-  const { data, isPending, isFetching } = useChecklists(
+  const { data, isPending, isFetching } = useSearchChecklists(
     {
-      search: debouncedSearch,
-      limit: 30,
-      deleted: 'false',
+      documentNumber: debouncedSearch,
     },
     {
       enabled: isDuplicateTasksModalOpen && Boolean(debouncedSearch),
@@ -188,11 +189,13 @@ export default function DuplicateTasksModal({
           )}
 
           {/* No results message */}
-          {!isLoadingChecklists && debouncedSearch && matchingChecklists.length === 0 && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-geist text-red-600 text-center">
-              No task list found matching "{debouncedSearch}"
-            </div>
-          )}
+          {!isLoadingChecklists &&
+            debouncedSearch &&
+            matchingChecklists.length === 0 && (
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-geist text-red-600 text-center">
+                No task list found matching "{debouncedSearch}"
+              </div>
+            )}
         </div>
 
         <div className="flex items-center mt-6 pb-4 justify-end gap-3">
@@ -216,4 +219,3 @@ export default function DuplicateTasksModal({
     </Modal>
   );
 }
-

@@ -9,6 +9,13 @@ export const fetchChecklists = async (params = {}) => {
   return data;
 };
 
+export const searchChecklists = async (params = {}) => {
+  const { data } = await axiosInstance.get('/checklists/admin/search', {
+    params,
+  });
+  return data;
+};
+
 export const fetchChecklistsAnalytics = async () => {
   const { data } = await axiosInstance.get('/user/analytics');
   return data;
@@ -81,10 +88,9 @@ export const fetchChecklistCatalogs = async (params = {}) => {
 };
 
 export const fetchChecklistCatalog = async (id) => {
-  const { data } = await axiosInstance.get(
-    `/checklists/admin/catalogs/${id}`,
-    { skipGlobalErrorToast: true },
-  );
+  const { data } = await axiosInstance.get(`/checklists/admin/catalogs/${id}`, {
+    skipGlobalErrorToast: true,
+  });
   return data;
 };
 
