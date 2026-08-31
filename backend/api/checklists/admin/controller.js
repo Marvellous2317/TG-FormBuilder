@@ -62,9 +62,16 @@ export class AdminController {
         return ResponseManager.error(res, "ValidationError", "User must belong to a company to duplicate a checklist", 400);
       }
 
+      // The copy always lands in the active workspace, but the source may sit in any
+      // company the caller belongs to — a corporateAdmin copies a form out of one of
+      // its entities into the entity it is currently in.
+      const memberCompanyIds = [
+        ...new Set([...(req.user.companies || []).map((c) => c.companyId), companyId].filter(Boolean)),
+      ];
+
       const result = await AdminRepository.duplicateChecklist({
         sourceChecklistId, title, documentNumber, issuedNumber, entityDisplayName,
-        companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
+        companyId, memberCompanyIds, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
         approvers, operators, entries, createdBy, isSuperAdmin,
       });
       return ResponseManager.success(res, result, 201, result.message);

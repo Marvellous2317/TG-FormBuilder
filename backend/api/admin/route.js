@@ -50,6 +50,7 @@ router.delete("/departments/:departmentId", validateUUID("departmentId"), isAuth
 
 // Analytics (Super Admin only)
 router.get("/analytics", isAuthenticated, superAdminRequired, AdminController.getGlobalAnalyticsApi);
+router.get("/analytics/adoption", isAuthenticated, superAdminRequired, AdminController.getAdoptionAnalyticsApi);
 router.get("/analytics/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.getCompanyAnalyticsApi);
 
 export default router;

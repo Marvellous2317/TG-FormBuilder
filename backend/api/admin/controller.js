@@ -411,6 +411,15 @@ export class AdminController {
     }
   }
 
+  static async getAdoptionAnalyticsApi(req, res, next) {
+    try {
+      const result = await AdminRepository.getAdoptionAnalytics();
+      return ResponseManager.success(res, result, 200, "Adoption analytics fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
   static async getCompanyAnalyticsApi(req, res, next) {
     try {
       const companyId = req.params.companyId;
