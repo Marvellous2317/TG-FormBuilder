@@ -10,6 +10,7 @@ import {
   // OperatorApprover,
   SubmittedChecklist,
   UserCompany,
+  Checklist,
 } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
 import { MULTI_COMPANY_ROLES, ROLE_CORPORATE_ADMIN, ROLE_SUPER_ADMIN } from "../constants/roles.js";
@@ -1236,6 +1237,96 @@ export class AdminRepository {
       if (error instanceof ApplicationError) throw error;
       console.log("Error in getCompanyAnalytics:", error);
       throw new ApplicationError("Failed to fetch company analytics", 500);
+    }
+  }
+
+  // Platform adoption overview: who is actually using DigiForms, which entities
+  // are on it vs. actually transacting on it, and the volume flowing through.
+  // "Adoption" is measured by activity (a user has submitted or approved at
+  // least one record), not by having an account -- an unused account is not adoption.
+  static async getAdoptionAnalytics() {
+    try {
+      const rate = (part, whole) =>
+        whole > 0 ? Number(((part / whole) * 100).toFixed(2)) : 0;
+
+      const distinctValues = async (model, column) => {
+        const rows = await model.findAll({
+          attributes: [[Sequelize.fn("DISTINCT", Sequelize.col(column)), "value"]],
+          where: { [column]: { [Op.ne]: null } },
+          raw: true,
+        });
+        return rows.map((row) => row.value).filter(Boolean);
+      };
+
+      const [
+        totalUsers,
+        activeUsers,
+        totalEntities,
+        activeEntities,
+        totalForms,
+        totalSubmittedRecords,
+        approvedRecords,
+        pendingRecords,
+        rejectedRecords,
+        submitterIds,
+        approverIds,
+        entityIdsWithSubmissions,
+        entityIdsWithForms,
+      ] = await Promise.all([
+        User.count(),
+        User.count({ where: { status: "active" } }),
+        Company.count(),
+        Company.count({ where: { status: "active" } }),
+        Checklist.count(),
+        SubmittedChecklist.count(),
+        SubmittedChecklist.count({ where: { status: "approved" } }),
+        SubmittedChecklist.count({ where: { status: "pending" } }),
+        SubmittedChecklist.count({ where: { status: "rejected" } }),
+        distinctValues(SubmittedChecklist, "submittedBy"),
+        distinctValues(SubmittedChecklist, "approvedBy"),
+        distinctValues(SubmittedChecklist, "companyId"),
+        distinctValues(Checklist, "companyId"),
+      ]);
+
+      // A person "uses it" once they have submitted or approved at least one record.
+      const adoptedUserIds = new Set([...submitterIds, ...approverIds]);
+      const adoptedUsers = adoptedUserIds.size;
+
+      // An entity "makes use of it" once it has either built a form or had a
+      // record submitted against one.
+      const engagedEntityIds = new Set([...entityIdsWithSubmissions, ...entityIdsWithForms]);
+      const entitiesUsing = engagedEntityIds.size;
+
+      return {
+        adoption: {
+          totalUsers,
+          activeUsers,
+          adoptedUsers,
+          adoptionRate: rate(adoptedUsers, totalUsers),
+          activeUserAdoptionRate: rate(adoptedUsers, activeUsers),
+        },
+        entities: {
+          totalEntities,
+          activeEntities,
+          entitiesUsing,
+          entitiesNotUsing: Math.max(totalEntities - entitiesUsing, 0),
+          entityAdoptionRate: rate(entitiesUsing, totalEntities),
+        },
+        usage: {
+          totalSubmittedRecords,
+          approvedRecords,
+          pendingRecords,
+          rejectedRecords,
+          approvalRate: rate(approvedRecords, totalSubmittedRecords),
+        },
+        forms: {
+          totalDevelopedForms: totalForms,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getAdoptionAnalytics:", error);
+      throw new ApplicationError("Failed to fetch adoption analytics", 500);
     }
   }
 }
