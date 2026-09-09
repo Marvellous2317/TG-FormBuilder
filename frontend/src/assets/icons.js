@@ -31,6 +31,14 @@ import userProfile from './icons/user-profile.png';
 import pdfIcon from './icons/pdf.png';
 import eraserIcon from './icons/eraser.png';
 import penIcon from './icons/pen.png';
+import roleBased from './icons/role-based.png';
+import offline from './icons/offline.png';
+import logo from './icons/logo.png';
+import logbook from './icons/logbook.png';
+import formula from './icons/formula.png';
+import cryptographic from './icons/cryptographic.png';
+import compliance from './icons/compliance.png'
+
 
 const Icons = {
   arrowLeftInactive,
@@ -66,6 +74,15 @@ const Icons = {
   pdfIcon,
   eraserIcon,
   penIcon,
+  offline,
+  cryptographic,
+  logo,
+  formula,
+  logbook,
+  roleBased,
+  compliance,
+
+  
 };
 
 export default Icons;

@@ -77,7 +77,7 @@ export class AdminRepository {
     });
     if (!membership) {
       throw new ApplicationError(
-        `User ${user.userId} does not belong to the company this checklist belongs to`,
+        `${user.email || user.userId} is not a member of the company this checklist belongs to, so they cannot be assigned to it`,
         403
       );
     }
@@ -511,7 +511,7 @@ export class AdminRepository {
 
     static async duplicateChecklist({
     sourceChecklistId, title, documentNumber, issuedNumber, entityDisplayName,
-    companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
+    companyId, memberCompanyIds = [], departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
     approvers, operators, entries, createdBy, isSuperAdmin,
   }) {
     const transaction = await sequelize.transaction();
@@ -524,8 +524,11 @@ export class AdminRepository {
           transaction,
         });
         if (!source) throw new ApplicationError("Source checklist not found", 404);
-        if (!isSuperAdmin && source.companyId !== companyId) {
-          throw new ApplicationError("Source checklist belongs to another company", 403);
+        // Any company the caller is a member of is a valid source, not just the active
+        // one; superAdmin may copy out of any company.
+        const allowedSources = memberCompanyIds.length > 0 ? memberCompanyIds : [companyId];
+        if (!isSuperAdmin && !allowedSources.includes(source.companyId)) {
+          throw new ApplicationError("Source checklist belongs to a company you do not belong to", 403);
         }
       }
 
@@ -605,24 +608,37 @@ export class AdminRepository {
         createdEntries = await ChecklistEntry.bulkCreate(entryData, { transaction });
       }
 
+      // Operators and approvers are members of the source company. Inheriting them
+      // into another entity would attach people who do not belong there, so a
+      // cross-entity copy starts with none and the admin assigns local users after.
+      const crossEntity = Boolean(source) && source.companyId !== companyId;
+
       let resolvedApprovers = approvers;
       if (resolvedApprovers === undefined && source) {
-        const sourceApprovers = await ChecklistApprover.findAll({
-          where: { checklistId: source.checklistId },
-          attributes: ["approverId", "step"],
-          transaction,
-        });
-        resolvedApprovers = sourceApprovers.map((a) => ({ approverId: a.approverId, step: a.step }));
+        if (crossEntity) {
+          resolvedApprovers = [];
+        } else {
+          const sourceApprovers = await ChecklistApprover.findAll({
+            where: { checklistId: source.checklistId },
+            attributes: ["approverId", "step"],
+            transaction,
+          });
+          resolvedApprovers = sourceApprovers.map((a) => ({ approverId: a.approverId, step: a.step }));
+        }
       }
 
       let resolvedOperators = operators;
       if (resolvedOperators === undefined && source) {
-        const sourceAssignments = await ChecklistAssignment.findAll({
-          where: { checklistId: source.checklistId, active: true },
-          attributes: ["assignedTo"],
-          transaction,
-        });
-        resolvedOperators = sourceAssignments.map((a) => a.assignedTo);
+        if (crossEntity) {
+          resolvedOperators = [];
+        } else {
+          const sourceAssignments = await ChecklistAssignment.findAll({
+            where: { checklistId: source.checklistId, active: true },
+            attributes: ["assignedTo"],
+            transaction,
+          });
+          resolvedOperators = sourceAssignments.map((a) => a.assignedTo);
+        }
       }
 
       const createdApprovers = resolved.approvalRequired

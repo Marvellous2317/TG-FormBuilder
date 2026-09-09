@@ -24,6 +24,7 @@ import {
   fetchChecklistVersion,
   fetchChecklistVersions,
   restoreChecklist,
+  searchChecklists,
   unAssignChecklistOperator,
   updateChecklist,
   updateChecklistCatalog,
@@ -119,6 +120,15 @@ export function useChecklists(queryParams = {}, options = {}) {
   return useQuery({
     queryKey: ['admin', 'checklists', queryParams],
     queryFn: () => fetchChecklists(queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useSearchChecklists(queryParams = {}, options = {}) {
+  return useQuery({
+    queryKey: ['admin', 'search', 'checklists', queryParams],
+    queryFn: () => searchChecklists(queryParams),
     keepPreviousData: true,
     ...options,
   });

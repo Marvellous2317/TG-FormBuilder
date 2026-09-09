@@ -43,7 +43,7 @@ function WorkspaceLogin() {
   const { showError, showSuccess } = useToast();
   const { user } = useAuthStore();
 
-  const workspaceCompanies = user?.companies;
+  const workspaceCompanies = user?.companies ?? [];
 
   const navigate = useNavigate();
 
@@ -63,6 +63,9 @@ function WorkspaceLogin() {
       navigate('/admin');
     } catch (error) {
       console.error(error);
+      showError(
+        error?.response?.data?.message || 'Failed to switch workspace',
+      );
     }
   };
 
@@ -105,67 +108,72 @@ function WorkspaceLogin() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="max-h-64 overflow-y-auto rounded-2xl border border-gray-200 p-2 space-y-2">
-              {workspaceCompanies.map((workspace) => {
-                const isSelected =
-                  selectedWorkspace?.companyId === workspace.companyId;
-                return (
-                  <div
-                    key={workspace.companyId}
-                    onClick={() => setSelectedWorkspace(workspace)}
-                    className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-primary-200 bg-primary-50/40 text-primary shadow-xs'
-                        : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg font-geist font-semibold text-sm ${
-                          isSelected
-                            ? 'bg-primary-200 text-white'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {workspace.companyName.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="font-geist text-sm font-medium text-gray-900">
-                          {workspace.companyName}
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div className="ml-3 shrink-0">
-                      {isSelected ? (
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-200 text-white">
-                          <svg
-                            className="h-3.5 w-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="3"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M4.5 12.75l6 6 9-13.5"
-                            />
-                          </svg>
+              {workspaceCompanies.length > 0 ? (
+                workspaceCompanies.map((workspace) => {
+                  const isSelected =
+                    selectedWorkspace?.companyId === workspace.companyId;
+                  return (
+                    <div
+                      key={workspace.companyId}
+                      onClick={() => setSelectedWorkspace(workspace)}
+                      className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-primary-200 bg-primary-50/40 text-primary shadow-xs'
+                          : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`flex h-9 w-9 items-center justify-center rounded-lg font-geist font-semibold text-sm ${
+                            isSelected
+                              ? 'bg-primary-200 text-white'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {workspace.companyName?.charAt(0)}
                         </div>
-                      ) : (
-                        <div className="h-5 w-5 rounded-full border border-gray-300" />
-                      )}
+                        <div>
+                          <h4 className="font-geist text-sm font-medium text-gray-900">
+                            {workspace.companyName}
+                          </h4>
+                        </div>
+                      </div>
+
+                      <div className="ml-3 shrink-0">
+                        {isSelected ? (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-200 text-white">
+                            <svg
+                              className="h-3.5 w-3.5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth="3"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4.5 12.75l6 6 9-13.5"
+                              />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border border-gray-300" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <p className="p-4 text-center font-geist text-xs text-gray-500">
+                  No workspaces available
+                </p>
+              )}
             </div>
 
             <Button
               type="submit"
               className="mt-3 w-full rounded-2xl bg-primary-200 px-4 py-3.5 font-geist text-base font-medium text-white hover:opacity-90 disabled:bg-primary disabled:opacity-50 flex items-center justify-center cursor-pointer"
               disabled={!selectedWorkspace || isSwitchingWorkspace}
-              onClick={handleSubmit}
             >
               {isSwitchingWorkspace ? <Loader /> : 'Continue'}
             </Button>

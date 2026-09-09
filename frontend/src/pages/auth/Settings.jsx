@@ -15,6 +15,7 @@ import SignatureModal from '../approver/components/SignatureModal';
 import clearAllCaches from '../../lib/clearCache';
 import { useQueryClient } from '@tanstack/react-query';
 
+
 export default function Settings() {
   const queryClient = useQueryClient();
   const { clearAuth, user } = useAuthStore();
@@ -97,6 +98,20 @@ export default function Settings() {
   const handleSavePassword = async (e) => {
     e.preventDefault();
 
+    if (
+      !passwordData.currentPassword.trim() ||
+      !passwordData.newPassword.trim() ||
+      !passwordData.confirmPassword.trim()
+    ) {
+      showError('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      showError('New password must be at least 6 characters');
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       showError('New password and confirm password do not match');
       return;
@@ -104,8 +119,18 @@ export default function Settings() {
 
     try {
       await changePassword(passwordData);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
     } catch (error) {
-      console.error('Error', error);
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to change password',
+      );
     }
   };
 
@@ -126,14 +151,24 @@ export default function Settings() {
   const handleSaveChanges = async (e) => {
     e.preventDefault();
 
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      showError('First name and last name are required');
+      return;
+    }
+
     try {
       await updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
       });
       showSuccess('Profile updated successfully');
     } catch (error) {
-      console.error('Error', error);
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to update profile',
+      );
     }
   };
 
@@ -145,6 +180,15 @@ export default function Settings() {
 
   return (
     <div className="w-full min-h-screen bg-secondary-200/20">
+      {isSwitchingWorkspace && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-white/70 backdrop-blur-sm">
+          <Loader size="h-10 w-10 !border-primary-200" />
+          <p className="text-sm font-medium text-primary">
+            Switching workspace...
+          </p>
+        </div>
+      )}
+
       <section className="py-5 px-4 sm:px-6 lg:px-25 gap-1 border-b border-secondary-200">
         <h2 className="font-medium text-primary text-xl">Settings</h2>
         <p className="text-xs text-tertiary">
@@ -181,6 +225,8 @@ export default function Settings() {
                   readOnly={isSwitchingWorkspace}
                 />
               )}
+
+             
             </div>
 
             <Button
@@ -332,6 +378,8 @@ export default function Settings() {
         setIsSignatureModalOpen={setIsSignatureModalOpen}
         toUpdate={true}
       />
+
+
     </div>
   );
 }
