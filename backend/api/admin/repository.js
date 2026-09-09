@@ -6,9 +6,8 @@ import {
   Role,
   Company,
   Department,
-  // LEGACY: OperatorApprover (operator_approvers table) replaced by per-checklist approver flow.
-  // OperatorApprover,
   SubmittedChecklist,
+  SubmittedChecklistEntry,
   UserCompany,
   Checklist,
 } from "../../models/index.js";
@@ -282,9 +281,6 @@ export class AdminRepository {
       throw new ApplicationError("Failed to restore user", 500);
     }
   }
-
-  // Accepts `companyId` as a single UUID string or an array of UUIDs and returns
-  // a validated, de-duplicated list. Only MULTI_COMPANY_ROLES may hold more than one.
   static async _resolveCompanyIds(role, companyId, transaction) {
     const ids = Array.isArray(companyId)
       ? [...new Set(companyId.filter(Boolean))]
@@ -1135,8 +1131,167 @@ export class AdminRepository {
     }
   }
 
-  static async getGlobalAnalytics() {
+
+  static _submittedDateColumn() {
+    return Sequelize.fn(
+      "COALESCE",
+      Sequelize.col("submitted_checklists.submittedAt"),
+      Sequelize.col("submitted_checklists.createdAt")
+    );
+  }
+
+
+  static _toRangeEnd(value) {
+    const date = new Date(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(value).trim())) {
+      date.setUTCHours(23, 59, 59, 999);
+    }
+    return date;
+  }
+
+  static _submittedDateFilter(startDate, endDate) {
+    if (!startDate && !endDate) return null;
+
+    const column = AdminRepository._submittedDateColumn();
+    const conditions = [];
+    if (startDate) conditions.push(Sequelize.where(column, { [Op.gte]: new Date(startDate) }));
+    if (endDate) conditions.push(Sequelize.where(column, { [Op.lte]: AdminRepository._toRangeEnd(endDate) }));
+    return conditions;
+  }
+
+   static _resolveAdoptionWindow(startDate, endDate, defaultDays = 30) {
+    if (!startDate && !endDate) {
+      const from = new Date();
+      from.setDate(from.getDate() - defaultDays);
+      return { from, to: null, defaultApplied: true };
+    }
+
+    return {
+      from: startDate ? new Date(startDate) : null,
+      to: endDate ? AdminRepository._toRangeEnd(endDate) : null,
+      defaultApplied: false,
+    };
+  }
+
+  static _submittedChecklistWhere({ companyId, status, startDate, endDate }) {
+    const where = {};
+    if (companyId) where.companyId = companyId;
+    if (status) where.status = status;
+
+    const dateConditions = AdminRepository._submittedDateFilter(startDate, endDate);
+    if (dateConditions) where[Op.and] = dateConditions;
+
+    return where;
+  }
+
+
+  static async getSubmittedChecklists({
+    companyId,
+    status,
+    startDate,
+    endDate,
+    page = 1,
+    limit = 30,
+  }) {
     try {
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
+
+      page = Number(page) || 1;
+      limit = Number(limit) || 30;
+      const offset = (page - 1) * limit;
+
+      const where = AdminRepository._submittedChecklistWhere({ companyId, status, startDate, endDate });
+
+      const { rows: submittedChecklists, count } = await SubmittedChecklist.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [
+          ["submittedAt", "DESC"],
+          ["createdAt", "DESC"],
+        ],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`(
+                SELECT COUNT(*)::integer
+                FROM "submitted_checklist_entries" AS "entries"
+                WHERE "entries"."submittedChecklistId" = "submitted_checklists"."submittedChecklistId"
+                  AND "entries"."deletedAt" IS NULL
+              )`),
+              "entryCount",
+            ],
+          ],
+        },
+        include: [
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName", "email"] },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
+        ],
+      });
+
+      return {
+        submittedChecklists,
+        filters: {
+          companyId: companyId || null,
+          status: status || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        pagination: {
+          total: count,
+          page,
+          pageSize: limit,
+          totalPages: Math.ceil(count / limit),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getSubmittedChecklists:", error);
+      throw new ApplicationError("Failed to fetch submitted checklists", 500);
+    }
+  }
+
+  static async getSubmittedChecklistById(submittedChecklistId) {
+    try {
+      const submittedChecklist = await SubmittedChecklist.findByPk(submittedChecklistId, {
+        include: [
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName", "email"] },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
+          {
+            model: SubmittedChecklistEntry,
+            as: "entries",
+            separate: true,
+            order: [
+              ["order", "ASC"],
+              ["createdAt", "ASC"],
+            ],
+          },
+        ],
+      });
+
+      if (!submittedChecklist) throw new ApplicationError("Submitted checklist not found", 404);
+
+      return submittedChecklist;
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getSubmittedChecklistById:", error);
+      throw new ApplicationError("Failed to fetch submitted checklist", 500);
+    }
+  }
+
+
+  static async getGlobalAnalytics({ companyId, startDate, endDate } = {}) {
+    try {
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
@@ -1148,39 +1303,55 @@ export class AdminRepository {
       startOfWeek.setDate(today.getDate() - diff);
       startOfWeek.setHours(0, 0, 0, 0);
 
-      const totalActiveCompanies = await Company.count({
-        where: { status: "active" },
-      });
+      const scoped = (extra = {}) => (companyId ? { companyId, ...extra } : { ...extra });
+      const rangeWhere = (status) =>
+        AdminRepository._submittedChecklistWhere({ companyId, status, startDate, endDate });
 
-      const totalActiveUsers = await User.count({
-        where: { status: "active" },
-      });
-
-      const totalChecklistsToday = await SubmittedChecklist.count({
-        where: {
-          createdAt: {
-            [Op.gte]: today,
-            [Op.lt]: tomorrow,
-          },
-        },
-      });
-
-      const totalChecklistsThisWeek = await SubmittedChecklist.count({
-        where: {
-          createdAt: {
-            [Op.gte]: startOfWeek,
-            [Op.lt]: tomorrow,
-          },
-        },
-      });
-
-      return {
+      const [
         totalActiveCompanies,
         totalActiveUsers,
         totalChecklistsToday,
         totalChecklistsThisWeek,
+        rangeTotal,
+        rangeApproved,
+        rangePending,
+        rangeRejected,
+      ] = await Promise.all([
+        Company.count({ where: scoped({ status: "active" }) }),
+        User.count({ where: scoped({ status: "active" }) }),
+        SubmittedChecklist.count({
+          where: scoped({ createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } }),
+        }),
+        SubmittedChecklist.count({
+          where: scoped({ createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } }),
+        }),
+        SubmittedChecklist.count({ where: rangeWhere() }),
+        SubmittedChecklist.count({ where: rangeWhere("approved") }),
+        SubmittedChecklist.count({ where: rangeWhere("pending") }),
+        SubmittedChecklist.count({ where: rangeWhere("rejected") }),
+      ]);
+
+      return {
+        filters: {
+          companyId: companyId || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        totalActiveCompanies,
+        totalActiveUsers,
+        totalChecklistsToday,
+        totalChecklistsThisWeek,
+        range: {
+          from: startDate || null,
+          to: endDate || null,
+          totalChecklists: rangeTotal,
+          approved: rangeApproved,
+          pending: rangePending,
+          rejected: rangeRejected,
+        },
       };
     } catch (error) {
+      if (error instanceof ApplicationError) throw error;
       console.log("Error in getGlobalAnalytics:", error);
       throw new ApplicationError("Failed to fetch analytics", 500);
     }
@@ -1240,23 +1411,39 @@ export class AdminRepository {
     }
   }
 
-  // Platform adoption overview: who is actually using DigiForms, which entities
-  // are on it vs. actually transacting on it, and the volume flowing through.
-  // "Adoption" is measured by activity (a user has submitted or approved at
-  // least one record), not by having an account -- an unused account is not adoption.
-  static async getAdoptionAnalytics() {
+   static async getAdoptionAnalytics({ companyId, startDate, endDate } = {}) {
     try {
-      const rate = (part, whole) =>
-        whole > 0 ? Number(((part / whole) * 100).toFixed(2)) : 0;
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
 
-      const distinctValues = async (model, column) => {
+      const { from, to, defaultApplied } = AdminRepository._resolveAdoptionWindow(startDate, endDate);
+
+      const distinctValues = async (model, column, scope = {}) => {
         const rows = await model.findAll({
           attributes: [[Sequelize.fn("DISTINCT", Sequelize.col(column)), "value"]],
-          where: { [column]: { [Op.ne]: null } },
+                  where: { [Op.and]: [scope, { [column]: { [Op.ne]: null } }] },
           raw: true,
         });
         return rows.map((row) => row.value).filter(Boolean);
       };
+
+      const submissionWhere = (status) =>
+        AdminRepository._submittedChecklistWhere({ companyId, status, startDate: from, endDate: to });
+
+      const formWhere = () => {
+        const where = {};
+        if (companyId) where.companyId = companyId;
+        if (from || to) {
+          where.createdAt = {};
+          if (from) where.createdAt[Op.gte] = from;
+          if (to) where.createdAt[Op.lte] = to;
+        }
+        return where;
+      };
+
+      const populationWhere = (extra = {}) => (companyId ? { companyId, ...extra } : { ...extra });
 
       const [
         totalUsers,
@@ -1273,51 +1460,55 @@ export class AdminRepository {
         entityIdsWithSubmissions,
         entityIdsWithForms,
       ] = await Promise.all([
-        User.count(),
-        User.count({ where: { status: "active" } }),
-        Company.count(),
-        Company.count({ where: { status: "active" } }),
-        Checklist.count(),
-        SubmittedChecklist.count(),
-        SubmittedChecklist.count({ where: { status: "approved" } }),
-        SubmittedChecklist.count({ where: { status: "pending" } }),
-        SubmittedChecklist.count({ where: { status: "rejected" } }),
-        distinctValues(SubmittedChecklist, "submittedBy"),
-        distinctValues(SubmittedChecklist, "approvedBy"),
-        distinctValues(SubmittedChecklist, "companyId"),
-        distinctValues(Checklist, "companyId"),
+        User.count({ where: populationWhere() }),
+        User.count({ where: populationWhere({ status: "active" }) }),
+        Company.count({ where: populationWhere() }),
+        Company.count({ where: populationWhere({ status: "active" }) }),
+        Checklist.count({ where: formWhere() }),
+        SubmittedChecklist.count({ where: submissionWhere() }),
+        SubmittedChecklist.count({ where: submissionWhere("approved") }),
+        SubmittedChecklist.count({ where: submissionWhere("pending") }),
+        SubmittedChecklist.count({ where: submissionWhere("rejected") }),
+        distinctValues(SubmittedChecklist, "submittedBy", submissionWhere()),
+        distinctValues(SubmittedChecklist, "approvedBy", submissionWhere()),
+        distinctValues(SubmittedChecklist, "companyId", submissionWhere()),
+        distinctValues(Checklist, "companyId", formWhere()),
       ]);
 
-      // A person "uses it" once they have submitted or approved at least one record.
       const adoptedUserIds = new Set([...submitterIds, ...approverIds]);
       const adoptedUsers = adoptedUserIds.size;
 
-      // An entity "makes use of it" once it has either built a form or had a
-      // record submitted against one.
+     
       const engagedEntityIds = new Set([...entityIdsWithSubmissions, ...entityIdsWithForms]);
       const entitiesUsing = engagedEntityIds.size;
 
       return {
+        filters: {
+          companyId: companyId || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        range: {
+          from: from ? from.toISOString() : null,
+          to: to ? to.toISOString() : null,
+          defaultApplied,
+        },
         adoption: {
           totalUsers,
           activeUsers,
           adoptedUsers,
-          adoptionRate: rate(adoptedUsers, totalUsers),
-          activeUserAdoptionRate: rate(adoptedUsers, activeUsers),
         },
         entities: {
           totalEntities,
           activeEntities,
           entitiesUsing,
           entitiesNotUsing: Math.max(totalEntities - entitiesUsing, 0),
-          entityAdoptionRate: rate(entitiesUsing, totalEntities),
         },
         usage: {
           totalSubmittedRecords,
           approvedRecords,
           pendingRecords,
           rejectedRecords,
-          approvalRate: rate(approvedRecords, totalSubmittedRecords),
         },
         forms: {
           totalDevelopedForms: totalForms,
