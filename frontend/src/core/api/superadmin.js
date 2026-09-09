@@ -88,6 +88,11 @@ export const fetchDashboardCompanyAnalytics = async () => {
   return data;
 };
 
+export const fetchDashboardCompanyAdoptionAnalytics = async () => {
+  const { data } = await axiosInstance.get(`/admin/analytics/adoption`);
+  return data;
+};
+
 export const fetchCompanyAnalytics = async (id) => {
   const { data } = await axiosInstance.get(`/admin/analytics/${id}`);
   return data;

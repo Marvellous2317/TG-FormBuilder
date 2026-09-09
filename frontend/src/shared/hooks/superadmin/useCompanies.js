@@ -11,6 +11,7 @@ import {
   fetchCompanies,
   fetchCompany,
   fetchCompanyAnalytics,
+  fetchDashboardCompanyAdoptionAnalytics,
   fetchDashboardCompanyAnalytics,
   restoreCompany,
   suspendCompany,
@@ -52,6 +53,15 @@ export function useDashboardCompanyAnalytics(options = {}) {
   return useQuery({
     queryKey: ['superadmin', 'companies', 'dashboard', 'analytics'],
     queryFn: () => fetchDashboardCompanyAnalytics(),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useDashboardCompanyAdoptionAnalytics(options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'companies', 'dashboard', 'analytics'],
+    queryFn: () => fetchDashboardCompanyAdoptionAnalytics(),
     keepPreviousData: true,
     ...options,
   });

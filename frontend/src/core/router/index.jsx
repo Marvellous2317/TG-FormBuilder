@@ -127,6 +127,10 @@ export const router = createBrowserRouter([
             element: <SuperAdminDashboard />,
           },
           {
+            path: 'reports',
+            element: <SuperAdminDashboard />,
+          },
+          {
             path: 'entities',
             element: <EntitiesManagement />,
           },
