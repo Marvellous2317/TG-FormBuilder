@@ -83,7 +83,7 @@ export function useDashboardCompanyAdoptionAnalytics(
   options = {},
 ) {
   return useQuery({
-    queryKey: ['superadmin', 'companies', 'dashboard', 'adoption', 'analytics'],
+    queryKey: ['superadmin', 'companies', 'dashboard', 'adoption', 'analytics', queryParams],
     queryFn: () => fetchDashboardCompanyAdoptionAnalytics(queryParams),
     keepPreviousData: true,
     ...options,

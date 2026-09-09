@@ -6,6 +6,7 @@ import CreateEntityModal from './components/CreateEntityModal';
 import EditEntityModal from './components/EditEntityModal';
 import EmptyEntityList from './components/EmptyEntityList';
 import StatCard from './components/StatCard';
+import InputField from '../../../shared/components/InputField';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 import {
@@ -41,8 +42,15 @@ export default function ReportsManagement() {
   });
 
   const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
+
+  const queryParams = {
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    ...(filters.companyId && { companyId: filters.companyId }),
+  };
+
   const { data: dashboardAnalytics, isPending: isDashboardAnalyticsLoading } =
-    useDashboardCompanyAdoptionAnalytics(filters);
+    useDashboardCompanyAdoptionAnalytics(queryParams);
 
   const dashboardAnalyticsData = dashboardAnalytics?.data;
   const companies = companiesData?.data?.companies || [];
@@ -53,8 +61,6 @@ export default function ReportsManagement() {
       [field]: value,
     }));
   };
-
-  console.log(dashboardAnalyticsData);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -69,52 +75,47 @@ export default function ReportsManagement() {
         </div>
       </header>
 
-      <section className="py-6 px-8 overflow-y-auto flex-1">
+      <section className="py-6 px-8">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+        <div className="flex flex-col sm:flex-row gap-4">
           {/* Company Filter */}
-          <div className="flex flex-col gap-1 w-full sm:w-48">
-            <label className="text-sm font-medium text-primary font-geist">
-              Company
-            </label>
-            <select
+          <div className="flex-1 min-w-0">
+            <InputField
+              label="Company"
+              id="company"
               value={filters.companyId}
+              type="select"
+              options={[
+                { label: 'All Companies', value: '' },
+                ...companies.map((company) => ({
+                  label: company.companyName,
+                  value: company.companyId,
+                })),
+              ]}
               onChange={(e) => handleFilterChange('companyId', e.target.value)}
               disabled={isLoadingCompanies}
-              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
-            >
-              <option value="">All Companies</option>
-              {companies.map((company) => (
-                <option key={company.companyId} value={company.companyId}>
-                  {company.companyName}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Start Date Filter */}
-          <div className="flex flex-col gap-1 w-full sm:w-48">
-            <label className="text-sm font-medium text-primary font-geist">
-              Start Date
-            </label>
-            <input
+          <div className="flex-1 min-w-0">
+            <InputField
+              label="Start Date"
+              id="startDate"
               type="date"
               value={filters.startDate}
               onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
             />
           </div>
 
           {/* End Date Filter */}
-          <div className="flex flex-col gap-1 w-full sm:w-48">
-            <label className="text-sm font-medium text-primary font-geist">
-              End Date
-            </label>
-            <input
+          <div className="flex-1 min-w-0">
+            <InputField
+              label="End Date"
+              id="endDate"
               type="date"
               value={filters.endDate}
               onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
             />
           </div>
         </div>

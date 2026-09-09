@@ -49,6 +49,7 @@ import SOPHome from '@/pages/sop/SOPHome';
 import WorkspaceLogin from '../../pages/auth/WorkspaceLogin';
 import ReportsManagement from '@/pages/superadmin/reports/ReportsManagement';
 import SuperAdminSubmissionsManagement from '@/pages/superadmin/submissions/SuperAdminSubmissionsManagement';
+import ViewSuperAdminEntries from '@/pages/superadmin/submissions/ViewSuperAdminEntries';
 
 export const router = createBrowserRouter([
   {
@@ -135,6 +136,11 @@ export const router = createBrowserRouter([
           {
             path: 'submissions',
             element: <SuperAdminSubmissionsManagement />,
+          },
+          {
+            path: 'submissions/:id',
+            loader: ({ params }) => params,
+            element: <ViewSuperAdminEntries />,
           },
           {
             path: 'entities',
