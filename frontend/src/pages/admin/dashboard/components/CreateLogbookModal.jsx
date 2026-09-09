@@ -91,7 +91,9 @@ export default function CreateLogbookModal({
     logbookTitle: checklistToDuplicate
       ? `${checklistToDuplicate?.title} (copy)`
       : '',
-    documentNumber: checklistToDuplicate?.documentNumber ?? '',
+    documentNumber: checklistToDuplicate
+      ? `${checklistToDuplicate?.documentNumber} (copy)`
+      : '',
     department: checklistToDuplicate?.department
       ? {
           departmentId: checklistToDuplicate?.department?.departmentId,
@@ -114,7 +116,9 @@ export default function CreateLogbookModal({
         logbookTitle: checklistToDuplicate
           ? `${checklistToDuplicate?.title} (copy)`
           : '',
-        documentNumber: checklistToDuplicate?.documentNumber || '',
+        documentNumber: checklistToDuplicate
+          ? `${checklistToDuplicate?.documentNumber} (copy)`
+          : '',
         department: checklistToDuplicate?.department || {},
         frequency: checklistToDuplicate?.frequency || '',
         frequencyInterval: checklistToDuplicate?.frequencyInterval || '',

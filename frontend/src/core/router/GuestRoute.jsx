@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../shared/store/authStore';
 import Loader from '../../shared/components/Loader';
+import RoleRedirect from './RoleRedirect';
 
 export default function GuestRoute({ children }) {
   const { accessToken, user, requiresPasswordChange, hasHydrated } =
@@ -18,5 +19,5 @@ export default function GuestRoute({ children }) {
     return <Navigate to="/change-password" replace />;
   }
 
-  return <Navigate to="/" replace />;
+  return <RoleRedirect />;
 }

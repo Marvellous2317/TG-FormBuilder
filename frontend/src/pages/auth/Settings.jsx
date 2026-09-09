@@ -5,16 +5,25 @@ import Icons from '../../assets/icons';
 import { useAuthStore } from '../../shared/store/authStore';
 import useToast from '../../shared/hooks/useToast';
 import useAuth from '../../shared/hooks/useAuth';
-import { useProfile, useProfileUpdate,  } from '../../shared/hooks/useAuth';
+import {
+  useProfile,
+  useProfileUpdate,
+  useSwitchWorkspace,
+} from '../../shared/hooks/useAuth';
 import Loader from '../../shared/components/Loader';
 import SignatureModal from '../approver/components/SignatureModal';
 import clearAllCaches from '../../lib/clearCache';
 import { useQueryClient } from '@tanstack/react-query';
 
+
 export default function Settings() {
   const queryClient = useQueryClient();
-  const { clearAuth, user, setUser } = useAuthStore();
-  const { showSuccess } = useToast();
+  const { clearAuth, user } = useAuthStore();
+  const { showSuccess, showError } = useToast();
+
+  const [selectedWorkspace, setSelectedWorkspace] = useState(
+    user?.companyId ?? user?.company?.companyId ?? '',
+  );
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -30,41 +39,100 @@ export default function Settings() {
   });
 
   const { changePassword, isChangingPassword } = useAuth();
-
-  // const { mutateAsync: changePassword, isPending: isChangingPassword } =
-  // useChangePassword();
-
-  
-
-  const handlePasswordChange = (e) => {
-  const { name, value } = e.target;
-  setPasswordData((prev) => ({ ...prev, [name]: value }));
-};
-
-const handleSavePassword = async (e) => {
-  e.preventDefault();
-
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    showError('New password and confirm password do not match');
-    return;
-  }
-
-  try {
-    await changePassword(passwordData);
-    // no need to reset state — onSuccess navigates to /login anyway
-  } catch (error) {
-    console.error('Error', error);
-  }
-};
-
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   const { data: profile, isPending: isLoadingProfile } = useProfile();
-
   const profileData = profile?.data?.user;
+  const currentCompanyId =
+    profileData?.companyId ??
+    profileData?.company?.companyId ??
+    user?.companyId ??
+    user?.company?.companyId ??
+    '';
+  const activeWorkspace = selectedWorkspace || currentCompanyId;
+
+  const workspaceCompanies = (user?.companies ?? []).map((c) => {
+    return { label: c.companyName, value: c.companyId };
+  });
 
   const { mutateAsync: updateProfile, isPending: isUpdatingProfile } =
     useProfileUpdate();
+  const { mutateAsync: switchWorkspace, isPending: isSwitchingWorkspace } =
+    useSwitchWorkspace();
+
+  // Role validation for Corporate Admin
+  const currentRole = (
+    profileData?.role?.roleName ||
+    user?.role?.roleName ||
+    profileData?.role ||
+    user?.role ||
+    ''
+  )
+    .toString()
+    .toLowerCase()
+    .replace(/[_\s-]+/g, ' ')
+    .trim();
+
+  const isCorporateAdmin =
+    currentRole === 'corporate admin' || currentRole.includes('corporate');
+
+  const handleWorkspaceSelectChange = async (companyId) => {
+    if (!companyId || companyId === activeWorkspace) return;
+
+    try {
+      await switchWorkspace({ companyId });
+      setSelectedWorkspace(companyId);
+      showSuccess('Workspace switched successfully');
+    } catch (error) {
+      showError(
+        error?.response?.data?.message || 'Failed to switch workspace',
+      );
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+
+    if (
+      !passwordData.currentPassword.trim() ||
+      !passwordData.newPassword.trim() ||
+      !passwordData.confirmPassword.trim()
+    ) {
+      showError('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      showError('New password must be at least 6 characters');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showError('New password and confirm password do not match');
+      return;
+    }
+
+    try {
+      await changePassword(passwordData);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error) {
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to change password',
+      );
+    }
+  };
 
   useEffect(() => {
     setFormData({
@@ -73,7 +141,6 @@ const handleSavePassword = async (e) => {
       email: user?.email || '',
       role: user?.role?.roleName || '',
     });
-    // if (profileData) setUser(profileData);
   }, [user, profile]);
 
   const handleInputChange = (e) => {
@@ -84,14 +151,24 @@ const handleSavePassword = async (e) => {
   const handleSaveChanges = async (e) => {
     e.preventDefault();
 
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      showError('First name and last name are required');
+      return;
+    }
+
     try {
       await updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
       });
       showSuccess('Profile updated successfully');
     } catch (error) {
-      console.error('Error', error);
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to update profile',
+      );
     }
   };
 
@@ -103,6 +180,15 @@ const handleSavePassword = async (e) => {
 
   return (
     <div className="w-full min-h-screen bg-secondary-200/20">
+      {isSwitchingWorkspace && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-white/70 backdrop-blur-sm">
+          <Loader size="h-10 w-10 !border-primary-200" />
+          <p className="text-sm font-medium text-primary">
+            Switching workspace...
+          </p>
+        </div>
+      )}
+
       <section className="py-5 px-4 sm:px-6 lg:px-25 gap-1 border-b border-secondary-200">
         <h2 className="font-medium text-primary text-xl">Settings</h2>
         <p className="text-xs text-tertiary">
@@ -115,11 +201,33 @@ const handleSavePassword = async (e) => {
       ) : (
         <section className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
           <div className="flex flex-row justify-between items-center mb-8">
-            <img
-              src={Icons.userProfile}
-              alt="User Profile"
-              className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
-            />
+            <div className="flex items-center gap-4 w-2/4">
+              <img
+                src={Icons.userProfile}
+                alt="User Profile"
+                className="w-16 h-16 bg-secondary-700 object-contain rounded-2xl p-3 border border-secondary-200 shadow-sm"
+              />
+
+              {/* Workspace dropdown rendered only for Corporate Admin */}
+              {isCorporateAdmin && (
+                <InputField
+                  id="workspace"
+                  name="workspace"
+                  label="Workspace"
+                  options={workspaceCompanies}
+                  value={activeWorkspace}
+                  onChange={(e) =>
+                    handleWorkspaceSelectChange(e.target.value)
+                  }
+                  placeholder="Select Workspace"
+                  className="w-full"
+                  type="select"
+                  readOnly={isSwitchingWorkspace}
+                />
+              )}
+
+             
+            </div>
 
             <Button
               type="button"
@@ -160,10 +268,7 @@ const handleSavePassword = async (e) => {
                 label="Email address"
                 type="email"
                 value={formData.email}
-                // readOnly={true}
                 disabled
-                // inputClassName="bg-secondary-700! cursor-not-allowed"
-                // className="w-full cursor-not-allowed"
               />
 
               <InputField
@@ -172,15 +277,12 @@ const handleSavePassword = async (e) => {
                 label="Role"
                 type="text"
                 value={formData.role}
-                // readOnly={true}
                 disabled
-                // inputClassName="bg-secondary-700! cursor-not-allowed"
-                // className="w-full cursor-not-allowed"
               />
 
               <div className="flex flex-col md:flex-row gap-2 items-end">
                 <div>
-                  <h2 className=" mb-2 block font-geist text-sm font-regular text-secondary">
+                  <h2 className="mb-2 block font-geist text-sm font-regular text-secondary">
                     Approver signature
                   </h2>
                   {profileData?.signature && (
@@ -219,7 +321,7 @@ const handleSavePassword = async (e) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-secondary-200 p-6 md:p-8 shadow-sm  mt-10">
+          <div className="bg-white rounded-3xl border border-secondary-200 p-6 md:p-8 shadow-sm mt-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <InputField
                 id="current password"
@@ -250,10 +352,6 @@ const handleSavePassword = async (e) => {
                 type="password"
                 value={passwordData.confirmPassword}
                 onChange={handlePasswordChange}
-                // readOnly={true}
-                // disabled
-                // inputClassName="bg-secondary-700! cursor-not-allowed"
-                // className="w-full cursor-not-allowed"
               />
             </div>
 
@@ -274,11 +372,14 @@ const handleSavePassword = async (e) => {
           </div>
         </section>
       )}
+
       <SignatureModal
         isSignatureModalOpen={isSignatureModalOpen}
         setIsSignatureModalOpen={setIsSignatureModalOpen}
         toUpdate={true}
       />
+
+
     </div>
   );
 }

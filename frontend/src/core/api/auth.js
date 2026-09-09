@@ -15,6 +15,11 @@ export const resetPassword = async (payload) => {
   return data;
 };
 
+export const switchWorkspace = async (payload) => {
+  const { data } = await axiosInstance.post('/auth/switch-workspace', payload);
+  return data;
+};
+
 export const forgotPassword = async (payload) => {
   const { data } = await axiosInstance.post(
     `/auth/forgot-password/${payload.email}`,

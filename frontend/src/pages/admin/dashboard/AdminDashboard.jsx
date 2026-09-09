@@ -12,6 +12,7 @@ import {
 import EditLogbookModal from './components/EditLogbookModal';
 import DeleteChecklistModal from './components/DeleteChecklistModal';
 import RestoreChecklistModal from './components/RestoreChecklistModal';
+import DuplicateTasksModal from './components/DuplicateTasksModal';
 import { useAuthStore } from '@/shared/store/authStore';
 
 export default function AdminDashboard() {
@@ -23,6 +24,8 @@ export default function AdminDashboard() {
   const [isDeleteChecklistModalOpen, setIsDeleteChecklistModalOpen] =
     useState(false);
   const [isRestoreChecklistModalOpen, setIsRestoreChecklistModalOpen] =
+    useState(false);
+  const [isDuplicateTasksModalOpen, setIsDuplicateTasksModalOpen] =
     useState(false);
   const [checklistToRestore, setChecklistToRestore] = useState(null);
   const [checklistToDuplicate, setChecklistToDuplicate] = useState(null);
@@ -40,6 +43,9 @@ export default function AdminDashboard() {
 
   const isReadAdmin =
     user?.accessLevel && user?.accessLevel === 'read' ? true : false;
+
+  const isCorporateAdmin =
+    user?.role?.roleName.toLowerCase() === 'corporateadmin';
 
   const { data, isFetching } = useChecklists(checklistPagination);
 
@@ -93,20 +99,35 @@ export default function AdminDashboard() {
             Here's an overview of your task list
           </p>
         </div>
-        {!isReadAdmin && (
-          <Button
-            className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
-            onClick={() => {
-              setIsShowLogbookModal(true);
-              setChecklistToDuplicate(null);
-            }}
-          >
-            <IoAddOutline className="text-white" size={14} />
-            <p className="text-white font-geist font-medium text-sm">
-              Add a task list
-            </p>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!isReadAdmin && (
+            <Button
+              className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+              onClick={() => {
+                setIsShowLogbookModal(true);
+                setChecklistToDuplicate(null);
+              }}
+            >
+              <IoAddOutline className="text-white" size={14} />
+              <p className="text-white font-geist font-medium text-sm">
+                Add a task list
+              </p>
+            </Button>
+          )}
+          {isCorporateAdmin && (
+            <Button
+              className="bg-primary-200 gap-1 p-2.5 rounded-[10px]"
+              onClick={() => {
+                setIsDuplicateTasksModalOpen(true);
+              }}
+            >
+              <IoAddOutline className="text-white" size={14} />
+              <p className="text-white font-geist font-medium text-sm">
+                Duplicate task list
+              </p>
+            </Button>
+          )}
+        </div>
       </header>
 
       <section className="py-6 px-8">
@@ -183,6 +204,13 @@ export default function AdminDashboard() {
         setIsRestoreChecklistModalOpen={setIsRestoreChecklistModalOpen}
         checklistToRestore={checklistToRestore}
         setChecklistToRestore={setChecklistToRestore}
+      />
+
+      <DuplicateTasksModal
+        isDuplicateTasksModalOpen={isDuplicateTasksModalOpen}
+        setIsDuplicateTasksModalOpen={setIsDuplicateTasksModalOpen}
+        setChecklistToDuplicate={setChecklistToDuplicate}
+        setIsShowLogbookModal={setIsShowLogbookModal}
       />
     </div>
   );
