@@ -8,7 +8,10 @@ import EmptyEntityList from './components/EmptyEntityList';
 import StatCard from './components/StatCard';
 import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
-import { useDashboardCompanyAdoptionAnalytics } from '../../../shared/hooks/superadmin/useCompanies';
+import {
+  useDashboardCompanyAdoptionAnalytics,
+  useCompanies,
+} from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 import {
   BarChart,
@@ -31,36 +34,31 @@ const twoMonthsAgo = date.toISOString().split('T')[0];
 const today = new Date().toISOString().split('T')[0];
 
 export default function ReportsManagement() {
-  const [companyPagination, setCompanyPagination] = useState({
+  const [filters, setFilters] = useState({
+    companyId: '',
     startDate: twoMonthsAgo,
     endDate: today,
   });
 
+  const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
   const { data: dashboardAnalytics, isPending: isDashboardAnalyticsLoading } =
-    useDashboardCompanyAdoptionAnalytics(companyPagination);
+    useDashboardCompanyAdoptionAnalytics(filters);
 
   const dashboardAnalyticsData = dashboardAnalytics?.data;
+  const companies = companiesData?.data?.companies || [];
 
-  const handlePagination = ({ companyId, startDate, endDate }) => {
-    if (companyId === '') {
-      setCompanyPagination({
-        startDate,
-        endDate,
-      });
-    } else {
-      setCompanyPagination({
-        companyId,
-        startDate,
-        endDate,
-      });
-    }
+  const handleFilterChange = (field, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   console.log(dashboardAnalyticsData);
 
   return (
     <div className="w-full min-h-screen max-h-screen">
-      <header className="flex flex-col sm:flex-row gap-3 md:gap-0 w-full px-8 py-2.5 border-b border-secondary-200 md:items-center items-start justify-between">
+      <header className="flex flex-col gap-4 w-full px-8 py-4 border-b border-secondary-200">
         <div className="flex flex-col gap-1">
           <h1 className="text-primary text-xl font-medium font-geist">
             Adoption reports
@@ -70,6 +68,57 @@ export default function ReportsManagement() {
           </p>
         </div>
       </header>
+
+      <section className="py-6 px-8 overflow-y-auto flex-1">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+          {/* Company Filter */}
+          <div className="flex flex-col gap-1 w-full sm:w-48">
+            <label className="text-sm font-medium text-primary font-geist">
+              Company
+            </label>
+            <select
+              value={filters.companyId}
+              onChange={(e) => handleFilterChange('companyId', e.target.value)}
+              disabled={isLoadingCompanies}
+              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
+            >
+              <option value="">All Companies</option>
+              {companies.map((company) => (
+                <option key={company.companyId} value={company.companyId}>
+                  {company.companyName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Start Date Filter */}
+          <div className="flex flex-col gap-1 w-full sm:w-48">
+            <label className="text-sm font-medium text-primary font-geist">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
+            />
+          </div>
+
+          {/* End Date Filter */}
+          <div className="flex flex-col gap-1 w-full sm:w-48">
+            <label className="text-sm font-medium text-primary font-geist">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              className="px-3 py-2 rounded-lg border border-secondary-200 bg-white text-primary font-geist text-sm"
+            />
+          </div>
+        </div>
+      </section>
 
       <section className="py-6 px-8 overflow-y-auto flex-1">
         {/* Adoption Section */}
@@ -240,7 +289,8 @@ export default function ReportsManagement() {
                         width: `${
                           dashboardAnalyticsData?.entities?.totalEntities
                             ? (dashboardAnalyticsData?.entities?.entitiesUsing /
-                                dashboardAnalyticsData?.entities?.totalEntities) *
+                                dashboardAnalyticsData?.entities
+                                  ?.totalEntities) *
                               100
                             : 0
                         }%`,
@@ -348,7 +398,8 @@ export default function ReportsManagement() {
                         style={{
                           width: `${
                             dashboardAnalyticsData?.usage?.totalSubmittedRecords
-                              ? (dashboardAnalyticsData?.usage?.approvedRecords /
+                              ? (dashboardAnalyticsData?.usage
+                                  ?.approvedRecords /
                                   dashboardAnalyticsData?.usage
                                     ?.totalSubmittedRecords) *
                                 100
