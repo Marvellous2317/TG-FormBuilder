@@ -62,11 +62,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/guide',
-            element: (
-              <GuestRoute>
-                <SOPHome />
-              </GuestRoute>
-            ),
+            element: <SOPHome />,
           },
           {
             path: '/login',

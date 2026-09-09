@@ -21,12 +21,22 @@ export default function EditAdminUserModal({
   setUserToEdit,
   fromAdmin = false,
 }) {
+  const isCorporateAdminInitial =
+    userToEdit?.role?.roleName === 'corporateAdmin' ||
+    userToEdit?.role?.label === 'corporateAdmin';
+
   const [formData, setFormData] = useState({
     firstName: userToEdit?.firstName ?? '',
     lastName: userToEdit?.lastName ?? '',
     email: userToEdit?.email ?? '',
     role: userToEdit?.role ?? {},
-    entity: userToEdit?.company ?? {},
+    entity: isCorporateAdminInitial
+      ? Array.isArray(userToEdit?.companies)
+        ? userToEdit.companies
+        : userToEdit?.company?.companyId
+          ? [userToEdit.company]
+          : []
+      : (userToEdit?.company ?? {}),
     departmentId: userToEdit?.departmentId ?? '',
     departmentName: userToEdit?.department ?? '',
     accessLevel: userToEdit?.accessLevel ?? '',
@@ -39,11 +49,15 @@ export default function EditAdminUserModal({
 
   const { showError, showSuccess } = useToast();
 
-  const rolesData = roles?.data?.roles.map((role) => ({
+  let rolesData = roles?.data?.roles.map((role) => ({
     ...role,
     label: role.roleName,
     value: role.roleId,
   }));
+
+  rolesData = fromAdmin
+    ? rolesData.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
+    : rolesData;
 
   const isAdminRole =
     rolesData?.find((r) => r.label === 'admin')?.roleId ===
@@ -255,6 +269,7 @@ export default function EditAdminUserModal({
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField
+              key={isCorporateAdminRole ? 'corporate' : 'standard'}
               label="Entity"
               id="entity"
               className=""
@@ -263,7 +278,7 @@ export default function EditAdminUserModal({
                   ? Array.isArray(formData.entity)
                     ? formData.entity.map(({ companyId }) => companyId)
                     : []
-                  : formData.entity?.companyId
+                  : (formData.entity?.companyId ?? '')
               }
               required
               readOnly={isLoadingEntities}

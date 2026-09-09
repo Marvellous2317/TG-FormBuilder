@@ -78,11 +78,13 @@ export default function CreateAdminUserModal({
 
   const { showError, showSuccess } = useToast();
 
-  const rolesData = roles?.data?.roles.map((role) => ({
-    ...role,
-    label: role.roleName,
-    value: role.roleId,
-  }));
+  const rolesData = roles?.data?.roles
+    .filter((role) => role.roleName.toLowerCase() !== 'corporateadmin')
+    .map((role) => ({
+      ...role,
+      label: role.roleName,
+      value: role.roleId,
+    }));
 
   const isAdminRole =
     rolesData?.find((r) => r.label === 'admin')?.roleId ===

@@ -20,7 +20,7 @@ export default function LandingPage() {
     navigate('/login');
   };
 
-  const sopGuide = ()=> {
+  const sopGuide = () => {
     navigate('/guide');
   };
 
@@ -275,8 +275,10 @@ export default function LandingPage() {
           {/* Right Column: High Fidelity Interactive UI Dashboard Mockup */}
           <div id="hero-right-mockup" className="lg:col-span-6 w-full">
             <div className="relative w-full rounded-2xl bg-white border border-[#E1E2ED] ambient-shadow p-3 sm:p-5 lg:p-6 overflow-hidden">
-             <img src={Images.formSnippet} className='object-contain w-full h-auto'/>
-              
+              <img
+                src={Images.formSnippet}
+                className="object-contain w-full h-auto"
+              />
             </div>
           </div>
         </section>
