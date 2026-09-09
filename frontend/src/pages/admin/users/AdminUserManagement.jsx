@@ -132,7 +132,7 @@ export default function AdminUserManagement() {
       <CreateAdminUserModal
         isCreateUserModalOpen={isCreateUserModalOpen}
         setIsCreateUserModalOpen={setIsCreateUserModalOpen}
-        isFromAdmin={true}
+        fromAdmin
       />
 
       <DeleteUserModal
