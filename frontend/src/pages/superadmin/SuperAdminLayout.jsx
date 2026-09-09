@@ -51,6 +51,12 @@ const navDetails = [
     to: '/superadmin/users',
   },
   {
+    icon: Icons.dashboardActive,
+    icon2: Icons.dashboardInactive,
+    title: 'Submissions',
+    to: '/superadmin/submissions',
+  },
+  {
     icon: Icons.settingsActive,
     icon2: Icons.settingsInactive,
     title: 'Settings',

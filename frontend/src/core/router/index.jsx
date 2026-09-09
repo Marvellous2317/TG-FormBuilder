@@ -47,6 +47,8 @@ import ViewAdminEntriesHistory from '../../pages/admin/history/ViewAdminEntriesH
 import GuestRoute from './GuestRoute';
 import SOPHome from '@/pages/sop/SOPHome';
 import WorkspaceLogin from '../../pages/auth/WorkspaceLogin';
+import ReportsManagement from '@/pages/superadmin/reports/ReportsManagement';
+import SuperAdminSubmissionsManagement from '@/pages/superadmin/submissions/SuperAdminSubmissionsManagement';
 
 export const router = createBrowserRouter([
   {
@@ -128,7 +130,11 @@ export const router = createBrowserRouter([
           },
           {
             path: 'reports',
-            element: <SuperAdminDashboard />,
+            element: <ReportsManagement />,
+          },
+          {
+            path: 'submissions',
+            element: <SuperAdminSubmissionsManagement />,
           },
           {
             path: 'entities',

@@ -13,6 +13,8 @@ import {
   fetchCompanyAnalytics,
   fetchDashboardCompanyAdoptionAnalytics,
   fetchDashboardCompanyAnalytics,
+  fetchSuperAdminSubmission,
+  fetchSuperAdminSubmissions,
   restoreCompany,
   suspendCompany,
   updateCompany,
@@ -49,6 +51,24 @@ export function useCompany(companyId, options = {}) {
   });
 }
 
+export function useSuperAdminSubmissions(queryParams = {}, options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'submissions', queryParams],
+    queryFn: () => fetchSuperAdminSubmissions(queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useSuperAdminSubmission(submissionId, options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'submissions', submissionId],
+    queryFn: () => fetchSuperAdminSubmission(submissionId),
+    enabled: Boolean(submissionId),
+    ...options,
+  });
+}
+
 export function useDashboardCompanyAnalytics(options = {}) {
   return useQuery({
     queryKey: ['superadmin', 'companies', 'dashboard', 'analytics'],
@@ -58,10 +78,13 @@ export function useDashboardCompanyAnalytics(options = {}) {
   });
 }
 
-export function useDashboardCompanyAdoptionAnalytics(options = {}) {
+export function useDashboardCompanyAdoptionAnalytics(
+  queryParams,
+  options = {},
+) {
   return useQuery({
-    queryKey: ['superadmin', 'companies', 'dashboard', 'analytics'],
-    queryFn: () => fetchDashboardCompanyAdoptionAnalytics(),
+    queryKey: ['superadmin', 'companies', 'dashboard', 'adoption', 'analytics'],
+    queryFn: () => fetchDashboardCompanyAdoptionAnalytics(queryParams),
     keepPreviousData: true,
     ...options,
   });
