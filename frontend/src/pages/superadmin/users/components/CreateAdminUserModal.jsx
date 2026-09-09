@@ -18,7 +18,7 @@ const accessLevels = [
 export default function CreateAdminUserModal({
   isCreateUserModalOpen,
   setIsCreateUserModalOpen,
-  isFromAdmin = false,
+  fromAdmin = false,
 }) {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -78,14 +78,22 @@ export default function CreateAdminUserModal({
 
   const { showError, showSuccess } = useToast();
 
-  const rolesData = roles?.data?.roles.map((role) => ({
+  let rolesData = roles?.data?.roles.map((role) => ({
     ...role,
     label: role.roleName,
     value: role.roleId,
   }));
 
+  rolesData = fromAdmin
+    ? rolesData?.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
+    : rolesData;
+
   const isAdminRole =
     rolesData?.find((r) => r.label === 'admin')?.roleId ===
+    formData?.role?.roleId;
+
+  const isCorporateAdminRole =
+    rolesData?.find((r) => r.label === 'corporateAdmin')?.roleId ===
     formData?.role?.roleId;
 
   const allCompanies =
@@ -106,22 +114,43 @@ export default function CreateAdminUserModal({
   }));
 
   const handleSetRole = (roleId) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: {
-        roleId,
-        label: rolesData.filter((r) => r.roleId === roleId)[0]?.label,
-      },
-    }));
+    const selectedRole = rolesData?.find((r) => r.roleId === roleId);
+    const isCorporateAdmin = selectedRole?.label === 'corporateAdmin';
+
+    setFormData((prev) => {
+      let entity = prev.entity;
+
+      if (isCorporateAdmin && !Array.isArray(entity)) {
+        entity = entity?.companyId ? [entity] : [];
+      }
+
+      if (!isCorporateAdmin && Array.isArray(entity)) {
+        entity = entity[0] ?? {};
+      }
+
+      return {
+        ...prev,
+        role: {
+          roleId,
+          label: selectedRole?.label,
+        },
+        entity,
+      };
+    });
   };
 
   const handleSetEntity = (companyId) => {
     setFormData((prev) => ({
       ...prev,
-      entity: {
-        companyId,
-        label: companiesList.find((r) => r.companyId === companyId)?.label,
-      },
+      entity: isCorporateAdminRole
+        ? companyId.map((id) => ({
+            companyId: id,
+            label: companiesList?.find((r) => r.companyId === id)?.label,
+          }))
+        : {
+            companyId,
+            label: companiesList?.find((r) => r.companyId === companyId)?.label,
+          },
     }));
   };
 
@@ -166,13 +195,13 @@ export default function CreateAdminUserModal({
       return;
     }
 
-    if (!entity?.companyId && !isFromAdmin) {
+    if (!entity?.companyId && !fromAdmin) {
       showError('Select an entity');
       return;
     }
 
     try {
-      const companyId = isFromAdmin ? user.companyId : entity.companyId;
+      const companyId = fromAdmin ? user.companyId : entity.companyId;
       await mutateAsync({
         firstName,
         lastName,
@@ -197,6 +226,7 @@ export default function CreateAdminUserModal({
       role: {},
       entity: {},
       department: {},
+      accessLevel: 'read_write',
     });
     setEntitySearchInput('');
     setEntitySearch('');
@@ -260,14 +290,14 @@ export default function CreateAdminUserModal({
             </div>
           )}
 
-          {isFromAdmin ? (
+          {/* {fromAdmin ? (
             <InputField
               label="Entity"
               id="entity"
               className=""
               value={user?.company?.companyName}
-              readOnly={isFromAdmin}
-              disabled={isFromAdmin}
+              readOnly={fromAdmin}
+              disabled={fromAdmin}
               onChange={handleInputChange}
             />
           ) : (
@@ -290,7 +320,31 @@ export default function CreateAdminUserModal({
               />
               {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
             </div>
-          )}
+          )} */}
+
+          <div className="flex gap-2 w-full items-center relative">
+            <InputField
+              key={isCorporateAdminRole ? 'corporate' : 'standard'}
+              label="Entity"
+              id="entity"
+              className=""
+              value={
+                isCorporateAdminRole
+                  ? Array.isArray(formData.entity)
+                    ? formData.entity.map(({ companyId }) => companyId)
+                    : []
+                  : (formData.entity?.companyId ?? '')
+              }
+              required
+              readOnly={isLoadingEntities}
+              disabled={fromAdmin}
+              options={companiesList}
+              type="select"
+              multiple={isCorporateAdminRole}
+              onChange={(e) => handleSetEntity(e.target.value)}
+            />
+            {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
+          </div>
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField

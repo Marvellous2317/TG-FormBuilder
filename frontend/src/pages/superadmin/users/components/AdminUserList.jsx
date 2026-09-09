@@ -115,65 +115,64 @@ export default function AdminUserList({
   }, [activeMenuId]);
 
   const dropOptions = [
-  {
-    title: 'Edit',
-    value: 'edit',
-    onClick: () => {
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      setIsEditUserModalOpen(true);
+    {
+      title: 'Edit',
+      value: 'edit',
+      onClick: () => {
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsEditUserModalOpen(true);
+      },
     },
-  },
-  {
-    title: 'Assign approver',
-    value: 'assign',
-    onClick: () => {
-      if (activeMenuRow?.role?.roleName !== 'operator') {
-        showError('Only operators can be assigned an approver.');
-        return;
-      }
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      setIsAssignApproverModalOpen(true);
+    {
+      title: 'Assign approver',
+      value: 'assign',
+      onClick: () => {
+        if (activeMenuRow?.role?.roleName !== 'operator') {
+          showError('Only operators can be assigned an approver.');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsAssignApproverModalOpen(true);
+      },
     },
-  },
-  {
-    title: 'Unassign approver',
-    value: 'unassign',
-    onClick: () => {
-      if (activeMenuRow?.role?.roleName !== 'operator') {
-        showError('Only operators can be unassigned from an approver.');
-        return;
-      }
-      if (activeMenuRow?.operatorApprovers?.length < 1) {
-        showError('This operator does not have an approver.');
-        return;
-      }
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      setIsUnassignApproverModalOpen(true);
+    {
+      title: 'Unassign approver',
+      value: 'unassign',
+      onClick: () => {
+        if (activeMenuRow?.role?.roleName !== 'operator') {
+          showError('Only operators can be unassigned from an approver.');
+          return;
+        }
+        if (activeMenuRow?.operatorApprovers?.length < 1) {
+          showError('This operator does not have an approver.');
+          return;
+        }
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+        setIsUnassignApproverModalOpen(true);
+      },
     },
-  },
-  {
-    title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
-    value: 'delete-restore',
-    onClick: () => {
-      const rowData = activeMenuRow; // Store reference before clearing
-      
-      setActiveMenuId(null);
-      setActiveMenuRow(null);
-      
-      if (rowData?.deletedAt) {
-        // User is deleted - show restore modal
-        setIsRestoreUserModalOpen(true);
-      } else {
-        // User is active - show delete modal
-        setIsDeleteUserModalOpen(true);
-      }
-    },
-  },
-];
+    {
+      title: activeMenuRow?.deletedAt ? 'Restore' : 'Delete',
+      value: 'delete-restore',
+      onClick: () => {
+        const rowData = activeMenuRow; // Store reference before clearing
 
+        setActiveMenuId(null);
+        setActiveMenuRow(null);
+
+        if (rowData?.deletedAt) {
+          // User is deleted - show restore modal
+          setIsRestoreUserModalOpen(true);
+        } else {
+          // User is active - show delete modal
+          setIsDeleteUserModalOpen(true);
+        }
+      },
+    },
+  ];
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -301,7 +300,10 @@ export default function AdminUserList({
                       {row?.role?.roleName || 'N/A'}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 wrap-break-words max-w-50 md:max-w-none">
-                      {row?.company?.companyName || 'N/A'}
+                      {row?.company?.companyName || 'N/A'}{' '}
+                      {row?.companies && row?.companies.length > 1
+                        ? `& (${row?.companies.length - 1} more)`
+                        : ''}
                     </td>
                     <td className="p-3 md:p-4 text-tertiary font-geist text-xs md:text-sm border-r border-gray-200 whitespace-nowrap">
                       {row?.status === 'active' ? 'Active' : 'Inactive'}
