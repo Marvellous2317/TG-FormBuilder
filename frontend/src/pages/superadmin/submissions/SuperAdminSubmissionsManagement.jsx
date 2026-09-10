@@ -34,7 +34,6 @@ export default function SuperAdminSubmissionsManagement() {
     page: 1,
     limit: 20,
     search: '',
-    status: 'approved',
   });
 
   const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
@@ -200,8 +199,14 @@ export default function SuperAdminSubmissionsManagement() {
                       Document number
                     </th>
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
-                      Approved by
+                      Company
                     </th>
+                    <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                      Status
+                    </th>
+                    {/* <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-r border-b border-gray-200 whitespace-nowrap">
+                      Approved by
+                    </th> */}
                     <th className="p-3 md:p-4 text-tertiary font-medium text-xs md:text-sm border-b border-gray-200 whitespace-nowrap">
                       Submitted at
                     </th>
@@ -234,12 +239,19 @@ export default function SuperAdminSubmissionsManagement() {
                           {row?.documentNumber}
                         </td>
                         <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
+                          {row?.company?.companyName}
+                        </td>
+                        <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
+                          {row?.status}
+                        </td>
+                        {/* <td className="p-3 md:p-4 text-tertiary text-sm wrap-break-words max-w-50 md:max-w-none">
                           {row?.approver &&
                           row.approver.firstName &&
                           row.approver.lastName
                             ? `${row.approver.firstName} ${row.approver.lastName}`
                             : 'N/A'}
-                        </td>
+                        </td> */}
+
                         <td className="p-3 md:p-4 text-tertiary text-sm">
                           {formatDate(row.submittedAt)}
                         </td>
