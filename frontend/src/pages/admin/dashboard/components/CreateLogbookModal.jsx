@@ -182,9 +182,11 @@ export default function CreateLogbookModal({
 
   const rolesData = roles?.data?.roles;
 
+  const approverRole = rolesData?.find((role) => role.roleName === 'approval');
   const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
   const adminRole = rolesData?.find((role) => role.roleName === 'admin');
-
+ const coporateAdminRole = rolesData?.find((role) => role.role === 'corporateAdmin');
+  
   const {
     data: usersData,
     isPending: isLoadingUsers,
@@ -211,16 +213,15 @@ export default function CreateLogbookModal({
     hasNextPage: hasNextOtherUsersPage,
     isFetchingNextPage: isFetchingNextOtherUsersPage,
   } = useFetchUsersInfinite(
-    { search: userOtherSearch },
-    { enabled: isShowLogbookModal },
+    { search: userOtherSearch, roleId: approverRole?.roleId },
+    { enabled: isShowLogbookModal && Boolean(approverRole?.roleId) },
   );
 
   const allOtherUsers =
     usersOtherData?.pages.flatMap((p) => p.data.users) ?? [];
 
   const usersOtherList = allOtherUsers
-    .filter((user) => user.roleId !== operatorRole?.roleId)
-    .filter((user) => user.roleId !== adminRole?.roleId)
+    .filter((user) => user.roleId === approverRole?.roleId)
     .map((user) => ({
       ...user,
       label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
