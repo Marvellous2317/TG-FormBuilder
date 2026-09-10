@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLoaderData, Link, useSearchParams } from 'react-router-dom';
 import {
   evaluateFormula,
@@ -17,7 +18,8 @@ export default function ViewSuperAdminEntries() {
   let { id: submissionId } = useLoaderData();
 
   const [searchParams] = useSearchParams();
-  const checklistTitle = searchParams.get('title');
+
+  const navigate = useNavigate();
 
   const { data, isPending } = useSuperAdminSubmission(submissionId);
 
@@ -26,6 +28,7 @@ export default function ViewSuperAdminEntries() {
   const [formData, setFormData] = useState({});
 
   const entriesData = data?.data?.entries;
+  const checklistTitle = data?.data?.title;
 
   const operator = data?.data?.submitter;
 
@@ -137,8 +140,17 @@ export default function ViewSuperAdminEntries() {
     <div
       className={`flex ${entriesData?.length > 0 ? 'min-h-screen' : ''} w-full flex-col overflow-y-auto bg-white py-6`}
     >
-      <div className="flex items-center w-full px-4 pb-2.5 border-b border-secondary-200">
-        <h1 className="flex items-center justify-start md:justify-center w-1/3 text-base mt-4 md:mt-0 lg:text-lg font-semibold text-primary font-geist">
+      <div className="mb-6 flex p-3 w-full max-w-6xl items-start justify-start sm:mb-10">
+        <Button
+          onClick={() => navigate(-1)}
+          className="flex border border-secondary-200 rounded-full gap-1.5 items-center py-1.5 px-3 text-secondary text-sm font-medium"
+        >
+          <FaArrowLeft className="text-primary" size={12} />
+          Back
+        </Button>
+      </div>
+      <div className="flex items-center justify-center w-full px-4 pb-2.5 border-b border-secondary-200">
+        <h1 className="flex items-center  md:justify-center w-1/3 text-base mt-4 md:mt-0 lg:text-lg font-semibold text-primary font-geist">
           {checklistTitle}
         </h1>
       </div>

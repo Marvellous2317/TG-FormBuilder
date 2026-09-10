@@ -56,7 +56,7 @@ export default function EditAdminUserModal({
   }));
 
   rolesData = fromAdmin
-    ? rolesData.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
+    ? rolesData?.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
     : rolesData;
 
   const isAdminRole =
