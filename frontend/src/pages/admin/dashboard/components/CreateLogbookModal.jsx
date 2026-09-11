@@ -136,6 +136,7 @@ export default function CreateLogbookModal({
   const [departmentSearch, setDepartmentSearch] = useState('');
   const [userSearchInput, setUserSearchInput] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [userOtherSearchInput, setUserOtherSearchInput] = useState('');
   const [userOtherSearch, setUserOtherSearch] = useState('');
   const [isDuplicatingChecklist, setIsDuplicatingChecklist] = useState(false);
 
@@ -155,6 +156,14 @@ export default function CreateLogbookModal({
     );
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setUserOtherSearch(userOtherSearchInput),
+      2000,
+    );
+    return () => clearTimeout(timer);
+  }, [userOtherSearchInput]);
 
   const { mutateAsync, isPending: isLoading } = useCreateChecklists();
 
@@ -448,6 +457,7 @@ export default function CreateLogbookModal({
     setDepartmentSearch('');
     setUserSearchInput('');
     setUserSearch('');
+    setUserOtherSearchInput('');
     setUserOtherSearch('');
     setChecklistToDuplicate(null);
     setIsShowLogbookModal(false);
@@ -554,7 +564,7 @@ export default function CreateLogbookModal({
                 options={usersOtherList}
                 type="select"
                 searchable
-                onExternalSearchChange={setUserOtherSearch}
+                onExternalSearchChange={setUserOtherSearchInput}
                 onLoadMore={fetchNextOtherUsersPage}
                 hasNextPage={hasNextOtherUsersPage}
                 isFetchingNextPage={isFetchingNextOtherUsersPage}
