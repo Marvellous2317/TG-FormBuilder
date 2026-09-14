@@ -1,4 +1,4 @@
-import { Op, Sequelize } from "sequelize";
+import { Op, QueryTypes, Sequelize } from "sequelize";
 import crypto from "crypto";
 
 import {
@@ -57,6 +57,10 @@ export class AdminRepository {
       if (!user.role || (user.role.isAdmin !== true && user.role.roleName !== "superAdmin")) {
         throw new ApplicationError("Unauthorized access", 401);
       }
+
+      userRaw.lastLoginAt = new Date();
+      await userRaw.save({ fields: ["lastLoginAt"], silent: true });
+      user.lastLoginAt = userRaw.lastLoginAt;
 
       const token = generateJWT(user.userId, user.companyId);
       const requiresPasswordChange = userRaw.newLogin === true;
@@ -1445,11 +1449,32 @@ export class AdminRepository {
 
       const populationWhere = (extra = {}) => (companyId ? { companyId, ...extra } : { ...extra });
 
+      // A user belongs to a company through their active workspace (users.companyId)
+      // or a membership row; memberships are not backfilled, so check both.
+      const userMembershipSql = `("u"."companyId" = :companyId OR EXISTS (
+          SELECT 1 FROM "packing_check_user_companies" AS "uc"
+          WHERE "uc"."userId" = "u"."userId" AND "uc"."companyId" = :companyId
+        ))`;
+
+      const countUsers = async (extraConditions = []) => {
+        const conditions = [`"u"."deletedAt" IS NULL`, ...extraConditions];
+        if (companyId) conditions.push(userMembershipSql);
+        const [row] = await sequelize.query(
+          `SELECT COUNT(*)::integer AS "count" FROM "packing_check_users" AS "u" WHERE ${conditions.join(" AND ")}`,
+          { replacements: { companyId, from, to }, type: QueryTypes.SELECT }
+        );
+        return row.count;
+      };
+
+      // Active users = last login (users.lastLoginAt) falls inside the window.
+      const lastLoginConditions = [`"u"."lastLoginAt" IS NOT NULL`];
+      if (from) lastLoginConditions.push(`"u"."lastLoginAt" >= :from`);
+      if (to) lastLoginConditions.push(`"u"."lastLoginAt" <= :to`);
+
       const [
         totalUsers,
         activeUsers,
         totalEntities,
-        activeEntities,
         totalForms,
         totalSubmittedRecords,
         approvedRecords,
@@ -1460,10 +1485,9 @@ export class AdminRepository {
         entityIdsWithSubmissions,
         entityIdsWithForms,
       ] = await Promise.all([
-        User.count({ where: populationWhere() }),
-        User.count({ where: populationWhere({ status: "active" }) }),
+        countUsers(),
+        countUsers(lastLoginConditions),
         Company.count({ where: populationWhere() }),
-        Company.count({ where: populationWhere({ status: "active" }) }),
         Checklist.count({ where: formWhere() }),
         SubmittedChecklist.count({ where: submissionWhere() }),
         SubmittedChecklist.count({ where: submissionWhere("approved") }),
@@ -1474,6 +1498,10 @@ export class AdminRepository {
         distinctValues(SubmittedChecklist, "companyId", submissionWhere()),
         distinctValues(Checklist, "companyId", formWhere()),
       ]);
+
+      // Active = did something in the window: users logged in, entities received a submission.
+      const submittedUsers = submitterIds.length;
+      const activeEntities = entityIdsWithSubmissions.length;
 
       const adoptedUserIds = new Set([...submitterIds, ...approverIds]);
       const adoptedUsers = adoptedUserIds.size;
@@ -1496,6 +1524,7 @@ export class AdminRepository {
         adoption: {
           totalUsers,
           activeUsers,
+          submittedUsers,
           adoptedUsers,
         },
         entities: {
