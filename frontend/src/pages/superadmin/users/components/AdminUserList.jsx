@@ -11,7 +11,6 @@ import {
 } from '../../../../shared/utils/constants';
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
-import { useAuthStore } from '@/shared/store/authStore';
 
 export default function AdminUserList({
   setIsEditUserModalOpen,
@@ -30,6 +29,7 @@ export default function AdminUserList({
   handleStatusChange,
   handleDeletedChange,
   setIsCreateUserModalOpen,
+  fromAdmin,
 }) {
   const [search, setSearch] = useState('');
   const [deleted, setDeleted] = useState(false);
@@ -39,10 +39,6 @@ export default function AdminUserList({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const { showError } = useToast();
-
-  const { user } = useAuthStore();
-
-  const isCorporateAdmin = user?.role?.roleName === 'corporateAdmin';
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -179,21 +175,15 @@ export default function AdminUserList({
     },
   ];
 
-  const visibleOptions = dropOptions
-    .filter(
-      (option) =>
-        !(
-          option.value === 'edit' &&
-          activeMenuRow?.role?.roleName === 'corporateAdmin'
-        ),
-    )
-    .filter(
-      (option) =>
-        !(
-          option.value === 'delete-restore' &&
-          activeMenuRow?.role?.roleName === 'corporateAdmin'
-        ),
-    );
+  const visibleOptions = fromAdmin
+    ? dropOptions.filter(
+        (option) =>
+          !(
+            ['edit', 'delete-restore'].includes(option.value) &&
+            activeMenuRow?.role?.roleName === 'corporateAdmin'
+          ),
+      )
+    : dropOptions;
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
