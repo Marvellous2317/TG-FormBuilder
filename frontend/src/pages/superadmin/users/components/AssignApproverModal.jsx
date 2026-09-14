@@ -21,7 +21,7 @@ export default function AssignApproverModal({
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 300);
+    const timer = setTimeout(() => setSearch(searchInput), 2000);
     return () => clearTimeout(timer);
   }, [searchInput]);
 

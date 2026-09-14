@@ -157,15 +157,15 @@ export default function TaskList({
   }, [activeMenuId]);
 
   const dropOptionsRead = [
-    {
-      title: 'Export',
-      value: 'export',
-      onClick: () => {
-        setIsShowExportLogbookModal(true);
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-      },
-    },
+    // {
+    //   title: 'Export',
+    //   value: 'export',
+    //   onClick: () => {
+    //     setIsShowExportLogbookModal(true);
+    //     setActiveMenuId(null);
+    //     setActiveMenuRow(null);
+    //   },
+    // },
     {
       title: 'Submissions',
       value: 'submissions',
@@ -178,15 +178,15 @@ export default function TaskList({
   ];
 
   const dropOptionsWrite = [
-    {
-      title: 'Export',
-      value: 'export',
-      onClick: () => {
-        setIsShowExportLogbookModal(true);
-        setActiveMenuId(null);
-        setActiveMenuRow(null);
-      },
-    },
+    // {
+    //   title: 'Export',
+    //   value: 'export',
+    //   onClick: () => {
+    //     setIsShowExportLogbookModal(true);
+    //     setActiveMenuId(null);
+    //     setActiveMenuRow(null);
+    //   },
+    // },
     {
       title: 'Entries',
       value: 'entries',
@@ -556,14 +556,14 @@ export default function TaskList({
         checklistAssignments={activeMenuRow?.assignments}
         action={actionToPerform}
       /> */}
-      <ExportLogbookModal
+      {/* <ExportLogbookModal
         key={activeMenuRow?.documentNumber}
         isShowExportLogbookModal={isShowExportLogbookModal}
         setIsShowExportLogbookModal={setIsShowExportLogbookModal}
         checklistId={checklistToExport?.checklistId}
         documentNumber={checklistToExport?.documentNumber}
         setChecklistToExport={setChecklistToExport}
-      />
+      /> */}
     </div>
   );
 }

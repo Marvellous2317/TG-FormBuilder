@@ -20,32 +20,46 @@ export default function CreateAdminUserModal({
   setIsCreateUserModalOpen,
   fromAdmin = false,
 }) {
+  const { user } = useAuthStore.getState();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     role: {},
-    entity: {},
+    entity: fromAdmin ? user?.company : {},
     department: {},
     accessLevel: 'read_write',
   });
+
+  useEffect(() => {
+    if (!isCreateUserModalOpen) {
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: {},
+        entity: fromAdmin ? user?.company : {},
+        department: {},
+        accessLevel: 'read_write',
+      });
+    }
+  }, [isCreateUserModalOpen, fromAdmin, user?.company]);
 
   const [entitySearchInput, setEntitySearchInput] = useState('');
   const [entitySearch, setEntitySearch] = useState('');
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
   const [departmentSearch, setDepartmentSearch] = useState('');
 
-  const { user } = useAuthStore.getState();
-
   useEffect(() => {
-    const timer = setTimeout(() => setEntitySearch(entitySearchInput), 500);
+    const timer = setTimeout(() => setEntitySearch(entitySearchInput), 2000);
     return () => clearTimeout(timer);
   }, [entitySearchInput]);
 
   useEffect(() => {
     const timer = setTimeout(
       () => setDepartmentSearch(departmentSearchInput),
-      500,
+      3000,
     );
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
@@ -185,6 +199,16 @@ export default function CreateAdminUserModal({
     } = formData;
 
     if (
+      !fromAdmin &&
+      (isCorporateAdminRole
+        ? !Array.isArray(entity) || entity.length === 0
+        : !entity?.companyId)
+    ) {
+      showError('Select an entity');
+      return;
+    }
+
+    if (
       !firstName ||
       !lastName ||
       !email ||
@@ -195,13 +219,12 @@ export default function CreateAdminUserModal({
       return;
     }
 
-    if (!entity?.companyId && !fromAdmin) {
-      showError('Select an entity');
-      return;
-    }
-
     try {
-      const companyId = fromAdmin ? user.companyId : entity.companyId;
+      const companyId = fromAdmin
+        ? user.companyId
+        : isCorporateAdminRole
+          ? entity.map(({ companyId }) => companyId)
+          : entity.companyId;
       await mutateAsync({
         firstName,
         lastName,
@@ -235,6 +258,7 @@ export default function CreateAdminUserModal({
     setIsCreateUserModalOpen(false);
   };
 
+  console.log(formData);
   return (
     <Modal
       isOpen={isCreateUserModalOpen}
@@ -333,13 +357,21 @@ export default function CreateAdminUserModal({
                   ? Array.isArray(formData.entity)
                     ? formData.entity.map(({ companyId }) => companyId)
                     : []
-                  : (formData.entity?.companyId ?? '')
+                  : fromAdmin
+                    ? user?.companyId
+                    : (formData.entity?.companyId ?? '')
               }
               required
               readOnly={isLoadingEntities}
               disabled={fromAdmin}
               options={companiesList}
               type="select"
+              placeholder={fromAdmin ? formData.entity?.companyName : ''}
+              searchable={!fromAdmin}
+              onExternalSearchChange={setEntitySearchInput}
+              onLoadMore={fetchNextEntitiesPage}
+              hasNextPage={hasNextEntitiesPage}
+              isFetchingNextPage={isFetchingNextEntitiesPage}
               multiple={isCorporateAdminRole}
               onChange={(e) => handleSetEntity(e.target.value)}
             />
