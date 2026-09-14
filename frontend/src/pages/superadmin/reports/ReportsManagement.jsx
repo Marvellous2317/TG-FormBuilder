@@ -26,18 +26,16 @@ import {
   Cell,
 } from 'recharts';
 
-const date = new Date();
-
-date.setMonth(date.getMonth() - 2);
-
-const twoMonthsAgo = date.toISOString().split('T')[0];
+const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  .toISOString()
+  .split('T')[0];
 
 const today = new Date().toISOString().split('T')[0];
 
 export default function ReportsManagement() {
   const [filters, setFilters] = useState({
     companyId: '',
-    startDate: twoMonthsAgo,
+    startDate: oneWeekAgo,
     endDate: today,
   });
 
@@ -138,7 +136,7 @@ export default function ReportsManagement() {
               value={dashboardAnalyticsData?.adoption?.activeUsers}
               loading={isDashboardAnalyticsLoading}
             />
-            <StatCard
+            {/* <StatCard
               label="Adopted Users"
               value={dashboardAnalyticsData?.adoption?.adoptedUsers}
               loading={isDashboardAnalyticsLoading}
@@ -155,25 +153,25 @@ export default function ReportsManagement() {
                   : 0
               }%`}
               loading={isDashboardAnalyticsLoading}
-            />
+            /> */}
           </div>
           {!isDashboardAnalyticsLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Progress Bar */}
               <div className="rounded-2xl border border-secondary-200 bg-secondary-700 p-4">
                 <h3 className="text-sm font-semibold text-primary mb-4 font-geist">
-                  Adoption Progress
+                  Active Progress
                 </h3>
                 <div className="space-y-2">
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-tertiary font-geist">
-                      {dashboardAnalyticsData?.adoption?.adoptedUsers || 0} of{' '}
+                      {dashboardAnalyticsData?.adoption?.activeUsers || 0} of{' '}
                       {dashboardAnalyticsData?.adoption?.totalUsers || 0} users
                     </span>
                     <span className="text-sm font-semibold text-primary">
                       {dashboardAnalyticsData?.adoption?.totalUsers
                         ? Math.round(
-                            (dashboardAnalyticsData?.adoption?.adoptedUsers /
+                            (dashboardAnalyticsData?.adoption?.activeUsers /
                               dashboardAnalyticsData?.adoption?.totalUsers) *
                               100,
                           )
@@ -187,7 +185,7 @@ export default function ReportsManagement() {
                       style={{
                         width: `${
                           dashboardAnalyticsData?.adoption?.totalUsers
-                            ? (dashboardAnalyticsData?.adoption?.adoptedUsers /
+                            ? (dashboardAnalyticsData?.adoption?.activeUsers /
                                 dashboardAnalyticsData?.adoption?.totalUsers) *
                               100
                             : 0
@@ -247,13 +245,13 @@ export default function ReportsManagement() {
               value={dashboardAnalyticsData?.entities?.activeEntities}
               loading={isDashboardAnalyticsLoading}
             />
-            <StatCard
+            {/* <StatCard
               label="Using Platform"
               value={dashboardAnalyticsData?.entities?.entitiesUsing}
               loading={isDashboardAnalyticsLoading}
-            />
+            /> */}
             <StatCard
-              label="Not Using"
+              label="Inactive Entities"
               value={dashboardAnalyticsData?.entities?.entitiesNotUsing}
               loading={isDashboardAnalyticsLoading}
             />
@@ -268,14 +266,14 @@ export default function ReportsManagement() {
                 <div className="space-y-2">
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-tertiary font-geist">
-                      {dashboardAnalyticsData?.entities?.entitiesUsing || 0} of{' '}
+                      {dashboardAnalyticsData?.entities?.activeEntities || 0} of{' '}
                       {dashboardAnalyticsData?.entities?.totalEntities || 0}{' '}
                       entities
                     </span>
                     <span className="text-sm font-semibold text-primary">
                       {dashboardAnalyticsData?.entities?.totalEntities
                         ? Math.round(
-                            (dashboardAnalyticsData?.entities?.entitiesUsing /
+                            (dashboardAnalyticsData?.entities?.activeEntities /
                               dashboardAnalyticsData?.entities?.totalEntities) *
                               100,
                           )
@@ -289,7 +287,7 @@ export default function ReportsManagement() {
                       style={{
                         width: `${
                           dashboardAnalyticsData?.entities?.totalEntities
-                            ? (dashboardAnalyticsData?.entities?.entitiesUsing /
+                            ? (dashboardAnalyticsData?.entities?.activeEntities /
                                 dashboardAnalyticsData?.entities
                                   ?.totalEntities) *
                               100
@@ -315,9 +313,7 @@ export default function ReportsManagement() {
                           dashboardAnalyticsData?.entities?.totalEntities || 0,
                         'Active Entities':
                           dashboardAnalyticsData?.entities?.activeEntities || 0,
-                        'Using Platform':
-                          dashboardAnalyticsData?.entities?.entitiesUsing || 0,
-                        'Not Using':
+                        'Inactive Entities':
                           dashboardAnalyticsData?.entities?.entitiesNotUsing ||
                           0,
                       },
@@ -330,8 +326,7 @@ export default function ReportsManagement() {
                     <Legend />
                     <Bar dataKey="Total Entities" fill="#2463eb" />
                     <Bar dataKey="Active Entities" fill="#218358" />
-                    <Bar dataKey="Using Platform" fill="#FFA500" />
-                    <Bar dataKey="Not Using" fill="#c62828" />
+                    <Bar dataKey="Inactive Entities" fill="#c62828" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

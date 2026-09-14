@@ -1,25 +1,20 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { formatDate } from '../../../shared/utils/constants';
 import { FiSearch } from 'react-icons/fi';
 import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../../shared/components/Loader';
 import InputField from '../../../shared/components/InputField';
 import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
-import { useFetchUsers } from '../../../shared/hooks/superadmin/useSuperAdminUser';
 import Pagination from '../../../shared/components/Pagination';
 import { useSuperAdminSubmissions } from '@/shared/hooks/superadmin/useCompanies';
 import AdminUserList from '../users/components/AdminUserList';
 import DropdownSelect from '@/shared/components/DropdownSelect';
 
 export default function SuperAdminSubmissionsManagement() {
-  const [search, setSearch] = useState('');
+  // const [search, setSearch] = useState('');
 
   const navigate = useNavigate();
-
-  const [filters, setFilters] = useState({
-    companyId: '',
-  });
 
   const submissionStatusOptions = [
     { title: 'Approved', value: 'approved' },
@@ -27,8 +22,6 @@ export default function SuperAdminSubmissionsManagement() {
     { title: 'Rejected', value: 'rejected' },
     { title: 'All', value: '' },
   ];
-
-  const [currentStatus, setCurrentStatus] = useState('pending');
 
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
@@ -38,28 +31,34 @@ export default function SuperAdminSubmissionsManagement() {
 
   const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
 
-  const { data: submissions, isFetching } =
-    useSuperAdminSubmissions(usersPagination);
+  const queryParams = {
+    startDate: usersPagination.startDate,
+    endDate: usersPagination.endDate,
+    search: usersPagination.search,
+    ...(usersPagination.companyId && { companyId: usersPagination.companyId }),
+    ...(usersPagination.status && { status: usersPagination.status }),
+  };
+
+  const { data: submissions, isFetching } = useSuperAdminSubmissions(
+    queryParams,
+    { keepPreviousData: true },
+  );
   const submissionsData = submissions?.data?.submittedChecklists;
   const pagination = submissions?.data?.pagination;
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
 
-  const handleSearch = useCallback((searchValue) => {
-    setUsersPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
-  }, []);
+  // const handleSearch = useCallback((searchValue) => {
+  //   setUsersPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
+  // }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleSearch(search);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [search, handleSearch]);
-
-  const handleChange = (event) => {
-    setSearch(event.target.value);
-  };
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     handleSearch(search);
+  //   }, 1000);
+  //   return () => clearTimeout(timer);
+  // }, [search, handleSearch]);
 
   const handlePageChange = ({ page, pageSize }) => {
     setUsersPagination((prev) => ({
@@ -69,16 +68,13 @@ export default function SuperAdminSubmissionsManagement() {
     }));
   };
 
-  const handleStatusChange = useCallback((status) => {
-    setUsersPagination((prev) => ({ ...prev, status, page: 1 }));
+  const handleFilterChange = useCallback((field, value) => {
+    setUsersPagination((prev) => ({
+      ...prev,
+      [field]: value,
+      page: 1,
+    }));
   }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleStatusChange(currentStatus);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [currentStatus, handleStatusChange]);
 
   const handlePaginationChange = (payload) => {
     if (typeof handlePageChange !== 'function') return;
@@ -109,12 +105,6 @@ export default function SuperAdminSubmissionsManagement() {
 
   const companies = companiesData?.data?.companies || [];
 
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
   return (
     <div className="w-full min-h-screen max-h-screen">
       <header className="flex flex-col sm:flex-row gap-3 md:gap-0 w-full px-8 py-2.5 border-b border-secondary-200 md:items-center items-start justify-between">
@@ -133,7 +123,7 @@ export default function SuperAdminSubmissionsManagement() {
           <section className="flex-col flex w-full min-h-full">
             {/* SEARCH */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
-              <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
+              {/* <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
                 <FiSearch className="text-gray-400 shrink-0" size={18} />
                 <input
                   type="text"
@@ -142,7 +132,7 @@ export default function SuperAdminSubmissionsManagement() {
                   onChange={handleChange}
                   className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
                 />
-              </div>
+              </div> */}
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex gap-2 items-center">
@@ -152,7 +142,7 @@ export default function SuperAdminSubmissionsManagement() {
                     <InputField
                       // label="Company"
                       id="company"
-                      value={filters.companyId}
+                      value={usersPagination.companyId}
                       type="select"
                       options={[
                         { label: 'All Companies', value: '' },
@@ -173,9 +163,9 @@ export default function SuperAdminSubmissionsManagement() {
                     Status:{' '}
                   </h2>
                   <DropdownSelect
-                    value={currentStatus}
+                    value={usersPagination.status}
                     options={submissionStatusOptions}
-                    onChange={(value) => setCurrentStatus(value)}
+                    onChange={(value) => handleFilterChange('status', value)}
                     placeholder="All"
                     buttonClassName="px-3! py-2! rounded-lg!"
                     menuClassName=""
