@@ -66,6 +66,9 @@ export class AuthRepository {
       if (user.status === "suspended") throw new ApplicationError("Account suspended. Contact administrator.", 403);
       if (user.status === "pending") throw new ApplicationError("Account pending approval.", 403);
 
+      user.lastLoginAt = new Date();
+      await user.save({ fields: ["lastLoginAt"], silent: true });
+
       const userData = user.toSafeJSON();
       const token = generateJWT(user.userId, user.companyId);
       const { refreshToken } = await issueRefreshToken(
@@ -116,6 +119,7 @@ export class AuthRepository {
         lastName,
         roleId: assignedRoleId,
         companyId: companyId || null,
+        lastLoginAt: new Date(),
       });
       await user.setPassword(password);
       await user.save();
