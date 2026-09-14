@@ -32,6 +32,20 @@ export default function CreateAdminUserModal({
     accessLevel: 'read_write',
   });
 
+  useEffect(() => {
+    if (!isCreateUserModalOpen) {
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: {},
+        entity: fromAdmin ? user?.company : {},
+        department: {},
+        accessLevel: 'read_write',
+      });
+    }
+  }, [isCreateUserModalOpen, fromAdmin, user?.company]);
+
   const [entitySearchInput, setEntitySearchInput] = useState('');
   const [entitySearch, setEntitySearch] = useState('');
   const [departmentSearchInput, setDepartmentSearchInput] = useState('');
@@ -184,7 +198,7 @@ export default function CreateAdminUserModal({
       accessLevel,
     } = formData;
 
-     if (
+    if (
       !fromAdmin &&
       (isCorporateAdminRole
         ? !Array.isArray(entity) || entity.length === 0
@@ -193,7 +207,6 @@ export default function CreateAdminUserModal({
       showError('Select an entity');
       return;
     }
-
 
     if (
       !firstName ||
@@ -207,7 +220,9 @@ export default function CreateAdminUserModal({
     }
 
     try {
-      const companyId = fromAdmin ? user.companyId : isCorporateAdminRole
+      const companyId = fromAdmin
+        ? user.companyId
+        : isCorporateAdminRole
           ? entity.map(({ companyId }) => companyId)
           : entity.companyId;
       await mutateAsync({
@@ -243,6 +258,7 @@ export default function CreateAdminUserModal({
     setIsCreateUserModalOpen(false);
   };
 
+  console.log(formData);
   return (
     <Modal
       isOpen={isCreateUserModalOpen}
@@ -343,18 +359,19 @@ export default function CreateAdminUserModal({
                     : []
                   : fromAdmin
                     ? user?.companyId
-                    : formData.entity?.companyId ?? ''
+                    : (formData.entity?.companyId ?? '')
               }
               required
               readOnly={isLoadingEntities}
               disabled={fromAdmin}
               options={companiesList}
               type="select"
-              // searchable
-              // onExternalSearchChange={setEntitySearchInput}
-              // onLoadMore={fetchNextEntitiesPage}
-              // hasNextPage={hasNextEntitiesPage}
-              // isFetchingNextPage={isFetchingNextEntitiesPage}
+              placeholder={fromAdmin ? formData.entity?.companyName : ''}
+              searchable={!fromAdmin}
+              onExternalSearchChange={setEntitySearchInput}
+              onLoadMore={fetchNextEntitiesPage}
+              hasNextPage={hasNextEntitiesPage}
+              isFetchingNextPage={isFetchingNextEntitiesPage}
               multiple={isCorporateAdminRole}
               onChange={(e) => handleSetEntity(e.target.value)}
             />
