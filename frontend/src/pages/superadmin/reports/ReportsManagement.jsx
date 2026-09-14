@@ -11,7 +11,7 @@ import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 import {
   useDashboardCompanyAdoptionAnalytics,
-  useCompanies,
+  useCompaniesInfinite,
 } from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 import {
@@ -39,7 +39,13 @@ export default function ReportsManagement() {
     endDate: today,
   });
 
-  const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
+  const {
+    data: companiesData,
+    isPending: isLoadingCompanies,
+    fetchNextPage: fetchNextCompaniesPage,
+    hasNextPage: hasNextCompaniesPage,
+    isFetchingNextPage: isFetchingNextCompaniesPage,
+  } = useCompaniesInfinite();
 
   const queryParams = {
     startDate: filters.startDate,
@@ -51,7 +57,8 @@ export default function ReportsManagement() {
     useDashboardCompanyAdoptionAnalytics(queryParams);
 
   const dashboardAnalyticsData = dashboardAnalytics?.data;
-  const companies = companiesData?.data?.companies || [];
+  const companies =
+    companiesData?.pages?.flatMap((page) => page.data.companies) ?? [];
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -92,6 +99,9 @@ export default function ReportsManagement() {
               ]}
               onChange={(e) => handleFilterChange('companyId', e.target.value)}
               disabled={isLoadingCompanies}
+              onLoadMore={fetchNextCompaniesPage}
+              hasNextPage={hasNextCompaniesPage}
+              isFetchingNextPage={isFetchingNextCompaniesPage}
             />
           </div>
 
