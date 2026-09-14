@@ -126,6 +126,7 @@ export default function AdminUserManagement() {
           handleStatusChange={handleStatusChange}
           handleDeletedChange={handleDeletedChange}
           setIsCreateUserModalOpen={setIsCreateUserModalOpen}
+          fromAdmin
         />
       </section>
 

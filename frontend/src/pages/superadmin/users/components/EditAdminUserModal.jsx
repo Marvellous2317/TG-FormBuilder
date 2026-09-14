@@ -56,7 +56,7 @@ export default function EditAdminUserModal({
   }));
 
   rolesData = fromAdmin
-    ? rolesData.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
+    ? rolesData?.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
     : rolesData;
 
   const isAdminRole =
@@ -142,20 +142,12 @@ export default function EditAdminUserModal({
   const { mutateAsync, isPending: isLoading } = useUpdateUser();
 
   const handleSubmit = async () => {
-    const {
-      firstName,
-      lastName,
-      email,
-      role,
-      entity,
-      departmentName,
-      accessLevel,
-    } = formData;
+    const { firstName, lastName, role, entity, departmentName, accessLevel } =
+      formData;
 
     if (
       !firstName ||
       !lastName ||
-      !email ||
       !role?.roleId ||
       (isCorporateAdminRole
         ? !Array.isArray(entity) || entity.length === 0
@@ -173,7 +165,6 @@ export default function EditAdminUserModal({
         payload: {
           firstName,
           lastName,
-          email,
           roleId: role?.roleId,
           companyId: isCorporateAdminRole
             ? entity.map(({ companyId }) => companyId)
@@ -331,6 +322,7 @@ export default function EditAdminUserModal({
             value={formData.email}
             required
             onChange={handleInputChange}
+            disabled
           />
         </div>
 

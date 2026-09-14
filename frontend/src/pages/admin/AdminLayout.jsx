@@ -6,6 +6,9 @@ import Icons from '../../assets/icons';
 import Images from '../../assets/images';
 import { useAuthStore } from '../../shared/store/authStore';
 import { getInitials } from '../../shared/utils/constants';
+import { LuLogOut } from 'react-icons/lu';
+import clearAllCaches from '../../lib/clearCache';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navDetails = [
   {
@@ -48,7 +51,14 @@ export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, clearAuth } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuth();
+    clearAllCaches();
+    queryClient.clear();
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -250,6 +260,21 @@ export default function AdminLayout() {
                 <p className="text-tertiary font-geist text-xs truncate max-w-32 md:max-w-36">
                   {user.email}
                 </p>
+              </div>
+            )}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleLogout}
+            className="bg-tertiary-500 justify-center items-center gap-1 p-2.5 rounded-xl transition-all hover:bg-tertiary-600 mb-5 w-full flex"
+          >
+            {!isCollapsed && isDesktop ? (
+              <div className="gap-0.5 flex flex-col items-start overflow-hidden">
+                <p className="text-white font-medium text-sm">Logout</p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <LuLogOut className="text-white" size={18} />
               </div>
             )}
           </Button>

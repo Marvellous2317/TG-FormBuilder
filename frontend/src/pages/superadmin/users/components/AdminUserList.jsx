@@ -29,6 +29,7 @@ export default function AdminUserList({
   handleStatusChange,
   handleDeletedChange,
   setIsCreateUserModalOpen,
+  fromAdmin,
 }) {
   const [search, setSearch] = useState('');
   const [deleted, setDeleted] = useState(false);
@@ -174,6 +175,16 @@ export default function AdminUserList({
     },
   ];
 
+  const visibleOptions = fromAdmin
+    ? dropOptions.filter(
+        (option) =>
+          !(
+            ['edit', 'delete-restore'].includes(option.value) &&
+            activeMenuRow?.role?.roleName === 'corporateAdmin'
+          ),
+      )
+    : dropOptions;
+
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const menuWidth = window.innerWidth < 640 ? 192 : 160;
@@ -315,7 +326,7 @@ export default function AdminUserList({
                       <Button
                         type="button"
                         onClick={(event) =>
-                          toggleRowMenu(row.userId, event, row)
+                          toggleRowMenu(row.userId, event, row, row?.role)
                         }
                         className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
@@ -375,7 +386,7 @@ export default function AdminUserList({
                 onClick={(event) => event.stopPropagation()}
                 role="menu"
               >
-                {dropOptions.map((option) => (
+                {visibleOptions.map((option) => (
                   <Button
                     key={option.value}
                     className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"

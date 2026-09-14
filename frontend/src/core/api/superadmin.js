@@ -88,8 +88,27 @@ export const fetchDashboardCompanyAnalytics = async () => {
   return data;
 };
 
+export const fetchDashboardCompanyAdoptionAnalytics = async (params = {}) => {
+  const { data } = await axiosInstance.get(`/admin/analytics/adoption`, {
+    params,
+  });
+  return data;
+};
+
 export const fetchCompanyAnalytics = async (id) => {
   const { data } = await axiosInstance.get(`/admin/analytics/${id}`);
+  return data;
+};
+
+export const fetchSuperAdminSubmissions = async (params = {}) => {
+  const { data } = await axiosInstance.get('/admin/submitted-checklists', {
+    params,
+  });
+  return data;
+};
+
+export const fetchSuperAdminSubmission = async (id) => {
+  const { data } = await axiosInstance.get(`/admin/submitted-checklists/${id}`);
   return data;
 };
 

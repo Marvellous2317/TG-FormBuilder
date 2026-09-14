@@ -5,6 +5,8 @@ import Images from '../../assets/images';
 import DropdownSelect from '../../shared/components/DropdownSelect';
 import { useAuthStore } from '../../shared/store/authStore';
 import { getInitials } from '../../shared/utils/constants';
+import Button from '@/shared/components/Button';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navDetails = [
   { title: 'Dashboard', to: '/approver', icon: FiHome },
@@ -13,8 +15,17 @@ const navDetails = [
 ];
 
 export default function ApproverWorkspaceLayout() {
+
   const location = useLocation();
-  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, clearAuth } = useAuthStore();
+
+
+  const handleLogout = () => {
+    clearAuth();
+    clearAllCaches();
+    queryClient.clear();
+  };
 
   return (
     <div className="flex flex-col w-full h-screen bg-white relative">
@@ -74,6 +85,13 @@ export default function ApproverWorkspaceLayout() {
             {user.email}
           </h1>
         </Link>
+        <Button
+          type="button"
+          onClick={() => handleLogout()}
+          className="bg-tertiary-500 gap-1 ml-5 p-2.5 px-6 rounded-xl transition-all hover:bg-tertiary-600"
+        >
+          <p className="text-white font-medium text-sm">Logout</p>
+        </Button>
       </aside>
 
       {/* MAIN CONTENT */}
