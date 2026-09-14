@@ -29,7 +29,7 @@ export default function LandingPage() {
         id="top-navbar"
         className="fixed top-0 left-0 right-0 w-full z-50 bg-white backdrop-blur-md border-b border-[#E1E2ED]/70 shadow-xs transition-colors"
       >
-        <div className="flex justify-between items-center px-6 lg:px-12 py-4 max-w-[1440px] mx-auto w-full">
+        <div className="flex justify-between items-center px-6 lg:px-12 py-4 max-w-360 mx-auto w-full">
           {/* Logo */}
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
