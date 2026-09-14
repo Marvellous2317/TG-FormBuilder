@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Icons from '../../assets/icons';
 import Images from '../../assets/images';
@@ -8,6 +8,16 @@ import { GiUdder } from 'react-icons/gi';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const imageSlides = [Images.picture1, Images.picture2, Images.picture3];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prevIndex) => (prevIndex + 1) % imageSlides.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [imageSlides.length]);
 
   const LoginPage = () => {
     navigate('/login');
@@ -86,7 +96,7 @@ export default function LandingPage() {
             >
               Eliminate paper logbooks and disconnected spreadsheets. DigiForms
               empowers packaging operators, automated formula calculations,
-              multi-tier approvals, and digital signatures—online or offline.
+              multi-tier approvals, and digital signatures, online or offline.
             </p>
             {/* Action Buttons */}
             <div
@@ -111,13 +121,42 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right Column: High Fidelity Interactive UI Dashboard Mockup */}
+          {/* Right Column: High Fidelity Interactive UI Dashboard Mockup / Auto-Slider */}
           <div id="hero-right-mockup" className="lg:col-span-6 w-full">
             <div className="relative w-full rounded-2xl bg-white border border-[#E1E2ED] ambient-shadow p-3 sm:p-5 lg:p-6 overflow-hidden">
-              <img
-                src={Images.formSnippet}
-                className="object-contain w-full h-auto"
-              />
+              {/* Slide Container */}
+              <div className="relative w-full overflow-hidden rounded-xl">
+                <div
+                  className="flex transition-transform duration-700 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {imageSlides.map((imgSrc, index) => (
+                    <div key={index} className="w-full flex-shrink-0">
+                      <img
+                        src={imgSrc}
+                        alt={`Slide ${index + 1}`}
+                        className="object-contain w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Navigation Dots Indicator */}
+              <div className="flex justify-center items-center gap-2 mt-4">
+                {imageSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      currentSlide === index
+                        ? 'w-6 bg-tertiary-500'
+                        : 'w-2 bg-[#E1E2ED] hover:bg-[#737686]'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>

@@ -169,7 +169,7 @@ export default function EntityList({
                   Entity
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
-                  Admin
+                  Contact person
                 </th>
                 <th className="p-3 md:p-4 text-secondary font-medium font-geist text-xs md:text-sm border-r border-b border-gray-200 bg-tertiary-300 whitespace-nowrap">
                   Status
