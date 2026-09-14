@@ -7,11 +7,7 @@ import { ApplicationError } from "../../utils/errorHandler.js";
 import jwt from "jsonwebtoken";
 import config from "../../appConfig.js";
 
-// The token carries the ACTIVE workspace alongside the user id, so a request's
-// company scope is decided by the credential presented, not by whatever the user
-// row happens to say. Two sessions can therefore sit in two different companies.
-// companyId is optional: tokens issued before this change simply omit it and fall
-// back to the user's stored company at decode time.
+
 export function generateJWT(userId, companyId = null) {
   const payload = {
     id: userId,

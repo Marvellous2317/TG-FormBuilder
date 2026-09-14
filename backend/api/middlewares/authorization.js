@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { User, Role, Company } from "../../models/index.js";
 import ResponseManager from "../../utils/responseManager.js";
 import config from "../../appConfig.js";
-import { ROLE_SUPER_ADMIN, APPROVAL_ROLES, OPERATOR_ROLES } from "../constants/roles.js";
+import { ROLE_SUPER_ADMIN, ROLE_CORPORATE_ADMIN, APPROVAL_ROLES, OPERATOR_ROLES } from "../constants/roles.js";
 
 export async function decodeToken(token) {
   try {
@@ -32,9 +32,14 @@ export async function decodeToken(token) {
     const tokenCompanyId = decoded.companyId || null;
     if (!tokenCompanyId) return data;
 
+    // Workspaces exist only for corporateAdmin (and superAdmin, who may enter any
+    // company). Every other role stays on its stored company.
+    const roleName = data.role?.roleName;
+    const isSuperAdmin = roleName === ROLE_SUPER_ADMIN;
+    if (roleName !== ROLE_CORPORATE_ADMIN && !isSuperAdmin) return data;
+
     const memberships = data.companies || [];
     const isMember = memberships.some((c) => c.companyId === tokenCompanyId);
-    const isSuperAdmin = data.role?.roleName === ROLE_SUPER_ADMIN;
 
     // Membership can be revoked after the token was issued; the token must not
     // outlive the access it claims.
