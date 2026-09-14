@@ -14,6 +14,7 @@ import AssignApproverModal from './components/AssignApproverModal';
 import UnassignApproverModal from './components/UnassignApproverModal';
 import DeleteUserModal from './components/DeleteUserModal';
 import RestoreUserModal from './components/RestoreUserModal';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function UserManagement() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);

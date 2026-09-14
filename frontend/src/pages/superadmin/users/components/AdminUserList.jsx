@@ -11,6 +11,7 @@ import {
 } from '../../../../shared/utils/constants';
 import Loader from '../../../../shared/components/Loader';
 import useToast from '../../../../shared/hooks/useToast';
+import { useAuthStore } from '@/shared/store/authStore';
 
 export default function AdminUserList({
   setIsEditUserModalOpen,
@@ -38,6 +39,10 @@ export default function AdminUserList({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const { showError } = useToast();
+
+  const { user } = useAuthStore();
+
+  const isCorporateAdmin = user?.role?.roleName === 'corporateAdmin';
 
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
@@ -173,6 +178,22 @@ export default function AdminUserList({
       },
     },
   ];
+
+  const visibleOptions = dropOptions
+    .filter(
+      (option) =>
+        !(
+          option.value === 'edit' &&
+          activeMenuRow?.role?.roleName === 'corporateAdmin'
+        ),
+    )
+    .filter(
+      (option) =>
+        !(
+          option.value === 'delete-restore' &&
+          activeMenuRow?.role?.roleName === 'corporateAdmin'
+        ),
+    );
 
   const toggleRowMenu = (rowId, event, row) => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
@@ -315,7 +336,7 @@ export default function AdminUserList({
                       <Button
                         type="button"
                         onClick={(event) =>
-                          toggleRowMenu(row.userId, event, row)
+                          toggleRowMenu(row.userId, event, row, row?.role)
                         }
                         className="flex items-center justify-between sm:justify-center gap-2 outline-none transition-all duration-150 ease-in-out px-3 py-2 rounded-lg hover:bg-gray-50 w-full sm:w-auto border border-gray-200 sm:border-0"
                       >
@@ -375,7 +396,7 @@ export default function AdminUserList({
                 onClick={(event) => event.stopPropagation()}
                 role="menu"
               >
-                {dropOptions.map((option) => (
+                {visibleOptions.map((option) => (
                   <Button
                     key={option.value}
                     className="w-full text-left p-2 rounded-md text-tertiary text-sm font-geist hover:bg-gray-100"
