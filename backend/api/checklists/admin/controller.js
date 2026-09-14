@@ -1,5 +1,6 @@
 import { AdminRepository } from "./repository.js";
 import ResponseManager from "../../../utils/responseManager.js";
+import { ROLE_SUPER_ADMIN } from "../../constants/roles.js";
 
 export class AdminController {
 
@@ -16,6 +17,62 @@ export class AdminController {
 
       const result = await AdminRepository.createChecklist({
         title, documentNumber, issuedNumber, entityDisplayName, companyId, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired, approvers, operators, createdBy,
+      });
+      return ResponseManager.success(res, result, 201, result.message);
+    } catch (e) { next(e); }
+  }
+
+  static async searchChecklistByDocumentNumber(req, res, next) {
+    try {
+      const { documentNumber } = req.query;
+      const isSuperAdmin = req.user.role?.roleName === ROLE_SUPER_ADMIN;
+
+      // Search every company the caller has access to, not just the active
+      // workspace — a corporateAdmin can find a document without switching first.
+      // The active company is unioned in as a fallback for users whose membership
+      // rows predate the join table.
+      const activeCompanyId = req.user.company?.companyId || req.user.companyId || null;
+      const companyIds = [
+        ...new Set(
+          [...(req.user.companies || []).map((c) => c.companyId), activeCompanyId].filter(Boolean),
+        ),
+      ];
+
+      if (companyIds.length === 0 && !isSuperAdmin) {
+        return ResponseManager.error(res, "ValidationError", "User must belong to a company to search checklists", 400);
+      }
+
+      const result = await AdminRepository.searchChecklistByDocumentNumber({ documentNumber, companyIds, isSuperAdmin });
+      return ResponseManager.success(res, result, 200, "Checklists fetched successfully");
+    } catch (e) { next(e); }
+  }
+
+  static async duplicateChecklist(req, res, next) {
+    try {
+      const {
+        sourceChecklistId, title, documentNumber, issuedNumber, entityDisplayName,
+        departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
+        approvers, operators, entries,
+      } = req.body;
+      const companyId = req.user.company?.companyId || null;
+      const createdBy = req.user.userId;
+      const isSuperAdmin = req.user.role?.roleName === ROLE_SUPER_ADMIN;
+
+      if (!companyId) {
+        return ResponseManager.error(res, "ValidationError", "User must belong to a company to duplicate a checklist", 400);
+      }
+
+      // The copy always lands in the active workspace, but the source may sit in any
+      // company the caller belongs to — a corporateAdmin copies a form out of one of
+      // its entities into the entity it is currently in.
+      const memberCompanyIds = [
+        ...new Set([...(req.user.companies || []).map((c) => c.companyId), companyId].filter(Boolean)),
+      ];
+
+      const result = await AdminRepository.duplicateChecklist({
+        sourceChecklistId, title, documentNumber, issuedNumber, entityDisplayName,
+        companyId, memberCompanyIds, departmentId, frequency, frequencyInterval, approvalMode, approvalRequired,
+        approvers, operators, entries, createdBy, isSuperAdmin,
       });
       return ResponseManager.success(res, result, 201, result.message);
     } catch (e) { next(e); }

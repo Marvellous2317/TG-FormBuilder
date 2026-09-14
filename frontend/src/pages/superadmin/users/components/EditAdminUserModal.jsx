@@ -21,12 +21,22 @@ export default function EditAdminUserModal({
   setUserToEdit,
   fromAdmin = false,
 }) {
+  const isCorporateAdminInitial =
+    userToEdit?.role?.roleName === 'corporateAdmin' ||
+    userToEdit?.role?.label === 'corporateAdmin';
+
   const [formData, setFormData] = useState({
     firstName: userToEdit?.firstName ?? '',
     lastName: userToEdit?.lastName ?? '',
     email: userToEdit?.email ?? '',
     role: userToEdit?.role ?? {},
-    entity: userToEdit?.company ?? {},
+    entity: isCorporateAdminInitial
+      ? Array.isArray(userToEdit?.companies)
+        ? userToEdit.companies
+        : userToEdit?.company?.companyId
+          ? [userToEdit.company]
+          : []
+      : (userToEdit?.company ?? {}),
     departmentId: userToEdit?.departmentId ?? '',
     departmentName: userToEdit?.department ?? '',
     accessLevel: userToEdit?.accessLevel ?? '',
@@ -39,14 +49,22 @@ export default function EditAdminUserModal({
 
   const { showError, showSuccess } = useToast();
 
-  const rolesData = roles?.data?.roles.map((role) => ({
+  let rolesData = roles?.data?.roles.map((role) => ({
     ...role,
     label: role.roleName,
     value: role.roleId,
   }));
 
+  rolesData = fromAdmin
+    ? rolesData?.filter((r) => r.label.toLowerCase() !== 'corporateadmin')
+    : rolesData;
+
   const isAdminRole =
     rolesData?.find((r) => r.label === 'admin')?.roleId ===
+    formData?.role?.roleId;
+
+  const isCorporateAdminRole =
+    rolesData?.find((r) => r.label === 'corporateAdmin')?.roleId ===
     formData?.role?.roleId;
 
   const companiesData = companies?.data?.companies.map((company) => ({
@@ -62,22 +80,43 @@ export default function EditAdminUserModal({
   }));
 
   const handleSetRole = (roleId) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: {
-        roleId,
-        label: rolesData?.find((r) => r.roleId === roleId)?.label,
-      },
-    }));
+    const selectedRole = rolesData?.find((r) => r.roleId === roleId);
+    const isCorporateAdmin = selectedRole?.label === 'corporateAdmin';
+
+    setFormData((prev) => {
+      let entity = prev.entity;
+
+      if (isCorporateAdmin && !Array.isArray(entity)) {
+        entity = entity?.companyId ? [entity] : [];
+      }
+
+      if (!isCorporateAdmin && Array.isArray(entity)) {
+        entity = entity[0] ?? {};
+      }
+
+      return {
+        ...prev,
+        role: {
+          roleId,
+          label: selectedRole?.label,
+        },
+        entity,
+      };
+    });
   };
 
   const handleSetEntity = (companyId) => {
     setFormData((prev) => ({
       ...prev,
-      entity: {
-        companyId,
-        label: companiesData?.find((r) => r.companyId === companyId)?.label,
-      },
+      entity: isCorporateAdminRole
+        ? companyId.map((id) => ({
+            companyId: id,
+            label: companiesData?.find((r) => r.companyId === id)?.label,
+          }))
+        : {
+            companyId,
+            label: companiesData?.find((r) => r.companyId === companyId)?.label,
+          },
     }));
   };
 
@@ -103,22 +142,16 @@ export default function EditAdminUserModal({
   const { mutateAsync, isPending: isLoading } = useUpdateUser();
 
   const handleSubmit = async () => {
-    const {
-      firstName,
-      lastName,
-      email,
-      role,
-      entity,
-      departmentName,
-      accessLevel,
-    } = formData;
+    const { firstName, lastName, role, entity, departmentName, accessLevel } =
+      formData;
 
     if (
       !firstName ||
       !lastName ||
-      !email ||
       !role?.roleId ||
-      !entity?.companyId ||
+      (isCorporateAdminRole
+        ? !Array.isArray(entity) || entity.length === 0
+        : !entity?.companyId) ||
       !departmentName ||
       !accessLevel
     ) {
@@ -132,9 +165,10 @@ export default function EditAdminUserModal({
         payload: {
           firstName,
           lastName,
-          email,
           roleId: role?.roleId,
-          companyId: entity?.companyId,
+          companyId: isCorporateAdminRole
+            ? entity.map(({ companyId }) => companyId)
+            : entity?.companyId,
           department: departmentName,
           accessLevel,
         },
@@ -226,15 +260,23 @@ export default function EditAdminUserModal({
 
           <div className="flex gap-2 w-full items-center relative">
             <InputField
+              key={isCorporateAdminRole ? 'corporate' : 'standard'}
               label="Entity"
               id="entity"
               className=""
-              value={formData.entity?.companyId}
+              value={
+                isCorporateAdminRole
+                  ? Array.isArray(formData.entity)
+                    ? formData.entity.map(({ companyId }) => companyId)
+                    : []
+                  : (formData.entity?.companyId ?? '')
+              }
               required
               readOnly={isLoadingEntities}
               disabled={fromAdmin}
               options={companiesData}
               type="select"
+              multiple={isCorporateAdminRole}
               onChange={(e) => handleSetEntity(e.target.value)}
             />
             {isLoadingEntities && <Loader size="w-4.5 h-4.5 mt-4" />}
@@ -280,6 +322,7 @@ export default function EditAdminUserModal({
             value={formData.email}
             required
             onChange={handleInputChange}
+            disabled
           />
         </div>
 

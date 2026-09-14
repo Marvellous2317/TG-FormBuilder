@@ -126,13 +126,14 @@ export default function AdminUserManagement() {
           handleStatusChange={handleStatusChange}
           handleDeletedChange={handleDeletedChange}
           setIsCreateUserModalOpen={setIsCreateUserModalOpen}
+          fromAdmin
         />
       </section>
 
       <CreateAdminUserModal
         isCreateUserModalOpen={isCreateUserModalOpen}
         setIsCreateUserModalOpen={setIsCreateUserModalOpen}
-        isFromAdmin={true}
+        fromAdmin
       />
 
       <DeleteUserModal

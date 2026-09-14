@@ -1,13 +1,13 @@
 import express from "express";
 import { isAuthenticated, adminRequired, superAdminRequired, requiresWriteAccess, validateUUID } from "../middlewares/authorization.js";
 import { AdminController } from "./controller.js";
-import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware, validateCompaniesQuery, validateUsersQuery, validateDepartmentsQuery, validateRolesQuery } from "./middleware.js";
+import { validateAddUserMiddleware, validateRoleMiddleware, validateUpdateUserMiddleware, validateUserIdsMiddleware, validateCreateCompanyMiddleware, validateUpdateCompanyMiddleware, validateSuspendCompanyMiddleware, validateCreateDepartmentMiddleware, validateUpdateDepartmentMiddleware, validateCompaniesQuery, validateUsersQuery, validateDepartmentsQuery, validateRolesQuery, validateSubmittedChecklistsQuery, validateAnalyticsQuery } from "./middleware.js";
 import { sigInMiddleware } from "../auth/middleware.js";
 
 const router = express.Router();
 
 
-// Role Management (superAdmin only for create/update/delete)
+
 router.get("/roles", validateRolesQuery, isAuthenticated, adminRequired, AdminController.getAllRolesApi);
 router.get("/roles/:roleId", validateUUID("roleId"), isAuthenticated, adminRequired, AdminController.getRoleByIdApi);
 router.post("/roles", validateRoleMiddleware, isAuthenticated, adminRequired, requiresWriteAccess, AdminController.createRoleApi);
@@ -48,8 +48,13 @@ router.post("/departments", validateCreateDepartmentMiddleware, isAuthenticated,
 router.put("/departments/:departmentId", validateUUID("departmentId"), validateUpdateDepartmentMiddleware, isAuthenticated, adminRequired, requiresWriteAccess, AdminController.updateDepartmentApi);
 router.delete("/departments/:departmentId", validateUUID("departmentId"), isAuthenticated, superAdminRequired, requiresWriteAccess, AdminController.deleteDepartmentApi);
 
+// Submitted Checklists (Super Admin only)
+router.get("/submitted-checklists", validateSubmittedChecklistsQuery, isAuthenticated, superAdminRequired, AdminController.getSubmittedChecklistsApi);
+router.get("/submitted-checklists/:submittedChecklistId", validateUUID("submittedChecklistId"), isAuthenticated, superAdminRequired, AdminController.getSubmittedChecklistByIdApi);
+
 // Analytics (Super Admin only)
-router.get("/analytics", isAuthenticated, superAdminRequired, AdminController.getGlobalAnalyticsApi);
+router.get("/analytics", validateAnalyticsQuery, isAuthenticated, superAdminRequired, AdminController.getGlobalAnalyticsApi);
+router.get("/analytics/adoption", validateAnalyticsQuery, isAuthenticated, superAdminRequired, AdminController.getAdoptionAnalyticsApi);
 router.get("/analytics/:companyId", validateUUID("companyId"), isAuthenticated, superAdminRequired, AdminController.getCompanyAnalyticsApi);
 
 export default router;

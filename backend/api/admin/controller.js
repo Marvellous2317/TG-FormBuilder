@@ -402,10 +402,47 @@ export class AdminController {
   }
 
 
+  static async getSubmittedChecklistsApi(req, res, next) {
+    try {
+      const { companyId, status, startDate, endDate, page, limit } = req.query;
+      const result = await AdminRepository.getSubmittedChecklists({
+        companyId,
+        status,
+        startDate,
+        endDate,
+        page,
+        limit,
+      });
+      return ResponseManager.success(res, result, 200, "Submitted checklists fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async getSubmittedChecklistByIdApi(req, res, next) {
+    try {
+      const result = await AdminRepository.getSubmittedChecklistById(req.params.submittedChecklistId);
+      return ResponseManager.success(res, result, 200, "Submitted checklist fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
   static async getGlobalAnalyticsApi(req, res, next) {
     try {
-      const result = await AdminRepository.getGlobalAnalytics();
+      const { companyId, startDate, endDate } = req.query;
+      const result = await AdminRepository.getGlobalAnalytics({ companyId, startDate, endDate });
       return ResponseManager.success(res, result, 200, "Global analytics fetched successfully");
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async getAdoptionAnalyticsApi(req, res, next) {
+    try {
+      const { companyId, startDate, endDate } = req.query;
+      const result = await AdminRepository.getAdoptionAnalytics({ companyId, startDate, endDate });
+      return ResponseManager.success(res, result, 200, "Adoption analytics fetched successfully");
     } catch (e) {
       next(e);
     }

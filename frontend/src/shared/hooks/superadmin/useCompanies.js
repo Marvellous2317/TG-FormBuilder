@@ -11,7 +11,10 @@ import {
   fetchCompanies,
   fetchCompany,
   fetchCompanyAnalytics,
+  fetchDashboardCompanyAdoptionAnalytics,
   fetchDashboardCompanyAnalytics,
+  fetchSuperAdminSubmission,
+  fetchSuperAdminSubmissions,
   restoreCompany,
   suspendCompany,
   updateCompany,
@@ -48,10 +51,40 @@ export function useCompany(companyId, options = {}) {
   });
 }
 
+export function useSuperAdminSubmissions(queryParams = {}, options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'submissions', queryParams],
+    queryFn: () => fetchSuperAdminSubmissions(queryParams),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useSuperAdminSubmission(submissionId, options = {}) {
+  return useQuery({
+    queryKey: ['superadmin', 'submissions', submissionId],
+    queryFn: () => fetchSuperAdminSubmission(submissionId),
+    enabled: Boolean(submissionId),
+    ...options,
+  });
+}
+
 export function useDashboardCompanyAnalytics(options = {}) {
   return useQuery({
     queryKey: ['superadmin', 'companies', 'dashboard', 'analytics'],
     queryFn: () => fetchDashboardCompanyAnalytics(),
+    keepPreviousData: true,
+    ...options,
+  });
+}
+
+export function useDashboardCompanyAdoptionAnalytics(
+  queryParams,
+  options = {},
+) {
+  return useQuery({
+    queryKey: ['superadmin', 'companies', 'dashboard', 'adoption', 'analytics', queryParams],
+    queryFn: () => fetchDashboardCompanyAdoptionAnalytics(queryParams),
     keepPreviousData: true,
     ...options,
   });

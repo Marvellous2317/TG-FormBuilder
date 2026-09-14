@@ -21,6 +21,11 @@ import path from "path";
     isAdmin: true,
   },
   {
+    roleName: "corporateAdmin",
+    description: "Corporate administrator spanning multiple companies",
+    isAdmin: true,
+  },
+  {
     roleName: "superAdmin",
     description: "Super Administrator with full access",
     isAdmin: true,

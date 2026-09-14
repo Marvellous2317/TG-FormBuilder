@@ -106,6 +106,66 @@ export const validateChecklistQuery = [
   validate,
 ];
 
+// Lookup a checklist by its document number within the caller's active company
+export const validateChecklistSearch = [
+  query("documentNumber").trim().notEmpty().withMessage("Document number is required")
+    .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  validate,
+];
+
+// Duplicate a checklist together with its entries.
+// Mirrors validateCreateChecklist, plus an optional source and optional entries array.
+export const validateDuplicateChecklist = [
+  body("sourceChecklistId").optional({ nullable: true }).isUUID().withMessage("Source checklist ID must be a valid UUID"),
+  body("title").trim().notEmpty().withMessage("Checklist title is required")
+    .isLength({ max: 255 }).withMessage("Title must be less than 255 characters"),
+  body("documentNumber").trim().notEmpty().withMessage("Document number is required")
+    .isLength({ max: 100 }).withMessage("Document number must be less than 100 characters"),
+  body("departmentId").optional({ nullable: true }).isUUID().withMessage("Department ID must be a valid UUID"),
+  body("frequency").optional({ nullable: true }).isIn(["hourly", "daily", "weekly", "monthly"])
+    .withMessage("Frequency must be one of: hourly, daily, weekly, monthly"),
+  body("frequencyInterval").optional({ nullable: true }).isInt({ min: 1, max: 24 })
+    .withMessage("Frequency interval must be between 1 and 24 hours"),
+  body("approvalMode")
+    .if(approvalIsRequired)
+    .optional().isIn(["sequential", "parallel"])
+    .withMessage("Approval mode must be sequential or parallel"),
+  body("approvalRequired").optional().isBoolean().withMessage("approvalRequired must be a boolean"),
+  body("approvers")
+    .if(approvalIsRequired)
+    .optional().isArray().withMessage("Approvers must be an array"),
+  body("approvers.*.approverId")
+    .if(approvalIsRequired)
+    .optional().isUUID().withMessage("Each approver must have a valid approverId"),
+  body("approvers.*.step")
+    .if(approvalIsRequired)
+    .optional().isInt({ min: 0 }).withMessage("Approver step must be a non-negative integer"),
+  body("operators").optional().isArray().withMessage("Operators must be an array"),
+  body("operators.*").optional().isUUID().withMessage("Each operator must be a valid UUID"),
+  body("entries").optional().isArray().withMessage("entries must be an array"),
+  body("entries.*.name").trim().notEmpty().withMessage("Entry name is required")
+    .isLength({ max: 500 }).withMessage("Name must be less than 500 characters"),
+  body("entries.*.type").optional().isIn(["text", "number", "dropdown", "date", "time", "enum", "name", "formular", "section", "section_formular", "image"])
+    .withMessage("Invalid field type"),
+  body("entries.*.section").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section must be a string (max 255 chars)"),
+  body("entries.*.image").optional({ nullable: true }).isBoolean().withMessage("Image must be a boolean"),
+  body("entries.*.section_formular").optional({ nullable: true }).isString().isLength({ max: 255 }).withMessage("Section formula must be a string (max 255 chars)"),
+  body("entries.*.order").optional().isInt({ min: 0 }).withMessage("Order must be a positive integer"),
+  body("entries.*.required").optional().isBoolean().withMessage("Required must be a boolean"),
+  body("entries.*.formulaExpression").optional({ nullable: true }).isString().withMessage("Formula expression must be a string"),
+  body("entries.*.options").optional({ nullable: true }).isArray().withMessage("Options must be an array"),
+  body().custom((body) => {
+    if (!body.sourceChecklistId && !Array.isArray(body.entries)) {
+      throw new Error("Provide either a sourceChecklistId to copy from, or an entries array");
+    }
+    if (body.frequency === "hourly" && (!body.frequencyInterval || body.frequencyInterval < 1)) {
+      throw new Error("Frequency interval is required when frequency is hourly");
+    }
+    return true;
+  }),
+  validate,
+];
+
 // Checklist version validation (read-only)
 export const validateVersionQuery = [
   query("checklistId").optional().isUUID().withMessage("Checklist ID must be a valid UUID"),

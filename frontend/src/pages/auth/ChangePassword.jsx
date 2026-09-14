@@ -21,7 +21,7 @@ function ChangePassword() {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value?.trim(),
     }));
   };
 

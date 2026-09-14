@@ -56,6 +56,7 @@ export default function EditUsersModal({
             className="mb-4"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled
           />
           <InputField
             label="Role"

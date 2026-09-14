@@ -91,7 +91,9 @@ export default function CreateLogbookModal({
     logbookTitle: checklistToDuplicate
       ? `${checklistToDuplicate?.title} (copy)`
       : '',
-    documentNumber: checklistToDuplicate?.documentNumber ?? '',
+    documentNumber: checklistToDuplicate
+      ? `${checklistToDuplicate?.documentNumber} (copy)`
+      : '',
     department: checklistToDuplicate?.department
       ? {
           departmentId: checklistToDuplicate?.department?.departmentId,
@@ -114,7 +116,9 @@ export default function CreateLogbookModal({
         logbookTitle: checklistToDuplicate
           ? `${checklistToDuplicate?.title} (copy)`
           : '',
-        documentNumber: checklistToDuplicate?.documentNumber || '',
+        documentNumber: checklistToDuplicate
+          ? `${checklistToDuplicate?.documentNumber} (copy)`
+          : '',
         department: checklistToDuplicate?.department || {},
         frequency: checklistToDuplicate?.frequency || '',
         frequencyInterval: checklistToDuplicate?.frequencyInterval || '',
@@ -132,6 +136,7 @@ export default function CreateLogbookModal({
   const [departmentSearch, setDepartmentSearch] = useState('');
   const [userSearchInput, setUserSearchInput] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [userOtherSearchInput, setUserOtherSearchInput] = useState('');
   const [userOtherSearch, setUserOtherSearch] = useState('');
   const [isDuplicatingChecklist, setIsDuplicatingChecklist] = useState(false);
 
@@ -151,6 +156,14 @@ export default function CreateLogbookModal({
     );
     return () => clearTimeout(timer);
   }, [departmentSearchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setUserOtherSearch(userOtherSearchInput),
+      2000,
+    );
+    return () => clearTimeout(timer);
+  }, [userOtherSearchInput]);
 
   const { mutateAsync, isPending: isLoading } = useCreateChecklists();
 
@@ -178,9 +191,11 @@ export default function CreateLogbookModal({
 
   const rolesData = roles?.data?.roles;
 
+  const approverRole = rolesData?.find((role) => role.roleName === 'approval');
   const operatorRole = rolesData?.find((role) => role.roleName === 'operator');
   const adminRole = rolesData?.find((role) => role.roleName === 'admin');
-
+ const coporateAdminRole = rolesData?.find((role) => role.role === 'corporateAdmin');
+  
   const {
     data: usersData,
     isPending: isLoadingUsers,
@@ -207,16 +222,15 @@ export default function CreateLogbookModal({
     hasNextPage: hasNextOtherUsersPage,
     isFetchingNextPage: isFetchingNextOtherUsersPage,
   } = useFetchUsersInfinite(
-    { search: userOtherSearch },
-    { enabled: isShowLogbookModal },
+    { search: userOtherSearch, roleId: approverRole?.roleId },
+    { enabled: isShowLogbookModal && Boolean(approverRole?.roleId) },
   );
 
   const allOtherUsers =
     usersOtherData?.pages.flatMap((p) => p.data.users) ?? [];
 
   const usersOtherList = allOtherUsers
-    .filter((user) => user.roleId !== operatorRole?.roleId)
-    .filter((user) => user.roleId !== adminRole?.roleId)
+    .filter((user) => user.roleId === approverRole?.roleId)
     .map((user) => ({
       ...user,
       label: `${user.firstName} ${user.lastName} - ${user?.role?.roleName || 'N/A'}`,
@@ -443,6 +457,7 @@ export default function CreateLogbookModal({
     setDepartmentSearch('');
     setUserSearchInput('');
     setUserSearch('');
+    setUserOtherSearchInput('');
     setUserOtherSearch('');
     setChecklistToDuplicate(null);
     setIsShowLogbookModal(false);
@@ -549,7 +564,7 @@ export default function CreateLogbookModal({
                 options={usersOtherList}
                 type="select"
                 searchable
-                onExternalSearchChange={setUserOtherSearch}
+                onExternalSearchChange={setUserOtherSearchInput}
                 onLoadMore={fetchNextOtherUsersPage}
                 hasNextPage={hasNextOtherUsersPage}
                 isFetchingNextPage={isFetchingNextOtherUsersPage}

@@ -1,4 +1,4 @@
-import { Op, Sequelize } from "sequelize";
+import { Op, QueryTypes, Sequelize } from "sequelize";
 import crypto from "crypto";
 
 import {
@@ -6,11 +6,13 @@ import {
   Role,
   Company,
   Department,
-  // LEGACY: OperatorApprover (operator_approvers table) replaced by per-checklist approver flow.
-  // OperatorApprover,
   SubmittedChecklist,
+  SubmittedChecklistEntry,
+  UserCompany,
+  Checklist,
 } from "../../models/index.js";
 import { ApplicationError, ValidationError } from "../../utils/errorHandler.js";
+import { MULTI_COMPANY_ROLES, ROLE_CORPORATE_ADMIN, ROLE_SUPER_ADMIN } from "../constants/roles.js";
 
 import { generateJWT } from "../auth/helper.js";
 import { sendApprovalEmail, sendPasswordMail } from "../../views/index.js";
@@ -56,7 +58,11 @@ export class AdminRepository {
         throw new ApplicationError("Unauthorized access", 401);
       }
 
-      const token = generateJWT(user.userId);
+      userRaw.lastLoginAt = new Date();
+      await userRaw.save({ fields: ["lastLoginAt"], silent: true });
+      user.lastLoginAt = userRaw.lastLoginAt;
+
+      const token = generateJWT(user.userId, user.companyId);
       const requiresPasswordChange = userRaw.newLogin === true;
 
       return {
@@ -77,7 +83,7 @@ export class AdminRepository {
   static async getAllRoles(user, { deleted } = {}) {
     const role = user.roleId ? await Role.findByPk(user.roleId) : null;
 
-    // Determine paranoid setting based on deleted filter
+
     let paranoid = true;
     let deletedAtCondition = null;
 
@@ -88,7 +94,7 @@ export class AdminRepository {
       paranoid = false;
     }
 
-    if (role?.roleName === "superAdmin") {
+    if (role?.roleName === ROLE_SUPER_ADMIN) {
       try {
         const where = deletedAtCondition || {};
         const roles = await Role.findAll({
@@ -102,10 +108,14 @@ export class AdminRepository {
       }
     }
 
+
+    const hidden = [ROLE_SUPER_ADMIN];
+    if (role?.roleName !== ROLE_CORPORATE_ADMIN) hidden.push(ROLE_CORPORATE_ADMIN);
+
     try {
       const where = {
         isActive: true,
-        roleName: { [Op.notIn]: ["superAdmin"] },
+        roleName: { [Op.notIn]: hidden },
       };
       if (deletedAtCondition) {
         Object.assign(where, deletedAtCondition);
@@ -196,7 +206,7 @@ export class AdminRepository {
       const role = await Role.findByPk(roleId);
       if (!role) throw new ApplicationError("Role not found", 404);
 
-      const protectedRoles = ["operator", "approval", "admin", "superAdmin"];
+      const protectedRoles = ["operator", "approval", "admin", ROLE_CORPORATE_ADMIN, ROLE_SUPER_ADMIN];
       if (protectedRoles.includes(role.roleName)) {
         throw new ApplicationError("Cannot delete protected system role", 400);
       }
@@ -275,15 +285,49 @@ export class AdminRepository {
       throw new ApplicationError("Failed to restore user", 500);
     }
   }
+  static async _resolveCompanyIds(role, companyId, transaction) {
+    const ids = Array.isArray(companyId)
+      ? [...new Set(companyId.filter(Boolean))]
+      : companyId
+        ? [companyId]
+        : [];
+
+    for (const id of ids) {
+      const company = await Company.findByPk(id, { transaction });
+      if (!company) throw new ValidationError(`Invalid company ID: ${id}`);
+    }
+
+    if (ids.length > 1 && !MULTI_COMPANY_ROLES.includes(role?.roleName)) {
+      throw new ValidationError(
+        `Only ${ROLE_CORPORATE_ADMIN} users can belong to more than one company`,
+      );
+    }
+
+    return ids;
+  }
+
+  static async _setUserCompanies(userId, companyIds, transaction) {
+    await UserCompany.destroy({ where: { userId }, transaction });
+    if (companyIds.length === 0) return;
+    await UserCompany.bulkCreate(
+      companyIds.map((cid) => ({ userId, companyId: cid })),
+      { transaction },
+    );
+  }
 
   static async addUser(
     admin,
     { email, firstName, lastName, roleId, companyId, department, accessLevel },
   ) {
+    const transaction = await sequelize.transaction();
+    let password;
+    let createdUser;
+
     try {
       const existingUser = await User.findOne({
         where: { email: email.toLowerCase().trim() },
         paranoid: false,
+        transaction,
       });
 
       if (existingUser) {
@@ -297,18 +341,15 @@ export class AdminRepository {
       }
 
       if (!roleId) throw new ValidationError("Role ID is required");
-      const role = await Role.findByPk(roleId);
+      const role = await Role.findByPk(roleId, { transaction });
       if (!role) throw new ValidationError("Invalid role ID");
 
-      if (companyId) {
-        const company = await Company.findByPk(companyId);
-        if (!company) throw new ValidationError("Invalid company ID");
-      }
+      const companyIds = await this._resolveCompanyIds(role, companyId, transaction);
 
-      const checkAdminRole = await Role.findByPk(admin.roleId);
+      const checkAdminRole = await Role.findByPk(admin.roleId, { transaction });
       if (
-        role.roleName === "superAdmin" &&
-        checkAdminRole.roleName !== "superAdmin"
+        role.roleName === ROLE_SUPER_ADMIN &&
+        checkAdminRole.roleName !== ROLE_SUPER_ADMIN
       ) {
         throw new ApplicationError(
           "Only SuperAdmin is Allowed to add SuperAdmin",
@@ -316,7 +357,7 @@ export class AdminRepository {
         );
       }
 
-      const password = generateRandomPassword();
+      password = generateRandomPassword();
 
       const user = User.build({
         email: email.toLowerCase(),
@@ -324,28 +365,34 @@ export class AdminRepository {
         lastName,
         status: "active",
         roleId,
-        companyId: companyId || null,
+        companyId: companyIds[0] || null,
         department: department || null,
         accessLevel: accessLevel || "read_write",
         newLogin: true,
       });
 
       await user.setPassword(password);
-      await user.save();
+      await user.save({ transaction });
 
-      sendPasswordMail({
-        email: user.email,
-        password,
-        firstName: user.firstName,
-      });
+      await this._setUserCompanies(user.userId, companyIds, transaction);
 
-      return { message: "User added successfully" };
+      await transaction.commit();
+      createdUser = user;
     } catch (error) {
+      await transaction.rollback();
       if (error instanceof ApplicationError || error instanceof ValidationError)
         throw error;
       console.log("Error in addUser:", error);
       throw new ApplicationError("Failed to add user", 500);
     }
+
+    sendPasswordMail({
+      email: createdUser.email,
+      password,
+      firstName: createdUser.firstName,
+    });
+
+    return { message: "User added successfully" };
   }
 
   static async getAllUsers(
@@ -442,23 +489,18 @@ export class AdminRepository {
             as: "company",
             attributes: ["companyId", "companyName"],
           },
-          // LEGACY: operator-approver mapping. Replaced by the per-checklist approver flow.
-          // {
-          //   model: OperatorApprover,
-          //   as: "operatorApprovers",
-          //   attributes: ["id"],
-          //   include: [
-          //     {
-          //       model: User,
-          //       as: "approver",
-          //       attributes: ["firstName", "lastName", "userId"],
-          //     },
-          //   ],
-          // },
+          {
+            model: Company,
+            as: "companies",
+            attributes: ["companyId", "companyName"],
+            through: { attributes: [] },
+            required: false,
+          },
         ],
         limit,
         offset,
         order: [["createdAt", "DESC"]],
+        distinct: true,
         paranoid,
       });
 
@@ -503,6 +545,7 @@ export class AdminRepository {
   }
 
   static async updateUser({ userId, data, admin }) {
+    const transaction = await sequelize.transaction();
     try {
       const firstName = (data.firstName || "").trim();
       const lastName = (data.lastName || "").trim();
@@ -513,7 +556,7 @@ export class AdminRepository {
       const status = data.status;
       const accessLevel = data.accessLevel;
 
-      const user = await User.findOne({ where: { userId } });
+      const user = await User.findOne({ where: { userId }, transaction });
       if (!user) throw new ApplicationError("User not found", 404);
 
       if (user.userId === admin.userId) {
@@ -527,18 +570,49 @@ export class AdminRepository {
       if (lastName) user.lastName = lastName;
       if (email) user.email = email;
 
+  
+      let effectiveRole = await Role.findByPk(user.roleId, { transaction });
+
       if (roleId) {
-        const role = await Role.findByPk(roleId);
+        const role = await Role.findByPk(roleId, { transaction });
         if (!role) throw new ValidationError("Invalid role ID");
+
+        const adminRole = await Role.findByPk(admin.roleId, { transaction });
+        if (
+          role.roleName === ROLE_SUPER_ADMIN &&
+          adminRole?.roleName !== ROLE_SUPER_ADMIN
+        ) {
+          throw new ApplicationError(
+            "Only SuperAdmin is Allowed to assign the SuperAdmin role",
+            403,
+          );
+        }
+
         user.roleId = roleId;
+        effectiveRole = role;
       }
 
       if (companyId !== undefined) {
-        if (companyId) {
-          const company = await Company.findByPk(companyId);
-          if (!company) throw new ValidationError("Invalid company ID");
+        const companyIds = await this._resolveCompanyIds(
+          effectiveRole,
+          companyId,
+          transaction,
+        );
+        await this._setUserCompanies(user.userId, companyIds, transaction);
+
+        user.companyId = companyIds.includes(user.companyId)
+          ? user.companyId
+          : companyIds[0] || null;
+      } else if (roleId && !MULTI_COMPANY_ROLES.includes(effectiveRole.roleName)) {
+        const memberships = await UserCompany.count({
+          where: { userId: user.userId },
+          transaction,
+        });
+        if (memberships > 1) {
+          throw new ValidationError(
+            `This user belongs to ${memberships} companies. Send a single companyId along with the new role to reduce their memberships.`,
+          );
         }
-        user.companyId = companyId || null;
       }
 
       if (department !== undefined) {
@@ -553,11 +627,14 @@ export class AdminRepository {
         user.accessLevel = accessLevel;
       }
 
-      await user.save();
+      await user.save({ transaction });
+      await transaction.commit();
       return { message: "User updated successfully" };
     } catch (error) {
+      await transaction.rollback();
       if (error instanceof ApplicationError || error instanceof ValidationError)
         throw error;
+      console.log(error)
       throw new ApplicationError("Failed to update user", 500);
     }
   }
@@ -628,91 +705,6 @@ export class AdminRepository {
     }
   }
 
-  /* LEGACY: global operator-approver mapping. Replaced by the per-checklist approver flow.
-  static async assignApprover(operatorId, approverId) {
-    try {
-      const operator = await User.findByPk(operatorId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!operator) throw new ApplicationError("Operator not found", 404);
-      if (operator.role?.roleName !== "operator") {
-        throw new ApplicationError("User is not an operator", 400);
-      }
-
-      const approver = await User.findByPk(approverId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!approver) throw new ApplicationError("Approver not found", 404);
-      if (approver.role?.roleName !== "approval") {
-        throw new ApplicationError(
-          "Selected user does not have approval role",
-          400,
-        );
-      }
-
-      const existing = await OperatorApprover.findOne({
-        where: { operatorId, approverId },
-      });
-      if (existing)
-        throw new ApplicationError(
-          "Approver is already assigned to this operator",
-          400,
-        );
-
-      await OperatorApprover.create({ operatorId, approverId });
-
-      return { message: "Approver assigned to operator successfully" };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to assign approver", 500);
-    }
-  }
-
-  static async unassignApprover(operatorId, approverId) {
-    try {
-      const record = await OperatorApprover.findOne({
-        where: { operatorId, approverId },
-      });
-      if (!record)
-        throw new ApplicationError(
-          "Approver is not assigned to this operator",
-          404,
-        );
-
-      await record.destroy();
-
-      return { message: "Approver unassigned from operator successfully" };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to unassign approver", 500);
-    }
-  }
-
-  static async getOperatorApprovers(operatorId) {
-    try {
-      const operator = await User.findByPk(operatorId, {
-        include: [{ model: Role, as: "role" }],
-      });
-      if (!operator) throw new ApplicationError("Operator not found", 404);
-
-      const approvers = await OperatorApprover.findAll({
-        where: { operatorId },
-        include: [
-          {
-            model: User,
-            as: "approver",
-            attributes: ["userId", "firstName", "lastName", "email"],
-          },
-        ],
-      });
-
-      return { approvers: approvers.map((r) => r.approver) };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new ApplicationError("Failed to fetch approvers", 500);
-    }
-  }
-  */
 
   static async getAllCompanies({
     status,
@@ -1143,8 +1135,167 @@ export class AdminRepository {
     }
   }
 
-  static async getGlobalAnalytics() {
+
+  static _submittedDateColumn() {
+    return Sequelize.fn(
+      "COALESCE",
+      Sequelize.col("submitted_checklists.submittedAt"),
+      Sequelize.col("submitted_checklists.createdAt")
+    );
+  }
+
+
+  static _toRangeEnd(value) {
+    const date = new Date(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(value).trim())) {
+      date.setUTCHours(23, 59, 59, 999);
+    }
+    return date;
+  }
+
+  static _submittedDateFilter(startDate, endDate) {
+    if (!startDate && !endDate) return null;
+
+    const column = AdminRepository._submittedDateColumn();
+    const conditions = [];
+    if (startDate) conditions.push(Sequelize.where(column, { [Op.gte]: new Date(startDate) }));
+    if (endDate) conditions.push(Sequelize.where(column, { [Op.lte]: AdminRepository._toRangeEnd(endDate) }));
+    return conditions;
+  }
+
+   static _resolveAdoptionWindow(startDate, endDate, defaultDays = 30) {
+    if (!startDate && !endDate) {
+      const from = new Date();
+      from.setDate(from.getDate() - defaultDays);
+      return { from, to: null, defaultApplied: true };
+    }
+
+    return {
+      from: startDate ? new Date(startDate) : null,
+      to: endDate ? AdminRepository._toRangeEnd(endDate) : null,
+      defaultApplied: false,
+    };
+  }
+
+  static _submittedChecklistWhere({ companyId, status, startDate, endDate }) {
+    const where = {};
+    if (companyId) where.companyId = companyId;
+    if (status) where.status = status;
+
+    const dateConditions = AdminRepository._submittedDateFilter(startDate, endDate);
+    if (dateConditions) where[Op.and] = dateConditions;
+
+    return where;
+  }
+
+
+  static async getSubmittedChecklists({
+    companyId,
+    status,
+    startDate,
+    endDate,
+    page = 1,
+    limit = 30,
+  }) {
     try {
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
+
+      page = Number(page) || 1;
+      limit = Number(limit) || 30;
+      const offset = (page - 1) * limit;
+
+      const where = AdminRepository._submittedChecklistWhere({ companyId, status, startDate, endDate });
+
+      const { rows: submittedChecklists, count } = await SubmittedChecklist.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [
+          ["submittedAt", "DESC"],
+          ["createdAt", "DESC"],
+        ],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`(
+                SELECT COUNT(*)::integer
+                FROM "submitted_checklist_entries" AS "entries"
+                WHERE "entries"."submittedChecklistId" = "submitted_checklists"."submittedChecklistId"
+                  AND "entries"."deletedAt" IS NULL
+              )`),
+              "entryCount",
+            ],
+          ],
+        },
+        include: [
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName", "email"] },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
+        ],
+      });
+
+      return {
+        submittedChecklists,
+        filters: {
+          companyId: companyId || null,
+          status: status || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        pagination: {
+          total: count,
+          page,
+          pageSize: limit,
+          totalPages: Math.ceil(count / limit),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getSubmittedChecklists:", error);
+      throw new ApplicationError("Failed to fetch submitted checklists", 500);
+    }
+  }
+
+  static async getSubmittedChecklistById(submittedChecklistId) {
+    try {
+      const submittedChecklist = await SubmittedChecklist.findByPk(submittedChecklistId, {
+        include: [
+          { model: Company, as: "company", attributes: ["companyId", "companyName"] },
+          { model: User, as: "submitter", attributes: ["userId", "firstName", "lastName", "email"] },
+          { model: User, as: "approver", attributes: ["userId", "firstName", "lastName", "email"] },
+          {
+            model: SubmittedChecklistEntry,
+            as: "entries",
+            separate: true,
+            order: [
+              ["order", "ASC"],
+              ["createdAt", "ASC"],
+            ],
+          },
+        ],
+      });
+
+      if (!submittedChecklist) throw new ApplicationError("Submitted checklist not found", 404);
+
+      return submittedChecklist;
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getSubmittedChecklistById:", error);
+      throw new ApplicationError("Failed to fetch submitted checklist", 500);
+    }
+  }
+
+
+  static async getGlobalAnalytics({ companyId, startDate, endDate } = {}) {
+    try {
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
@@ -1156,39 +1307,55 @@ export class AdminRepository {
       startOfWeek.setDate(today.getDate() - diff);
       startOfWeek.setHours(0, 0, 0, 0);
 
-      const totalActiveCompanies = await Company.count({
-        where: { status: "active" },
-      });
+      const scoped = (extra = {}) => (companyId ? { companyId, ...extra } : { ...extra });
+      const rangeWhere = (status) =>
+        AdminRepository._submittedChecklistWhere({ companyId, status, startDate, endDate });
 
-      const totalActiveUsers = await User.count({
-        where: { status: "active" },
-      });
-
-      const totalChecklistsToday = await SubmittedChecklist.count({
-        where: {
-          createdAt: {
-            [Op.gte]: today,
-            [Op.lt]: tomorrow,
-          },
-        },
-      });
-
-      const totalChecklistsThisWeek = await SubmittedChecklist.count({
-        where: {
-          createdAt: {
-            [Op.gte]: startOfWeek,
-            [Op.lt]: tomorrow,
-          },
-        },
-      });
-
-      return {
+      const [
         totalActiveCompanies,
         totalActiveUsers,
         totalChecklistsToday,
         totalChecklistsThisWeek,
+        rangeTotal,
+        rangeApproved,
+        rangePending,
+        rangeRejected,
+      ] = await Promise.all([
+        Company.count({ where: scoped({ status: "active" }) }),
+        User.count({ where: scoped({ status: "active" }) }),
+        SubmittedChecklist.count({
+          where: scoped({ createdAt: { [Op.gte]: today, [Op.lt]: tomorrow } }),
+        }),
+        SubmittedChecklist.count({
+          where: scoped({ createdAt: { [Op.gte]: startOfWeek, [Op.lt]: tomorrow } }),
+        }),
+        SubmittedChecklist.count({ where: rangeWhere() }),
+        SubmittedChecklist.count({ where: rangeWhere("approved") }),
+        SubmittedChecklist.count({ where: rangeWhere("pending") }),
+        SubmittedChecklist.count({ where: rangeWhere("rejected") }),
+      ]);
+
+      return {
+        filters: {
+          companyId: companyId || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        totalActiveCompanies,
+        totalActiveUsers,
+        totalChecklistsToday,
+        totalChecklistsThisWeek,
+        range: {
+          from: startDate || null,
+          to: endDate || null,
+          totalChecklists: rangeTotal,
+          approved: rangeApproved,
+          pending: rangePending,
+          rejected: rangeRejected,
+        },
       };
     } catch (error) {
+      if (error instanceof ApplicationError) throw error;
       console.log("Error in getGlobalAnalytics:", error);
       throw new ApplicationError("Failed to fetch analytics", 500);
     }
@@ -1245,6 +1412,141 @@ export class AdminRepository {
       if (error instanceof ApplicationError) throw error;
       console.log("Error in getCompanyAnalytics:", error);
       throw new ApplicationError("Failed to fetch company analytics", 500);
+    }
+  }
+
+   static async getAdoptionAnalytics({ companyId, startDate, endDate } = {}) {
+    try {
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        if (!company) throw new ApplicationError("Company not found", 404);
+      }
+
+      const { from, to, defaultApplied } = AdminRepository._resolveAdoptionWindow(startDate, endDate);
+
+      const distinctValues = async (model, column, scope = {}) => {
+        const rows = await model.findAll({
+          attributes: [[Sequelize.fn("DISTINCT", Sequelize.col(column)), "value"]],
+                  where: { [Op.and]: [scope, { [column]: { [Op.ne]: null } }] },
+          raw: true,
+        });
+        return rows.map((row) => row.value).filter(Boolean);
+      };
+
+      const submissionWhere = (status) =>
+        AdminRepository._submittedChecklistWhere({ companyId, status, startDate: from, endDate: to });
+
+      const formWhere = () => {
+        const where = {};
+        if (companyId) where.companyId = companyId;
+        if (from || to) {
+          where.createdAt = {};
+          if (from) where.createdAt[Op.gte] = from;
+          if (to) where.createdAt[Op.lte] = to;
+        }
+        return where;
+      };
+
+      const populationWhere = (extra = {}) => (companyId ? { companyId, ...extra } : { ...extra });
+
+      // A user belongs to a company through their active workspace (users.companyId)
+      // or a membership row; memberships are not backfilled, so check both.
+      const userMembershipSql = `("u"."companyId" = :companyId OR EXISTS (
+          SELECT 1 FROM "packing_check_user_companies" AS "uc"
+          WHERE "uc"."userId" = "u"."userId" AND "uc"."companyId" = :companyId
+        ))`;
+
+      const countUsers = async (extraConditions = []) => {
+        const conditions = [`"u"."deletedAt" IS NULL`, ...extraConditions];
+        if (companyId) conditions.push(userMembershipSql);
+        const [row] = await sequelize.query(
+          `SELECT COUNT(*)::integer AS "count" FROM "packing_check_users" AS "u" WHERE ${conditions.join(" AND ")}`,
+          { replacements: { companyId, from, to }, type: QueryTypes.SELECT }
+        );
+        return row.count;
+      };
+
+      // Active users = last login (users.lastLoginAt) falls inside the window.
+      const lastLoginConditions = [`"u"."lastLoginAt" IS NOT NULL`];
+      if (from) lastLoginConditions.push(`"u"."lastLoginAt" >= :from`);
+      if (to) lastLoginConditions.push(`"u"."lastLoginAt" <= :to`);
+
+      const [
+        totalUsers,
+        activeUsers,
+        totalEntities,
+        totalForms,
+        totalSubmittedRecords,
+        approvedRecords,
+        pendingRecords,
+        rejectedRecords,
+        submitterIds,
+        approverIds,
+        entityIdsWithSubmissions,
+        entityIdsWithForms,
+      ] = await Promise.all([
+        countUsers(),
+        countUsers(lastLoginConditions),
+        Company.count({ where: populationWhere() }),
+        Checklist.count({ where: formWhere() }),
+        SubmittedChecklist.count({ where: submissionWhere() }),
+        SubmittedChecklist.count({ where: submissionWhere("approved") }),
+        SubmittedChecklist.count({ where: submissionWhere("pending") }),
+        SubmittedChecklist.count({ where: submissionWhere("rejected") }),
+        distinctValues(SubmittedChecklist, "submittedBy", submissionWhere()),
+        distinctValues(SubmittedChecklist, "approvedBy", submissionWhere()),
+        distinctValues(SubmittedChecklist, "companyId", submissionWhere()),
+        distinctValues(Checklist, "companyId", formWhere()),
+      ]);
+
+      // Active = did something in the window: users logged in, entities received a submission.
+      const submittedUsers = submitterIds.length;
+      const activeEntities = entityIdsWithSubmissions.length;
+
+      const adoptedUserIds = new Set([...submitterIds, ...approverIds]);
+      const adoptedUsers = adoptedUserIds.size;
+
+     
+      const engagedEntityIds = new Set([...entityIdsWithSubmissions, ...entityIdsWithForms]);
+      const entitiesUsing = engagedEntityIds.size;
+
+      return {
+        filters: {
+          companyId: companyId || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        range: {
+          from: from ? from.toISOString() : null,
+          to: to ? to.toISOString() : null,
+          defaultApplied,
+        },
+        adoption: {
+          totalUsers,
+          activeUsers,
+          submittedUsers,
+          adoptedUsers,
+        },
+        entities: {
+          totalEntities,
+          activeEntities,
+          entitiesUsing,
+          entitiesNotUsing: Math.max(totalEntities - entitiesUsing, 0),
+        },
+        usage: {
+          totalSubmittedRecords,
+          approvedRecords,
+          pendingRecords,
+          rejectedRecords,
+        },
+        forms: {
+          totalDevelopedForms: totalForms,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      console.log("Error in getAdoptionAnalytics:", error);
+      throw new ApplicationError("Failed to fetch adoption analytics", 500);
     }
   }
 }
