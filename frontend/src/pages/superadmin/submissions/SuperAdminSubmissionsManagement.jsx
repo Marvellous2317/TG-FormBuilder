@@ -137,7 +137,7 @@ export default function SuperAdminSubmissionsManagement() {
                   type="text"
                   placeholder="Enter search here"
                   value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
                 />
               </div>
@@ -162,6 +162,7 @@ export default function SuperAdminSubmissionsManagement() {
                       onChange={(e) =>
                         handleFilterChange('companyId', e.target.value)
                       }
+                      searchable
                       disabled={isLoadingCompanies}
                       onLoadMore={fetchNextCompaniesPage}
                       hasNextPage={hasNextCompaniesPage}

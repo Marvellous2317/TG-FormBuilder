@@ -97,6 +97,7 @@ export default function ReportsManagement() {
                   value: company.companyId,
                 })),
               ]}
+              searchable
               onChange={(e) => handleFilterChange('companyId', e.target.value)}
               disabled={isLoadingCompanies}
               onLoadMore={fetchNextCompaniesPage}
