@@ -5,14 +5,16 @@ import { FiSearch } from 'react-icons/fi';
 import { FaArrowLeft } from 'react-icons/fa';
 import Loader from '../../../shared/components/Loader';
 import InputField from '../../../shared/components/InputField';
-import { useCompanies } from '../../../shared/hooks/superadmin/useCompanies';
 import Pagination from '../../../shared/components/Pagination';
-import { useSuperAdminSubmissions } from '@/shared/hooks/superadmin/useCompanies';
+import {
+  useCompaniesInfinite,
+  useSuperAdminSubmissions,
+} from '@/shared/hooks/superadmin/useCompanies';
 import AdminUserList from '../users/components/AdminUserList';
 import DropdownSelect from '@/shared/components/DropdownSelect';
 
 export default function SuperAdminSubmissionsManagement() {
-  // const [search, setSearch] = useState('');
+  const [search, setSearch] = useState('');
 
   const navigate = useNavigate();
 
@@ -26,10 +28,15 @@ export default function SuperAdminSubmissionsManagement() {
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
     limit: 20,
-    search: '',
   });
 
-  const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
+  const {
+    data: companiesData,
+    isPending: isLoadingCompanies,
+    fetchNextPage: fetchNextCompaniesPage,
+    hasNextPage: hasNextCompaniesPage,
+    isFetchingNextPage: isFetchingNextCompaniesPage,
+  } = useCompaniesInfinite();
 
   const queryParams = {
     startDate: usersPagination.startDate,
@@ -49,16 +56,16 @@ export default function SuperAdminSubmissionsManagement() {
   const currentPage = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? pagination?.limit ?? 20;
 
-  // const handleSearch = useCallback((searchValue) => {
-  //   setUsersPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
-  // }, []);
+  const handleSearch = useCallback((searchValue) => {
+    setUsersPagination((prev) => ({ ...prev, search: searchValue, page: 1 }));
+  }, []);
 
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     handleSearch(search);
-  //   }, 1000);
-  //   return () => clearTimeout(timer);
-  // }, [search, handleSearch]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(search);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [search, handleSearch]);
 
   const handlePageChange = ({ page, pageSize }) => {
     setUsersPagination((prev) => ({
@@ -103,7 +110,8 @@ export default function SuperAdminSubmissionsManagement() {
     navigate(`/superadmin/submissions/${id}`);
   };
 
-  const companies = companiesData?.data?.companies || [];
+  const companies =
+    companiesData?.pages?.flatMap((page) => page.data.companies) ?? [];
 
   return (
     <div className="w-full min-h-screen max-h-screen">
@@ -123,16 +131,16 @@ export default function SuperAdminSubmissionsManagement() {
           <section className="flex-col flex w-full min-h-full">
             {/* SEARCH */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full p-3 md:p-4 border-b border-gray-200 bg-white">
-              {/* <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
+              <div className="flex items-center gap-2 p-2 w-full sm:max-w-sm transition-all">
                 <FiSearch className="text-gray-400 shrink-0" size={18} />
                 <input
                   type="text"
                   placeholder="Enter search here"
                   value={search}
-                  onChange={handleChange}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="outline-none text-secondary placeholder:text-gray-400 font-geist text-sm w-full bg-transparent"
                 />
-              </div> */}
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex gap-2 items-center">
@@ -154,7 +162,11 @@ export default function SuperAdminSubmissionsManagement() {
                       onChange={(e) =>
                         handleFilterChange('companyId', e.target.value)
                       }
+                      searchable
                       disabled={isLoadingCompanies}
+                      onLoadMore={fetchNextCompaniesPage}
+                      hasNextPage={hasNextCompaniesPage}
+                      isFetchingNextPage={isFetchingNextCompaniesPage}
                     />
                   </div>
                 </div>

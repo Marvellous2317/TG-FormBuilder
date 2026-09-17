@@ -57,6 +57,10 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+	lastLoginAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "packing_check_users",
