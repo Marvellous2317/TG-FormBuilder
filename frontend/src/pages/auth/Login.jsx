@@ -117,14 +117,14 @@ function Login() {
             </Button>
           </form>
 
-          {/* <div className="flex items-center justify-center text-center my-2 w-full">
+          <div className="flex items-center justify-center text-center my-2 w-full">
             <a
               href="/guide"
               className="text-sm underline text-primary-200 font-geist font-medium cursor-pointer"
             >
               View the Guide
             </a>
-          </div> */}
+          </div> 
         </div>
       </section>
     </div>
