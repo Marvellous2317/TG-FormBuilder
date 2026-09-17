@@ -561,7 +561,7 @@ const sopSections = [
 
 export default function SOPHome() {
   return (
-    <div className="flex min-h-screen w-full flex-col font-inter bg-white font-geist">
+    <div className="flex min-h-screen w-full flex-col bg-white font-geist">
       <SOPTopBar />
 
       <div className="flex w-full flex-1 items-start">

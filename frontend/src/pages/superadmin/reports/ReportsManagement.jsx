@@ -11,7 +11,7 @@ import Icons from '../../../assets/icons';
 import AdminCard from '../../admin/dashboard/components/AdminCard';
 import {
   useDashboardCompanyAdoptionAnalytics,
-  useCompanies,
+  useCompaniesInfinite,
 } from '../../../shared/hooks/superadmin/useCompanies';
 import Loader from '../../../shared/components/Loader';
 import {
@@ -39,7 +39,13 @@ export default function ReportsManagement() {
     endDate: today,
   });
 
-  const { data: companiesData, isPending: isLoadingCompanies } = useCompanies();
+  const {
+    data: companiesData,
+    isPending: isLoadingCompanies,
+    fetchNextPage: fetchNextCompaniesPage,
+    hasNextPage: hasNextCompaniesPage,
+    isFetchingNextPage: isFetchingNextCompaniesPage,
+  } = useCompaniesInfinite();
 
   const queryParams = {
     startDate: filters.startDate,
@@ -51,7 +57,8 @@ export default function ReportsManagement() {
     useDashboardCompanyAdoptionAnalytics(queryParams);
 
   const dashboardAnalyticsData = dashboardAnalytics?.data;
-  const companies = companiesData?.data?.companies || [];
+  const companies =
+    companiesData?.pages?.flatMap((page) => page.data.companies) ?? [];
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -90,8 +97,12 @@ export default function ReportsManagement() {
                   value: company.companyId,
                 })),
               ]}
+              searchable
               onChange={(e) => handleFilterChange('companyId', e.target.value)}
               disabled={isLoadingCompanies}
+              onLoadMore={fetchNextCompaniesPage}
+              hasNextPage={hasNextCompaniesPage}
+              isFetchingNextPage={isFetchingNextCompaniesPage}
             />
           </div>
 
@@ -230,109 +241,117 @@ export default function ReportsManagement() {
           )}
         </div>
         {/* Entities Section */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold text-primary mb-4 font-geist">
-            Entities
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              label="Total Entities"
-              value={dashboardAnalyticsData?.entities?.totalEntities}
-              loading={isDashboardAnalyticsLoading}
-            />
-            <StatCard
-              label="Active Entities"
-              value={dashboardAnalyticsData?.entities?.activeEntities}
-              loading={isDashboardAnalyticsLoading}
-            />
-            {/* <StatCard
+        {!filters.companyId && (
+          <div className="mb-12">
+            <h2 className="text-lg font-semibold text-primary mb-4 font-geist">
+              Entities
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <StatCard
+                label="Total Entities"
+                value={dashboardAnalyticsData?.entities?.totalEntities}
+                loading={isDashboardAnalyticsLoading}
+              />
+              <StatCard
+                label="Active Entities"
+                value={dashboardAnalyticsData?.entities?.activeEntities}
+                loading={isDashboardAnalyticsLoading}
+              />
+              {/* <StatCard
               label="Using Platform"
               value={dashboardAnalyticsData?.entities?.entitiesUsing}
               loading={isDashboardAnalyticsLoading}
             /> */}
-            <StatCard
-              label="Inactive Entities"
-              value={dashboardAnalyticsData?.entities?.entitiesNotUsing}
-              loading={isDashboardAnalyticsLoading}
-            />
-          </div>
-          {!isDashboardAnalyticsLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Progress Bar */}
-              <div className="rounded-2xl border border-secondary-200 bg-secondary-700 p-4">
-                <h3 className="text-sm font-semibold text-primary mb-4 font-geist">
-                  Platform Adoption
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-tertiary font-geist">
-                      {dashboardAnalyticsData?.entities?.activeEntities || 0} of{' '}
-                      {dashboardAnalyticsData?.entities?.totalEntities || 0}{' '}
-                      entities
-                    </span>
-                    <span className="text-sm font-semibold text-primary">
-                      {dashboardAnalyticsData?.entities?.totalEntities
-                        ? Math.round(
-                            (dashboardAnalyticsData?.entities?.activeEntities /
-                              dashboardAnalyticsData?.entities?.totalEntities) *
-                              100,
-                          )
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <div className="w-full bg-secondary-200 rounded-full h-3">
-                    <div
-                      className="bg-primary-200 h-3 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${
-                          dashboardAnalyticsData?.entities?.totalEntities
-                            ? (dashboardAnalyticsData?.entities?.activeEntities /
+              <StatCard
+                label="Inactive Entities"
+                value={dashboardAnalyticsData?.entities?.entitiesNotUsing}
+                loading={isDashboardAnalyticsLoading}
+              />
+            </div>
+            {!isDashboardAnalyticsLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Progress Bar */}
+                <div className="rounded-2xl border border-secondary-200 bg-secondary-700 p-4">
+                  <h3 className="text-sm font-semibold text-primary mb-4 font-geist">
+                    Platform Adoption
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm text-tertiary font-geist">
+                        {dashboardAnalyticsData?.entities?.activeEntities || 0}{' '}
+                        of{' '}
+                        {dashboardAnalyticsData?.entities?.totalEntities || 0}{' '}
+                        entities
+                      </span>
+                      <span className="text-sm font-semibold text-primary">
+                        {dashboardAnalyticsData?.entities?.totalEntities
+                          ? Math.round(
+                              (dashboardAnalyticsData?.entities
+                                ?.activeEntities /
                                 dashboardAnalyticsData?.entities
                                   ?.totalEntities) *
-                              100
-                            : 0
-                        }%`,
-                      }}
-                    />
+                                100,
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="w-full bg-secondary-200 rounded-full h-3">
+                      <div
+                        className="bg-primary-200 h-3 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${
+                            dashboardAnalyticsData?.entities?.totalEntities
+                              ? (dashboardAnalyticsData?.entities
+                                  ?.activeEntities /
+                                  dashboardAnalyticsData?.entities
+                                    ?.totalEntities) *
+                                100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Bar Chart */}
-              <div className="rounded-2xl border border-secondary-200 bg-secondary-700 p-4">
-                <h3 className="text-sm font-semibold text-primary mb-4 font-geist">
-                  Entity Distribution
-                </h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart
-                    data={[
-                      {
-                        name: 'Entities',
-                        'Total Entities':
-                          dashboardAnalyticsData?.entities?.totalEntities || 0,
-                        'Active Entities':
-                          dashboardAnalyticsData?.entities?.activeEntities || 0,
-                        'Inactive Entities':
-                          dashboardAnalyticsData?.entities?.entitiesNotUsing ||
-                          0,
-                      },
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#bdbdbd" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="Total Entities" fill="#2463eb" />
-                    <Bar dataKey="Active Entities" fill="#218358" />
-                    <Bar dataKey="Inactive Entities" fill="#c62828" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {/* Bar Chart */}
+                <div className="rounded-2xl border border-secondary-200 bg-secondary-700 p-4">
+                  <h3 className="text-sm font-semibold text-primary mb-4 font-geist">
+                    Entity Distribution
+                  </h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart
+                      data={[
+                        {
+                          name: 'Entities',
+                          'Total Entities':
+                            dashboardAnalyticsData?.entities?.totalEntities ||
+                            0,
+                          'Active Entities':
+                            dashboardAnalyticsData?.entities?.activeEntities ||
+                            0,
+                          'Inactive Entities':
+                            dashboardAnalyticsData?.entities
+                              ?.entitiesNotUsing || 0,
+                        },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#bdbdbd" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Total Entities" fill="#2463eb" />
+                      <Bar dataKey="Active Entities" fill="#218358" />
+                      <Bar dataKey="Inactive Entities" fill="#c62828" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
         {/* Usage Section */}
         <div className="mb-12">
           <h2 className="text-lg font-semibold text-primary mb-4 font-geist">

@@ -258,7 +258,6 @@ export default function CreateAdminUserModal({
     setIsCreateUserModalOpen(false);
   };
 
-  console.log(formData);
   return (
     <Modal
       isOpen={isCreateUserModalOpen}

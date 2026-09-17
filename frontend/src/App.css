@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @theme {
   /* Primary colors */
@@ -46,7 +45,6 @@
 
   /* Font families */
   --font-geist: 'Geist', sans-serif;
-  --font-inter: 'Inter', sans-serif;
 }
 
 @font-face {
