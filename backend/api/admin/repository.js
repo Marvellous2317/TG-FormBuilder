@@ -710,14 +710,14 @@ export class AdminRepository {
     status,
     search,
     page = 1,
-    limit = 20,
+    limit = 100,
     startDate,
     endDate,
     deleted,
   }) {
     try {
       page = Number(page) || 1;
-      limit = Number(limit) || 20;
+      limit = Number(limit) || 100;
       const offset = (page - 1) * limit;
       const where = {};
 
