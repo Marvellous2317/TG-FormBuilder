@@ -1,11 +1,14 @@
-name: Build and Deploy Node.js app to Azure Web App - tgearnspotapppoc
+name: Production - Build and Deploy Node.js app to Azure Web App
 
 on:
   push:
     branches:
       - main
-      - uat
   workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -31,21 +34,7 @@ jobs:
         run: npm install
         working-directory: ./backend
 
-      # # UAT Deployment
-      # - name: Write APP_CONFIG_JSON_TEST to appConfig.json (UAT)
-      #   if: github.ref == 'refs/heads/uat'
-      #   run: echo '${{ secrets.APP_CONFIG_JSON_TEST }}' > ./backend/appConfig.json
-
-      # - name: Deploy to Azure Web App (UAT)
-      #   uses: azure/webapps-deploy@v3
-      #   if: github.ref == 'refs/heads/uat'
-      #   with:
-      #     app-name: "tgearnspottestapp"
-      #     slot-name: "production"
-      #     package: ./backend
-      #     publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_TEST }}
-
-      # Production Deployment
+      # Production Deployment (UAT is handled by uat_tgearnspotapppoc.yml)
       - name: Write APP_CONFIG_JSON to appConfig.json (Production)
         if: github.ref == 'refs/heads/main'
         run: echo '${{ secrets.APP_CONFIG_JSON }}' > ./backend/appConfig.json
@@ -58,5 +47,3 @@ jobs:
           slot-name: "Production"
           package: ./backend
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_tgpackagingrgprd }}
-      
- 

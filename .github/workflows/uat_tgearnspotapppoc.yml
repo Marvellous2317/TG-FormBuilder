@@ -1,0 +1,49 @@
+name: UAT - Build and Deploy Node.js app to Azure Web App
+
+on:
+  push:
+    branches:
+      - uat
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-uat
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Install and build frontend
+        run: |
+          npm install
+          npm run build
+        working-directory: ./frontend
+
+      - name: Copy frontend dist to backend
+        run: cp -r ./frontend/dist ./backend/dist
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
+
+      # UAT Deployment
+      - name: Write APP_CONFIG_JSON_UAT to appConfig.json (UAT)
+        if: github.ref == 'refs/heads/uat'
+        run: echo '${{ secrets.APP_CONFIG_JSON_UAT }}' > ./backend/appConfig.json
+
+      - name: Deploy to Azure Web App (UAT)
+        uses: azure/webapps-deploy@v3
+        if: github.ref == 'refs/heads/uat'
+        with:
+          app-name: "tgdigiformsappprd"
+          slot-name: "Production"
+          package: ./backend
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DIGIFORM_UAT }}

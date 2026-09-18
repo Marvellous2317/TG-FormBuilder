@@ -35,8 +35,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://digiforms.tolaram.com",
-      "https://tolaram.com",
-      "https://digiforms.tolaram.com",
+      "http://tgdigiformsappprd-drgxgfgkb9b5fwa7.northeurope-01.azurewebsites.net",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
