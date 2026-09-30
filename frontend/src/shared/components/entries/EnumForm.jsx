@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react';
-import InputField from '../InputField';
 
 export default function EnumForm({
   entry,
   formData = {},
   setFormData,
   readOnly,
+  inputKey,
 }) {
   const entryId = entry?.entryId;
+
+  const inputName = inputKey || entryId;
 
   const handleChange = (event) => {
     const { value } = event.target;
@@ -52,23 +54,21 @@ export default function EnumForm({
 
   return (
     <div className="mt-5 flex w-full items-center justify-between gap-2">
-      <h2 className="block font-geist text-sm font-regul text-secondary">
-        {entry.name}
-      </h2>
+      <h2 className="block font-geist text-sm text-secondary">{entry.name}</h2>
       <div className="flex gap-2 items-center">
         <div className="flex gap-2 items-center">
           <label
-            htmlFor={`${entryId}-0`}
-            className={`block font-geist text-sm font-regul text-secondary`}
+            htmlFor={`${inputName}-0`}
+            className={`block font-geist text-sm text-secondary`}
           >
             {splitOptions[0] || 'Yes'}
           </label>
 
           <input
             type="radio"
-            name={entryId}
-            id={`${entryId}-0`}
-            value={splitOptions[0]}
+            name={inputName}
+            id={`${inputName}-0`}
+            value={splitOptions[0] || 'Yes'}
             onChange={handleChange}
             checked={currentValue === splitOptions[0]}
             disabled={readOnly}
@@ -78,16 +78,16 @@ export default function EnumForm({
 
         <div className="flex gap-2 items-center">
           <label
-            htmlFor={`${entryId}-1`}
-            className={`block font-geist text-sm font-regul text-secondary`}
+            htmlFor={`${inputName}-1`}
+            className={`block font-geist text-sm text-secondary`}
           >
-            {splitOptions[1]}
+            {splitOptions[1] || 'No'}
           </label>
 
           <input
             type="radio"
-            name={entryId}
-            id={`${entryId}-1`}
+            name={inputName}
+            id={`${inputName}-1`}
             value={splitOptions[1] || 'No'}
             onChange={handleChange}
             checked={currentValue === splitOptions[1]}

@@ -418,7 +418,7 @@ export default function DropdownOptionsModal({
                 <div className="w-full mt-4">
                   <label
                     htmlFor={'items'}
-                    className={`mb-2 block font-geist text-sm font-regul text-secondary`}
+                    className={`mb-2 block font-geist text-sm font-geist text-secondary`}
                   >
                     Items
                   </label>

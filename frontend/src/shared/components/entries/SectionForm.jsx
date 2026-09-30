@@ -190,6 +190,7 @@ export default function SectionForm({
                             formData={rowFormData}
                             setFormData={rowSetFormData}
                             readOnly={readOnly}
+                            inputKey={entryKey}
                           />
                         )}
                         {field.type === 'dropdown' && (

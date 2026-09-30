@@ -77,7 +77,7 @@ export default function DropdownForm({
 
   return (
     <div className="mt-5 flex flex-col items-center justify-between w-full gap-2">
-      <h2 className="block w-full font-geist text-sm font-regul text-secondary">
+      <h2 className="block w-full font-geist text-sm text-secondary">
         {entry.name}
       </h2>
       <div className="w-full flex gap-2 items-center justify-end">
